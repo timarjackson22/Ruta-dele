@@ -6,7 +6,7 @@ My DELE app: a complete Spanish course from A1 to C2 for the Instituto Cervantes
 - Escuchar: 12 interactive stories and 12 podcast episodes with sentence-by-sentence playback, tap-to-translate and dictation
 - The 2,500 most-used Spanish words, ranked by frequency, with quizzes
 
-**Open the app:** https://timarjackson22.github.io/ruta-dele/
+**Open the app:** https://timarjackson22.github.io/Ruta-dele/
 
 Install on Android: open the link in Chrome → ⋮ → Install app.
 Install on iPhone: open the link in Safari → Share → Add to Home Screen.
