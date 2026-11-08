@@ -1,0 +1,34 @@
+RUTA DELE: INSTALL IT AS AN APP
+================================
+
+STEP 1. Put it online (once, about 5 minutes, easiest on a computer)
+--------------------------------------------------------------------
+1. Unzip ruta-dele-app.zip. You get a folder called "ruta-dele-app".
+2. Go to https://app.netlify.com/drop
+3. Drag the whole "ruta-dele-app" folder onto the page.
+4. Sign up for a free Netlify account when asked, so your site stays online.
+5. Netlify gives you a link like https://something-random.netlify.app
+   Optional: Site configuration > Change site name, e.g. ruta-dele-tunombre.netlify.app
+
+STEP 2. Install it on your phone
+--------------------------------
+Android (Chrome):
+  1. Open your Netlify link in Chrome.
+  2. Tap "Install app" when it appears, or tap the menu (three dots) > "Install app".
+  3. Ruta DELE now sits in your app drawer like any other app.
+
+iPhone (Safari; it must be Safari):
+  1. Open your Netlify link in Safari.
+  2. Tap the Share button (square with an arrow).
+  3. Scroll down and tap "Add to Home Screen", then "Add".
+  4. Open it from the new icon. It runs full screen, without browser bars.
+
+Open it once while online. After that it also works offline. Audio uses your
+phone's built-in Spanish voices; on some Android phones these need a
+connection the first time.
+
+UPDATING
+--------
+When you get a new version of the folder, drag it onto your site's
+"Deploys" page in Netlify. The app updates the next time you open it online.
+Your progress stays on your phone.
