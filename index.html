@@ -2224,6 +2224,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const CAN_MIC = !!SR && !IN_CLAUDE;
   const HAS_GPU = !!navigator.gpu;
+  let GPU_STATE = HAS_GPU ? "checking" : "none"; // ok | noadapter | none
+  if (HAS_GPU && !IN_CLAUDE) navigator.gpu.requestAdapter().then((a) => { GPU_STATE = a ? "ok" : "noadapter"; }, () => { GPU_STATE = "noadapter"; }).then(() => { if (tView === "hist") tRender(); });
+  const GPU_HELP = '<p class="small"><b>Your phone’s graphics chip isn’t enabled for this in Chrome yet.</b> Chrome turns this on automatically only for some chips. Many Galaxy S24 phones sold outside the US use Samsung’s Exynos chip, which isn’t on that list. To try it:</p><ol class="small"><li>In Chrome, type <b>chrome://flags</b> in the address bar.</li><li>Search for <b>Unsafe WebGPU Support</b> and set it to <b>Enabled</b>.</li><li>Tap <b>Relaunch</b>, then open Ruta DELE again and come back here.</li></ol><p class="small muted">If it still doesn’t work, use a Claude key below, or the Practice tab, which works offline without any AI.</p>';
   const tid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
   function resolveTB() {
@@ -2568,6 +2571,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (IN_CLAUDE ? '<p class="small">You’re in the Claude version: Profe uses your Claude plan and saves chats to your Claude account.</p>' : "") +
       '<div class="prbox"><p><b>On this phone (offline, free, private)</b></p>' +
       (IN_CLAUDE ? '<p class="small muted">Available in the phone app (installed from the Ruta DELE website), not inside Claude.</p>' : !HAS_GPU ? '<p class="small muted">This browser can’t run on-device AI (it needs WebGPU). On your Galaxy S24, open the app in Chrome.</p>' :
+        GPU_STATE === "noadapter" ? GPU_HELP :
         loaded ? '<p class="small">Downloaded: <b>' + esc(mname) + "</b> model. It works offline.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="local" aria-pressed="' + (TB === "local") + '">Use on-device AI</button><button class="btn small" data-act="t-dlmodel" data-v="' + (mname === "Light" ? "better" : "light") + '">Switch to ' + (mname === "Light" ? "Better" : "Light") + '</button><button class="btn small" data-act="t-delmodel">Remove from phone</button></div>' :
           '<p class="small">Download once on Wi-Fi. The AI then runs on your phone, with no account and no internet.</p><div class="row"><button class="btn small primary" data-act="t-dlmodel" data-v="light">Light · ' + MODELS.light.size + '</button><button class="btn small" data-act="t-dlmodel" data-v="better">Better · ' + MODELS.better.size + "</button></div>") +
       '<div class="dlp" id="t-dl" hidden><div class="bar"><i id="t-progbar" style="width:0%"></i></div><p class="small muted" id="t-prog">Starting…</p></div></div>' +
@@ -2583,12 +2587,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   async function downloadModel(which) {
     const m = MODELS[which]; if (!m || !HAS_GPU) return;
+    try { const ad = await navigator.gpu.requestAdapter(); if (!ad) { GPU_STATE = "noadapter"; tRender(); return; } } catch (e) { GPU_STATE = "noadapter"; tRender(); return; }
     const box = document.getElementById("t-dl"); if (box) box.hidden = false;
     try {
       if (LLM) { try { await LLM.unload(); } catch (e) {} LLM = null; llmLoading = null; }
       await loadLocal(m.id);
       TS.localModel = LLM_ID || m.id; TS.localReady = true; TS.engine = "local"; tsave(); TB = resolveTB(); tRender();
-    } catch (e) { const p = document.getElementById("t-prog"); if (p) p.textContent = "Download failed: " + ((e && e.message) || e) + ". Check your connection and free space, then try again."; }
+    } catch (e) { const p = document.getElementById("t-prog"); if (p) p.textContent = /GPU/i.test((e && e.message) || "") ? "Your phone’s graphics chip isn’t available to Chrome for this. See the steps above." : "Download failed: " + ((e && e.message) || e) + ". Check your connection and free space, then try again."; if (/GPU/i.test((e && e.message) || "")) { GPU_STATE = "noadapter"; tRender(); } }
   }
   async function deleteModel() {
     try { const webllm = await import(WEBLLM_URL); if (LLM) { try { await LLM.unload(); } catch (e) {} } LLM = null; llmLoading = null; await webllm.deleteModelAllInfoInCache(TS.localModel); } catch (e) {}
