@@ -1,0 +1,51 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build release APK
+        working-directory: android
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          set -o pipefail
+          gradle --no-daemon --stacktrace assembleRelease 2>&1 | tee ../build.log
+      - name: Collect APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk ruta-dele.apk
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk
+          name: Ruta DELE for Android
+          make_latest: true
+          files: ruta-dele.apk
+          body: |
+            Ruta DELE as an Android app (build ${{ github.run_number }}).
+            Download **ruta-dele.apk** on your phone and open it to install. The app loads the latest course content automatically.
+      - name: Upload build log on failure
+        if: failure()
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-build-log
+          name: APK build log
+          prerelease: true
+          files: build.log

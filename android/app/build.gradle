@@ -1,0 +1,29 @@
+plugins { id 'com.android.application' }
+def vc = (System.getenv("VERSION_CODE") ?: "1") as Integer
+android {
+    namespace 'app.rutadele'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'app.rutadele'
+        minSdk 26
+        targetSdk 34
+        versionCode vc
+        versionName "1.0." + vc
+    }
+    signingConfigs {
+        release {
+            storeFile file('release.jks')
+            storePassword 'rutadele'
+            keyAlias 'rutadele'
+            keyPassword 'rutadele'
+        }
+    }
+    buildTypes {
+        release { minifyEnabled false; signingConfig signingConfigs.release }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+    implementation 'androidx.core:core:1.13.1'
+}

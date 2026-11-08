@@ -16,7 +16,7 @@ My DELE app: a complete Spanish course from A1 to C2 for the Instituto Cervantes
 
 **Open the app:** https://timarjackson22.github.io/Ruta-dele/
 
-Install on Android: open the link in Chrome → ⋮ → Install app.
+Install on Android: download the APK from the latest release (ruta-dele.apk), or open the link in Chrome → ⋮ → Install app.
 Install on iPhone: open the link in Safari → Share → Add to Home Screen.
 
 Word ranking: FrequencyWords by Hermit Dave (CC BY-SA), via the spanish_data project. Meanings adapted from Wiktionary (CC BY-SA).

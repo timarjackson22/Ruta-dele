@@ -1489,6 +1489,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<ol class="route" aria-label="Your progress by level">' + route + "</ol></div>" +
       '<div class="features"><a class="feature" href="#escuchar"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg></span><span><b>Escuchar</b><span class="muted">' + LISTEN.filter((x) => x.cat !== "reading").length + " listening exercises from Latin America: stories, podcasts, news, history, culture, songs and poems. Tap or highlight any text for the English.</span></span></a>" +
       '<a class="feature" href="#leer"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg></span><span><b>Leer</b><span class="muted">' + LISTEN.filter((x) => x.cat === "reading").length + " DELE-style reading texts with comprehension questions, from short messages to essays.</span></span></a>" +
+      (/Android/i.test(navigator.userAgent) && !/RutaDELEApp/.test(navigator.userAgent) ? '<a class="feature" href="https://github.com/timarjackson22/Ruta-dele/releases/download/apk/ruta-dele.apk"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span><b>Android app</b><span class="muted">Download the APK. Listen mode keeps playing with the screen off, and the microphone works in Practice.</span></span></a>' : "") +
       '<a class="feature" href="#gramatica"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span><b>Gramática</b><span class="muted">Every part of speech, with words ranked by use: 1,360 nouns, the top 150 adjectives, adverbs, pronouns, prepositions, conjunctions, interjections and more, plus reflexive verbs.</span></span></a>' +
       '<a class="feature" href="#palabras"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><b>Las 2.500 palabras</b><span class="muted">The most-used Spanish words, ranked by frequency, with meanings, continuous audio and quizzes. You know ' + Object.keys(S.w || {}).length + " so far.</span></span></a></div>" +
       '<section class="block"><div class="shead"><h2>How each unit works</h2></div><ol class="steps"><li><b>Listen</b><span>Tap the speaker to hear every word.</span></li><li><b>Learn</b><span>Grammar tables with the key rules.</span></li><li><b>Practise</b><span>Type your answers and check them.</span></li><li><b>Review</b><span>Flashcards for the whole level.</span></li><li><b>Test</b><span>Exam guide and a timed-style mock.</span></li></ol></section>' +
@@ -2525,6 +2526,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) { gpStop(); }
   }
   async function gpWake(on) { try { if (on && "wakeLock" in navigator && !GP.lock) GP.lock = await navigator.wakeLock.request("screen"); if (!on && GP.lock) { GP.lock.release(); GP.lock = null; } } catch (e) { GP.lock = null; } }
+  const GP_NATIVE = !!(window.AndroidTTS && window.AndroidTTS.hasQueue);
+  function gpNativeSend() {
+    const vs = (V2[0] || voice), ve = VEN;
+    try { AndroidTTS.queue(JSON.stringify({ items: GP.list.map((x) => ({ es: x.es, en: enSpeak(x.en), show: x.show })), start: GP.i, reps: +GP.o.reps, gap: +GP.o.gap, rate: +GP.o.rate, en: !!+GP.o.en, esLang: vs ? vs.lang : (S.region === "es" ? "es-ES" : "es-US"), esVoice: vs ? vs.name : "", enLang: ve ? ve.lang : "en-US", enVoice: ve ? ve.name : "" })); } catch (e) { gpStop(); }
+    gpBar();
+  }
+  function gpGo() { if (GP_NATIVE) gpNativeSend(); else gpSay(); }
+  window.__gpNative = (ev, i, k) => {
+    if (!GP.on) return;
+    if (ev === "pos") { const w = GP.i !== i; GP.i = i; GP.step = k; if (w) gpBar(); }
+    else if (ev === "done" || ev === "stopped") { GP.on = false; GP.paused = false; gpBar(); }
+  };
   function gpStart() {
     if (!canSpeak) return;
     const s = gpSource(); if (!s || !s.list.length) return;
@@ -2532,24 +2545,25 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const open = document.querySelector(".gitem.open .grow, .vrow:focus");
     const fromRow = open ? s.list.findIndex((x) => x.i === +open.dataset.i) : -1;
     GP.i = fromRow > 0 ? fromRow : 0;
-    gpWake(true); gpSay();
+    if (!GP_NATIVE) gpWake(true);
+    gpGo();
   }
-  function gpStop() { GP.on = false; GP.paused = false; GP.cur = null; clearTimeout(GP.t); try { speechSynthesis.cancel(); } catch (e) {} gpWake(false); gpBar(); }
-  function gpJump(d) { GP.i = Math.max(0, Math.min(GP.list.length - 1, GP.i + d)); GP.step = 0; GP.paused = false; gpSay(); gpBar(); }
+  function gpStop() { if (GP_NATIVE) try { AndroidTTS.stopQueue(); } catch (e) {} GP.on = false; GP.paused = false; GP.cur = null; clearTimeout(GP.t); try { speechSynthesis.cancel(); } catch (e) {} gpWake(false); gpBar(); }
+  function gpJump(d) { GP.i = Math.max(0, Math.min(GP.list.length - 1, GP.i + d)); GP.step = 0; GP.paused = false; gpGo(); gpBar(); }
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-act]"); if (!t) return;
     const a = t.dataset.act;
     if (a === "gp-play") { GP.on ? gpStop() : gpStart(); }
     else if (a === "gp-stop") gpStop();
-    else if (a === "gp-pause") { GP.paused = !GP.paused; if (GP.paused) { GP.cur = null; clearTimeout(GP.t); try { speechSynthesis.cancel(); } catch (x) {} gpBar(); } else { GP.step = 0; gpSay(); gpBar(); } }
+    else if (a === "gp-pause") { GP.paused = !GP.paused; if (GP.paused) { GP.cur = null; clearTimeout(GP.t); if (GP_NATIVE) try { AndroidTTS.stopQueue(); } catch (x) {} else try { speechSynthesis.cancel(); } catch (x) {} gpBar(); } else { GP.step = 0; gpGo(); gpBar(); } }
     else if (a === "gp-next") gpJump(1);
     else if (a === "gp-prev") gpJump(-1);
-    else if (a === "gp-opt") { const k = t.dataset.k; GP.o[k] = +t.dataset.v; gpSave(); const keepOpen = true; gpBar(); if (keepOpen) { const d = document.querySelector(".gpset"); if (d) d.open = true; } }
+    else if (a === "gp-opt") { const k = t.dataset.k; GP.o[k] = +t.dataset.v; gpSave(); const keepOpen = true; if (GP_NATIVE && GP.on && !GP.paused) gpNativeSend(); gpBar(); if (keepOpen) { const d = document.querySelector(".gpset"); if (d) d.open = true; } }
     else if (GP.on && (a === "say" || a === "th-play" || a === "pl-play")) gpStop();
-    else if (GP.on && (a === "g-tog" || a === "v-open") && !t.closest("#gpbar")) { /* tapping a word jumps the player there */ const k = GP.list.findIndex((x) => x.i === +t.dataset.i); if (k >= 0 && a === "g-tog") { GP.i = k; GP.step = 0; GP.paused = false; gpSay(); } }
+    else if (GP.on && (a === "g-tog" || a === "v-open") && !t.closest("#gpbar")) { /* tapping a word jumps the player there */ const k = GP.list.findIndex((x) => x.i === +t.dataset.i); if (k >= 0 && a === "g-tog") { GP.i = k; GP.step = 0; GP.paused = false; gpGo(); } }
   });
   addEventListener("hashchange", () => { if (GP.on) gpStop(); });
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && GP.on && !GP.paused) { gpWake(true); if (!speechSynthesis.speaking) gpSay(); } });
+  document.addEventListener("visibilitychange", () => { if (!GP_NATIVE && document.visibilityState === "visible" && GP.on && !GP.paused) { gpWake(true); if (!speechSynthesis.speaking) gpSay(); } });
   function gpButton() { return canSpeak ? '<button class="btn small primary gp-btn" data-act="gp-play" aria-pressed="false">▶ Listen: ' + (GP.o.en ? "English, then " : "") + "Spanish ×" + GP.o.reps + "</button>" : ""; }
 
   /* ================= AI TUTOR (Profe): voice, on-device AI, Claude, offline practice ================= */
