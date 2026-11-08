@@ -1,5 +1,5 @@
-const CACHE = "ruta-dele-v3";
-const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"];
+const CACHE = "ruta-dele-v4";
+const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"].concat(["verbdata/verbs-d-0.json", "verbdata/verbs-d-1.json", "verbdata/verbs-d-10.json", "verbdata/verbs-d-11.json", "verbdata/verbs-d-12.json", "verbdata/verbs-d-13.json", "verbdata/verbs-d-14.json", "verbdata/verbs-d-15.json", "verbdata/verbs-d-16.json", "verbdata/verbs-d-2.json", "verbdata/verbs-d-3.json", "verbdata/verbs-d-4.json", "verbdata/verbs-d-5.json", "verbdata/verbs-d-6.json", "verbdata/verbs-d-7.json", "verbdata/verbs-d-8.json", "verbdata/verbs-d-9.json", "verbdata/verbs-index.json"]);
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
