@@ -2321,7 +2321,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   /* ---------- engines ---------- */
-  let LLM = null, llmLoading = null, llmProg = null, LLM_ID = "";
+  let LLM = null, llmLoading = null, llmProg = null, LLM_ID = "", llmOnProg = null;
   async function loadLocal(id) {
     if (LLM) return LLM;
     if (!llmLoading) llmLoading = (async () => {
@@ -2329,7 +2329,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       let mid = id || TS.localModel;
       try { const ad = await navigator.gpu.requestAdapter(); if (ad && !ad.features.has("shader-f16")) mid = mid.replace("q4f16_1", "q4f32_1"); } catch (e) {}
       LLM_ID = mid;
-      LLM = await webllm.CreateMLCEngine(mid, { initProgressCallback: (p) => { llmProg = p; const el = document.getElementById("t-prog"); if (el) { el.textContent = p.text || ""; const b = document.getElementById("t-progbar"); if (b) b.style.width = Math.round((p.progress || 0) * 100) + "%"; } } });
+      LLM = await webllm.CreateMLCEngine(mid, { initProgressCallback: (p) => { llmProg = p; if (llmOnProg) llmOnProg(p); const el = document.getElementById("t-prog"); if (el) { el.textContent = p.text || ""; const b = document.getElementById("t-progbar"); if (b) b.style.width = Math.round((p.progress || 0) * 100) + "%"; } } });
       llmProg = null; return LLM;
     })().catch((e) => { llmLoading = null; throw e; });
     return llmLoading;
@@ -2346,8 +2346,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const text = (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n"); onText(text); return text;
     }
     if (TB === "local") {
-      onText(LLM ? "" : "Loading the AI on your phone…");
-      const eng = await loadLocal();
+      if (!LLM) { onText("Starting the AI on your phone… The first message after opening the app takes up to a minute or two."); llmOnProg = (p) => onText("Starting the AI on your phone… " + Math.round((p.progress || 0) * 100) + "%\n\n" + (p.text || "").replace(/\[.*?\]\s*/g, "").slice(0, 120)); }
+      let eng; try { eng = await loadLocal(); } finally { llmOnProg = null; }
+      onText("…");
       const last = turns[turns.length - 1] ? turns[turns.length - 1].content : "";
       const f = facts(last + " " + (ctx.verb || ""));
       const msgs = [{ role: "system", content: rules(ctx, true) + (f ? "\n\n" + f : "") }].concat(turns.slice(-8));
@@ -2582,6 +2583,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="muted small">' + (TDB ? "Saved to your Claude account and this device." : "Saved on this device.") + "</p></div>";
   }
   function tOpen(prompt) {
+    if (resolveTB() === "local" && !LLM) loadLocal().catch(() => {}); // warm up while the learner reads or types
     const pan = document.getElementById("tutor"); pan.hidden = false; document.body.classList.add("tutor-open"); if (!PR) tView = "chat"; tRender();
     if (prompt) { tView = "chat"; tSend(prompt); }
   }
