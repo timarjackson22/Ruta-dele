@@ -92,8 +92,20 @@ public class SttBridge {
         listenOnce();
     }
 
+    // words the recognizer should favour (the conversation and the page the learner is on)
+    final ArrayList<String> bias = new ArrayList<>();
+
+    @JavascriptInterface
+    public void setBias(String json) {
+        main.post(() -> {
+            bias.clear();
+            try { org.json.JSONArray a = new org.json.JSONArray(json); for (int k = 0; k < a.length() && k < 100; k++) bias.add(a.getString(k)); } catch (Exception ignored) { }
+        });
+    }
+
     void listenOnce() {
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        if (android.os.Build.VERSION.SDK_INT >= 33 && !bias.isEmpty()) i.putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, new ArrayList<>(bias));
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, lang);

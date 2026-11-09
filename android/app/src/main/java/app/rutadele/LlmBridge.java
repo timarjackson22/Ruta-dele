@@ -36,7 +36,9 @@ public class LlmBridge {
     volatile boolean cancelDl = false;
     LlmInference llm;
     volatile LlmInferenceSession cur;
-    static final int MAX_TOKENS = 2048;
+    // context size follows the model file: "..._ekv1280.task" holds 1,280 tokens, "..._ekv4096.task" 4,096
+    int maxTokens() { File f = modelFile(); return f != null && f.getName().contains("ekv1280") ? 1280 : 2048; }
+    int chatCap() { return maxTokens() <= 1280 ? 2600 : 5200; }
 
     LlmBridge(MainActivity act, WebView web) {
         this.act = act;
@@ -125,6 +127,7 @@ public class LlmBridge {
                 File[] old = dir().listFiles();
                 if (old != null) for (File f : old) if (f.getName().endsWith(".task") && !f.getName().equals(name)) f.delete();
                 if (!part.renameTo(done)) throw new Exception("couldn't save the model");
+                runExec.execute(() -> { try { if (chat != null) chat.close(); } catch (Exception ignored) { } chat = null; chatKey = ""; try { if (llm != null) llm.close(); } catch (Exception ignored) { } llm = null; });
                 state = "ready";
                 ev("dl", "", "done");
             } catch (Exception e) {
@@ -158,7 +161,7 @@ public class LlmBridge {
         ev("loading", "", "");
         LlmInference.LlmInferenceOptions o = LlmInference.LlmInferenceOptions.builder()
                 .setModelPath(f.getAbsolutePath())
-                .setMaxTokens(MAX_TOKENS)
+                .setMaxTokens(maxTokens())
                 .setMaxTopK(40)
                 .setPreferredBackend(LlmInference.Backend.CPU)
                 .build();
@@ -227,7 +230,7 @@ public class LlmBridge {
         runExec.execute(() -> {
             try {
                 ensureLoaded();
-                boolean fresh = chat == null || !key.equals(chatKey) || chatChars + user.length() > 5200;
+                boolean fresh = chat == null || !key.equals(chatKey) || chatChars + user.length() > chatCap();
                 if (fresh) {
                     if (chat != null) try { chat.close(); } catch (Exception ignored) { }
                     chat = LlmInferenceSession.createFromOptions(llm, LlmInferenceSession.LlmInferenceSessionOptions.builder()
