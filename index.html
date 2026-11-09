@@ -2843,10 +2843,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
     rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = !!opts.continuous; rec.maxAlternatives = 1;
-    let final = ""; liveText = "";
-    rec.onresult = (e) => { let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) final += (final ? " " : "") + r[0].transcript.trim(); else interim += r[0].transcript; } liveText = (final + " " + interim).trim(); paintLive(); };
-    rec.onerror = (e) => { listening = false; if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
-    rec.onend = () => { listening = false; uiVoice(); const t = final.trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
+    let final = "", heard = "", done = false; liveText = "";
+    const me = rec;
+    // some phones (Samsung) show the words while you speak but then end with "no match" instead of a final result: keep what was heard
+    rec.onresult = (e) => { let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) final += (final ? " " : "") + r[0].transcript.trim(); else interim += r[0].transcript; } liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); };
+    rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
+    rec.onend = () => { if (done || rec !== me) return; done = true; listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
     try { rec.start(); listening = true; } catch (e) { listening = false; }
     uiVoice(); paintLive();
   }
@@ -2858,7 +2860,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const clean = plainForSpeech(text).replace(/\n+/g, ". ");
     const parts = (clean.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || [clean]).map((s) => s.trim()).filter(Boolean);
     if (!parts.length) { if (onDone) onDone(); return; }
-    parts.forEach((p, i) => { const u = utter(p, isSpanish(p) ? "es" : "en", isSpanish(p) ? 0.92 : 1); if (i === parts.length - 1) u.onend = () => { if (onDone) onDone(); }; try { speechSynthesis.speak(u); } catch (e) {} });
+    // continue even if the voice fails or never reports the end (otherwise voice chat would stop listening)
+    let fired = false; const finish = () => { if (fired) return; fired = true; clearTimeout(guard); if (onDone) onDone(); };
+    const guard = setTimeout(finish, 4000 + clean.length * 110);
+    parts.forEach((p, i) => { const u = utter(p, isSpanish(p) ? "es" : "en", isSpanish(p) ? 0.92 : 1); if (i === parts.length - 1) { u.onend = finish; u.onerror = finish; } try { speechSynthesis.speak(u); } catch (e) { if (i === parts.length - 1) finish(); } });
   }
   function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = liveText || (listening ? "Listening… speak now" : ""); } }
   function uiVoice() {
@@ -3781,7 +3786,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611092001";
+  var BUILD = "202611092005";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
@@ -3790,7 +3795,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
       if (document.getElementById("upd-bar")) return;
       var b = document.createElement("div"); b.id = "upd-bar"; b.setAttribute("role", "status");
       b.style.cssText = "position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:50;background:var(--cobalt);color:var(--on-cobalt);border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.2);font-weight:600";
-      b.innerHTML = '<span>A new version of Ruta DELE is ready.</span><button type="button" style="border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer">Update</button>';
+      b.innerHTML = '<span>A new version of Ruta DELE is ready.</span><button type="button" style="border:0;border-radius:999px;padding:6px 16px;font:inherit;font-weight:700;cursor:pointer;background:#fff;color:#1F4FA3">Update</button>';
       b.querySelector("button").onclick = function () { location.reload(); };
       document.body.appendChild(b);
     }).catch(function () {});
