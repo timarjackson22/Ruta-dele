@@ -390,6 +390,9 @@ tr.playing td { background: var(--saffron-soft) }
 .flabel { font-weight: 600; margin-top: 4px }
 .mytools p { margin: 6px 0 }
 .hsub { margin: 8px 0 0 }
+.cleanl { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 10px }
+.cleanl label { display: flex; gap: 10px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; cursor: pointer }
+.cleanl input { margin-top: 4px; width: 20px; height: 20px; flex: none }
 .btn:disabled { opacity: .45; cursor: not-allowed }
 .ttabs { width: 100%; gap: 6px }
 .micbtn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--saffron); color: #1b1300; display: grid; place-items: center; cursor: pointer }
@@ -2626,7 +2629,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function natPrompt(sys, turns, budget) {
     const lines = []; let n = 0;
     for (let i = turns.length - 1; i >= 0; i--) { const l = (turns[i].role === "user" ? "Learner: " : "Profe: ") + turns[i].content.replace(/\s+/g, " ").slice(0, 900); if (n + l.length > (budget || 2600) && lines.length) break; lines.unshift(l); n += l.length; }
-    return sys + "\n\nConversation so far:\n" + lines.join("\n") + "\n\nWrite Profe's next reply to the learner. Write only the reply.";
+    return sys + "\n\nConversation so far:\n" + lines.join("\n") + "\n\nNow write ONLY Profe's next reply (1 to 3 short sentences, then one question). Do not write the learner's lines.";
   }
   function nativeBox() {
     const st = natStatus();
@@ -2765,7 +2768,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   // small on-device models sometimes echo their instructions: cut the reply where that starts
   const ECHO = /\n\s*(\*\*)?(learner notes|notes|on screen|page open|background|private reference|reference facts|meanings|how to reply|rules)\b\s*(\(|:)/i;
-  function cleanLocal(t) { const m = ("\n" + t).search(ECHO); let out = m >= 0 ? ("\n" + t).slice(0, m).trim() : t; return out.replace(/^profe:\s*/i, "").trim(); }
+  function cleanLocal(t) {
+    t = String(t).replace(/^\s*(profe|assistant|asistente)\s*:\s*/i, "");
+    const cut = t.search(/\n\s*(learner|student|estudiante|alumno|user|usuario|profe|assistant)\s*:/i); if (cut > 0) t = t.slice(0, cut); const m = ("\n" + t).search(ECHO); let out = m >= 0 ? ("\n" + t).slice(0, m).trim() : t; return out.replace(/^profe:\s*/i, "").trim(); }
   async function ask(turns, ctx, onText, signal) {
     const lastU = turns[turns.length - 1] ? turns[turns.length - 1].content : "";
     const ref = TB === "local" ? "" : facts(lastU + " " + (ctx.verb || ""));
@@ -2790,7 +2795,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (natStatus().state !== "loaded") onText("Starting the AI on your phone… The first reply after opening the app can take a minute.");
       const f = facts(lastU + " " + (ctx.verb || ""));
       const hist = turns.slice(-8).map((t) => (t.role === "assistant" ? { role: "assistant", content: cleanLocal(t.content) } : t));
-      const out = await natGenerate(natPrompt(rules(ctx, true) + (f ? "\n\n" + f : ""), hist), 320, 0.5, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal);
+      const out = await natGenerate(natPrompt(rules(ctx, true) + (f ? "\n\n" + f : ""), hist), 220, 0.3, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal);
       return cleanLocal(out) || "…";
     }
     if (TB === "local") {
@@ -3263,8 +3268,35 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   /* ---------- extracting text from what the learner brings ---------- */
+  // boilerplate that news sites put around articles
+  const JUNK = /^(lee también|lea también|leer más|te puede interesar|le puede interesar|también te puede interesar|más noticias|noticias relacionadas|relacionad[oa]s?|contenido (patrocinado|relacionado)|publicidad|anuncio|suscr[ií]bete|suscripción|newsletter|bolet[ií]n|regístrate|inicia sesión|iniciar sesión|compartir|comparte|síguenos|sigue(nos)? en|únete|whatsapp|telegram|facebook|twitter|instagram|tiktok|youtube|linkedin|cookies?|aceptar|política de (privacidad|cookies)|aviso legal|términos|todos los derechos|derechos reservados|copyright|©|foto:|fotos?:|imagen:|ilustración:|video:|vídeo:|fuente:|crédito|archivo|getty|efe|afp|reuters|ap photo|europa press|cortesía|escucha (la|esta)|escuchar (la|esta|artículo)|tiempo de lectura|minutos? de lectura|actualizado|publicado|por:? redacción|redacción|etiquetas|temas:|tags:|menú|buscar|inicio|portada|ver más|ver también|cargar más|haz clic|clic aquí|click aquí|descarga|descargar la app|mira también|en vivo|última hora|lo más leído|lo más visto|tendencias|comentarios|deja (un|tu) comentario)\b/i;
+  function junkBlock(b) {
+    const t = b.trim(), w = toks(t).length;
+    if (JUNK.test(t) && w < 25) return true;
+    if (/^(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}|\d{1,2} de [a-záéíóú]+ de \d{4}|(lunes|martes|miércoles|jueves|viernes|sábado|domingo),?)/i.test(t) && w < 14) return true; // dates and bylines
+    if (/^(por|by)\s+[A-ZÁÉÍÓÚÑ][\w.]+(\s+[A-ZÁÉÍÓÚÑ][\w.]+){0,3}\s*([|·,\-–]|$)/.test(t) && w < 12) return true;
+    if ((t.match(/[|·•»›]/g) || []).length >= 3 && w < 30) return true; // menus and breadcrumbs
+    if (/https?:\/\/|www\.|@\w/.test(t) && w < 15) return true;
+    if (w < 7 && !/[.!?:…]$/.test(t) && /^[A-ZÁÉÍÓÚÑ0-9\s]+$/.test(t.replace(/[^\p{L}\d\s]/gu, ""))) return true; // SHOUTY LABELS
+    return false;
+  }
+  async function readability(html, url) {
+    await loadScript("https://cdn.jsdelivr.net/npm/@mozilla/readability@0.6.0/Readability.js", () => !!window.Readability);
+    const d = new DOMParser().parseFromString(html, "text/html");
+    if (url) { const base = d.createElement("base"); base.href = url; d.head.appendChild(base); }
+    const art = new window.Readability(d, { charThreshold: 300, keepClasses: false }).parse();
+    if (!art || !art.content) return null;
+    const c = new DOMParser().parseFromString(art.content, "text/html");
+    c.querySelectorAll("figure,figcaption,aside,table,ul.share,.share,.related,script,style,iframe").forEach((e) => e.remove());
+    const blocks = [];
+    c.querySelectorAll("h1,h2,h3,h4,p,li,blockquote").forEach((e) => { if (e.querySelector("p,li,h1,h2,h3")) return; const t = e.textContent.replace(/\s+/g, " ").trim(); if (/^h/i.test(e.tagName) ? toks(t).length >= 2 : toks(t).length >= 4) blocks.push(t); });
+    const out = cleanBlocks(blocks);
+    return out.length >= 2 ? { title: (art.title || "").trim(), blocks: out } : null;
+  }
+  let CLEAN_SEEN = new Set();
   function cleanBlocks(blocks) {
-    return blocks.map((b) => b.replace(/­/g, "").replace(/[ \t ]+/g, " ").trim()).filter((b) => toks(b).length >= 2);
+    CLEAN_SEEN = new Set();
+    return blocks.map((b) => b.replace(/­/g, "").replace(/[ \t ]+/g, " ").trim()).filter((b) => { if (toks(b).length < 2 || junkBlock(b)) return false; const k = b.toLowerCase(); if (CLEAN_SEEN.has(k)) return false; CLEAN_SEEN.add(k); return true; });
   }
   function textBlocks(t) {
     t = t.replace(/\r\n?/g, "\n");
@@ -3335,7 +3367,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let r;
     if (/\.pdf$/.test(n) || f.type === "application/pdf") r = await readPdf(await f.arrayBuffer());
     else if (/\.docx$/.test(n)) r = await readDocx(await f.arrayBuffer());
-    else if (/\.(html?|xhtml)$/.test(n)) r = htmlDoc(await f.text());
+    else if (/\.(html?|xhtml)$/.test(n)) { const t = await f.text(); try { r = await readability(t); } catch (e) {} if (!r) r = htmlDoc(t); }
     else if (/\.(txt|md|text|csv|srt|vtt)$/.test(n) || /^text\//.test(f.type)) { let t = await f.text(); if (/\.(srt|vtt)$/.test(n)) t = t.replace(/^\d+\s*$/gm, "").replace(/^[\d:.,]+ --> .*$/gm, "").replace(/^WEBVTT.*$/m, ""); r = /\.md$/.test(n) ? mdDoc(t) : { title: "", blocks: textBlocks(t) }; }
     else if (/\.doc$/.test(n)) throw new Error("Old Word files (.doc) can’t be read. In Word or Google Docs, save it as .docx or PDF, then add it again.");
     else throw new Error("This file type isn’t supported. Use PDF, Word (.docx), web page (.html) or text (.txt).");
@@ -3354,11 +3386,16 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (r.ok) {
         const ct = r.headers.get("content-type") || "";
         if (/pdf/.test(ct)) { const d = await readPdf(await r.arrayBuffer()); d.src = src; return d; }
-        const t = await r.text(); const d = /html/.test(ct) ? htmlDoc(t) : { title: "", blocks: textBlocks(t) };
+        const t = await r.text(); let d = null;
+        if (/html/.test(ct)) { try { d = await readability(t, url); } catch (e) {} if (!d) d = htmlDoc(t); } else d = { title: "", blocks: textBlocks(t) };
         if (d.blocks.length) { d.src = src; return d; }
       }
     } catch (e) {}
     // 2) a public reader service that returns the article text (the address is sent to r.jina.ai)
+    try {
+      const rh = await fetch("https://r.jina.ai/" + url, { headers: { "X-Return-Format": "html" } });
+      if (rh.ok) { const d = await readability(await rh.text(), url); if (d && d.blocks.length >= 2) { d.src = src; return d; } }
+    } catch (e) {}
     let r;
     try { r = await fetch("https://r.jina.ai/" + url); } catch (e) { throw new Error(IN_CLAUDE ? "Links can’t be fetched inside Claude. Use the phone app, or paste the text." : "Couldn’t reach that page. Check your connection, or copy the article text and paste it."); }
     if (!r.ok) throw new Error(r.status === 429 ? "The link reader is busy. Wait a minute and try again, or paste the text." : "That page couldn’t be read (it may need a login or block readers). Copy the text and paste it instead.");
@@ -3545,6 +3582,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small">Questions: ' + (x.qKind === "ai" ? "comprehension (written by Profe’s AI)" : x.q.length ? "vocabulary in context (offline)" : "none yet") + "</p>" +
       '<div class="row">' + (JOB.busy ? '<button class="btn small" data-act="my-stop">Stop</button>' : (done ? "" : '<button class="btn small primary" data-act="my-tr"' + (trEngine() ? "" : " disabled") + ">Translate to English</button>") + '<button class="btn small" data-act="my-q"' + (ai ? "" : " disabled") + ">" + (x.qKind === "ai" ? "New questions" : "Write comprehension questions") + "</button>") + "</div>" +
       '<p class="small muted" id="my-job" aria-live="polite">' + esc(JOB.busy ? JOB.msg : ai ? "" : trEngine() ? "Comprehension questions need Profe’s AI (Profe → History & settings). Translation and tapping words work without it." : "You’re offline: English translation needs the internet or Profe’s AI. Tapping words works offline.") + "</p>" +
+      '<div class="row"><button class="btn small" data-act="my-clean">Clean up text</button><span class="muted small">Remove ads, captions or other bits that aren’t part of the article.</span></div>' +
       '<details class="small"><summary>Rename or delete</summary><div class="row"><input id="my-rename" value="' + esc(x.t) + '" aria-label="Title"><button class="btn small" data-act="my-rename">Save title</button><button class="btn small" data-act="my-del">Delete this text</button></div></details></section>';
   }
   function afterItem(x) {
@@ -3560,6 +3598,26 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!x.q.length) { const qs = document.querySelector('.mc[data-scope="lq"]'); if (qs) qs.insertAdjacentHTML("beforebegin", '<p class="muted">No questions yet. ' + (resolveTB() ? "Tap “Write comprehension questions” above." : "Set up Profe’s AI to write some.") + "</p>"); }
     if (!x.gl.length) { const g = document.querySelector("#litem table.vocab"); if (g) g.closest("section").innerHTML = '<div class="shead"><h2>Glosario</h2></div><p class="muted">' + (LEX ? "No harder words found for this level." : "The glossary appears once the dictionary has loaded (needs the internet the first time).") + "</p>"; }
     loadLex().then(() => { if (!x.gl.length && x.paras.length) { x.gl = makeGlossary(x); if (!x.q.length) { x.q = vocabQuiz(x); x.qKind = "vocab"; } if (x.gl.length) { myPut(x); if (CUR === x) listenItem(x); } } }).catch(() => {});
+  }
+  function cleanView(x) {
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Leer</a><span aria-hidden="true">›</span><a href="#' + x.id + '">' + esc(x.t) + '</a><span aria-hidden="true">›</span><span>Clean up</span></p>' +
+      '<div><h1>Clean up text</h1><p class="lead2">Untick anything that isn’t part of the article (ads, photo captions, “read also” links, author lines), then save.</p></div>' +
+      '<div class="row"><button class="btn primary" data-act="my-clean-save">Save</button><a class="btn" href="#' + x.id + '">Cancel</a><span class="muted small" id="my-clean-n"></span></div>' +
+      '<ol class="cleanl">' + x.paras.map((p, i) => { const t = p.s.map((y) => y[0]).join(" "), sus = junkBlock(t) || toks(t).length < 6; return '<li><label><input type="checkbox" data-pi="' + i + '"' + (sus ? "" : " checked") + '><span' + (sus ? ' class="muted"' : "") + ">" + esc(t.length > 400 ? t.slice(0, 400) + "…" : t) + "</span></label></li>"; }).join("") + "</ol>" +
+      '<div class="row"><button class="btn primary" data-act="my-clean-save">Save</button><a class="btn" href="#' + x.id + '">Cancel</a></div></div>';
+    const cnt = () => { const n = app.querySelectorAll(".cleanl input:not(:checked)").length; const el = document.getElementById("my-clean-n"); if (el) el.textContent = n ? n + " paragraph" + (n > 1 ? "s" : "") + " will be removed" : ""; };
+    app.querySelectorAll(".cleanl input").forEach((i) => i.addEventListener("change", cnt)); cnt(); scrollTo(0, 0);
+  }
+  async function cleanSave(x) {
+    const keep = [...app.querySelectorAll(".cleanl input")].filter((i) => i.checked).map((i) => +i.dataset.pi);
+    if (!keep.length) return;
+    x.paras = keep.map((i) => x.paras[i]);
+    const sents = x.paras.flatMap((p) => p.s.map((y) => y[0]));
+    x.words = sents.flatMap(toks).length; x.s = x.s.replace(/[\d,.]+ words$/, x.words.toLocaleString() + " words");
+    x.lvlEst = estimateLevel(sents); if (x.lvl === undefined) x.lvl = x.lvlEst;
+    x.gl = makeGlossary(x); if (x.qKind !== "ai") x.q = vocabQuiz(x);
+    const st = S.l[x.id]; if (st) { delete st.quiz; save(); }
+    await myPut(x); listenItem(x);
   }
   function rerender(x) { if (CUR === x && location.hash === "#" + x.id) { const y = scrollY; listenItem(x); scrollTo(0, y); } }
   async function runJob(x, fn) {
@@ -3591,6 +3649,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (t.dataset.arm !== "1") { t.dataset.arm = "1"; t.textContent = "Tap again to delete"; setTimeout(() => { if (t.isConnected) { t.dataset.arm = ""; t.textContent = "Delete this text"; } }, 4000); return; }
       myDel(x.id); delete LI[x.id]; MY.splice(MY.indexOf(x), 1); delete S.l[x.id]; save(); location.hash = "#leer";
     }
+    else if (act === "my-clean" && x) cleanView(x);
+    else if (act === "my-clean-save" && CUR && CUR.cat === "mine") cleanSave(CUR);
     else if (act === "my-trk") trOnDemand([+t.dataset.k], t.parentElement);
     else if (act === "my-trsel") trOnDemand(SELKS.slice(), t.parentElement);
   });
