@@ -3776,5 +3776,26 @@ if ("serviceWorker" in navigator) {
 }
 if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(function () {}); }
 </script>
+<script>
+/* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
+(function () {
+  var BUILD = "202611091954";
+  function check(auto) {
+    fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !j.v || j.v <= BUILD) return;
+      var busy = document.body.classList.contains("tutor-open") || document.body.classList.contains("gp-on");
+      if (auto && !busy) { try { if (sessionStorage.getItem("rd-upd") === j.v) return; sessionStorage.setItem("rd-upd", j.v); } catch (e) {} location.reload(); return; }
+      if (document.getElementById("upd-bar")) return;
+      var b = document.createElement("div"); b.id = "upd-bar"; b.setAttribute("role", "status");
+      b.style.cssText = "position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:50;background:var(--cobalt);color:var(--on-cobalt);border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.2);font-weight:600";
+      b.innerHTML = '<span>A new version of Ruta DELE is ready.</span><button type="button" style="border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer">Update</button>';
+      b.querySelector("button").onclick = function () { location.reload(); };
+      document.body.appendChild(b);
+    }).catch(function () {});
+  }
+  setTimeout(function () { check(true); }, 1500);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") check(false); });
+})();
+</script>
 </body>
 </html>
