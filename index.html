@@ -396,6 +396,14 @@ tr.playing td { background: var(--saffron-soft) }
 .btn:disabled { opacity: .45; cursor: not-allowed }
 .ttabs { width: 100%; gap: 6px }
 .tm .tb em { color: var(--muted) }
+.fx { align-self: flex-end; max-width: 88%; background: var(--surface); border: 1px dashed var(--line); border-radius: 12px; padding: 8px 12px; margin-top: -6px }
+.fx.ok { color: var(--good); border-style: solid }
+.fx ul { margin: 4px 0 0; padding-left: 1.1em }
+.fx li { margin: 2px 0 }
+.fx del { color: var(--bad); text-decoration-thickness: 2px }
+.fx ins { color: var(--good); text-decoration: none; font-weight: 700 }
+.fxline { margin: 4px 0; font-size: 1rem }
+.fxbetter { margin: 6px 0 0; display: flex; gap: 6px; align-items: center; flex-wrap: wrap }
 .pav { font-size: 1.05rem; line-height: 1 }
 .pvrow { gap: 6px }
 .pvb { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 1.25rem; cursor: pointer; display: grid; place-items: center; font-weight: 800; font-family: var(--display); color: var(--ink) }
@@ -2982,7 +2990,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!TB) { tView = "chat"; ensureSession(pageCtx().label, text); tCur.msgs.push({ r: "u", c: text, t: Date.now() }, { r: "a", c: "", err: ERRS.unavailable, t: Date.now() }); tRender(); return; }
     const ctx = pageCtx();
     ensureSession(ctx.label, text);
-    tCur.msgs.push({ r: "u", c: text, t: Date.now() }); tCur.updated = Date.now(); tView = "chat";
+    const um = { r: "u", c: text, t: Date.now() }; tCur.msgs.push(um); tCur.updated = Date.now(); tView = "chat";
     const turns = tCur.msgs.filter((m) => m.c && !m.err).slice(-24).map((m) => ({ role: m.r === "u" ? "user" : "assistant", content: m.c }));
     while (turns.length && turns[0].role !== "user") turns.shift();
     const live = { r: "a", c: "", t: Date.now(), pending: true }; tCur.msgs.push(live);
@@ -2995,6 +3003,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else { live.c = (e && e.text) || ""; live.err = e && e.code === "native" ? "The on-device AI couldn’t answer: " + (e.message || "unknown error") + ". Try again, or run “Test the AI” in History & settings." : ERRS[e && e.code] || (TB === "local" ? ERRS.local_failed + (e && e.message ? " (" + e.message + ")" : "") : ERRS.upstream_error); }
     }
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
+    checkMsg(um);
     if (spk) { if (live.c && !live.err) spk.finish(live.c); else { SPK_GEN++; } }
     else if ((voiceMode || lastVoice) && live.c && !live.err) speakMixed(live.c, () => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); });
     if (tCur.msgs.filter((m) => m.r === "u").length % 6 === 0) tRemember();
@@ -3143,8 +3152,127 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return h.split(/\n{2,}/).map((p) => /^\s*([-•]|\d+\.)\s/m.test(p) ? "<ul>" + p.split("\n").filter(Boolean).map((l) => "<li>" + l.replace(/^\s*([-•]|\d+\.)\s*/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
   }
   const plainForSpeech = (s) => String(s).replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
+  /* ---------- corrections: what in the learner's Spanish is wrong or could be better ---------- */
+  const FXP = { yo: 0, "tú": 1, tu: -1, "él": 2, ella: 2, usted: 2, nosotros: 3, nosotras: 3, vosotros: 4, vosotras: 4, ellos: 5, ellas: 5, ustedes: 5 };
+  const PNAME = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
+  const TNAMES = { pres: "present", pret: "preterite", impf: "imperfect", fut: "future", cond: "conditional", subj: "present subjunctive" };
+  const SKIP = /^(no|me|te|se|nos|os|lo|la|le|les|los|las|ya|también|siempre|nunca|todavía|aún|solo|sólo)$/;
+  // every way a word can be a conjugated verb: [{v, tense, person}]
+  function verbReadings(w) {
+    w = w.toLowerCase(); const lemmas = new Set();
+    const tg = TG[w]; if (tg && tg[1] === "verb") (tg[0] || "").split(/\s*[\/,]\s*/).forEach((l) => l && lemmas.add(l));
+    if (typeof lexIdx === "function" && LEX) { const k = lexIdx(w); if (k >= 0 && LEX.L[k][1] === "verb") lemmas.add(LEX.L[k][0].split(", ")[0]); }
+    const out = [];
+    lemmas.forEach((v) => {
+      if (!/(ar|er|ir|ír)$/.test(v)) return;
+      let R; try { const r = VI ? VI.find((x) => x[0] === v) : null; R = CONJ.conjugate(v, r ? r[2] : ""); } catch (e) { return; }
+      Object.keys(TNAMES).forEach((t) => (R[t] || []).forEach((f, pi) => { if (f && f.toLowerCase() === w) out.push({ v, t, pi, R }); }));
+    });
+    return out;
+  }
+  const NOUNSUBJ = /^(mi|tu|su|el|la|este|esta|ese|esa|nuestro|nuestra|mis|tus|sus|los|las|estos|estas|nuestros|nuestras)$/;
+  const STATES = /^(cansad|enferm|ocupad|content|enojad|preocupad|emocionad|sentad|perdid|estresad|resfriad|mojad|embarazad)/; // not aburrido/listo/feliz: they also go with ser
+  function quickFixes(text) {
+    const fixes = [], words = text.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+|\d+/g) || [], low = words.map((w) => w.toLowerCase());
+    let at = 0; const add = (from, to, why, pos) => { if (from.toLowerCase() !== to.toLowerCase() && !fixes.some((f) => f.at === pos)) fixes.push({ from, to, why, at: pos }); };
+    for (let i = 0; i < low.length; i++) {
+      const w = low[i];
+      // pronoun + verb in another person: "yo tiene" -> "yo tengo"
+      if (w in FXP && FXP[w] >= 0 && !/^(y|e|o|u|ni|con|que)$/.test(low[i - 1] || "")) { // "mi mamá y yo fuimos" is a compound subject
+        let j = i + 1; while (j < low.length && SKIP.test(low[j])) j++;
+        if (j < low.length) {
+          const rd = verbReadings(low[j]);
+          if (rd.length && !rd.some((r) => r.pi === FXP[w])) { const r = rd[0], right = r.R[r.t][FXP[w]]; if (right) add(words[j], right, "With «" + w + "», " + r.v + " in the " + TNAMES[r.t] + " is «" + right + "» (" + PNAME[FXP[w]] + ").", j); }
+        }
+      }
+      // "mi día fui" -> "fue": a noun subject takes the 3rd person
+      if (NOUNSUBJ.test(w) && i + 2 < low.length && !(low[i + 1] in FXP)) {
+        const rd = verbReadings(low[i + 2]); const plural = /s$/.test(w) && w !== "tus" ? 5 : 2;
+        if (rd.length && rd.every((r) => r.pi === 0 || r.pi === 1) && !(low[i + 1] in FXP)) { const r = rd[0], right = r.R[r.t][plural]; if (right) add(words[i + 2], right, "«" + words[i] + " " + words[i + 1] + "» is the subject (3rd person), so: «" + right + "».", i + 2); }
+      }
+      // ser with temporary states: "soy cansado" -> "estoy cansado"
+      const ser = { soy: "estoy", eres: "estás", es: "está", somos: "estamos", son: "están", "fui": "estuve", era: "estaba" };
+      if (w in ser && i + 1 < low.length && STATES.test(low[i + 1]) && !/^(muy|un|una)$/.test(low[i + 1])) add(words[i], ser[w], "Feelings and temporary states use estar: «" + ser[w] + " " + words[i + 1] + "».", i);
+      if (w in ser && i + 2 < low.length && /^(muy|bastante|un poco|tan)$/.test(low[i + 1]) && STATES.test(low[i + 2])) add(words[i], ser[w], "Feelings and temporary states use estar: «" + ser[w] + " " + low[i + 1] + " " + words[i + 2] + "».", i);
+      // age: "soy 25 años" -> "tengo 25 años"
+      if (/^(soy|es|eres|son|somos)$/.test(w) && i + 2 < low.length && /^(\d+|[a-z]+)$/.test(low[i + 1]) && low[i + 2] === "años") add(words[i], { soy: "tengo", es: "tiene", eres: "tienes", son: "tienen", somos: "tenemos" }[w], "Age uses tener in Spanish: «" + { soy: "tengo", es: "tiene", eres: "tienes", son: "tienen", somos: "tenemos" }[w] + " " + low[i + 1] + " años».", i);
+      // "mucho gracias" -> "muchas gracias"
+      if (w === "mucho" && low[i + 1] === "gracias") add(words[i], "muchas", "«gracias» is feminine plural: «muchas gracias».", i);
+      // feminine nouns in -ción, -dad, -tud and masculine -ma words
+      if (w === "el" && i + 1 < low.length && /(ción|sión|dad|tad|tud|umbre)$/.test(low[i + 1])) add(words[i], "la", "Nouns ending in -ción, -dad, -tud are feminine: «la " + words[i + 1] + "».", i);
+      if (w === "la" && i + 1 < low.length && /^(problema|sistema|tema|programa|idioma|clima|mapa|día|planeta|drama|poema)$/.test(low[i + 1])) add(words[i], "el", "«" + words[i + 1] + "» is masculine: «el " + words[i + 1] + "».", i);
+      // "me gusta" + plural noun
+      if (w === "gusta" && low[i - 1] === "me" && i + 2 < low.length && /^(los|las|mis|tus)$/.test(low[i + 1])) add(words[i], "gustan", "With a plural thing, use «me gustan».", i);
+      // "estoy de acuerdo" (not "soy de acuerdo")
+      if (w === "soy" && low[i + 1] === "de" && low[i + 2] === "acuerdo") add(words[i], "estoy", "The expression is «estoy de acuerdo».", i);
+    }
+    return fixes;
+  }
+  // word-level differences between what the learner said and a corrected version
+  function wordDiff(a, b) {
+    const A = a.match(/\S+/g) || [], B = b.match(/\S+/g) || [], key = (w) => w.toLowerCase().replace(/[¿?¡!.,;:«»"“”()]/g, "");
+    const n = A.length, m = B.length, L = Array.from({ length: n + 1 }, () => Array(m + 1).fill(0));
+    for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) L[i][j] = key(A[i]) === key(B[j]) ? L[i + 1][j + 1] + 1 : Math.max(L[i + 1][j], L[i][j + 1]);
+    const ops = []; let i = 0, j = 0;
+    while (i < n && j < m) { if (key(A[i]) === key(B[j])) { ops.push(["=", B[j]]); i++; j++; } else if (L[i + 1][j] >= L[i][j + 1]) ops.push(["-", A[i++]]); else ops.push(["+", B[j++]]); }
+    while (i < n) ops.push(["-", A[i++]]); while (j < m) ops.push(["+", B[j++]]);
+    // group neighbouring changes into "wrong -> right" pairs
+    const pairs = []; let cur = null;
+    ops.forEach(([o, w]) => { if (o === "=") { if (cur) { pairs.push(cur); cur = null; } } else { cur = cur || { from: [], to: [] }; (o === "-" ? cur.from : cur.to).push(w); } });
+    if (cur) pairs.push(cur);
+    return { ops, pairs: pairs.map((x) => ({ from: x.from.join(" "), to: x.to.join(" ") })) };
+  }
+  function fixCard(m) {
+    const fx = m.fx; if (!fx) return "";
+    if (fx.state === "checking" && !(fx.items || []).length) return '<div class="fx muted small">✏️ Checking your Spanish…</div>';
+    const items = fx.items || [];
+    if (!items.length) return fx.state === "done" && fx.ai ? '<div class="fx ok small">✓ Your Spanish looks good.</div>' : "";
+    const diff = fx.better ? wordDiff(m.c, fx.better) : null;
+    const line = diff ? diff.ops.map(([o, w]) => (o === "=" ? esc(w) : o === "-" ? '<del>' + esc(w) + "</del>" : "<ins>" + esc(w) + "</ins>")).join(" ") : "";
+    return '<div class="fx small"><b>✏️ Corrections</b>' + (line ? '<p class="fxline">' + line + "</p>" : "") +
+      '<ul>' + items.map((f) => '<li><span class="fxw">' + (f.from ? "<del>" + esc(f.from) + "</del> → " : "+ ") + "<ins>" + esc(f.to || "(remove)") + "</ins></span>" + (f.why ? " <span class=\"muted\">" + esc(f.why) + "</span>" : "") + "</li>").join("") + "</ul>" +
+      (fx.better ? '<p class="fxbetter">Better: <b>' + esc(fx.better) + '</b> <button class="say" data-act="fx-say" data-t="' + esc(fx.better) + '" aria-label="Listen">' + ICON + "</button></p>" : "") + "</div>";
+  }
+  const FX_SYS = "You are a precise Spanish teacher. You correct a learner's Spanish sentence.";
+  async function aiCorrect(text) {
+    const tb = resolveTB(); if (!tb) return null;
+    if (tb === "claude" || tb === "api") {
+      const t = await aiText(FX_SYS, "Learner's message (it may come from speech recognition, so ignore missing punctuation and capital letters, and don't flag a word that is clearly a recognition slip):\n«" + text + "»\n\nFind real mistakes (grammar, agreement, verb forms, wrong word, word order, unnatural phrasing). Reply ONLY with JSON: {\"better\": \"the whole message in correct, natural " + (S.region === "es" ? "Spain" : "Latin American") + " Spanish, changing as little as possible\", \"issues\": [{\"wrong\": \"exact words from the message\", \"right\": \"replacement\", \"why\": \"short reason in English\"}]}. If there are no mistakes, return {\"better\": \"\", \"issues\": []}.");
+      const j = JSON.parse((t.match(/\{[\s\S]*\}/) || ["{}"])[0]);
+      return { better: (j.better || "").trim(), items: (j.issues || []).filter((x) => x && x.right != null).map((x) => ({ from: String(x.wrong || ""), to: String(x.right || ""), why: String(x.why || "") })) };
+    }
+    // small on-device models: one simple task (rewrite), then the app finds the differences
+    let t = await aiText("You correct Spanish. Reply with only the corrected sentence.", "Correct the grammar of this Spanish sentence. Change as few words as possible. If it is already correct, repeat it unchanged.\nSentence: " + text + "\nCorrected:");
+    t = String(t || "").split("\n").map((x) => x.trim()).filter(Boolean)[0] || "";
+    t = t.replace(/^(corrected|corregido|correcta?|oración)\s*:\s*/i, "").replace(/^["«“]|["»”]$/g, "").trim();
+    if (!t || t.length > text.length * 1.6 + 20 || !isSpanish(t + " de")) return null;
+    const d = wordDiff(text, t);
+    if (d.pairs.length > Math.max(3, (text.match(/\S+/g) || []).length / 2)) return null; // the model rewrote everything: don't trust it
+    return { better: d.pairs.length ? t : "", items: d.pairs.map((x) => ({ from: x.from, to: x.to, why: "" })) };
+  }
+  async function checkMsg(m) {
+    if (TS.noFix || !m || m.r !== "u") return;
+    const words = (m.c.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g) || []);
+    const known = words.filter((w) => TG[w.toLowerCase()] || w.toLowerCase() in FXP).length;
+    if (words.length < 2 || (!isSpanish(m.c + " ") && known < words.length * 0.6) || /\b(the|and|is|are|you|what|how|my)\b/i.test(m.c)) return;
+    try { if (typeof loadIndex === "function" && !VI) await loadIndex(); } catch (e) {}
+    const q = quickFixes(m.c);
+    m.fx = { items: q, state: "checking", better: "" };
+    if (q.length) { let k = -1; m.fx.better = m.c.replace(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+|\d+/g, (w) => { k++; const f = q.find((x) => x.at === k); return f ? (/^[A-ZÁÉÍÓÚÑ]/.test(w) ? f.to[0].toUpperCase() + f.to.slice(1) : f.to) : w; }); }
+    tRender();
+    try {
+      const r = await aiCorrect(m.c);
+      if (r) {
+        m.fx.ai = true;
+        // keep the explanations from the offline checks, add what the AI found
+        r.items.forEach((x) => { const same = m.fx.items.find((f) => f.from.toLowerCase() === x.from.toLowerCase() || (x.from && x.from.toLowerCase().includes(f.from.toLowerCase()))); if (same) { if (!same.why && x.why) same.why = x.why; } else if (x.from || x.to) m.fx.items.push(x); });
+        if (r.better && r.items.length) m.fx.better = r.better;
+      }
+    } catch (e) {}
+    m.fx.state = "done"; if (tCur) tPush(tCur); tRender();
+  }
   function bubble(m, i) {
-    if (m.r === "u") return '<div class="tm u"><div class="tb">' + esc(m.c).replace(/\n/g, "<br>") + "</div></div>";
+    if (m.r === "u") return '<div class="tm u"><div class="tb">' + esc(m.c).replace(/\n/g, "<br>") + "</div></div>" + fixCard(m);
     const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' : md(m.c || "").replace(/<p>((?:(?!<\/p>)[\s\S])*)<\/p>/g, (all, inner) => { const txt = inner.replace(/<[^>]+>/g, ""); return txt && !isSpanish(txt) && !/<em>/.test(inner) && /[a-z]/i.test(txt) ? '<p class="en-line"><em>' + inner + "</em></p>" : all; });
     return '<div class="tm a">' + pAvatar() + '<div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
   }
@@ -3212,6 +3340,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
       '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2500, "2.5 s"], [4000, "4 s"], [6000, "6 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 2500) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
+      '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-fix"' + (TS.noFix ? "" : " checked") + '> Correct my Spanish (marks wrong words under each message)</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.8, "Slow"], [0.9, "Relaxed"], [1, "Normal"], [1.15, "Fast"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
       (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
@@ -3220,13 +3349,15 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const id = e.target.id;
     if (id === "pv-en-on") { TS.speakEn = e.target.checked; tsave(); }
     else if (id === "pv-wait") { TS.waitMs = +e.target.value; tsave(); }
+    else if (id === "pv-fix") { TS.noFix = !e.target.checked; tsave(); }
     else if (id === "pv-es") { TS.pvEs = e.target.value; tsave(); } else if (id === "pv-en") { TS.pvEn = e.target.value; tsave(); }
     else if (id === "pv-rate") { TS.prate = +e.target.value; tsave(); } else if (id === "pv-pitch") { TS.ppitch = +e.target.value; tsave(); }
     else if (id === "pv-name") { TS.pname = e.target.value.trim().slice(0, 20) || "Profe"; tsave(); tRender(); fabLook(); }
   });
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-act]"); if (!t) return;
-    if (t.dataset.act === "pv-av") { TS.pav = t.dataset.v; tsave(); tRender(); fabLook(); }
+    if (t.dataset.act === "fx-say") speakMixed(t.dataset.t);
+    else if (t.dataset.act === "pv-av") { TS.pav = t.dataset.v; tsave(); tRender(); fabLook(); }
     else if (t.dataset.act === "pv-col") { TS.pcol = t.dataset.v; tsave(); tRender(); fabLook(); }
     else if (t.dataset.act === "pv-try") speakMixed("¡Hola! Soy " + pName() + ". ¿Practicamos un poco de español hoy? Let's practise together.");
   });
@@ -3996,7 +4127,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611092111";
+  var BUILD = "202611092303";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
