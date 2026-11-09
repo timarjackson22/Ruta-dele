@@ -2618,6 +2618,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const c = NAT.cbs[id]; if (!c) return;
     if (type === "part") c.part(data); else if (type === "done") c.done(); else if (type === "err") c.err(data);
   } };
+  // the model streams bytes in pieces; a character split across two pieces arrives as "Â¡" instead of "¡": repair it
+  function fixUtf(t) { return t.replace(/[\u00C2-\u00F4][\u0080-\u00BF]{1,3}/g, (m) => { try { return decodeURIComponent(escape(m)); } catch (e) { return m; } }); }
   function natGenerate(prompt, maxTokens, temp, onPart, signal, onWait) {
     return new Promise((res, rej) => {
       const id = "g" + (++NAT.seq), t0 = Date.now(); let text = "", first = 0;
@@ -2628,7 +2630,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         if (!first && sec > 180) { clearInterval(natWatch); try { window.AndroidLLM.cancel(); } catch (e) {} delete NAT.cbs[id]; rej({ code: "native", message: "no answer after 3 minutes (the phone may be low on memory; close other apps and try again)", text }); }
       }, 1000);
       const fin = () => { clearInterval(natWatch); delete NAT.cbs[id]; };
-      NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (onPart) onPart(text); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(text); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
+      NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (onPart) onPart(fixUtf(text)); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(fixUtf(text)); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
       if (signal) signal.addEventListener("abort", () => { try { window.AndroidLLM.cancel(); } catch (e) {} });
       try { window.AndroidLLM.generate(id, prompt, maxTokens, temp); } catch (e) { delete NAT.cbs[id]; rej({ code: "native", message: String(e) }); }
     });
@@ -3779,7 +3781,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611091954";
+  var BUILD = "202611092001";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
