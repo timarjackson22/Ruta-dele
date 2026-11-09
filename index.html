@@ -2613,14 +2613,22 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       return;
     }
     if (type === "dlerr") { NAT.dlerr = data; tRender(); return; }
+    if (type === "err" && !id) { NAT.lastErr = data; if (tView === "hist") tRender(); return; }
     if (type === "removed" || type === "loaded" || type === "loading") { TB = resolveTB(); if (tView === "hist") tRender(); return; }
     const c = NAT.cbs[id]; if (!c) return;
     if (type === "part") c.part(data); else if (type === "done") c.done(); else if (type === "err") c.err(data);
   } };
-  function natGenerate(prompt, maxTokens, temp, onPart, signal) {
+  function natGenerate(prompt, maxTokens, temp, onPart, signal, onWait) {
     return new Promise((res, rej) => {
-      const id = "g" + (++NAT.seq); let text = "";
-      NAT.cbs[id] = { part: (d) => { text += d; if (onPart) onPart(text); }, done: () => { delete NAT.cbs[id]; res(text); }, err: (m) => { delete NAT.cbs[id]; rej({ code: "native", message: m, text }); } };
+      const id = "g" + (++NAT.seq), t0 = Date.now(); let text = "", first = 0;
+      // while the model loads and reads the prompt nothing streams back: show a timer, and give up after 3 minutes without a word
+      const natWatch = setInterval(() => {
+        const sec = Math.round((Date.now() - t0) / 1000);
+        if (!first && onWait) onWait(sec);
+        if (!first && sec > 180) { clearInterval(natWatch); try { window.AndroidLLM.cancel(); } catch (e) {} delete NAT.cbs[id]; rej({ code: "native", message: "no answer after 3 minutes (the phone may be low on memory; close other apps and try again)", text }); }
+      }, 1000);
+      const fin = () => { clearInterval(natWatch); delete NAT.cbs[id]; };
+      NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (onPart) onPart(text); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(text); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
       if (signal) signal.addEventListener("abort", () => { try { window.AndroidLLM.cancel(); } catch (e) {} });
       try { window.AndroidLLM.generate(id, prompt, maxTokens, temp); } catch (e) { delete NAT.cbs[id]; rej({ code: "native", message: String(e) }); }
     });
@@ -2634,12 +2642,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function nativeBox() {
     const st = natStatus();
     if (st.state === "downloading") { const g = +st.got || 0, t = +st.total || 0; return '<p class="small">Downloading the AI model (' + NATIVE_MODEL.size + ').</p><div class="dlp"><div class="bar"><i id="n-bar" style="width:' + (t ? Math.round((g / t) * 100) : 0) + '%"></i></div><p class="small muted" id="n-prog">Downloading… ' + gb(g) + (t ? " of " + gb(t) : "") + '. Keep the app open; it resumes if interrupted.</p></div><button class="btn small" data-act="t-ncancel">Pause download</button>'; }
-    if (/^(ready|loading|loaded)$/.test(st.state)) return '<p class="small">Downloaded: <b>Qwen 2.5 · 1.5B</b> (' + gb(+st.size || 0) + "). It runs on your phone’s processor and works offline. The first reply after opening the app takes a little longer while it loads.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="native" aria-pressed="' + (TB === "native") + '">Use on-device AI</button><button class="btn small" data-act="t-ndel">Remove from phone</button></div>';
+    if (/^(ready|loading|loaded)$/.test(st.state)) return '<p class="small">Downloaded: <b>Qwen 2.5 · 1.5B</b> (' + gb(+st.size || 0) + "). It runs on your phone’s processor and works offline. The first reply after opening the app takes a little longer while it loads.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="native" aria-pressed="' + (TB === "native") + '">Use on-device AI</button><button class="btn small" data-act="t-ntest">Test the AI</button><button class="btn small" data-act="t-ndel">Remove from phone</button></div><p class="small muted" id="n-test">' + esc(NAT.test || (NAT.lastErr ? "Last error: " + NAT.lastErr : "")) + "</p>";
     return '<p class="small">Download once on Wi-Fi (' + NATIVE_MODEL.size + ', from Hugging Face). The AI then runs inside this app on your phone, with no account and no internet.</p>' + (NAT.dlerr || st.error ? '<p class="small terr">Last try: ' + esc(NAT.dlerr || st.error) + "</p>" : "") + '<div class="row"><button class="btn small primary" data-act="t-ndl">' + (NAT.dlerr || st.error ? "Resume download" : "Download the AI") + "</button></div>";
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-act]"); if (!t || !HAS_NATIVE) return;
     if (t.dataset.act === "t-ndl") { NAT.dlerr = ""; try { window.AndroidLLM.download(NATIVE_MODEL.url, NATIVE_MODEL.name); } catch (x) {} setTimeout(tRender, 300); }
+    else if (t.dataset.act === "t-ntest") {
+      const out = (m) => { NAT.test = m; const el = document.getElementById("n-test"); if (el) el.textContent = m; };
+      out("Testing… 0 s"); const t0 = Date.now();
+      natGenerate("Reply with one short friendly sentence in Spanish.", 40, 0.2, null, null, (sec) => out("Testing… " + sec + " s (loading the model the first time can take a minute)"))
+        .then((r) => out("✓ Works. Answer in " + Math.round((Date.now() - t0) / 1000) + " s: “" + cleanLocal(r).slice(0, 120) + "”"))
+        .catch((e) => out("✗ " + (e.message || "error")));
+    }
     else if (t.dataset.act === "t-ncancel") { try { window.AndroidLLM.cancelDownload(); } catch (x) {} }
     else if (t.dataset.act === "t-ndel") { if (t.dataset.arm !== "1") { t.dataset.arm = "1"; t.textContent = "Tap again to remove"; return; } try { window.AndroidLLM.remove(); } catch (x) {} if (TS.engine === "native") TS.engine = "auto"; tsave(); }
   });
@@ -2792,10 +2807,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       return text;
     }
     if (TB === "native") {
-      if (natStatus().state !== "loaded") onText("Starting the AI on your phone… The first reply after opening the app can take a minute.");
+      const cold = natStatus().state !== "loaded";
       const f = facts(lastU + " " + (ctx.verb || ""));
-      const hist = turns.slice(-8).map((t) => (t.role === "assistant" ? { role: "assistant", content: cleanLocal(t.content) } : t));
-      const out = await natGenerate(natPrompt(rules(ctx, true) + (f ? "\n\n" + f : ""), hist), 220, 0.3, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal);
+      const hist = turns.slice(-6).map((t) => (t.role === "assistant" ? { role: "assistant", content: cleanLocal(t.content) } : t));
+      const small = Object.assign({}, ctx, { text: (ctx.text || "").slice(0, 350) });
+      const wait = (sec) => onText("*" + (cold ? "Loading the AI on your phone and thinking" : "Thinking") + "… " + sec + " s*" + (sec > 25 ? "\n\n*The on-device AI is slow on long messages. Short questions get faster answers.*" : ""));
+      wait(0);
+      const out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), hist, 1400), 200, 0.3, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
       return cleanLocal(out) || "…";
     }
     if (TB === "local") {
@@ -2850,7 +2868,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   let lastVoice = false;
   async function tSend(text, byVoice) {
     lastVoice = !!byVoice;
-    text = String(text || "").trim(); if (!text || tBusy) return;
+    text = String(text || "").trim(); if (!text) return;
+    if (tBusy) { const el = document.getElementById("t-live"); if (el) { el.hidden = false; el.textContent = "Profe is still answering your last message. Wait for it, or tap Stop and send again."; } return; }
     TB = resolveTB();
     if (!TB) { tView = "chat"; ensureSession(pageCtx().label, text); tCur.msgs.push({ r: "u", c: text, t: Date.now() }, { r: "a", c: "", err: ERRS.unavailable, t: Date.now() }); tRender(); return; }
     const ctx = pageCtx();
@@ -2864,7 +2883,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     catch (e) {
       delete live.pending;
       if (e && e.code === "cancelled") live.c = e.text || live.c || "(stopped)";
-      else { live.c = (e && e.text) || ""; live.err = ERRS[e && e.code] || (TB === "local" ? ERRS.local_failed + (e && e.message ? " (" + e.message + ")" : "") : ERRS.upstream_error); }
+      else { live.c = (e && e.text) || ""; live.err = e && e.code === "native" ? "The on-device AI couldn’t answer: " + (e.message || "unknown error") + ". Try again, or run “Test the AI” in History & settings." : ERRS[e && e.code] || (TB === "local" ? ERRS.local_failed + (e && e.message ? " (" + e.message + ")" : "") : ERRS.upstream_error); }
     }
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
     if ((voiceMode || lastVoice) && live.c && !live.err) speakMixed(live.c, () => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); });
