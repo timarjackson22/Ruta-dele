@@ -383,6 +383,14 @@ tr.playing td { background: var(--saffron-soft) }
 .tutor textarea#t-mem { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit }
 .tsess { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px }
 .tsb { width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 2px }
+.myform { display: grid; gap: 8px; margin-top: 10px }
+.myform input, .myform textarea, .mytools input, .mytools select { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit }
+.mytools select, .mytools input { width: auto; padding: 6px 10px }
+.mytools input#my-rename { flex: 1; min-width: 0 }
+.flabel { font-weight: 600; margin-top: 4px }
+.mytools p { margin: 6px 0 }
+.hsub { margin: 8px 0 0 }
+.btn:disabled { opacity: .45; cursor: not-allowed }
 .ttabs { width: 100%; gap: 6px }
 .micbtn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--saffron); color: #1b1300; display: grid; place-items: center; cursor: pointer }
 .micbtn svg { width: 22px; height: 22px }
@@ -1751,7 +1759,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   let LF = "all", CF = "all", RF = "all";
   function card(x) {
     const st = S.l[x.id] || {};
-    const pill = st.quiz != null ? '<span class="pill ' + (st.quiz === x.q.length ? "ok" : "prog") + '">' + st.quiz + " / " + x.q.length + "</span>" : st.heard ? '<span class="pill prog">' + (x.cat === "reading" ? "Read" : "Listened") + "</span>" : '<span class="pill new">New</span>';
+    const pill = st.quiz != null ? '<span class="pill ' + (st.quiz === x.q.length ? "ok" : "prog") + '">' + st.quiz + " / " + x.q.length + "</span>" : st.heard ? '<span class="pill prog">' + (isReading(x) ? "Read" : "Listened") + "</span>" : '<span class="pill new">New</span>';
     const kind = CATS[x.cat][1] + (x.sub ? " · " + SUBS[x.sub] : "") + (x.genre ? " · " + x.genre : "");
     return '<a class="lcard2" href="#' + x.id + '"><span class="kind k-' + x.cat + '">' + esc(kind) + " · " + x.lvl.toUpperCase() + "</span><b>" + esc(x.t) + '</b><span class="muted">' + esc(x.s) + '</span><span class="row" style="margin-top:auto"><span class="muted small">' + esc(x.country || "") + " · ≈ " + minutes(x) + " min</span>" + pill + "</span></a>";
   }
@@ -1770,7 +1778,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function readHub() {
     const pool = LISTEN.filter((x) => x.cat === "reading");
     const items = pool.filter((x) => RF === "all" || x.lvl === RF).sort(byLvl);
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Comprensión de lectura</p><h1>Leer</h1><p class="lead2">' + pool.length + ' DELE-style reading texts: messages, notices, articles, letters, opinion pieces and essays, each with five questions. Tap a word or highlight a sentence to see the English, and play any text aloud.</p></div>' +
+    if (!DOCS_LOADED) docsReady.then(() => { if (location.hash === "#leer") readHub(); });
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Comprensión de lectura</p><h1>Leer</h1><p class="lead2">' + pool.length + ' DELE-style reading texts: messages, notices, articles, letters, opinion pieces and essays, each with five questions. Tap a word or highlight a sentence to see the English, and play any text aloud.</p></div>' + myHub() +
+      '<h2 class="hsub">DELE readings</h2>' +
       '<div class="row">' + chips(RF, [["all", "All levels"]].concat(COURSE.map((l) => [l.id, l.name])), "l-rf") + "</div>" +
       '<div class="lgrid">' + items.map(card).join("") + '</div><p class="callout">Want more reading? Every piece in <a href="#escuchar">Escuchar</a> also has its full text and translation.</p></div>';
   }
@@ -1801,9 +1811,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function listenItem(x) {
     CUR = x; PL.id = x.id; PL.i = 0; PL.playing = false;
-    const lv = LV[x.lvl], reading = x.cat === "reading";
+    const lv = LV[x.lvl], reading = isReading(x);
     const body = renderText(x);
-    const pool = LISTEN.filter((y) => (reading ? y.cat === "reading" : y.cat !== "reading")).sort(byLvl);
+    const pool = x.cat === "mine" ? MY : LISTEN.filter((y) => (reading ? y.cat === "reading" : y.cat !== "reading")).sort(byLvl);
     const next = pool[pool.indexOf(x) + 1];
     const hidden = x.cat === "podcast";
     const dict = reading ? [] : dictationSents();
@@ -1822,6 +1832,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     CUR.dict = dict;
     if (hidden) { const b = document.getElementById("l-text"); if (b) { b.textContent = "Show text"; b.setAttribute("aria-pressed", "true"); } }
     if (reading) { const st = S.l[x.id] || {}; st.heard = true; S.l[x.id] = st; save(); }
+    afterItem(x);
     plUI();
   }
   function dictationSents() {
@@ -1843,6 +1854,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const w = word.toLowerCase(), out = [];
     (CUR && CUR.gl || []).forEach((g) => { if (g[0].toLowerCase().split(/[\s()/]+/).some((t) => t.length > 2 && (t === w || (w.length > 4 && t.slice(0, -1) === w.slice(0, -1))))) out.push("<p><b>" + esc(g[0]) + "</b> · " + esc(g[1]) + ' <span class="pill new">glossary</span></p>'); });
     const tg = TG[w];
+    if (!tg && LEX) { const l = lexLine(w); if (l) out.push(l); }
     if (tg) out.push("<p><b>" + esc(tg[0] || word.toLowerCase()) + '</b> <span class="tag">' + esc(tg[1]) + "</span> · " + esc(tg[2]) + (tg[3] >= 0 ? ' <span class="pill ok">#' + (tg[3] + 1) + " most used</span>" : "") + "</p>");
     return out;
   }
@@ -1851,10 +1863,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const lines = wordLines(word), it = PL.items[k];
     openSheet('<div class="row" style="justify-content:space-between"><span class="sw">' + esc(word) + '</span><button class="btn small" data-act="l-close">Close</button></div>' +
       (lines.length ? lines.join("") : '<p class="muted">No dictionary entry for this form.</p>') +
-      (it ? '<p class="sent-en"><span class="eyebrow">Sentence</span><br>' + esc(it.en) + "</p>" : "") +
+      (it && it.en ? '<p class="sent-en"><span class="eyebrow">Sentence</span><br>' + esc(it.en) + "</p>" : it && CUR && CUR.cat === "mine" ? '<p class="sent-en"><button class="btn small" data-act="my-trk" data-k="' + k + '">Translate this sentence</button></p>' : "") +
       '<div class="row">' + sayBtn(word) + '<button class="btn small" data-act="l-sent" data-k="' + k + '">Play sentence</button><button class="btn small" data-act="l-from" data-k="' + k + '">Play from here</button></div>');
   }
-  let selT = null, selShown = "", selLast = "";
+  let selT = null, selShown = "", selLast = "", SELKS = [];
   document.addEventListener("selectionchange", () => { clearTimeout(selT); selT = setTimeout(onSel, 400); });
   function onSel() {
     const box = document.getElementById("ltext"); if (!box) return;
@@ -1864,12 +1876,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     selLast = txt;
     const ks = [...box.querySelectorAll(".sent")].filter((el) => r.intersectsNode(el)).map((el) => +el.dataset.pi);
     if (!ks.length) return;
+    SELKS = ks;
+    const missing = ks.some((k) => !PL.items[k].en);
     selShown = ks.length > 1 ? ks.map((k) => PL.items[k].text).join(" ") : txt;
     const words = txt.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g) || [];
     const wl = words.length <= 4 ? words.map((w) => { const l = wordLines(w); return l.length ? l[l.length - 1] : '<p><b>' + esc(w) + '</b> <span class="muted">· no entry</span></p>'; }).join("") : "";
     openSheet('<div class="row" style="justify-content:space-between"><span class="eyebrow">Highlighted</span><button class="btn small" data-act="l-close">Close</button></div>' +
       '<p class="sel-es">' + esc(selShown.length > 220 ? selShown.slice(0, 217) + "…" : selShown) + "</p>" + wl +
-      '<p class="sent-en"><span class="eyebrow">' + (ks.length > 1 ? "These sentences in English" : "Sentence in English") + "</span><br>" + esc(ks.map((k) => PL.items[k].en).join(" ")) + "</p>" +
+      (missing && CUR && CUR.cat === "mine" ? '<p class="sent-en"><button class="btn small" data-act="my-trsel">Translate to English</button></p>' : '<p class="sent-en"><span class="eyebrow">' + (ks.length > 1 ? "These sentences in English" : "Sentence in English") + "</span><br>" + esc(ks.map((k) => PL.items[k].en).join(" ")) + "</p>") +
       '<div class="row"><button class="btn small" data-act="l-saysel">Hear it</button></div>');
   }
 
@@ -3063,6 +3077,438 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (t.dataset.act === "th-rep") { TP.rep = !TP.rep; t.setAttribute("aria-pressed", TP.rep); }
   });
 
+
+  /* ================= MY READINGS: import your own Spanish texts (file, link or pasted) ================= */
+  CATS.mine = ["Mis lecturas", "Mi lectura"];
+  const MY = []; let DOCS_LOADED = false;
+  const isReading = (x) => x.cat === "reading" || x.cat === "mine";
+
+  /* ---------- storage: IndexedDB on this device (falls back to localStorage) ---------- */
+  let IDBH = null;
+  function idb() {
+    return new Promise((res, rej) => {
+      if (IDBH) return res(IDBH);
+      try {
+        const r = indexedDB.open("ruta-dele-docs", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("docs", { keyPath: "id" });
+        r.onsuccess = () => { IDBH = r.result; res(IDBH); }; r.onerror = () => rej(r.error);
+      } catch (e) { rej(e); }
+    });
+  }
+  const LSD = "ruta-dele-docs-v1";
+  async function myAll() {
+    try { const db = await idb(); return await new Promise((res, rej) => { const q = db.transaction("docs").objectStore("docs").getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); }); }
+    catch (e) { try { return JSON.parse(localStorage.getItem(LSD) || "[]"); } catch (x) { return []; } }
+  }
+  function plainDoc(x) { const c = Object.assign({}, x); delete c.dict; return JSON.parse(JSON.stringify(c)); }
+  async function myPut(x) {
+    try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction("docs", "readwrite"); t.objectStore("docs").put(plainDoc(x)); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+    catch (e) { try { localStorage.setItem(LSD, JSON.stringify(MY.map(plainDoc))); } catch (x2) {} }
+  }
+  async function myDel(id) {
+    try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction("docs", "readwrite"); t.objectStore("docs").delete(id); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+    catch (e) { try { localStorage.setItem(LSD, JSON.stringify(MY.filter((d) => d.id !== id).map(plainDoc))); } catch (x2) {} }
+  }
+  function myReg(x) { LI[x.id] = x; if (!MY.includes(x)) MY.push(x); MY.sort((a, b) => (b.created || 0) - (a.created || 0)); }
+  const docsReady = (async () => { try { (await myAll()).forEach(myReg); } catch (e) {} DOCS_LOADED = true; })();
+
+  /* ---------- full dictionary (≈90,000 words, 340,000 forms), loaded on demand ---------- */
+  let LEX = null, LEXP = null;
+  const deacc = (s) => s.replace(/[áéíóú]/g, (c) => "aeiou"["áéíóú".indexOf(c)]);
+  function loadLex() {
+    if (LEX) return Promise.resolve(LEX);
+    if (!LEXP) LEXP = fetch("dictdata/es-en.json").then((r) => { if (!r.ok) throw new Error("dictionary " + r.status); return r.json(); }).then((d) => {
+      const F = new Map();
+      d.L.forEach((e, i) => {
+        const base = e[0].split(", ")[0];
+        e[0].split(", ").forEach((l) => { if (!F.has(l)) F.set(l, i); });
+        if (e[3]) e[3].split("|").forEach((s) => { let f; if (s[0] === "~") f = s.slice(1); else { const m = s.match(/^(\d+)(.*)$/); f = base.slice(0, base.length - +m[1]) + m[2]; } if (!F.has(f)) F.set(f, i); });
+      });
+      const LEM = new Map(); d.L.forEach((e, i) => e[0].split(", ").forEach((l) => { if (!LEM.has(l)) LEM.set(l, i); }));
+      LEX = { L: d.L, F, LEM, nf: d.nf }; return LEX;
+    }).catch((e) => { LEXP = null; throw e; });
+    return LEXP;
+  }
+  function lexIdx(w) {
+    if (!LEX) return -1;
+    w = w.toLowerCase();
+    let k = LEX.F.get(w); if (k != null) return k;
+    const c = []; let x = w;
+    for (let i = 0; i < 2; i++) { const m = x.match(/(me|te|se|nos|os|lo|la|los|las|le|les)$/); if (!m || x.length - m[1].length < 3) break; x = x.slice(0, -m[1].length); c.push(x, deacc(x)); if (/mo$/.test(x)) c.push(x + "s", deacc(x) + "s"); }
+    if (/ces$/.test(w)) c.push(w.slice(0, -3) + "z");
+    if (/es$/.test(w)) c.push(w.slice(0, -2), deacc(w.slice(0, -2)));
+    if (/s$/.test(w)) c.push(w.slice(0, -1));
+    if (/as$/.test(w)) c.push(w.slice(0, -2) + "o");
+    if (/a$/.test(w)) c.push(w.slice(0, -1) + "o");
+    if (/ísim[oa]s?$/.test(w)) c.push(w.replace(/ísim[oa]s?$/, "o"));
+    if (/mente$/.test(w)) c.push(w.slice(0, -5));
+    for (const y of c) { k = LEX.F.get(y); if (k != null) return k; }
+    return -1;
+  }
+  function lexLine(word) {
+    const k = lexIdx(word); if (k < 0) return null;
+    const lk = LEX.LEM.get(word.toLowerCase()), other = lk != null && lk !== k ? lexOne(lk) : "";
+    return lexOne(k) + other;
+  }
+  function lexOne(k) {
+    const e = LEX.L[k];
+    return "<p><b>" + esc(e[0]) + '</b> <span class="tag">' + esc(e[1]) + "</span> · " + esc(e[2]) + (k >= LEX.nf ? ' <span class="pill new">less common</span>' : "") + "</p>";
+  }
+
+  /* ---------- text → sentences, level, glossary, questions ---------- */
+  const ABBR = /\b(Sr|Sra|Srta|Dr|Dra|Lic|Ing|Prof|etc|pág|núm|art|av|Avda|EE|UU|Ud|Uds|Vd|aprox|tel|p|ej|vs|S\.A|Cía)\.$/i;
+  function splitSents(t) {
+    t = t.replace(/\s+/g, " ").trim(); if (!t) return [];
+    const parts = t.split(/(?<=[.!?…»”"])\s+(?=[¿¡«“"(—–-]?[A-ZÁÉÍÓÚÑ0-9])/);
+    const out = [];
+    parts.forEach((p) => { if (out.length && ABBR.test(out[out.length - 1])) out[out.length - 1] += " " + p; else out.push(p); });
+    // very long sentences: split at semicolons or colons so audio and translation stay manageable
+    return out.flatMap((s) => (s.length > 380 ? s.split(/(?<=[;:])\s+/) : [s])).map((s) => s.trim()).filter((s) => /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(s));
+  }
+  const toks = (s) => s.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g) || [];
+  function estimateLevel(sents) {
+    const words = sents.flatMap(toks); if (!words.length) return "b1";
+    const asl = words.length / sents.length;
+    let n = 0, rare = 0;
+    if (LEX) words.forEach((t) => { const lw = t.toLowerCase(); if (/^[A-ZÁÉÍÓÚÑ]/.test(t) && !LEX.F.has(lw)) return; n++; const k = lexIdx(lw); if (k < 0 || k >= 3000) rare++; });
+    const s = Math.min(asl, 30) + 40 * (n ? rare / n : 0.12);
+    return s < 11.5 ? "a1" : s < 15 ? "a2" : s < 19 ? "b1" : s < 22.7 ? "b2" : s < 26 ? "c1" : "c2";
+  }
+  const BANDS = { a1: 400, a2: 900, b1: 1800, b2: 3000, c1: 5000, c2: 8000 };
+  function makeGlossary(x) {
+    if (!LEX) return [];
+    const cnt = new Map(), first = new Map(), from = BANDS[x.lvl] || 1800;
+    x.paras.forEach((p) => p.s.forEach((s) => toks(s[0]).forEach((t, i) => {
+      const lw = t.toLowerCase(); if (lw.length < 3) return;
+      if (/^[A-ZÁÉÍÓÚÑ]/.test(t) && i > 0 && !LEX.F.has(lw)) return;
+      const k = lexIdx(lw); if (k < from || LEX.L[k][1] === "name") return;
+      cnt.set(k, (cnt.get(k) || 0) + 1); if (!first.has(k)) first.set(k, t);
+    })));
+    return [...cnt.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]).slice(0, 16).map(([k]) => { const e = LEX.L[k]; return [e[0], e[2].split(";").slice(0, 2).join(";").trim(), first.get(k)]; });
+  }
+  function shuffleQ(q, opts, right) { const o = opts.map((t, i) => [t, i === right]); for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; } return [q, o.map((y) => y[0]), o.findIndex((y) => y[1])]; }
+  function vocabQuiz(x) {
+    if (!LEX || !x.gl.length) return [];
+    const sents = x.paras.flatMap((p) => p.s.map((s) => s[0]));
+    const pool = x.gl.map((g) => g[1].split(/[;,]/)[0].trim()).filter(Boolean);
+    const q = [];
+    for (const g of x.gl) {
+      if (q.length >= 5) break;
+      const form = g[2], s = sents.find((y) => new RegExp("(^|[^\\p{L}])" + form + "([^\\p{L}]|$)", "u").test(y)); if (!s) continue;
+      const right = g[1].split(/[;,]/)[0].trim();
+      const k = lexIdx(form), pos = k >= 0 ? LEX.L[k][1] : "";
+      const ds = pool.filter((d) => d !== right).sort(() => Math.random() - 0.5);
+      while (ds.length < 2) { const r = 300 + Math.floor(Math.random() * 4000), e = LEX.L[r]; if (e && (!pos || e[1] === pos)) { const d = e[2].split(/[;,]/)[0].trim(); if (d !== right && !ds.includes(d)) ds.push(d); } }
+      const short = s.length > 170 ? "…" + s.slice(Math.max(0, s.indexOf(form) - 70), s.indexOf(form) + form.length + 70) + "…" : s;
+      q.push(shuffleQ("«" + short + "» — ¿Qué significa «" + form + "» aquí?", [right, ds[0], ds[1]], 0));
+    }
+    return q;
+  }
+
+  /* ---------- extracting text from what the learner brings ---------- */
+  function cleanBlocks(blocks) {
+    return blocks.map((b) => b.replace(/­/g, "").replace(/[ \t ]+/g, " ").trim()).filter((b) => toks(b).length >= 2);
+  }
+  function textBlocks(t) {
+    t = t.replace(/\r\n?/g, "\n");
+    if (/\n\s*\n/.test(t)) return cleanBlocks(t.split(/\n\s*\n+/).map((b) => b.replace(/-\n(?=[a-záéíóúñ])/g, "").replace(/\n/g, " ")));
+    return cleanBlocks(t.split("\n"));
+  }
+  function pdfBlocks(lines) {
+    // join wrapped lines back into paragraphs: a paragraph ends at a bigger vertical gap, a page break,
+    // or where a line ends a sentence and is noticeably short
+    const ls = lines.map((l) => ({ t: l.t.replace(/\s+/g, " ").trim(), gap: l.gap, end: l.end })).filter((l) => l.t);
+    const lens = ls.map((l) => l.t.length).sort((a, b) => a - b), med = lens[Math.floor(lens.length / 2)] || 60;
+    const gaps = ls.map((l) => l.gap).filter((g) => g > 0).sort((a, b) => a - b), mg = gaps[Math.floor(gaps.length / 2)] || 0;
+    const out = []; let cur = "";
+    ls.forEach((o) => {
+      const l = o.t;
+      if (/^\d+$/.test(l)) return; // page numbers
+      if (cur && (o.gap < 0 || (mg && o.gap > mg * 1.35))) { out.push(cur); cur = ""; }
+      cur = cur ? (/-$/.test(cur) && /^[a-záéíóúñ]/.test(l) ? cur.slice(0, -1) + l : cur + " " + l) : l;
+      if ((/[.!?:»”"]$/.test(l) && l.length < 0.7 * med) || (o.end && (/[.!?:»”"]$/.test(l) || l.length < 0.7 * med))) { out.push(cur); cur = ""; }
+    });
+    if (cur) out.push(cur);
+    return cleanBlocks(out);
+  }
+  function htmlDoc(html) {
+    const d = new DOMParser().parseFromString(html, "text/html");
+    const title = (d.querySelector('meta[property="og:title"]') || {}).content || (d.querySelector("h1") || {}).textContent || d.title || "";
+    d.querySelectorAll("script,style,noscript,nav,header,footer,aside,form,figure,iframe,svg,button,[role=navigation],[aria-hidden=true],.share,.related,.comments,.advert,.ad").forEach((e) => e.remove());
+    const root = d.querySelector("article") || d.querySelector("main") || d.body;
+    const blocks = [];
+    root.querySelectorAll("h1,h2,h3,h4,p,li,blockquote,pre,td").forEach((e) => { if (e.querySelector("p,li,h1,h2,h3")) return; const t = e.textContent.replace(/\s+/g, " ").trim(); if (/^h/i.test(e.tagName) ? toks(t).length >= 1 : toks(t).length >= 5) blocks.push(t); });
+    if (blocks.length < 3) return { title: title.trim(), blocks: textBlocks(root.textContent) };
+    return { title: title.trim(), blocks: cleanBlocks(blocks) };
+  }
+  function mdDoc(md) {
+    let title = (md.match(/^Title:\s*(.+)$/m) || [])[1] || "";
+    const i = md.indexOf("Markdown Content:"); if (i >= 0) md = md.slice(i + 17);
+    md = md.replace(/!\[[^\]]*\]\([^)]*\)/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/<[^>]+>/g, "").replace(/^\s*[-=*_]{3,}\s*$/gm, "\n");
+    const blocks = md.split(/\n\s*\n+/).map((b) => b.replace(/^#+\s*/gm, "").replace(/^\s*[*+-]\s+/gm, "").replace(/[*_`]{1,3}/g, "").replace(/\n/g, " ").trim())
+      .filter((b) => toks(b).length >= 6 || (toks(b).length >= 2 && /[.!?:]$/.test(b)));
+    if (!title && blocks[0] && toks(blocks[0]).length < 16) title = blocks[0];
+    return { title: title.trim(), blocks: cleanBlocks(blocks) };
+  }
+  function loadScript(src, test) { return new Promise((res, rej) => { if (test()) return res(); const s = document.createElement("script"); s.src = src; s.onload = () => (test() ? res() : rej(new Error("library failed"))); s.onerror = () => rej(new Error("Couldn’t load the file reader. Connect to the internet once, then try again.")); document.head.appendChild(s); }); }
+  const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/";
+  async function readPdf(buf) {
+    await loadScript(PDFJS + "pdf.min.js", () => !!window.pdfjsLib);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+    const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise, lines = [];
+    let title = "";
+    try { const md = await pdf.getMetadata(); title = (md && md.info && md.info.Title) || ""; } catch (e) {}
+    for (let p = 1; p <= Math.min(pdf.numPages, 80); p++) {
+      const tc = await (await pdf.getPage(p)).getTextContent(); let line = "", y = null, prevY = null, first = true;
+      const flush = (blockEnd) => { if (line.trim()) { lines.push({ t: line, gap: first ? -1 : prevY != null && y != null ? Math.abs(prevY - y) : 0, end: blockEnd }); first = false; prevY = y; } line = ""; y = null; };
+      tc.items.forEach((it) => { if (y == null && it.str.trim()) y = it.transform[5]; line += it.str; if (it.hasEOL) flush(!it.str); });
+      flush();
+    }
+    const blocks = pdfBlocks(lines);
+    if (!blocks.length) throw new Error("This PDF has no selectable text (it may be a scan or photo). Try a PDF with real text, or paste the text.");
+    return { title, blocks };
+  }
+  async function readDocx(buf) {
+    await loadScript("https://cdn.jsdelivr.net/npm/mammoth@1.13.0/mammoth.browser.min.js", () => !!window.mammoth);
+    const r = await window.mammoth.extractRawText({ arrayBuffer: buf });
+    return { title: "", blocks: textBlocks(r.value) };
+  }
+  async function readFile(f) {
+    const n = f.name.toLowerCase(), base = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+    let r;
+    if (/\.pdf$/.test(n) || f.type === "application/pdf") r = await readPdf(await f.arrayBuffer());
+    else if (/\.docx$/.test(n)) r = await readDocx(await f.arrayBuffer());
+    else if (/\.(html?|xhtml)$/.test(n)) r = htmlDoc(await f.text());
+    else if (/\.(txt|md|text|csv|srt|vtt)$/.test(n) || /^text\//.test(f.type)) { let t = await f.text(); if (/\.(srt|vtt)$/.test(n)) t = t.replace(/^\d+\s*$/gm, "").replace(/^[\d:.,]+ --> .*$/gm, "").replace(/^WEBVTT.*$/m, ""); r = /\.md$/.test(n) ? mdDoc(t) : { title: "", blocks: textBlocks(t) }; }
+    else if (/\.doc$/.test(n)) throw new Error("Old Word files (.doc) can’t be read. In Word or Google Docs, save it as .docx or PDF, then add it again.");
+    else throw new Error("This file type isn’t supported. Use PDF, Word (.docx), web page (.html) or text (.txt).");
+    if (!r.title && r.blocks[0] && toks(r.blocks[0]).length <= 14 && !/[.,;]$/.test(r.blocks[0])) r.title = r.blocks[0];
+    r.title = r.title || base; r.src = { type: "file", name: f.name };
+    return r;
+  }
+  async function readLink(url) {
+    url = url.trim(); if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    let u; try { u = new URL(url); } catch (e) { throw new Error("That doesn’t look like a web address."); }
+    const gd = url.match(/docs\.google\.com\/document\/d\/([\w-]+)/); if (gd) url = "https://docs.google.com/document/d/" + gd[1] + "/export?format=txt";
+    const src = { type: "link", url: gd ? u.href : url, site: u.hostname.replace(/^www\./, "") };
+    // 1) the site itself, when it allows apps to read it
+    try {
+      const r = await fetch(url, { mode: "cors", credentials: "omit" });
+      if (r.ok) {
+        const ct = r.headers.get("content-type") || "";
+        if (/pdf/.test(ct)) { const d = await readPdf(await r.arrayBuffer()); d.src = src; return d; }
+        const t = await r.text(); const d = /html/.test(ct) ? htmlDoc(t) : { title: "", blocks: textBlocks(t) };
+        if (d.blocks.length) { d.src = src; return d; }
+      }
+    } catch (e) {}
+    // 2) a public reader service that returns the article text (the address is sent to r.jina.ai)
+    let r;
+    try { r = await fetch("https://r.jina.ai/" + url); } catch (e) { throw new Error(IN_CLAUDE ? "Links can’t be fetched inside Claude. Use the phone app, or paste the text." : "Couldn’t reach that page. Check your connection, or copy the article text and paste it."); }
+    if (!r.ok) throw new Error(r.status === 429 ? "The link reader is busy. Wait a minute and try again, or paste the text." : "That page couldn’t be read (it may need a login or block readers). Copy the text and paste it instead.");
+    const d = mdDoc(await r.text());
+    if (!d.blocks.length) throw new Error("No article text found on that page. Copy the text and paste it instead.");
+    d.src = src; return d;
+  }
+
+  /* ---------- building a reading ---------- */
+  const PART_WORDS = 2500;
+  async function buildDocs(title, blocks, src) {
+    try { await loadLex(); } catch (e) {}
+    const paras = blocks.map((b) => splitSents(b)).filter((s) => s.length);
+    if (!paras.length) throw new Error("No Spanish text found.");
+    const all = paras.flat(), words = all.flatMap(toks);
+    const esHits = words.filter((w) => /^(de|la|que|el|en|y|los|del|se|las|por|un|una|para|con|no|es|su|al|lo|como|más|pero|sus|le|ya|o|este|sí|porque|esta|entre|cuando|muy|sin|sobre|también)$/i.test(w)).length;
+    const notSpanish = words.length > 30 && esHits / words.length < 0.12;
+    // long texts become parts of about 2,500 words, split between paragraphs
+    const groups = []; let g = [], n = 0;
+    paras.forEach((p) => { const k = p.flatMap(toks).length; if (n && n + k > PART_WORDS) { groups.push(g); g = []; n = 0; } g.push(p); n += k; });
+    if (g.length) groups.push(g);
+    const now = Date.now(), docs = [];
+    groups.forEach((gp, i) => {
+      const x = { id: "my-" + now.toString(36) + (groups.length > 1 ? "-" + (i + 1) : ""), cat: "mine", t: (title || "Mi lectura").slice(0, 120) + (groups.length > 1 ? " (" + (i + 1) + "/" + groups.length + ")" : ""), country: "", note: "", src, created: now - i, paras: gp.map((p) => ({ s: p.map((s) => [s, ""]) })), q: [], gl: [] };
+      const sents = gp.flat(); x.words = sents.flatMap(toks).length;
+      x.lvl = estimateLevel(sents); x.lvlEst = x.lvl;
+      x.s = (src.type === "link" ? src.site : src.type === "file" ? src.name : "Pasted text") + " · " + x.words.toLocaleString() + " words";
+      x.gl = makeGlossary(x); x.q = vocabQuiz(x); x.qKind = "vocab";
+      docs.push(x);
+    });
+    return { docs, notSpanish };
+  }
+
+  /* ---------- AI helpers (uses Profe's engine: Claude, API key or the on-device model) ---------- */
+  async function aiText(sys, user) {
+    TB = resolveTB();
+    if (TB === "claude") return (await SAMPLE(sys + "\n\n" + user, { cache: false })).text;
+    if (TB === "api") {
+      const res = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", headers: { "content-type": "application/json", "x-api-key": TS.apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: JSON.stringify({ model: API_MODEL, max_tokens: 4000, system: sys, messages: [{ role: "user", content: user }] }) });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) throw { code: res.status === 401 ? "bad_key" : res.status === 429 ? "rate_limited" : "upstream_error" };
+      return (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
+    }
+    if (TB === "local") {
+      const eng = await loadLocal();
+      const r = await eng.chat.completions.create({ messages: [{ role: "system", content: sys }, { role: "user", content: user }], temperature: 0.2, max_tokens: 900 });
+      return (r.choices[0] && r.choices[0].message && r.choices[0].message.content) || "";
+    }
+    throw { code: "unavailable" };
+  }
+  const flatIdx = (x) => { const f = []; x.paras.forEach((p, pi) => p.s.forEach((s, si) => f.push([pi, si]))); return f; };
+  function parseNumbered(t, n) {
+    const out = Array(n).fill(""); let hits = 0;
+    t.split("\n").forEach((l) => { const m = l.match(/^\s*\**(\d+)\**[.):\-]\s*(.+)$/); if (m && +m[1] >= 1 && +m[1] <= n && !out[+m[1] - 1]) { out[+m[1] - 1] = m[2].replace(/^["“]|["”]$/g, "").trim(); hits++; } });
+    if (!hits && n === 1) out[0] = t.trim().replace(/^1[.)]\s*/, "");
+    return out;
+  }
+  const JOB = { busy: false, stop: false, msg: "" };
+  function jobMsg(t) { JOB.msg = t; const el = document.getElementById("my-job"); if (el) el.textContent = t; }
+  const TR_SYS = "You translate Spanish into natural, accurate English for a language learner. Translate each numbered sentence. Reply ONLY with the numbered English translations, one per line, keeping the same numbers. No notes.";
+  async function myTranslate(x, ks, quiet) {
+    const flat = flatIdx(x), per = resolveTB() === "local" ? 5 : 30;
+    for (let i = 0; i < ks.length; i += per) {
+      if (JOB.stop) break;
+      const batch = ks.slice(i, i + per);
+      const src = batch.map((k, j) => (j + 1) + ". " + x.paras[flat[k][0]].s[flat[k][1]][0]).join("\n");
+      let lines = parseNumbered(await aiText(TR_SYS, src), batch.length);
+      if (batch.length > 1 && lines.filter(Boolean).length < batch.length / 2) { // small models sometimes lose the numbering: retry one by one
+        lines = [];
+        for (const k of batch) lines.push(parseNumbered(await aiText(TR_SYS, "1. " + x.paras[flat[k][0]].s[flat[k][1]][0]), 1)[0]);
+      }
+      batch.forEach((k, j) => { if (lines[j]) { const [pi, si] = flat[k]; x.paras[pi].s[si][1] = lines[j]; if (CUR === x && PL.items[k]) PL.items[k].en = lines[j]; } });
+      await myPut(x); paintEn(x);
+      if (!quiet) jobMsg("Translating… " + Math.min(i + per, ks.length) + " of " + ks.length + " sentences");
+    }
+  }
+  function paintEn(x) {
+    if (CUR !== x) return;
+    document.querySelectorAll("#ltext .para").forEach((el, pi) => { const en = el.querySelector(".en"); if (en && x.paras[pi]) en.textContent = x.paras[pi].s.map((s) => s[1]).filter(Boolean).join(" "); });
+    const st = document.getElementById("my-trstat"); if (st) st.innerHTML = trStat(x);
+  }
+  const trDone = (x) => flatIdx(x).filter(([pi, si]) => x.paras[pi].s[si][1]).length;
+  const trStat = (x) => { const n = flatIdx(x).length, d = trDone(x); return d >= n ? "English translation: complete ✓" : "English translation: " + d + " of " + n + " sentences"; };
+  const Q_SYS = "You write DELE-style reading comprehension questions in Spanish. Follow the format exactly.";
+  function parseQs(t) {
+    const out = [];
+    t.replace(/\r/g, "").split(/\n\s*(?=(?:\*\*)?(?:P|Q|Pregunta)?\s*\d*\s*[:.)]?\s*¿)/).forEach((b) => {
+      const q = (b.match(/¿[^?\n]+\?/) || [])[0]; if (!q) return;
+      const opts = []; (b.match(/^\s*\(?([ABC])[).:]\s*(.+)$/gm) || []).forEach((l) => { const m = l.match(/^\s*\(?([ABC])[).:]\s*(.+)$/); opts["ABC".indexOf(m[1])] = m[2].replace(/\*+/g, "").trim(); });
+      const c = (b.match(/(?:Correct[ao]?|Respuesta(?: correcta)?|Answer)\s*[:\-]?\s*\(?([ABC])\b/i) || [])[1];
+      if (opts.filter(Boolean).length === 3 && c) out.push(shuffleQ(q.trim(), opts, "ABC".indexOf(c.toUpperCase())));
+    });
+    return out.slice(0, 6);
+  }
+  async function myQuestions(x) {
+    const local = resolveTB() === "local";
+    const words = x.paras.flatMap((p) => p.s.map((s) => s[0])).join(" ").split(/\s+/);
+    const text = words.slice(0, local ? 1100 : 6000).join(" ");
+    const prompt = "Text (level " + x.lvl.toUpperCase() + "):\n\"\"\"\n" + text + "\n\"\"\"\n\nWrite 5 multiple-choice questions in Spanish that test understanding of this text (main idea, details, opinions, vocabulary in context), suitable for DELE " + x.lvl.toUpperCase() + ". Each question has 3 options and exactly one is correct according to the text. Use exactly this format, with a blank line between questions:\n\n¿Pregunta?\nA) opción\nB) opción\nC) opción\nCorrecta: B";
+    let q = parseQs(await aiText(Q_SYS, prompt));
+    if (q.length < 3 && local) q = parseQs(await aiText(Q_SYS, prompt));
+    if (q.length < 3) throw new Error("The AI didn’t return usable questions. Try again" + (local ? ", or use a Claude key for better results." : "."));
+    return q;
+  }
+
+  /* ---------- views ---------- */
+  function myHub() {
+    return '<section class="block myhub"><div class="shead"><h2>Mis lecturas</h2><a class="btn small primary" href="#leer-add">+ Add a text</a></div>' +
+      (MY.length ? '<div class="lgrid">' + MY.map(card).join("") + "</div>" : '<p class="muted">Bring your own Spanish: a news article link, a PDF or Word file, or pasted text. It gets the same tools as the readings below: tap for meanings, highlight for English, audio, glossary and questions.</p>') + "</section>";
+  }
+  let ADD = { tab: "link", err: "", busy: false, pre: null };
+  function docAdd() {
+    const p = ADD.pre || {};
+    const tabs = [["link", "Link"], ["file", "File"], ["paste", "Paste text"]].map(([k, n]) => '<button class="btn small" data-act="my-tab" data-v="' + k + '" aria-pressed="' + (ADD.tab === k) + '">' + n + "</button>").join("");
+    let form;
+    if (ADD.tab === "link") form = '<label class="flabel" for="my-url">Web address of a Spanish article</label><input id="my-url" type="url" inputmode="url" autocomplete="off" placeholder="https://elpais.com/…" value="' + esc(p.url || "") + '"><p class="muted small">Works with most news sites, blogs, Wikipedia and public Google Docs. The address is sent to the free reader service r.jina.ai when the site doesn’t allow apps to read it directly. Pages behind a login or paywall can’t be read: copy the text and paste it instead.</p>';
+    else if (ADD.tab === "file") form = '<label class="flabel" for="my-file">Choose a file</label><input id="my-file" type="file" accept=".pdf,.docx,.txt,.md,.html,.htm,.srt,.vtt,application/pdf,text/plain,text/html"><p class="muted small">PDF (with real text, not scans), Word (.docx), web pages (.html), text (.txt) and subtitles (.srt). The file stays on your phone.</p>';
+    else form = '<label class="flabel" for="my-text">Spanish text</label><textarea id="my-text" rows="10" placeholder="Pega aquí tu texto…">' + esc(p.text || "") + "</textarea>";
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Leer</a><span aria-hidden="true">›</span><span>Add a text</span></p><div><p class="eyebrow">Mis lecturas</p><h1>Add a text</h1><p class="lead2">Turn any Spanish article or document into a reading with audio, tap-to-translate, a glossary and questions.</p></div>' +
+      '<section class="block"><div class="row">' + tabs + '</div><div class="myform">' + form +
+      '<label class="flabel" for="my-title">Title <span class="muted">(optional)</span></label><input id="my-title" autocomplete="off" value="' + esc(p.title || "") + '">' +
+      '<div class="row"><button class="btn primary" data-act="my-import"' + (ADD.busy ? " disabled" : "") + ">" + (ADD.busy ? "Reading…" : "Add to Mis lecturas") + '</button></div><p class="result" id="my-err" aria-live="polite">' + esc(ADD.err) + "</p></div></section>" +
+      '<section class="block"><div class="shead"><h2>What you get</h2></div><ul class="small"><li>Tap any word for its meaning (offline dictionary of about 90,000 words), highlight to see the English.</li><li>Audio of the whole text, sentence by sentence, at your speed.</li><li>An estimated DELE level, a glossary of the harder words and a vocabulary-in-context quiz, all offline.</li><li>With Profe’s AI (on your phone or a Claude key): a full English translation and DELE-style comprehension questions.</li><li>Long documents are split into parts of about 2,500 words.</li></ul>' +
+      (ADD.tab === "link" ? '<p class="muted small">Tip: in Chrome, tap Share on any article and choose Ruta DELE to send it straight here (after the app updates on your phone; if Ruta DELE isn’t in the share list, reinstall it from the website).</p>' : "") + "</section></div>";
+  }
+  async function doImport() {
+    if (ADD.busy) return;
+    const title = (document.getElementById("my-title") || {}).value || "";
+    ADD.err = ""; ADD.busy = true;
+    let src;
+    try {
+      let r;
+      if (ADD.tab === "link") { const u = (document.getElementById("my-url") || {}).value || ""; if (!u.trim()) throw new Error("Paste a link first."); ADD.pre = { url: u, title }; docAdd(); r = await readLink(u); }
+      else if (ADD.tab === "file") { const f = document.getElementById("my-file").files[0]; if (!f) throw new Error("Choose a file first."); ADD.pre = { title }; docAdd(); r = await readFile(f); }
+      else { const t = (document.getElementById("my-text") || {}).value || ""; if (toks(t).length < 5) throw new Error("Paste a longer text."); ADD.pre = { text: t, title }; docAdd(); r = { title: "", blocks: textBlocks(t), src: { type: "text" } }; if (!title) r.title = splitSents(r.blocks[0] || "")[0] || "Mi lectura"; if (r.title.length > 70) r.title = r.title.slice(0, 67).replace(/\s+\S*$/, "") + "…"; }
+      const out = await buildDocs(title.trim() || r.title, r.blocks, r.src);
+      for (const d of out.docs) { myReg(d); await myPut(d); }
+      ADD = { tab: ADD.tab, err: "", busy: false, pre: null };
+      if (out.notSpanish) out.docs[0].note = "This text doesn’t look like Spanish, so meanings and the level may be off.";
+      location.hash = "#" + out.docs[0].id;
+    } catch (e) { ADD.busy = false; ADD.err = (e && e.message) || String(e); if (location.hash === "#leer-add") docAdd(); }
+  }
+  function myTools(x) {
+    const ai = !!resolveTB(), n = flatIdx(x).length, done = trDone(x) >= n;
+    const lv = '<select id="my-lvl" aria-label="Level">' + COURSE.map((l) => '<option value="' + l.id + '"' + (l.id === x.lvl ? " selected" : "") + ">" + l.name + (l.id === x.lvlEst ? " (estimated)" : "") + "</option>").join("") + "</select>";
+    return '<section class="block mytools"><div class="row"><span class="small">Level</span>' + lv + '<span class="muted small">' + x.words.toLocaleString() + " words" + (x.src && x.src.url ? ' · <a href="' + esc(x.src.url) + '" target="_blank" rel="noopener">original</a>' : "") + "</span></div>" +
+      '<p class="small" id="my-trstat">' + trStat(x) + "</p>" +
+      '<p class="small">Questions: ' + (x.qKind === "ai" ? "comprehension (written by Profe’s AI)" : x.q.length ? "vocabulary in context (offline)" : "none yet") + "</p>" +
+      '<div class="row">' + (JOB.busy ? '<button class="btn small" data-act="my-stop">Stop</button>' : (done ? "" : '<button class="btn small primary" data-act="my-tr"' + (ai ? "" : " disabled") + ">Translate to English</button>") + '<button class="btn small" data-act="my-q"' + (ai ? "" : " disabled") + ">" + (x.qKind === "ai" ? "New questions" : "Write comprehension questions") + "</button>") + "</div>" +
+      '<p class="small muted" id="my-job" aria-live="polite">' + esc(JOB.busy ? JOB.msg : ai ? "" : "Translation and questions need Profe’s AI. Set it up in Profe → History & settings (on-device or a Claude key). Tapping words works without it.") + "</p>" +
+      '<details class="small"><summary>Rename or delete</summary><div class="row"><input id="my-rename" value="' + esc(x.t) + '" aria-label="Title"><button class="btn small" data-act="my-rename">Save title</button><button class="btn small" data-act="my-del">Delete this text</button></div></details></section>';
+  }
+  function afterItem(x) {
+    if (x.cat !== "mine") return;
+    const lt = document.getElementById("ltext"); if (!lt) return;
+    lt.insertAdjacentHTML("beforebegin", myTools(x));
+    if (!x.q.length) { const qs = document.querySelector('.mc[data-scope="lq"]'); if (qs) qs.insertAdjacentHTML("beforebegin", '<p class="muted">No questions yet. ' + (resolveTB() ? "Tap “Write comprehension questions” above." : "Set up Profe’s AI to write some.") + "</p>"); }
+    if (!x.gl.length) { const g = document.querySelector("#litem table.vocab"); if (g) g.closest("section").innerHTML = '<div class="shead"><h2>Glosario</h2></div><p class="muted">' + (LEX ? "No harder words found for this level." : "The glossary appears once the dictionary has loaded (needs the internet the first time).") + "</p>"; }
+    loadLex().then(() => { if (!x.gl.length && x.paras.length) { x.gl = makeGlossary(x); if (!x.q.length) { x.q = vocabQuiz(x); x.qKind = "vocab"; } if (x.gl.length) { myPut(x); if (CUR === x) listenItem(x); } } }).catch(() => {});
+  }
+  function rerender(x) { if (CUR === x && location.hash === "#" + x.id) { const y = scrollY; listenItem(x); scrollTo(0, y); } }
+  async function runJob(x, fn) {
+    if (JOB.busy) return; JOB.busy = true; JOB.stop = false; rerender(x);
+    try { await fn(); JOB.busy = false; jobMsg(""); }
+    catch (e) { JOB.busy = false; jobMsg((e && e.message) || ERRS[e && e.code] || "Something went wrong. Try again."); const m = JOB.msg; rerender(x); jobMsg(m); return; }
+    rerender(x);
+  }
+  // translate on demand when a sentence without English is tapped or highlighted
+  async function trOnDemand(ks, el) {
+    const x = CUR; if (!x || x.cat !== "mine") return;
+    if (!resolveTB()) { if (el) el.textContent = "Set up Profe’s AI in Profe → History & settings to translate sentences."; return; }
+    if (el) el.textContent = "Translating…";
+    try { await myTranslate(x, ks, true); if (el) el.innerHTML = '<span class="eyebrow">English</span><br>' + esc(ks.map((k) => PL.items[k].en).join(" ")); }
+    catch (e) { if (el) el.textContent = ERRS[e && e.code] || "Couldn’t translate right now."; }
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-act]"); if (!t) return;
+    const act = t.dataset.act, x = CUR && CUR.cat === "mine" ? CUR : null;
+    if (act === "my-tab") { const cur = { url: (document.getElementById("my-url") || {}).value, text: (document.getElementById("my-text") || {}).value, title: (document.getElementById("my-title") || {}).value }; ADD.pre = Object.assign(ADD.pre || {}, Object.fromEntries(Object.entries(cur).filter(([, v]) => v != null))); ADD.tab = t.dataset.v; ADD.err = ""; docAdd(); }
+    else if (act === "my-import") doImport();
+    else if (act === "my-tr" && x) runJob(x, () => myTranslate(x, flatIdx(x).map((f, k) => k).filter((k) => !x.paras[flatIdx(x)[k][0]].s[flatIdx(x)[k][1]][1])));
+    else if (act === "my-q" && x) runJob(x, async () => { jobMsg("Writing questions… (on-device AI can take a minute)"); const q = await myQuestions(x); x.q = q; x.qKind = "ai"; const st = S.l[x.id]; if (st) { delete st.quiz; save(); } await myPut(x); });
+    else if (act === "my-stop") { JOB.stop = true; jobMsg("Stopping after this step…"); }
+    else if (act === "my-rename" && x) { const v = document.getElementById("my-rename").value.trim(); if (v) { x.t = v.slice(0, 120); myPut(x); rerender(x); } }
+    else if (act === "my-del" && x) {
+      if (t.dataset.arm !== "1") { t.dataset.arm = "1"; t.textContent = "Tap again to delete"; setTimeout(() => { if (t.isConnected) { t.dataset.arm = ""; t.textContent = "Delete this text"; } }, 4000); return; }
+      myDel(x.id); delete LI[x.id]; MY.splice(MY.indexOf(x), 1); delete S.l[x.id]; save(); location.hash = "#leer";
+    }
+    else if (act === "my-trk") trOnDemand([+t.dataset.k], t.parentElement);
+    else if (act === "my-trsel") trOnDemand(SELKS.slice(), t.parentElement);
+  });
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "my-lvl" && CUR && CUR.cat === "mine") { const x = CUR; x.lvl = e.target.value; x.gl = makeGlossary(x); if (x.qKind !== "ai") x.q = vocabQuiz(x); myPut(x); rerender(x); }
+  });
+
+  /* ---------- shared from another app (Android share sheet) ---------- */
+  try {
+    const sp = new URLSearchParams(location.search);
+    if (sp.has("url") || sp.has("text")) {
+      const txt = sp.get("text") || "", link = sp.get("url") || (txt.match(/https?:\/\/\S+/) || [])[0] || "";
+      ADD.pre = { url: link, text: link ? "" : txt, title: sp.get("title") || "" }; ADD.tab = link ? "link" : "paste";
+      history.replaceState(null, "", location.pathname + "#leer-add");
+    }
+  } catch (e) {}
+
   /* ---------- router ---------- */
   function route() {
     const h = location.hash.replace(/^#/, "");
@@ -3070,7 +3516,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     stopAll(); app.classList.remove("hide-en"); delete document.body.dataset.gcat;
     const sh = document.getElementById("sheet"); if (sh) sh.hidden = true;
     if (h === "escuchar") { setSec("escuchar"); navChips(null); listenHub(); }
-    else if (LI[h]) { setSec("escuchar"); navChips(null); listenItem(LI[h]); }
+    else if (h === "leer-add") { setSec("leer"); navChips(null); docAdd(); }
+    else if (/^my-/.test(h) && !LI[h] && !DOCS_LOADED) { setSec("leer"); navChips(null); app.innerHTML = '<p class="muted">Loading…</p>'; docsReady.then(route); return; }
+    else if (LI[h]) { setSec(isReading(LI[h]) ? "leer" : "escuchar"); navChips(null); listenItem(LI[h]); }
     else if (h === "leer") { setSec("leer"); navChips(null); readHub(); }
     else if (h === "verbos") { setSec("verbos"); navChips(null); verbsView(); }
     else if (h === "verbos-reflexivos") { setSec("verbos"); navChips(null); gPage("reflexivos"); }
