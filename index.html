@@ -2890,15 +2890,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     SPK_GEN++;
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
-    rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = !!opts.continuous; rec.maxAlternatives = 1;
+    // keep the recognizer open (continuous) and decide ourselves when the learner has finished: after a pause of TS.waitMs
+    const manual = !!opts.continuous, waitMs = TS.waitMs || 2500;
+    rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+    let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => { if (rec === me && listening) stopListening(); }, ms); };
     let final = "", heard = "", done = false; liveText = "";
     const me = rec;
     // some phones (Samsung) show the words while you speak but then end with "no match" instead of a final result: keep what was heard
-    rec.onresult = (e) => { let interim = ""; for (let i = e.resultIndex; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) final += (final ? " " : "") + r[0].transcript.trim(); else interim += r[0].transcript; } liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); };
+    rec.onresult = (e) => { let interim = "", fin = ""; for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += (fin ? " " : "") + r[0].transcript.trim(); else interim += r[0].transcript; } final = fin; liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(waitMs); };
     rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
-    rec.onend = () => { if (done || rec !== me) return; done = true; listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
+    rec.onend = () => { if (done || rec !== me) return; done = true; clearTimeout(quiet); listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
     try { if (window.AndroidSTT && window.AndroidSTT.setBias) window.AndroidSTT.setBias(JSON.stringify(biasWords())); } catch (e) {}
     try { rec.start(); listening = true; } catch (e) { listening = false; }
+    arm(12000); // time to start speaking
     uiVoice(); paintLive();
   }
   function stopListening() { if (rec) try { rec.stop(); } catch (e) {} }
@@ -2962,7 +2966,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     next();
   }
-  function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = liveText || (listening ? "Listening… speak now" : ""); } }
+  function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = liveText || (listening ? "Listening… speak now. Pause when you’re done, or tap the mic." : ""); } }
   function uiVoice() {
     document.querySelectorAll("[data-act=t-mic],[data-act=pr-mic]").forEach((b) => { b.classList.toggle("on", listening); b.setAttribute("aria-label", listening ? "Stop listening" : "Speak"); });
     const vb = document.getElementById("t-voice"); if (vb) { vb.setAttribute("aria-pressed", voiceMode); vb.textContent = voiceMode ? "End voice chat" : "Voice chat"; }
@@ -3028,6 +3032,34 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (kw.length > 1) { for (let i = 0; i + kw.length <= sw.length; i++) if (lev(sw.slice(i, i + kw.length).join(" "), ks) <= Math.max(1, Math.floor(ks.length / 6))) return true; }
     return false;
   }
+  // sets of mutually exclusive choices: English words (as used in the task) and Spanish stems
+  const CONTRAST = [
+    { small: ["pequen", "chic", "chiquit", "pequeñit"], medium: ["median"], large: ["grand"], big: ["grand"] },
+    { cold: ["fri", "helad"], hot: ["calient"], warm: ["tibi", "calient"] },
+    { left: ["izquierd"], right: ["derech"], straight: ["recto", "derecho"] },
+    { black: ["negr"], white: ["blanc"], red: ["roj"], blue: ["azul"], green: ["verde"], yellow: ["amarill"], brown: ["marron", "cafe"], grey: ["gris"], gray: ["gris"], pink: ["rosad"], orange: ["anaranjad", "naranja"] },
+    { cash: ["efectivo"], card: ["tarjeta"], yappy: ["yappy", "yapi"] },
+    { morning: ["manana"], afternoon: ["tarde"], evening: ["noche"], night: ["noche"] },
+    { one: ["uno", "una", "un "], two: ["dos"], three: ["tres"], four: ["cuatro"], five: ["cinco"], six: ["seis"], seven: ["siete"], eight: ["ocho"], nine: ["nueve"], ten: ["diez"] },
+    { before: ["antes"], after: ["despues"] },
+    { more: ["mas"], less: ["menos"] },
+    { yesterday: ["ayer"], today: ["hoy"], tomorrow: ["manana"] },
+    { expensive: ["car"], cheap: ["barat", "economic"] },
+  ];
+  // returns {said, want} when the task asks for one option and the answer gives a different one from the same set
+  function wrongChoice(st, said) {
+    const hint = " " + String(st.hint || "").toLowerCase().replace(/[^a-z\s]/g, " ") + " ", ans = " " + nrm(said) + " ", model = " " + nrm(st.model) + " ";
+    const has = (txt, stems) => stems.some((x) => new RegExp("(^|[^a-zñ])" + x.trim().replace(/ñ/g, "n")).test(txt));
+    for (const set of CONTRAST) {
+      const asked = Object.keys(set).filter((k) => hint.includes(" " + k + " ") && has(model, set[k]));
+      if (!asked.length) continue;
+      const wantStems = asked.flatMap((k) => set[k]);
+      if (has(ans, wantStems)) continue;
+      const other = Object.keys(set).find((k) => !asked.includes(k) && has(ans, set[k]) && !set[k].every((x) => wantStems.includes(x)));
+      if (other) { const w = (ans.match(new RegExp("(^|[^a-zñ])(" + set[other].map((x) => x.trim()).join("|") + ")[a-zñ]*")) || [])[0]; return { said: (w || other).trim(), want: asked[0] }; }
+    }
+    return null;
+  }
   function judge(groups, said) { return groups.every((g) => g.some((k) => hasKey(said, k))); }
   function prSay(pair) { if (pair) speakMixed(pair[0], () => { if (PR && PR.autoMic && CAN_MIC) listen(prAnswer); }); }
   function startRoleplay(id) { const sc = VOICE.roleplays.find((r) => r.id === id); if (!sc) return; tCur = null; PR = { kind: "rp", sc, step: 0, tries: 0, score: 0, log: [], autoMic: true, fb: null }; ensureSession("Role-play", "Role-play: " + sc.t); logMsg("a", "🎭 Role-play: **" + sc.t + "** (" + sc.en + ")"); tView = "practice"; tRender(); prSay(sc.steps[0].say); logMsg("a", sc.steps[0].say[0]); }
@@ -3053,12 +3085,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     logMsg("u", said);
     if (PR.kind === "rp") {
       const st = PR.sc.steps[PR.step];
-      if (judge(st.accept, said)) {
+      const wc = wrongChoice(st, said);
+      if (!wc && judge(st.accept, said)) {
         PR.score += PR.tries ? 0.5 : 1; PR.tries = 0; PR.fb = { ok: true, text: st.ok[0], en: st.ok[1] }; PR.step++;
         const nx = PR.sc.steps[PR.step];
         if (nx) { logMsg("a", st.ok[0] + " " + nx.say[0]); tRender(); speakMixed(st.ok[0] + " " + nx.say[0], () => { if (PR && CAN_MIC && PR.autoMic) listen(prAnswer); }); }
         else { const summ = PR.sc.end[0] + " — Score: " + PR.score + " / " + PR.sc.steps.length; logMsg("a", summ); PR.done = true; tRender(); speakMixed(st.ok[0] + " " + PR.sc.end[0]); }
-      } else { PR.tries++; PR.fb = { ok: false, said, hint: st.hint, model: st.model }; logMsg("a", "Not quite. " + st.hint + " Example: **" + st.model + "**"); tRender(); speakMixed("Casi. Por ejemplo: " + st.model); }
+      } else {
+        PR.tries++; PR.fb = { ok: false, said, hint: st.hint, model: st.model, wrong: wc };
+        logMsg("a", (wc ? "You said «" + wc.said + "», but the task asks for *" + wc.want + "*. " : "Not quite. " + st.hint + " ") + "Example: **" + st.model + "**"); tRender();
+        speakMixed((wc ? "Ojo: " : "Casi. ") + "Por ejemplo: " + st.model, () => { if (PR && CAN_MIC && PR.autoMic && !PR.done) listen(prAnswer); });
+      }
       return;
     }
     if (PR.kind === "sp") { PR.text = (PR.text + " " + said).trim(); tRender(); return; }
@@ -3118,7 +3155,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else {
         if (PR.fb && PR.fb.ok) h += '<p class="prok">✓ ' + esc(PR.fb.text) + ' <span class="muted">(' + esc(PR.fb.en) + ")</span></p>";
         h += '<div class="prbox"><p class="prsay">' + sayBtn(st.say[0]) + " <b>" + esc(st.say[0]) + '</b></p><p class="muted">' + esc(st.say[1]) + '</p><p class="small"><b>Your turn:</b> ' + esc(st.hint) + "</p></div>";
-        if (PR.fb && !PR.fb.ok) h += '<div class="prbox bad"><p>You said: «' + esc(PR.fb.said) + '»</p><p>Try something like: <b>' + esc(st.model) + "</b> " + sayBtn(st.model) + "</p>" + (PR.tries >= 2 ? '<button class="btn small" data-act="pr-skip">Skip this step</button>' : "") + "</div>";
+        if (PR.fb && !PR.fb.ok) h += '<div class="prbox bad"><p>You said: «' + esc(PR.fb.said) + '»</p>' + (PR.fb.wrong ? '<p><b>Check the task:</b> you said «' + esc(PR.fb.wrong.said) + "», but it asks for <b>" + esc(PR.fb.wrong.want) + "</b>.</p>" : "") + '<p>Try something like: <b>' + esc(st.model) + "</b> " + sayBtn(st.model) + "</p>" + (PR.tries >= 2 ? '<button class="btn small" data-act="pr-skip">Skip this step</button>' : "") + "</div>";
       }
     } else if (PR.kind === "sp") {
       const sp = PR.sp;
@@ -3157,6 +3194,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small" style="margin-top:8px">Colour</p><div class="row pvrow">' + PV_COLORS.map(([c, n]) => '<button class="pvc" data-act="pv-col" data-v="' + c + '" aria-pressed="' + ((TS.pcol || "#1F4FA3") === c) + '" aria-label="' + n + '" style="background:' + c + '"></button>').join("") + "</div>" +
       '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
       '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
+      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2500, "2.5 s"], [4000, "4 s"], [6000, "6 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 2500) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.8, "Slow"], [0.9, "Relaxed"], [1, "Normal"], [1.15, "Fast"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
       (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
@@ -3164,6 +3202,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("change", (e) => {
     const id = e.target.id;
     if (id === "pv-en-on") { TS.speakEn = e.target.checked; tsave(); }
+    else if (id === "pv-wait") { TS.waitMs = +e.target.value; tsave(); }
     else if (id === "pv-es") { TS.pvEs = e.target.value; tsave(); } else if (id === "pv-en") { TS.pvEn = e.target.value; tsave(); }
     else if (id === "pv-rate") { TS.prate = +e.target.value; tsave(); } else if (id === "pv-pitch") { TS.ppitch = +e.target.value; tsave(); }
     else if (id === "pv-name") { TS.pname = e.target.value.trim().slice(0, 20) || "Profe"; tsave(); tRender(); fabLook(); }
@@ -3940,7 +3979,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611092040";
+  var BUILD = "202611092050";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
