@@ -209,6 +209,64 @@ public class LlmBridge {
         });
     }
 
+    // ---------- multi-turn chat: one session per conversation, so earlier turns stay in the model's memory ----------
+    LlmInferenceSession chat;
+    String chatKey = "";
+    int chatChars = 0;
+
+    @JavascriptInterface
+    public boolean hasChat() { return true; }
+
+    @JavascriptInterface
+    public void resetChat() {
+        runExec.execute(() -> { if (chat != null) try { chat.close(); } catch (Exception ignored) { } chat = null; chatKey = ""; chatChars = 0; });
+    }
+
+    @JavascriptInterface
+    public void chat(final String id, final String key, final String system, final String user, final int maxTokens, final float temperature) {
+        runExec.execute(() -> {
+            try {
+                ensureLoaded();
+                boolean fresh = chat == null || !key.equals(chatKey) || chatChars + user.length() > 5200;
+                if (fresh) {
+                    if (chat != null) try { chat.close(); } catch (Exception ignored) { }
+                    chat = LlmInferenceSession.createFromOptions(llm, LlmInferenceSession.LlmInferenceSessionOptions.builder()
+                            .setTopK(40).setTopP(0.9f).setTemperature(temperature).setRandomSeed((int) (System.currentTimeMillis() & 0x7fffffff)).build());
+                    chatKey = key;
+                    chatChars = system.length();
+                    chat.addQueryChunk(system + "\n\n" + user);
+                } else {
+                    chat.addQueryChunk(user);
+                }
+                chatChars += user.length();
+                cur = chat;
+                final StringBuilder sb = new StringBuilder();
+                final int cap = Math.max(32, maxTokens) * 4;
+                final LlmInferenceSession sess = chat;
+                sess.generateResponseAsync((partial, done) -> {
+                    if (partial != null && !partial.isEmpty()) {
+                        sb.append(partial);
+                        ev("part", id, partial);
+                        if (sb.length() > cap) try { sess.cancelGenerateResponseAsync(); } catch (Exception ignored) { }
+                    }
+                }).get();
+                chatChars += sb.length();
+                ev("done", id, fresh ? "fresh" : "");
+            } catch (Throwable e) {
+                String m = String.valueOf(e.getMessage());
+                if (m.toLowerCase().contains("cancel")) ev("done", id, "");
+                else {
+                    // a broken session is dropped so the next message starts clean
+                    if (chat != null) try { chat.close(); } catch (Exception ignored) { }
+                    chat = null; chatKey = "";
+                    ev("err", id, m);
+                }
+            } finally {
+                cur = null;
+            }
+        });
+    }
+
     @JavascriptInterface
     public void cancel() {
         LlmInferenceSession s = cur;
@@ -216,6 +274,7 @@ public class LlmBridge {
     }
 
     void destroy() {
+        try { if (chat != null) chat.close(); } catch (Exception ignored) { }
         try { if (llm != null) llm.close(); } catch (Exception ignored) { }
         dlExec.shutdownNow();
         runExec.shutdownNow();

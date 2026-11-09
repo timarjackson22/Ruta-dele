@@ -395,6 +395,12 @@ tr.playing td { background: var(--saffron-soft) }
 .cleanl input { margin-top: 4px; width: 20px; height: 20px; flex: none }
 .btn:disabled { opacity: .45; cursor: not-allowed }
 .ttabs { width: 100%; gap: 6px }
+.pav { font-size: 1.05rem; line-height: 1 }
+.pvrow { gap: 6px }
+.pvb { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); font-size: 1.25rem; cursor: pointer; display: grid; place-items: center; font-weight: 800; font-family: var(--display); color: var(--ink) }
+.pvb[aria-pressed="true"], .pvc[aria-pressed="true"] { border-color: var(--saffron); box-shadow: 0 0 0 2px var(--saffron) }
+.pvc { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--surface); cursor: pointer }
+.tutor select#pv-es, .tutor select#pv-en { width: 100% }
 .micbtn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--saffron); color: #1b1300; display: grid; place-items: center; cursor: pointer }
 .micbtn svg { width: 22px; height: 22px }
 .micbtn.on { background: #C2362B; color: #fff; animation: micpulse 1.2s ease-in-out infinite }
@@ -2620,7 +2626,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   } };
   // the model streams bytes in pieces; a character split across two pieces arrives as "Â¡" instead of "¡": repair it
   function fixUtf(t) { return t.replace(/[\u00C2-\u00F4][\u0080-\u00BF]{1,3}/g, (m) => { try { return decodeURIComponent(escape(m)); } catch (e) { return m; } }); }
+  function natChat(key, sys, user, maxTokens, temp, onPart, signal, onWait) {
+    return natRun((id) => window.AndroidLLM.chat(id, key, sys, user, maxTokens, temp), onPart, signal, onWait);
+  }
   function natGenerate(prompt, maxTokens, temp, onPart, signal, onWait) {
+    return natRun((id) => window.AndroidLLM.generate(id, prompt, maxTokens, temp), onPart, signal, onWait);
+  }
+  function natRun(start, onPart, signal, onWait) {
     return new Promise((res, rej) => {
       const id = "g" + (++NAT.seq), t0 = Date.now(); let text = "", first = 0;
       // while the model loads and reads the prompt nothing streams back: show a timer, and give up after 3 minutes without a word
@@ -2632,7 +2644,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const fin = () => { clearInterval(natWatch); delete NAT.cbs[id]; };
       NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (onPart) onPart(fixUtf(text)); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(fixUtf(text)); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
       if (signal) signal.addEventListener("abort", () => { try { window.AndroidLLM.cancel(); } catch (e) {} });
-      try { window.AndroidLLM.generate(id, prompt, maxTokens, temp); } catch (e) { delete NAT.cbs[id]; rej({ code: "native", message: String(e) }); }
+      try { start(id); } catch (e) { fin(); rej({ code: "native", message: String(e) }); }
     });
   }
   // one plain-text prompt (works whether or not the model file adds its own chat template)
@@ -2815,7 +2827,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const small = Object.assign({}, ctx, { text: (ctx.text || "").slice(0, 350) });
       const wait = (sec) => onText("*" + (cold ? "Loading the AI on your phone and thinking" : "Thinking") + "… " + sec + " s*" + (sec > 25 ? "\n\n*The on-device AI is slow on long messages. Short questions get faster answers.*" : ""));
       wait(0);
-      const out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), hist, 1400), 200, 0.3, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+      let out;
+      if (typeof window.AndroidLLM.chat === "function") {
+        // the app keeps one model session per conversation: only the new message is sent, so replies start sooner and stay on topic
+        const key = (tCur ? tCur.id : "x") + ":" + (TS.pname || "") + ":" + S.region;
+        const sys = rules(small, true) + "\n\nYou are now talking with the learner. Answer their message below.";
+        const user = lastU + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
+        out = await natChat(key, sys, user, 200, 0.6, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+      } else {
+        const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
+        out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 200, 0.6, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+      }
       return cleanLocal(out) || "…";
     }
     if (TB === "local") {
@@ -2840,6 +2862,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function listen(onFinal, opts) {
     opts = opts || {};
     if (!CAN_MIC) return;
+    SPK_GEN++;
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
     rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = !!opts.continuous; rec.maxAlternatives = 1;
@@ -2854,16 +2877,32 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function stopListening() { if (rec) try { rec.stop(); } catch (e) {} }
   const isSpanish = (s) => /[¿¡ñáéíóú]/i.test(s) || /\b(el|la|los|las|que|de|es|y|en|un|una|por|para|con|muy|bien|yo|tú|usted|qué|cómo|está|son|hola|gracias)\b/i.test(s) && !/\b(the|and|is|you|to|of|in English|means)\b/i.test(s);
+  let SPK_GEN = 0;
+  function profeUtter(t, es) {
+    const all = (() => { try { return speechSynthesis.getVoices(); } catch (e) { return []; } })();
+    const want = es ? TS.pvEs : TS.pvEn, v = want ? all.find((x) => x.name === want) : null;
+    return utter(t, es ? "es" : "en", (es ? 0.92 : 1) * (TS.prate || 1), v || undefined, TS.ppitch || 1);
+  }
   function speakMixed(text, onDone) {
     if (!canSpeak) { if (onDone) onDone(); return; }
     try { speechSynthesis.cancel(); } catch (e) {}
     const clean = plainForSpeech(text).replace(/\n+/g, ". ");
     const parts = (clean.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || [clean]).map((s) => s.trim()).filter(Boolean);
     if (!parts.length) { if (onDone) onDone(); return; }
-    // continue even if the voice fails or never reports the end (otherwise voice chat would stop listening)
-    let fired = false; const finish = () => { if (fired) return; fired = true; clearTimeout(guard); if (onDone) onDone(); };
-    const guard = setTimeout(finish, 4000 + clean.length * 110);
-    parts.forEach((p, i) => { const u = utter(p, isSpanish(p) ? "es" : "en", isSpanish(p) ? 0.92 : 1); if (i === parts.length - 1) { u.onend = finish; u.onerror = finish; } try { speechSynthesis.speak(u); } catch (e) { if (i === parts.length - 1) finish(); } });
+    // join neighbouring sentences in the same language, then play the pieces one after another
+    // (the Android voice replaces whatever is playing, so queuing them would keep only the last sentence)
+    const segs = []; parts.forEach((p) => { const es = isSpanish(p); if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); });
+    let fired = false, k = 0, gen = ++SPK_GEN; const finish = () => { if (fired) return; fired = true; clearTimeout(guard); if (onDone) onDone(); };
+    const guard = setTimeout(finish, 6000 + clean.length * 120);
+    const next = () => {
+      if (gen !== SPK_GEN) return; // a newer reply or the mic took over
+      if (k >= segs.length) return finish();
+      const sg = segs[k++], u = profeUtter(sg.t, sg.es);
+      let moved = false; const go = () => { if (moved) return; moved = true; next(); };
+      u.onend = go; u.onerror = (e) => { if (e && e.error === "interrupted") return; go(); };
+      try { speechSynthesis.speak(u); } catch (e) { go(); }
+    };
+    next();
   }
   function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = liveText || (listening ? "Listening… speak now" : ""); } }
   function uiVoice() {
@@ -2977,7 +3016,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function bubble(m, i) {
     if (m.r === "u") return '<div class="tm u"><div class="tb">' + esc(m.c).replace(/\n/g, "<br>") + "</div></div>";
     const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' : md(m.c || "");
-    return '<div class="tm a"><span class="av a" aria-hidden="true">P</span><div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
+    return '<div class="tm a">' + pAvatar() + '<div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
   }
   function tPaintLast() { const box = document.getElementById("t-msgs"); if (!box || !tCur) return; const last = box.lastElementChild, m = tCur.msgs[tCur.msgs.length - 1]; if (last && m) { last.outerHTML = bubble(m, tCur.msgs.length - 1); box.scrollTop = box.scrollHeight; } }
   const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>';
@@ -3024,6 +3063,41 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!PR.done) h += '<div class="t-live" id="t-live" hidden></div><form class="tform" id="pr-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="pr-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="pr-input">Type your answer</label><input id="pr-input" autocomplete="off" placeholder="…or type your answer"><button class="btn primary" type="submit">OK</button></form>';
     return h;
   }
+  const PV_AVATARS = [["P", "Letter"], ["👩🏽‍🏫", "Teacher"], ["👨🏽‍🏫", "Teacher"], ["🧑🏽‍🎓", "Student"], ["🦜", "Parrot"], ["🐢", "Turtle"], ["🌺", "Flower"], ["☕", "Coffee"], ["🎸", "Guitar"], ["⚽", "Football"]];
+  const PV_COLORS = [["#1F4FA3", "Cobalt"], ["#C27C0E", "Saffron"], ["#2C7449", "Green"], ["#7D2C82", "Purple"], ["#B0365E", "Rose"], ["#11627A", "Teal"]];
+  const pName = () => (TS.pname || "Profe").slice(0, 20);
+  function pAvatar(big) {
+    const a = TS.pav || "P", c = TS.pcol || "";
+    return '<span class="av a pav' + (big ? " big" : "") + '" aria-hidden="true"' + (c ? ' style="background:' + c + ';color:#fff"' : "") + ">" + esc(a === "P" ? pName()[0].toUpperCase() : a) + "</span>";
+  }
+  function looksHTML() {
+    let vs = []; try { vs = speechSynthesis.getVoices(); } catch (e) {}
+    const es = vs.filter((v) => /^es/i.test(v.lang)), en = vs.filter((v) => /^en/i.test(v.lang));
+    const nice = (v) => { const n = v.name.replace(/^(Google|Microsoft|Samsung)\s*/i, "").replace(/[-_]x[-_]/i, " ").replace(/-(local|network)$/i, ""); return n + " · " + v.lang + (v.localService === false ? " (online)" : ""); };
+    const opt = (list, cur) => '<option value="">Automatic</option>' + list.map((v) => '<option value="' + esc(v.name) + '"' + (v.name === cur ? " selected" : "") + ">" + esc(nice(v)) + "</option>").join("");
+    return '<h3>Profe’s look and voice</h3><div class="prbox">' +
+      '<div class="row"><label class="small" for="pv-name">Name</label><input id="pv-name" maxlength="20" value="' + esc(pName()) + '" style="max-width:12em"></div>' +
+      '<p class="small" style="margin-top:8px">Picture</p><div class="row pvrow">' + PV_AVATARS.map(([a, n]) => '<button class="pvb" data-act="pv-av" data-v="' + esc(a) + '" aria-pressed="' + ((TS.pav || "P") === a) + '" aria-label="' + n + '">' + esc(a === "P" ? pName()[0].toUpperCase() : a) + "</button>").join("") + "</div>" +
+      '<p class="small" style="margin-top:8px">Colour</p><div class="row pvrow">' + PV_COLORS.map(([c, n]) => '<button class="pvc" data-act="pv-col" data-v="' + c + '" aria-pressed="' + ((TS.pcol || "#1F4FA3") === c) + '" aria-label="' + n + '" style="background:' + c + '"></button>').join("") + "</div>" +
+      '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
+      '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
+      '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.8, "Slow"], [0.9, "Relaxed"], [1, "Normal"], [1.15, "Fast"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
+      (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
+  }
+  document.addEventListener("change", (e) => {
+    const id = e.target.id;
+    if (id === "pv-es") { TS.pvEs = e.target.value; tsave(); } else if (id === "pv-en") { TS.pvEn = e.target.value; tsave(); }
+    else if (id === "pv-rate") { TS.prate = +e.target.value; tsave(); } else if (id === "pv-pitch") { TS.ppitch = +e.target.value; tsave(); }
+    else if (id === "pv-name") { TS.pname = e.target.value.trim().slice(0, 20) || "Profe"; tsave(); tRender(); fabLook(); }
+  });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-act]"); if (!t) return;
+    if (t.dataset.act === "pv-av") { TS.pav = t.dataset.v; tsave(); tRender(); fabLook(); }
+    else if (t.dataset.act === "pv-col") { TS.pcol = t.dataset.v; tsave(); tRender(); fabLook(); }
+    else if (t.dataset.act === "pv-try") speakMixed("¡Hola! Soy " + pName() + ". ¿Practicamos un poco de español hoy? Let's practise together.");
+  });
+  function fabLook() { const f = document.getElementById("tutor-fab"); if (!f) return; const sp = f.querySelector("span"); if (sp) { sp.textContent = (TS.pav || "P") === "P" ? pName()[0].toUpperCase() : TS.pav; if (TS.pcol) { sp.style.background = TS.pcol; sp.style.color = "#fff"; } } const tn = [...f.childNodes].find((n) => n.nodeType === 3); if (tn) tn.textContent = pName(); f.setAttribute("aria-label", "Open " + pName() + ", your AI tutor"); }
+  setTimeout(fabLook, 0);
   function tRender() {
     const fab = document.getElementById("tutor-fab"), pan = document.getElementById("tutor");
     if (!fab || !pan) return;
@@ -3031,7 +3105,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     TB = resolveTB();
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
-    const head = '<div class="th"><div><b>Profe</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
+    const head = '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
     else if (tView === "practice") body = practiceHTML();
@@ -3039,7 +3113,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const msgs = tCur ? tCur.msgs : [];
       const intro = TB ? "¡Hola! Soy Profe. I can see what you have open (<b>" + esc(ctx.label) + "</b>). Ask me anything" + (CAN_MIC ? ", tap the mic to talk, or start a hands-free voice chat." : ", or pick an option below.") :
         "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.";
-      body = '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a"><span class="av a" aria-hidden="true">P</span><div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
+      body = '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a">' + pAvatar() + '<div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
         '<div class="t-live" id="t-live" hidden></div>' +
         '<div class="tchips">' + (CAN_MIC && TB ? '<button class="btn small" id="t-voice" data-act="t-voice" aria-pressed="' + voiceMode + '">' + (voiceMode ? "End voice chat" : "Voice chat") + "</button>" : "") + [["Explain this page to me", "Explain"], ["Quiz me on this, one question at a time", "Quiz me"], ["Go through my answers on this page and explain my mistakes", "Check my answers"], ["Let's have a short conversation in Spanish about this topic. You start.", "Conversation"], ["Give me DELE exam tips for this level", "DELE tips"]].map(([p, n]) => '<button class="btn small" data-act="t-chip" data-p="' + esc(p) + '"' + (tBusy ? " disabled" : "") + ">" + n + "</button>").join("") + "</div>" +
         '<form class="tform" id="t-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="t-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="t-input">Message Profe</label><textarea id="t-input" rows="1" placeholder="Escribe aquí…"></textarea>' + (tBusy ? '<button class="btn" type="button" data-act="t-stop">Stop</button>' : '<button class="btn primary" type="submit">Send</button>') + "</form>";
@@ -3065,6 +3139,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="dlp" id="t-dl" hidden><div class="bar"><i id="t-progbar" style="width:0%"></i></div><p class="small muted" id="t-prog">Starting…</p></div></div>' +
       (IN_CLAUDE ? "" : '<div class="prbox"><p><b>Claude (best quality, needs internet)</b></p><p class="small">Paste an Anthropic API key. With a key saved, Profe uses Claude Opus 5.5, Anthropic’s strongest model here, instead of the on-device AI. On the Max plan, link your Console organization in claude.ai Settings › Billing to use its monthly API credits. Usage is billed to that key by Anthropic; the key stays on this phone.</p><div class="row"><input id="t-key" type="password" autocomplete="off" placeholder="' + (TS.apiKey ? "Key saved" : "sk-ant-…") + '"><button class="btn small primary" data-act="t-savekey">Save</button>' + (TS.apiKey ? '<button class="btn small" data-act="t-engine" data-v="api" aria-pressed="' + (TB === "api") + '">Use Claude</button><button class="btn small" data-act="t-forgetkey">Remove key</button>' : "") + '</div><p class="small muted">Or use your Claude plan: <a href="https://claude.ai/artifact/AK8GJFzo1XtEvZAtbtDTs7" target="_blank" rel="noopener">open Ruta DELE in Claude</a> (no microphone there).</p></div>') +
       (CAN_MIC ? '<div class="prbox"><p><b>Voice</b></p><div class="row"><span class="small">I speak:</span><select id="t-stt"><option value="">Spanish (' + (S.region === "es" ? "Spain" : "Latin America") + ')</option><option value="es-PA"' + (TS.sttLang === "es-PA" ? " selected" : "") + '>Spanish (Panamá)</option><option value="en-US"' + (TS.sttLang === "en-US" ? " selected" : "") + '>English</option></select></div><label class="row small"><input type="checkbox" id="t-auto"' + (TS.autoListen ? " checked" : "") + "> In voice chat, listen again automatically after Profe speaks</label></div>" : "") +
+      looksHTML() +
       "<h3>What Profe remembers</h3><p class=\"muted small\">Profe reads these notes at the start of every chat. They update every few messages, and you can edit them.</p><textarea id=\"t-mem\" rows=\"6\">" + esc(TS.memory) + '</textarea><div class="row"><button class="btn small primary" data-act="t-savemem">Save notes</button><button class="btn small" data-act="t-remember">Update from this chat</button></div>' +
       "<h3>Past conversations</h3>" + (TS.sessions.length ? '<ul class="tsess">' + TS.sessions.map((s) => '<li><button class="tsb" data-act="t-open-s" data-id="' + esc(s.id) + '"><b>' + esc(s.title || "Conversation") + '</b><span class="muted small">' + esc(s.where || "") + " · " + new Date(s.updated || s.created).toLocaleString() + " · " + s.msgs.length + " messages</span></button></li>").join("") + "</ul>" : '<p class="muted">No conversations yet.</p>') +
       '<p class="muted small">' + (TDB ? "Saved to your Claude account and this device." : "Saved on this device.") + "</p></div>";
@@ -3101,7 +3176,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (act === "t-close") { voiceMode = false; stopListening(); document.getElementById("tutor").hidden = true; document.body.classList.remove("tutor-open"); }
     else if (act === "t-tab") { tView = t.dataset.v; tRender(); }
     else if (act === "t-chip") tSend(t.dataset.p);
-    else if (act === "t-new") { if (tCur && tCur.msgs.length >= 4) tRemember(); tCur = null; PR = null; voiceMode = false; stopListening(); tView = "chat"; tRender(); }
+    else if (act === "t-new" && window.AndroidLLM && window.AndroidLLM.resetChat) { try { window.AndroidLLM.resetChat(); } catch (x) {} }
+    if (act === "t-new") { if (tCur && tCur.msgs.length >= 4) tRemember(); tCur = null; PR = null; voiceMode = false; stopListening(); tView = "chat"; tRender(); }
     else if (act === "t-stop") { if (tCtl) tCtl.abort(); }
     else if (act === "t-say") { const m = tCur && tCur.msgs[+t.dataset.i]; if (m) speakMixed(m.c); }
     else if (act === "t-mic") { if (listening) stopListening(); else listen((txt) => tSend(txt, true)); }
@@ -3786,7 +3862,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611092005";
+  var BUILD = "202611092014";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
