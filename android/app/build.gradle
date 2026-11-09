@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 def vc = (System.getenv("VERSION_CODE") ?: "1") as Integer
 android {
     namespace 'app.rutadele'
-    compileSdk 34
+    compileSdk 35
     defaultConfig {
         applicationId 'app.rutadele'
         minSdk 26
@@ -21,9 +21,16 @@ android {
     buildTypes {
         release { minifyEnabled false; signingConfig signingConfigs.release }
     }
+    packaging {
+        jniLibs { pickFirsts += ['**/libc++_shared.so'] }
+        resources { excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE*', 'META-INF/NOTICE*', 'META-INF/*.kotlin_module'] }
+    }
     compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
 dependencies {
     implementation 'androidx.webkit:webkit:1.11.0'
     implementation 'androidx.core:core:1.13.1'
+    // on-device AI (Profe) and offline translation
+    implementation 'com.google.mediapipe:tasks-genai:0.10.+'
+    implementation 'com.google.mlkit:translate:17.0.3'
 }

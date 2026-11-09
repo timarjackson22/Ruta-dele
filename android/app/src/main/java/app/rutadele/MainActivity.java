@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.PermissionRequest;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -28,7 +29,10 @@ import java.util.Collections;
 public class MainActivity extends Activity {
     static final String HOST = "timarjackson22.github.io";
     static final String URL = "https://" + HOST + "/Ruta-dele/";
-    static final int REQ_MIC = 7, REQ_NOTIF = 8;
+    static final int REQ_MIC = 7, REQ_NOTIF = 8, REQ_FILE = 9;
+    ValueCallback<Uri[]> fileCb;
+    LlmBridge llm;
+    TranslateBridge trb;
 
     WebView web;
     TtsBridge tts;
@@ -58,6 +62,10 @@ public class MainActivity extends Activity {
         stt = new SttBridge(this, web);
         web.addJavascriptInterface(tts, "AndroidTTS");
         web.addJavascriptInterface(stt, "AndroidSTT");
+        llm = new LlmBridge(this, web);
+        trb = new TranslateBridge(web);
+        web.addJavascriptInterface(llm, "AndroidLLM");
+        web.addJavascriptInterface(trb, "AndroidTR");
 
         bridgeJs = readAsset("bridge.js");
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
@@ -85,10 +93,51 @@ public class MainActivity extends Activity {
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) request.grant(request.getResources());
                 else request.deny();
             }
+
+            // <input type="file"> (adding PDFs, Word files and texts to Mis lecturas)
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (fileCb != null) fileCb.onReceiveValue(null);
+                fileCb = cb;
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/html", "text/markdown", "application/x-subrip", "text/vtt", "application/octet-stream"});
+                try { startActivityForResult(i, REQ_FILE); } catch (Exception e) { fileCb = null; return false; }
+                return true;
+            }
         });
 
-        if (saved != null) web.restoreState(saved);
+        String shared = sharedUrl(getIntent());
+        if (shared != null) web.loadUrl(shared);
+        else if (saved != null) web.restoreState(saved);
         else web.loadUrl(URL);
+    }
+
+    // Text or links shared from other apps (Chrome's Share menu) open in Mis lecturas → Add a text
+    String sharedUrl(Intent in) {
+        if (in == null || !Intent.ACTION_SEND.equals(in.getAction())) return null;
+        String text = in.getStringExtra(Intent.EXTRA_TEXT), title = in.getStringExtra(Intent.EXTRA_SUBJECT);
+        if (text == null || text.trim().isEmpty()) return null;
+        return URL + "?text=" + Uri.encode(text) + (title != null ? "&title=" + Uri.encode(title) : "") + "#leer-add";
+    }
+
+    @Override
+    protected void onNewIntent(Intent in) {
+        super.onNewIntent(in);
+        String shared = sharedUrl(in);
+        if (shared != null) web.loadUrl(shared);
+    }
+
+    @Override
+    protected void onActivityResult(int code, int result, Intent data) {
+        super.onActivityResult(code, result, data);
+        if (code == REQ_FILE && fileCb != null) {
+            Uri[] r = null;
+            if (result == RESULT_OK && data != null && data.getData() != null) r = new Uri[]{data.getData()};
+            fileCb.onReceiveValue(r);
+            fileCb = null;
+        }
     }
 
     void askNotifications() {
@@ -133,6 +182,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         stt.destroy();
+        llm.destroy();
+        trb.destroy();
         tts.shutdown();
         web.destroy();
         super.onDestroy();

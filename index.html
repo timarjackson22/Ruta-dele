@@ -2593,6 +2593,53 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const CAN_MIC = !!SR && !IN_CLAUDE;
   const HAS_GPU = !!navigator.gpu;
+  /* ---------- Android app: on-device AI through the app (LiteRT / MediaPipe), since its web view has no WebGPU ---------- */
+  const HAS_NATIVE = !!window.AndroidLLM && !IN_CLAUDE;
+  const NATIVE_MODEL = { url: "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct/resolve/main/Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", name: "Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", size: "1.6 GB" };
+  const NAT = { st: {}, cbs: {}, seq: 0, dl: "", dlerr: "" };
+  function natStatus() { try { NAT.st = JSON.parse(window.AndroidLLM.status() || "{}"); } catch (e) { NAT.st = {}; } return NAT.st; }
+  const natReady = () => HAS_NATIVE && /^(ready|loading|loaded)$/.test(natStatus().state || "");
+  const gb = (b) => (b / 1e9).toFixed(2) + " GB";
+  window.__allm = { ev(type, id, data) {
+    if (type === "dl") {
+      NAT.dl = data;
+      if (data === "done") { TS.engine = "native"; tsave(); TB = resolveTB(); tRender(); return; }
+      const [g, t] = data.split("/").map(Number), bar = document.getElementById("n-bar"), pr = document.getElementById("n-prog");
+      if (bar && t) bar.style.width = Math.round((g / t) * 100) + "%";
+      if (pr) pr.textContent = "Downloading… " + gb(g) + (t ? " of " + gb(t) : "") + ". Keep the app open; it resumes if interrupted.";
+      return;
+    }
+    if (type === "dlerr") { NAT.dlerr = data; tRender(); return; }
+    if (type === "removed" || type === "loaded" || type === "loading") { TB = resolveTB(); if (tView === "hist") tRender(); return; }
+    const c = NAT.cbs[id]; if (!c) return;
+    if (type === "part") c.part(data); else if (type === "done") c.done(); else if (type === "err") c.err(data);
+  } };
+  function natGenerate(prompt, maxTokens, temp, onPart, signal) {
+    return new Promise((res, rej) => {
+      const id = "g" + (++NAT.seq); let text = "";
+      NAT.cbs[id] = { part: (d) => { text += d; if (onPart) onPart(text); }, done: () => { delete NAT.cbs[id]; res(text); }, err: (m) => { delete NAT.cbs[id]; rej({ code: "native", message: m, text }); } };
+      if (signal) signal.addEventListener("abort", () => { try { window.AndroidLLM.cancel(); } catch (e) {} });
+      try { window.AndroidLLM.generate(id, prompt, maxTokens, temp); } catch (e) { delete NAT.cbs[id]; rej({ code: "native", message: String(e) }); }
+    });
+  }
+  // one plain-text prompt (works whether or not the model file adds its own chat template)
+  function natPrompt(sys, turns, budget) {
+    const lines = []; let n = 0;
+    for (let i = turns.length - 1; i >= 0; i--) { const l = (turns[i].role === "user" ? "Learner: " : "Profe: ") + turns[i].content.replace(/\s+/g, " ").slice(0, 900); if (n + l.length > (budget || 2600) && lines.length) break; lines.unshift(l); n += l.length; }
+    return sys + "\n\nConversation so far:\n" + lines.join("\n") + "\n\nWrite Profe's next reply to the learner. Write only the reply.";
+  }
+  function nativeBox() {
+    const st = natStatus();
+    if (st.state === "downloading") { const g = +st.got || 0, t = +st.total || 0; return '<p class="small">Downloading the AI model (' + NATIVE_MODEL.size + ').</p><div class="dlp"><div class="bar"><i id="n-bar" style="width:' + (t ? Math.round((g / t) * 100) : 0) + '%"></i></div><p class="small muted" id="n-prog">Downloading… ' + gb(g) + (t ? " of " + gb(t) : "") + '. Keep the app open; it resumes if interrupted.</p></div><button class="btn small" data-act="t-ncancel">Pause download</button>'; }
+    if (/^(ready|loading|loaded)$/.test(st.state)) return '<p class="small">Downloaded: <b>Qwen 2.5 · 1.5B</b> (' + gb(+st.size || 0) + "). It runs on your phone’s processor and works offline. The first reply after opening the app takes a little longer while it loads.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="native" aria-pressed="' + (TB === "native") + '">Use on-device AI</button><button class="btn small" data-act="t-ndel">Remove from phone</button></div>';
+    return '<p class="small">Download once on Wi-Fi (' + NATIVE_MODEL.size + ', from Hugging Face). The AI then runs inside this app on your phone, with no account and no internet.</p>' + (NAT.dlerr || st.error ? '<p class="small terr">Last try: ' + esc(NAT.dlerr || st.error) + "</p>" : "") + '<div class="row"><button class="btn small primary" data-act="t-ndl">' + (NAT.dlerr || st.error ? "Resume download" : "Download the AI") + "</button></div>";
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-act]"); if (!t || !HAS_NATIVE) return;
+    if (t.dataset.act === "t-ndl") { NAT.dlerr = ""; try { window.AndroidLLM.download(NATIVE_MODEL.url, NATIVE_MODEL.name); } catch (x) {} setTimeout(tRender, 300); }
+    else if (t.dataset.act === "t-ncancel") { try { window.AndroidLLM.cancelDownload(); } catch (x) {} }
+    else if (t.dataset.act === "t-ndel") { if (t.dataset.arm !== "1") { t.dataset.arm = "1"; t.textContent = "Tap again to remove"; return; } try { window.AndroidLLM.remove(); } catch (x) {} if (TS.engine === "native") TS.engine = "auto"; tsave(); }
+  });
   let GPU_STATE = HAS_GPU ? "checking" : "none"; // ok | noadapter | none
   if (HAS_GPU && !IN_CLAUDE) navigator.gpu.requestAdapter().then((a) => { GPU_STATE = a ? "ok" : "noadapter"; }, () => { GPU_STATE = "noadapter"; }).then(() => { if (tView === "hist") tRender(); });
   const GPU_HELP = '<p class="small"><b>Your phone’s graphics chip isn’t enabled for this in Chrome yet.</b> Chrome turns this on automatically only for some chips. Many Galaxy S24 phones sold outside the US use Samsung’s Exynos chip, which isn’t on that list. To try it:</p><ol class="small"><li>In Chrome, type <b>chrome://flags</b> in the address bar.</li><li>Search for <b>Unsafe WebGPU Support</b> and set it to <b>Enabled</b>.</li><li>Tap <b>Relaunch</b>, then open Ruta DELE again and come back here.</li></ol><p class="small muted">If it still doesn’t work, use a Claude key below, or the Practice tab, which works offline without any AI.</p>';
@@ -2600,11 +2647,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   function resolveTB() {
     if (SAMPLE) return "claude";
-    if (TS.apiKey && TS.engine !== "local") return "api";
-    if (TS.localReady && TS.localModel && HAS_GPU) return "local";
+    if (TS.apiKey && TS.engine !== "local" && TS.engine !== "native") return "api";
+    if (natReady()) return "native";
+    if (TS.localReady && TS.localModel && HAS_GPU && !HAS_NATIVE) return "local";
     if (TS.apiKey) return "api";
     return null;
   }
+
   (async function tutorInit() {
     try {
       if (IN_CLAUDE) {
@@ -2737,6 +2786,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       } catch (e) { if (signal && signal.aborted) throw { code: "cancelled", text }; throw e.code ? e : { code: "upstream_error", text }; }
       return text;
     }
+    if (TB === "native") {
+      if (natStatus().state !== "loaded") onText("Starting the AI on your phone… The first reply after opening the app can take a minute.");
+      const f = facts(lastU + " " + (ctx.verb || ""));
+      const hist = turns.slice(-8).map((t) => (t.role === "assistant" ? { role: "assistant", content: cleanLocal(t.content) } : t));
+      const out = await natGenerate(natPrompt(rules(ctx, true) + (f ? "\n\n" + f : ""), hist), 320, 0.5, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal);
+      return cleanLocal(out) || "…";
+    }
     if (TB === "local") {
       if (!LLM) { onText("Starting the AI on your phone… The first message after opening the app takes up to a minute or two."); llmOnProg = (p) => onText("Starting the AI on your phone… " + Math.round((p.progress || 0) * 100) + "%\n\n" + (p.text || "").replace(/\[.*?\]\s*/g, "").slice(0, 120)); }
       let eng; try { eng = await loadLocal(); } finally { llmOnProg = null; }
@@ -2811,7 +2867,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   async function tRemember() {
     TB = resolveTB(); if (!TB || !tCur) return;
-    const convo = tCur.msgs.filter((m) => m.c).slice(-30).map((m) => (m.r === "u" ? "Learner: " : "Profe: ") + m.c).join("\n").slice(0, TB === "local" ? 3000 : 12000);
+    const convo = tCur.msgs.filter((m) => m.c).slice(-30).map((m) => (m.r === "u" ? "Learner: " : "Profe: ") + m.c).join("\n").slice(0, (TB === "local" || TB === "native") ? 3000 : 12000);
     const prompt = "You keep short notes about a Spanish learner for their tutor. Current notes:\n" + (TS.memory || "(none)") + "\n\nRecent activity:\n" + convo + "\n\nRewrite the notes, max 120 words, as short bullet lines: level and goals, strengths, recurring mistakes, topics covered, what to practise next. Keep useful old points. Reply with only the notes.";
     try {
       let t;
@@ -2894,7 +2950,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function tPaintLast() { const box = document.getElementById("t-msgs"); if (!box || !tCur) return; const last = box.lastElementChild, m = tCur.msgs[tCur.msgs.length - 1]; if (last && m) { last.outerHTML = bubble(m, tCur.msgs.length - 1); box.scrollTop = box.scrollHeight; } }
   const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>';
-  function engineLabel() { return TB === "claude" ? "Claude" : TB === "api" ? "Claude (API key)" : TB === "local" ? "AI on this phone" : "Practice mode"; }
+  function engineLabel() { return TB === "claude" ? "Claude" : TB === "api" ? "Claude (API key)" : TB === "local" || TB === "native" ? "AI on this phone" : "Practice mode"; }
   function practiceHTML() {
     if (!PR) {
       const lvl = curLvl(), rl = PRL || lvl, rps = VOICE.roleplays.filter((r) => r.lvl === rl), sps = VOICE.speaking.filter((r) => r.lvl === lvl);
@@ -2971,7 +3027,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       "<h3>Profe’s AI</h3>" +
       (IN_CLAUDE ? '<p class="small">You’re in the Claude version: Profe uses your Claude plan and saves chats to your Claude account.</p>' : "") +
       '<div class="prbox"><p><b>On this phone (offline, free, private)</b></p>' +
-      (IN_CLAUDE ? '<p class="small muted">Available in the phone app (installed from the Ruta DELE website), not inside Claude.</p>' : !HAS_GPU ? '<p class="small muted">This browser can’t run on-device AI (it needs WebGPU). On your Galaxy S24, open the app in Chrome.</p>' :
+      (IN_CLAUDE ? '<p class="small muted">Available in the phone app (installed from the Ruta DELE website), not inside Claude.</p>' : HAS_NATIVE ? nativeBox() : !HAS_GPU ? '<p class="small muted">This browser can’t run on-device AI (it needs WebGPU). On your Galaxy S24, open the app in Chrome.</p>' :
         GPU_STATE === "noadapter" ? GPU_HELP :
         loaded ? '<p class="small">Downloaded: <b>' + esc(mname) + "</b> model. It works offline.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="local" aria-pressed="' + (TB === "local") + '">Use on-device AI</button><button class="btn small" data-act="t-dlmodel" data-v="' + (mname === "Light" ? "better" : "light") + '">Switch to ' + (mname === "Light" ? "Better" : "Light") + '</button><button class="btn small" data-act="t-delmodel">Remove from phone</button></div>' :
           '<p class="small">Download once on Wi-Fi. The AI then runs on your phone, with no account and no internet.</p><div class="row"><button class="btn small primary" data-act="t-dlmodel" data-v="light">Light · ' + MODELS.light.size + '</button><button class="btn small" data-act="t-dlmodel" data-v="better">Better · ' + MODELS.better.size + "</button></div>") +
@@ -2984,6 +3040,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function tOpen(prompt) {
     if (resolveTB() === "local" && !LLM) loadLocal().catch(() => {}); // warm up while the learner reads or types
+    if (resolveTB() === "native") try { window.AndroidLLM.preload(); } catch (e) {}
     const pan = document.getElementById("tutor"); pan.hidden = false; document.body.classList.add("tutor-open"); if (!PR) tView = "chat"; tRender();
     if (prompt) { tView = "chat"; tSend(prompt); }
   }
@@ -3345,6 +3402,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (!res.ok) throw { code: res.status === 401 ? "bad_key" : res.status === 429 ? "rate_limited" : "upstream_error" };
       return (j.content || []).filter((c) => c.type === "text").map((c) => c.text).join("\n");
     }
+    if (TB === "native") return (await natGenerate(sys + "\n\n" + user, 900, 0.2)).trim();
     if (TB === "local") {
       const eng = await loadLocal();
       const r = await eng.chat.completions.create({ messages: [{ role: "system", content: sys }, { role: "user", content: user }], temperature: 0.2, max_tokens: 900 });
@@ -3361,9 +3419,44 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   const JOB = { busy: false, stop: false, msg: "" };
   function jobMsg(t) { JOB.msg = t; const el = document.getElementById("my-job"); if (el) el.textContent = t; }
+  const ATR = { cbs: {}, seq: 0 };
+  window.__atr = { ev(id, text, err) { const c = ATR.cbs[id]; if (!c) return; delete ATR.cbs[id]; err ? c[1](new Error(err)) : c[0](text); } };
+  const mlkitTr = (t) => new Promise((res, rej) => { const id = "t" + (++ATR.seq); ATR.cbs[id] = [res, rej]; try { window.AndroidTR.translate(id, t); } catch (e) { delete ATR.cbs[id]; rej(e); } });
+  let MM_BLOCK = 0;
+  async function mmTr(t) {
+    if (Date.now() < MM_BLOCK) throw new Error("The free online translator’s daily limit is used up. It resets tomorrow, or set up Profe’s AI.");
+    const r = await fetch("https://api.mymemory.translated.net/get?langpair=es%7Cen&q=" + encodeURIComponent(t.slice(0, 480)));
+    const j = await r.json().catch(() => ({}));
+    const out = j && j.responseData && j.responseData.translatedText;
+    if (r.status === 429 || /MYMEMORY WARNING|QUERY LENGTH LIMIT/i.test(out || "") || (j.quotaFinished)) { MM_BLOCK = Date.now() + 3600e3; throw new Error("The free online translator’s daily limit is used up. It resets tomorrow, or set up Profe’s AI."); }
+    if (!r.ok || !out) throw new Error("The online translator didn’t answer. Check your connection.");
+    const d = document.createElement("textarea"); d.innerHTML = out; return d.value;
+  }
+  // which translator to use: the Android app's offline one, Claude, the free online one, then the on-device AI
+  function trEngine() {
+    if (window.AndroidTR && !IN_CLAUDE) return "mlkit";
+    const tb = resolveTB();
+    if (tb === "claude" || tb === "api") return "ai";
+    if (navigator.onLine && !IN_CLAUDE && Date.now() >= MM_BLOCK) return "mymemory";
+    return tb ? "ai" : null;
+  }
   const TR_SYS = "You translate Spanish into natural, accurate English for a language learner. Translate each numbered sentence. Reply ONLY with the numbered English translations, one per line, keeping the same numbers. No notes.";
   async function myTranslate(x, ks, quiet) {
-    const flat = flatIdx(x), per = resolveTB() === "local" ? 5 : 30;
+    const flat = flatIdx(x), eng = trEngine();
+    if (eng === "mlkit" || eng === "mymemory") {
+      const fn = eng === "mlkit" ? mlkitTr : mmTr;
+      for (let i = 0; i < ks.length; i++) {
+        if (JOB.stop) break;
+        const k = ks[i], [pi, si] = flat[k];
+        const en = (await fn(x.paras[pi].s[si][0])).trim();
+        if (en) { x.paras[pi].s[si][1] = en; if (CUR === x && PL.items[k]) PL.items[k].en = en; }
+        if (i % 4 === 3 || i === ks.length - 1) { await myPut(x); paintEn(x); }
+        if (!quiet) jobMsg("Translating… " + (i + 1) + " of " + ks.length + " sentences");
+      }
+      return;
+    }
+    if (!eng) throw { code: "unavailable" };
+    const per = resolveTB() === "local" || resolveTB() === "native" ? 5 : 30;
     for (let i = 0; i < ks.length; i += per) {
       if (JOB.stop) break;
       const batch = ks.slice(i, i + per);
@@ -3450,14 +3543,20 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return '<section class="block mytools"><div class="row"><span class="small">Level</span>' + lv + '<span class="muted small">' + x.words.toLocaleString() + " words" + (x.src && x.src.url ? ' · <a href="' + esc(x.src.url) + '" target="_blank" rel="noopener">original</a>' : "") + "</span></div>" +
       '<p class="small" id="my-trstat">' + trStat(x) + "</p>" +
       '<p class="small">Questions: ' + (x.qKind === "ai" ? "comprehension (written by Profe’s AI)" : x.q.length ? "vocabulary in context (offline)" : "none yet") + "</p>" +
-      '<div class="row">' + (JOB.busy ? '<button class="btn small" data-act="my-stop">Stop</button>' : (done ? "" : '<button class="btn small primary" data-act="my-tr"' + (ai ? "" : " disabled") + ">Translate to English</button>") + '<button class="btn small" data-act="my-q"' + (ai ? "" : " disabled") + ">" + (x.qKind === "ai" ? "New questions" : "Write comprehension questions") + "</button>") + "</div>" +
-      '<p class="small muted" id="my-job" aria-live="polite">' + esc(JOB.busy ? JOB.msg : ai ? "" : "Translation and questions need Profe’s AI. Set it up in Profe → History & settings (on-device or a Claude key). Tapping words works without it.") + "</p>" +
+      '<div class="row">' + (JOB.busy ? '<button class="btn small" data-act="my-stop">Stop</button>' : (done ? "" : '<button class="btn small primary" data-act="my-tr"' + (trEngine() ? "" : " disabled") + ">Translate to English</button>") + '<button class="btn small" data-act="my-q"' + (ai ? "" : " disabled") + ">" + (x.qKind === "ai" ? "New questions" : "Write comprehension questions") + "</button>") + "</div>" +
+      '<p class="small muted" id="my-job" aria-live="polite">' + esc(JOB.busy ? JOB.msg : ai ? "" : trEngine() ? "Comprehension questions need Profe’s AI (Profe → History & settings). Translation and tapping words work without it." : "You’re offline: English translation needs the internet or Profe’s AI. Tapping words works offline.") + "</p>" +
       '<details class="small"><summary>Rename or delete</summary><div class="row"><input id="my-rename" value="' + esc(x.t) + '" aria-label="Title"><button class="btn small" data-act="my-rename">Save title</button><button class="btn small" data-act="my-del">Delete this text</button></div></details></section>';
   }
   function afterItem(x) {
     if (x.cat !== "mine") return;
     const lt = document.getElementById("ltext"); if (!lt) return;
     lt.insertAdjacentHTML("beforebegin", myTools(x));
+    // English under each paragraph, like the built-in readings: translate automatically when a fast translator is available
+    const todo = flatIdx(x).map((f, k) => k).filter((k) => { const [pi, si] = flatIdx(x)[k]; return !x.paras[pi].s[si][1]; });
+    const eng = trEngine();
+    if (todo.length && !JOB.busy && (eng === "mlkit" || eng === "mymemory" || (eng === "ai" && resolveTB() !== "local" && resolveTB() !== "native")) && !(x.autoTrFail && Date.now() - x.autoTrFail < 3600e3)) {
+      setTimeout(() => { if (CUR === x && !JOB.busy) runJob(x, async () => { jobMsg("Adding the English translation…"); try { await myTranslate(x, todo); } catch (e) { x.autoTrFail = Date.now(); throw e; } }); }, 50);
+    }
     if (!x.q.length) { const qs = document.querySelector('.mc[data-scope="lq"]'); if (qs) qs.insertAdjacentHTML("beforebegin", '<p class="muted">No questions yet. ' + (resolveTB() ? "Tap “Write comprehension questions” above." : "Set up Profe’s AI to write some.") + "</p>"); }
     if (!x.gl.length) { const g = document.querySelector("#litem table.vocab"); if (g) g.closest("section").innerHTML = '<div class="shead"><h2>Glosario</h2></div><p class="muted">' + (LEX ? "No harder words found for this level." : "The glossary appears once the dictionary has loaded (needs the internet the first time).") + "</p>"; }
     loadLex().then(() => { if (!x.gl.length && x.paras.length) { x.gl = makeGlossary(x); if (!x.q.length) { x.q = vocabQuiz(x); x.qKind = "vocab"; } if (x.gl.length) { myPut(x); if (CUR === x) listenItem(x); } } }).catch(() => {});
@@ -3472,7 +3571,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // translate on demand when a sentence without English is tapped or highlighted
   async function trOnDemand(ks, el) {
     const x = CUR; if (!x || x.cat !== "mine") return;
-    if (!resolveTB()) { if (el) el.textContent = "Set up Profe’s AI in Profe → History & settings to translate sentences."; return; }
+    if (!trEngine()) { if (el) el.textContent = "You’re offline: translation needs the internet or Profe’s AI."; return; }
     if (el) el.textContent = "Translating…";
     try { await myTranslate(x, ks, true); if (el) el.innerHTML = '<span class="eyebrow">English</span><br>' + esc(ks.map((k) => PL.items[k].en).join(" ")); }
     catch (e) { if (el) el.textContent = ERRS[e && e.code] || "Couldn’t translate right now."; }
