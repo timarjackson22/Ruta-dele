@@ -443,20 +443,20 @@ html { font-size: calc(100% * var(--fs, 1)) }
 body { font-size: 1.0625rem }
 .today { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px }
 .today-top { display: flex; gap: 14px; align-items: center }
-.today-h { font-family: var(--display); font-size: 1.35rem; font-weight: 700; margin: 2px 0 }
+.today-h { font-family: var(--display); font-size: 1.25rem; line-height: 1.2; font-weight: 700; margin: 2px 0 }
 .ring { position: relative; width: 76px; height: 76px; flex: none }
 .ring svg { width: 76px; height: 76px; transform: rotate(-90deg) }
 .ring circle { fill: none; stroke-width: 7 } .ring .rbg { stroke: var(--surface-2) } .ring .rfg { stroke: var(--good); stroke-linecap: round; transition: stroke-dasharray .4s }
-.ring span { position: absolute; inset: 0; display: grid; place-items: center; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; line-height: 1.1 }
+.ring span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; line-height: 1.1 }
 .ring span b { display: block; font-size: 1.15rem; color: var(--ink) }
 .week { display: flex; gap: 6px; margin-top: 6px }
 .week .wd { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: .68rem; color: var(--muted); font-weight: 700 }
 .week .wd i { width: 14px; height: 14px; border-radius: 50%; background: var(--surface-2); border: 2px solid var(--line) }
 .week .wd.part i { background: var(--saffron-soft); border-color: var(--saffron) } .week .wd.full i { background: var(--good); border-color: var(--good) }
-.week .wd.today { color: var(--ink) }
+.week .wd.now { color: var(--ink) } .week .wd.now i { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--cobalt) }
 .ttiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
 .ttile { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); text-decoration: none; color: var(--ink); min-height: 58px }
-.ttile .ti { font-size: 1.3rem } .ttile b { display: block; font-size: .98rem } .ttile small { display: block; color: var(--muted); font-size: .8rem; line-height: 1.25 }
+.ttile .ti { font-size: 1.25rem } .ttile b { display: block; font-size: .95rem; line-height: 1.2 } .ttile small { display: block; color: var(--muted); font-size: .8rem; line-height: 1.25 }
 .ttile.main { grid-column: 1 / -1; background: var(--cobalt); color: var(--on-cobalt) } .ttile.main small { color: var(--on-cobalt); opacity: .85 }
 .dispset summary { cursor: pointer; color: var(--muted); font-size: .9rem }
 .dispset .row { margin-top: 8px; gap: 6px }
@@ -1781,7 +1781,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function week() {
     const A = S.act || {}, g = S.goal || 20, out = []; const d = new Date(); d.setDate(d.getDate() - 6);
-    for (let i = 0; i < 7; i++) { const v = A[dayKey(d)] || 0; out.push('<span class="wd' + (v >= g ? " full" : v >= 5 ? " part" : "") + (i === 6 ? " today" : "") + '" title="' + v + ' points"><i></i>' + "SMTWTFS"[d.getDay()] + "</span>"); d.setDate(d.getDate() + 1); }
+    for (let i = 0; i < 7; i++) { const v = A[dayKey(d)] || 0; out.push('<span class="wd' + (v >= g ? " full" : v >= 5 ? " part" : "") + (i === 6 ? " now" : "") + '" title="' + v + ' points"><i></i>' + "SMTWTFS"[d.getDay()] + "</span>"); d.setDate(d.getDate() + 1); }
     return '<div class="week" aria-label="Last 7 days">' + out.join("") + "</div>";
   }
   function coachToast(t) { let n = document.getElementById("coach-toast"); if (!n) { n = document.createElement("div"); n.id = "coach-toast"; n.className = "pa-toast"; document.body.appendChild(n); } n.textContent = t; n.hidden = false; clearTimeout(n._t); n._t = setTimeout(() => (n.hidden = true), 3200); }
@@ -1855,12 +1855,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const nm = (S.mist || []).length, st = streak(), last = S.last && LV[S.last.l] ? S.last : null, fresh = !last && !Object.keys(S.u || {}).length;
     const tile = (href, ic, t, sub, cls) => '<a class="ttile' + (cls ? " " + cls : "") + '" href="' + href + '"><span class="ti" aria-hidden="true">' + ic + "</span><span><b>" + t + '</b><small>' + sub + "</small></span></a>";
     return '<section class="today" aria-label="Today">' +
-      '<div class="today-top">' + goalRing() + '<div class="today-txt"><p class="eyebrow">Today</p><p class="today-h">' + (st ? "🔥 " + st + "-day streak" : "Start a streak today") + '</p><p class="small muted">Daily goal: ' + (S.goal || 20) + " points · practice answers, flashcards, lessons and listening all count.</p>" + week() + "</div></div>" +
+      '<div class="today-top">' + goalRing() + '<div class="today-txt"><p class="eyebrow">Today</p><p class="today-h">' + (st ? "🔥 " + st + "-day streak" : "Start a streak today") + '</p><p class="small muted">Goal: ' + (S.goal || 20) + " points a day</p>" + week() + "</div></div>" +
       '<div class="ttiles">' +
       (last ? tile("#" + last.l + "-u" + (last.i + 1), "▶️", "Continue", LV[last.l].name + " · " + esc(LV[last.l].units[last.i].t), "main") : tile(S.place ? "#" + S.place.lvl : "#nivel", fresh ? "🧭" : "▶️", fresh ? "Find your level" : "Start " + (S.place ? S.place.lvl.toUpperCase() : "A1"), fresh ? "A 3-minute test tells you where to begin" : "Your recommended level", "main")) +
       tile("#repaso", "🗂️", "Flashcards", due ? due + " due now" : "No reviews due") +
       tile("#errores", "🩹", "My mistakes", nm ? nm + " to fix" : "None saved yet") +
-      tile("#guias", "📘", "Grammar guides", GUIDES.length + " in-depth topics") +
+      tile("#guias", "📘", "Grammar guides", GUIDES.length + " topics") +
+      tile("#escuchar", "🎧", "Listen", "Stories, podcasts, news") +
       "</div>" +
       '<details class="dispset"><summary>⚙ Goal and display</summary><div class="row"><span class="small">Daily goal</span>' + GOALS.map(([v, n]) => '<button class="btn small" data-act="goal" data-v="' + v + '" aria-pressed="' + ((S.goal || 20) === v) + '">' + n + " · " + v + "</button>").join("") + "</div>" +
       '<div class="row"><span class="small">Text size</span>' + [[0.9, "A−"], [1, "A"], [1.12, "A+"], [1.25, "A++"]].map(([v, n]) => '<button class="btn small" data-act="ui-fs" data-v="' + v + '" aria-pressed="' + ((UI.fs || 1) == v) + '">' + n + "</button>").join("") + "</div>" +
@@ -5512,7 +5513,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110423";
+  var BUILD = "202611110425";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
