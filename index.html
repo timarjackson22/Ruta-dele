@@ -18,6 +18,8 @@
 body { margin: 0; font: 14px system-ui, -apple-system, sans-serif }
 img { max-width: 100% }
 [hidden] { display: none !important }
+.t-en { margin: 8px 0 2px; padding: 6px 9px; border-left: 3px solid var(--line, #d0d7e2); background: color-mix(in srgb, currentColor 4%, transparent); border-radius: 6px; font-size: .86em; line-height: 1.4; color: var(--muted, #5b6472) }
+.t-enl { display: inline-block; font-size: .72em; font-weight: 700; letter-spacing: .05em; margin-right: 6px; padding: 0 5px; border-radius: 4px; border: 1px solid currentColor; opacity: .75; vertical-align: 1px }
 </style>
 <title>Ruta DELE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -3917,6 +3919,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const snorm = (x) => x.toLowerCase().replace(/[*_¿¡?!.,;:]/g, "").replace(/\s+/g, " ").trim();
   function looped(t) { const seen = new Set(); let rep = 0; for (const x of sents(t)) { const k = snorm(x); if (k.length < 6) continue; if (seen.has(k)) rep++; seen.add(k); } return rep >= 2; }
   function deloop(t) { const seen = new Set(), out = []; for (const x of sents(t)) { const k = snorm(x); if (k.length >= 6 && seen.has(k)) break; seen.add(k); out.push(x); } return out.join(" "); }
+  // two replies that say essentially the same thing
+  function sameReply(a, b) {
+    const ws = (t) => new Set(snorm(t).split(" ").filter((w) => w.length > 2));
+    const A = ws(a), B = ws(b); if (!A.size || !B.size) return false;
+    let n = 0; A.forEach((w) => B.has(w) && n++);
+    return n / Math.min(A.size, B.size) >= 0.75;
+  }
   function natRun(start, onPart, signal, onWait) {
     return new Promise((res, rej) => {
       const id = "g" + (++NAT.seq), t0 = Date.now(); let text = "", first = 0;
@@ -4047,7 +4056,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const gn = guideNotes(lastUser ? lastUser.c : (ctx.text || "").slice(0, 300));
     if (compact && gn) ctx = Object.assign({}, ctx, { text: "Topic notes (reliable):\n" + gn + "\n\n" + (ctx.text || "") });
     if (compact && TB === "native") return "You are Profe, a friendly Spanish teacher. The learner is an English speaker in Panama, level " + lvl + ". " + lang + " Use Latin American Spanish.\n" +
-      "Reply in 1 to 3 short sentences, then ask ONE simple question. If the learner's Spanish has a real mistake, show the right Spanish in **bold** and give a short reason. Put any English on its own line in *italics*. If unsure, keep it simple. Never repeat yourself or these instructions.\n" +
+      "Reply in 1 to 3 short sentences, then ask ONE simple question. If the learner's Spanish has a real mistake, show the right Spanish in **bold** and give a short reason. Put any English on its own line in *italics*. If unsure, keep it simple. If the learner says yes or answers briefly, act on it straight away with a concrete example or a short exercise. Never ask the same question twice. Never repeat yourself or these instructions.\n" +
       "Learner notes: " + (TS.memory || "none").slice(0, 200);
     if (compact) return "You are Profe, a warm, patient Spanish tutor. The learner lives in Panama and is preparing the DELE " + lvl + ". " + lang + " Use " + (es ? "Spain Spanish" : "Latin American Spanish (ustedes, not vosotros)") + ".\n" +
       "The learner usually speaks to you through speech recognition, so a word may be misheard (for example «tía» for «día»). Read their message in the context of the conversation and answer what they most likely meant; never correct a recognition slip, only real grammar mistakes.\n" +
@@ -4175,7 +4184,76 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     out.push("", "*Write another sentence and I'll check it.*");
     return out.join("\n");
   }
-  function expertAnswer(text) {
+
+  /* ---------- chat drills: "practise haber" gives one form at a time, checks it, moves on ---------- */
+  const DR_T = [["pres", "Present", "presente", "I have"], ["pret", "Preterite (simple past)", "pretérito indefinido"], ["impf", "Imperfect", "pretérito imperfecto"], ["fut", "Future", "futuro"], ["cond", "Conditional", "condicional"]];
+  const DR_SKIP = new Set(["practicar", "conjugar", "aprender", "estudiar", "repasar", "querer", "hablar", "decir"]);
+  const drAcc = (t) => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "");
+  function drVerbIn(t) {
+    const quoted = /["“«']([a-záéíóúñ]+(?:ar|er|ir|ír))["”»']/i.exec(String(t || ""));
+    if (quoted) { const I = verbInfo(quoted[1]); if (I) return I; }
+    const ws = xnorm(t).match(/\b[a-záéíóúñ]+(?:ar|er|ir|ír)\b/g) || [];
+    let skipped = null;
+    for (const w of ws) { const I = verbInfo(w); if (!I) continue; if (DR_SKIP.has(w)) { skipped = skipped || I; continue; } return I; }
+    return /practic|practi[cs]e/.test(xnorm(t)) ? null : skipped;
+  }
+  function drNext(D) {
+    let R; try { R = CONJ.conjugate(D.v, D.code); } catch (e) { return null; }
+    const P = PERS(); let k, pi, g = 0;
+    do { k = D.ts[Math.floor(Math.random() * D.ts.length)]; pi = P[Math.floor(Math.random() * P.length)]; g++; } while (g < 12 && D.last === k + pi[1]);
+    D.last = k + pi[1];
+    const T = DR_T.find((x) => x[0] === k), ans = R[k][pi[1]];
+    D.q = { k, p: pi, ans };
+    D.n++;
+    return "**" + D.n + " / " + D.total + "** · **" + pi[2] + "** + **" + D.v + "** · " + T[2] + "\n*(" + pi[0] + " — " + T[1].toLowerCase() + ")*";
+  }
+  function drStart(I, q) {
+    let ts = DR_T.map((x) => x[0]).filter((k) => TENSES.some(([kk, re]) => kk === k && re.test(q)));
+    if (!ts.length) ts = /^a[12]/.test(curLvl()) ? ["pres", "pret", "fut"] : ["pres", "pret", "impf", "fut", "cond"];
+    const D = (tCur.drill = { v: I.v, code: I.code, en: I.en, ts, n: 0, ok: 0, total: 6, miss: [] });
+    const first = drNext(D); if (!first) { tCur.drill = null; return null; }
+    return "¡Vamos! Practicamos **" + I.v + "**.\n*Let’s practise " + I.v + " (" + String(I.en).replace(/\s*\([^)]*\)/g, "").split(";")[0] + "). Type or say just the verb form. Say «stop» to finish.*\n\n" + first;
+  }
+  function drGrade(D, q) {
+    const a = D.q.ans, said = q.replace(/^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)\s+/, "").trim();
+    const right = said === a.toLowerCase(), close = !right && drAcc(said) === drAcc(a.toLowerCase());
+    let out;
+    if (right) { D.ok++; out = "✅ **¡Correcto!** " + D.q.p[2] + " **" + a + "**."; }
+    else if (close) { D.ok++; out = "✅ **¡Bien!** Watch the accent: **" + a + "**."; }
+    else { D.miss.push(D.q.p[2] + " " + a); out = "❌ **Casi.** It’s " + D.q.p[2] + " **" + a + "**." + (said ? "\n*You wrote «" + said + "».*" : ""); }
+    try { actAdd(1); } catch (e) {}
+    if (D.n >= D.total) {
+      D.done = 1;
+      return out + "\n\n🎉 **" + D.ok + " / " + D.total + "** con **" + D.v + "**." + (D.miss.length ? "\n*Review: " + D.miss.join(", ") + ".*" : "") + "\n\n¿Otra ronda? Escribe una frase con **" + D.v + "** y la corrijo.\n*Another round? Say «otra vez». Or write a sentence with " + D.v + " and I’ll check it.*";
+    }
+    return out + "\n\n" + drNext(D);
+  }
+  function drillAnswer(text) {
+    if (!tCur) return null;
+    if (String(text || "").length > 200 || /\n/.test(text)) return null; // notes and other long prompts are not drill answers
+    const q = xnorm(text); if (!q) return null;
+    const D = tCur.drill, nw = q.split(" ").length;
+    if (D && !D.done) {
+      if (/^(stop|para|basta|salir|exit|quit|enough|no m[aá]s|termina|fin)\b/.test(q)) { D.done = 1; return "👍 Paramos aquí" + (D.n > 1 ? ": **" + D.ok + " / " + (D.n - 1) + "**" : "") + ".\n*We’ll stop here. Ask me anything, or say «practicar " + D.v + "» to go again.*"; }
+      // a verb form ("hubimos", "yo hube"), not a new question or a sentence
+      if (!/\?/.test(text) && (nw === 1 || (nw === 2 && /^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/.test(q.split(" ")[0])))) return drGrade(D, q);
+      D.done = 1; return null; // the learner moved on to something else
+    }
+    if (D && D.done && /^(otra vez|otra|again|more|m[aá]s|another|s[ií]|ok|vale|dale|claro|yes)\b/.test(q) && nw <= 4) return drStart({ v: D.v, code: D.code, en: D.en }, q);
+    let I = null;
+    if (/\b(practi[cs]e|practicar|practiquemos|practica|drill|quiz me|test me|ejercicios?)\b/.test(q)) I = drVerbIn(text);
+    if (!I && !/^(no|nah|nope|not)\b/.test(q) && !/conjug|mean|significa|how|c[oó]mo|what|qu[eé]/.test(q)) {
+      const lastA = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending);
+      // Profe just offered to practise a verb ("¿Cómo quieres practicar haber?") and the learner answered briefly
+      const offer = lastA && sents(lastA.c).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x));
+      if (offer && nw <= 3 && !/explain|explica|tell|dime/.test(q)) I = drVerbIn(offer);
+    }
+    return I ? drStart(I, q) : null;
+  }
+  let EXPERT_LAST = "";
+  function expertAnswer(text) { const ea = expertAnswer0(text); EXPERT_LAST = ea || ""; return ea; }
+  function expertAnswer0(text) {
+    const dr = drillAnswer(text); if (dr) return dr;
     const raw = String(text || "").trim();
     let mm = /^(?:corrige|corr[ií]geme|correct(?: this| me)?|check(?: this)?|is this (?:correct|right)|est[aá] bien)\s*[:\-–]?\s*(.+)$/i.exec(raw);
     if (mm && mm[1].length < 200) return correctAnswer(mm[1]);
@@ -4248,6 +4326,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         const sys = rules(small, true) + "\n\nYou are now talking with the learner. Answer their message below.";
         const user = lastU + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
         out = await natChat(key, sys, user, 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+        // the small model sometimes asks the same question again: tell it to move on, once
+        const prevA = turns.filter((t) => t.role === "assistant").slice(-1)[0];
+        if (prevA && sameReply(cleanLocal(out), cleanLocal(prevA.content)) && !(signal && signal.aborted)) {
+          NAT.repeats = (NAT.repeats || 0) + 1;
+          out = await natChat(key, sys, "(You just repeated your previous question. The learner already answered: «" + lastU.slice(0, 120) + "». Do not ask it again. Act on their answer now: give one short example in Spanish, then ask a different, simple question.)", 220, 0.6, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+          if (sameReply(cleanLocal(out), cleanLocal(prevA.content))) { const I = drVerbIn(lastU + " " + prevA.content); out = (I && drStart(I, xnorm(lastU))) || "Vamos a hacer algo concreto. Dime tres cosas que hiciste ayer.\n*Let’s do something concrete. Tell me three things you did yesterday.*"; }
+        }
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
         out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
@@ -4291,13 +4376,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
     // keep the recognizer open (continuous) and decide ourselves when the learner has finished: after a pause of TS.waitMs
-    const manual = !!opts.continuous, waitMs = TS.waitMs || 2500;
+    const manual = !!opts.continuous, waitMs = TS.waitMs || 3500;
     rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
     let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => { if (rec === me && listening) stopListening(); }, ms); };
-    let final = "", heard = "", done = false; liveText = "";
+    let final = "", heard = "", done = false, kept = "", prevI = "", prevN = 0; liveText = "";
     const me = rec;
     // some phones (Samsung) show the words while you speak but then end with "no match" instead of a final result: keep what was heard
-    rec.onresult = (e) => { let interim = "", fin = ""; for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) fin += (fin ? " " : "") + r[0].transcript.trim(); else interim += r[0].transcript; } final = fin; liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(waitMs); };
+    rec.onresult = (e) => { let interim = "", fin = "", nf = 0; for (let i = 0; i < e.results.length; i++) { const r = e.results[i]; if (r.isFinal) { nf++; fin += (fin ? " " : "") + r[0].transcript.trim(); } else interim += r[0].transcript; }
+      // the phone's recogniser restarts after each pause; a part it never confirmed would be lost, so keep it
+      interim = interim.trim();
+      if (nf > prevN) prevI = "";
+      else if (prevI && interim && interim.split(" ").length < prevI.split(" ").length && interim.split(" ")[0].toLowerCase() !== prevI.split(" ")[0].toLowerCase()) kept += (kept ? " " : "") + prevI;
+      prevN = nf; if (interim) prevI = interim;
+      final = (kept + " " + fin).trim(); liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(waitMs); };
     rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
     rec.onend = () => { if (done || rec !== me) return; done = true; clearTimeout(quiet); listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
     try { if (window.AndroidSTT && window.AndroidSTT.setBias) window.AndroidSTT.setBias(JSON.stringify(biasWords())); } catch (e) {}
@@ -4379,7 +4470,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     text = String(text || "").trim(); if (!text) return;
     if (tBusy) { const el = document.getElementById("t-live"); if (el) { el.hidden = false; el.textContent = "Profe is still answering your last message. Wait for it, or tap Stop and send again."; } return; }
     TB = resolveTB();
-    if (!TB) { tView = "chat"; ensureSession(pageCtx().label, text); try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(text); tCur.msgs.push({ r: "u", c: text, t: Date.now() }, ex ? { r: "a", c: ex, t: Date.now() } : { r: "a", c: "", err: ERRS.unavailable, t: Date.now() }); tRender(); return; }
+    if (!TB) { tView = "chat"; ensureSession(pageCtx().label, text); try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(text); tCur.msgs.push({ r: "u", c: text, t: Date.now() }, ex ? { r: "a", c: ex, t: Date.now(), x: 1 } : { r: "a", c: "", err: ERRS.unavailable, t: Date.now() }); tRender(); return; }
     const ctx = pageCtx();
     ensureSession(ctx.label, text);
     const um = { r: "u", c: text, t: Date.now() }; tCur.msgs.push(um); tCur.updated = Date.now(); tView = "chat";
@@ -4388,7 +4479,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const live = { r: "a", c: "", t: Date.now(), pending: true }; tCur.msgs.push(live);
     tBusy = true; tCtl = new AbortController(); tRender();
     const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); }) : null;
-    try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; }
+    EXPERT_LAST = "";
+    try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; if (out && out === EXPERT_LAST) live.x = 1; }
     catch (e) {
       delete live.pending;
       if (e && e.code === "cancelled") live.c = e.text || live.c || "(stopped)";
@@ -4396,6 +4488,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
     checkMsg(um);
+    trReply(live);
     if (spk) { if (live.c && !live.err) spk.finish(live.c); else { SPK_GEN++; } }
     else if ((voiceMode || lastVoice) && live.c && !live.err) speakMixed(live.c, () => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); });
     if (tCur.msgs.filter((m) => m.r === "u").length % 6 === 0) tRemember();
@@ -4615,6 +4708,21 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (cur) pairs.push(cur);
     return { ops, pairs: pairs.map((x) => ({ from: x.from.join(" "), to: x.to.join(" ") })) };
   }
+  // the Spanish of a reply, without the English lines Profe already wrote in italics
+  function esOnly(c) {
+    const t = String(c || "").replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g, "$1").replace(/\*\*/g, "").replace(/^\s*[-•]\s*/gm, "").replace(/\n{2,}/g, "\n").trim();
+    const lines = t.split("\n").map((x) => x.trim()).filter((x) => x && isSpanish(x + " "));
+    return lines.join("\n");
+  }
+  async function trReply(m) {
+    if (TS.noEnLine || !m || m.r !== "a" || m.x || m.err || !m.c || m.en != null) return;
+    const es = esOnly(m.c); if (!es || es.length < 4) return;
+    m.en = "…"; tRender();
+    let en = "";
+    try { if (window.__trEn) en = await window.__trEn(es); } catch (e) {}
+    if (!en) try { if (resolveTB() === "claude") en = await aiText("You translate Spanish into natural English. Reply with only the English translation.", es); } catch (e) {}
+    m.en = String(en || "").trim(); if (tCur) tPush(tCur); tRender();
+  }
   function fixCard(m) {
     const fx = m.fx; if (!fx) return "";
     if (fx.state === "checking" && !(fx.items || []).length) return '<div class="fx muted small">✏️ Checking your Spanish…</div>';
@@ -4640,7 +4748,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     t = t.replace(/^(corrected|corregido|correcta?|oración)\s*:\s*/i, "").replace(/^["«“]|["»”]$/g, "").trim();
     if (!t || t.length > text.length * 1.6 + 20 || !isSpanish(t + " de")) return null;
     const d = wordDiff(text, t);
-    if (d.pairs.length > Math.max(3, (text.match(/\S+/g) || []).length / 2)) return null; // the model rewrote everything: don't trust it
+    if (d.pairs.length > Math.max(3, (text.match(/\S+/g) || []).length / 2)) return null;
+    if (d.ops.filter(([o]) => o === "-").length > Math.max(2, (text.match(/\S+/g) || []).length * 0.4) || t.length < text.length * 0.6) return null; // the model rewrote everything: don't trust it
     return { better: d.pairs.length ? t : "", items: d.pairs.map((x) => ({ from: x.from, to: x.to, why: "" })) };
   }
   async function checkMsg(m) {
@@ -4669,7 +4778,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function bubble(m, i) {
     if (m.r === "u") return '<div class="tm u"><div class="tb">' + esc(m.c).replace(/\n/g, "<br>") + "</div></div>" + fixCard(m);
     const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' : md(m.c || "").replace(/<p>((?:(?!<\/p>)[\s\S])*)<\/p>/g, (all, inner) => { const txt = inner.replace(/<[^>]+>/g, ""); return txt && !isSpanish(txt) && !/<em>/.test(inner) && /[a-z]/i.test(txt) ? '<p class="en-line"><em>' + inner + "</em></p>" : all; });
-    return '<div class="tm a">' + pAvatar() + '<div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
+    return '<div class="tm a">' + pAvatar() + '<div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (m.en && !TS.noEnLine ? '<p class="t-en" lang="en"><span class="t-enl">EN</span>' + (m.en === "…" ? '<span class="muted">translating…</span>' : esc(m.en).replace(/\n/g, "<br>")) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
   }
   function tPaintLast() { const box = document.getElementById("t-msgs"); if (!box || !tCur) return; const last = box.lastElementChild, m = tCur.msgs[tCur.msgs.length - 1]; if (last && m) { last.outerHTML = bubble(m, tCur.msgs.length - 1); box.scrollTop = box.scrollHeight; } }
   const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>';
@@ -4736,8 +4845,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small" style="margin-top:8px">Colour</p><div class="row pvrow">' + PV_COLORS.map(([c, n]) => '<button class="pvc" data-act="pv-col" data-v="' + c + '" aria-pressed="' + ((TS.pcol || "#1F4FA3") === c) + '" aria-label="' + n + '" style="background:' + c + '"></button>').join("") + "</div>" +
       '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
       '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
-      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2500, "2.5 s"], [4000, "4 s"], [6000, "6 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 2500) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
+      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2500, "2.5 s"], [3500, "3.5 s"], [5000, "5 s"], [7000, "7 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 3500) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-fix"' + (TS.noFix ? "" : " checked") + '> Correct my Spanish (marks wrong words under each message)</label>' +
+      '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-enline"' + (TS.noEnLine ? "" : " checked") + '> Show English under Profe’s replies (never read aloud)</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.8, "Slow"], [0.9, "Relaxed"], [1, "Normal"], [1.15, "Fast"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
       (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
@@ -4747,6 +4857,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (id === "pv-en-on") { TS.speakEn = e.target.checked; tsave(); }
     else if (id === "pv-wait") { TS.waitMs = +e.target.value; tsave(); }
     else if (id === "pv-fix") { TS.noFix = !e.target.checked; tsave(); }
+    else if (id === "pv-enline") { TS.noEnLine = !e.target.checked; tsave(); }
     else if (id === "pv-es") { TS.pvEs = e.target.value; tsave(); } else if (id === "pv-en") { TS.pvEn = e.target.value; tsave(); }
     else if (id === "pv-rate") { TS.prate = +e.target.value; tsave(); } else if (id === "pv-pitch") { TS.ppitch = +e.target.value; tsave(); }
     else if (id === "pv-name") { TS.pname = e.target.value.trim().slice(0, 20) || "Profe"; tsave(); tRender(); fabLook(); }
@@ -5235,6 +5346,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   window.__atr = { ev(id, text, err) { const c = ATR.cbs[id]; if (!c) return; delete ATR.cbs[id]; err ? c[1](new Error(err)) : c[0](text); } };
   const mlkitTr = (t) => new Promise((res, rej) => { const id = "t" + (++ATR.seq); ATR.cbs[id] = [res, rej]; try { window.AndroidTR.translate(id, t); } catch (e) { delete ATR.cbs[id]; rej(e); } });
   let MM_BLOCK = 0;
+  window.__trEn = async (t) => { const e = trEngine(); if (e === "mlkit") return mlkitTr(t); if (e === "mymemory") return mmTr(t); return ""; };
   async function mmTr(t) {
     if (Date.now() < MM_BLOCK) throw new Error("The free online translator’s daily limit is used up. It resets tomorrow, or set up Profe’s AI.");
     const r = await fetch("https://api.mymemory.translated.net/get?langpair=es%7Cen&q=" + encodeURIComponent(t.slice(0, 480)));
@@ -5562,7 +5674,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110448";
+  var BUILD = "202611110500";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

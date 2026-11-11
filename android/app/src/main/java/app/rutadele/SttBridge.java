@@ -22,6 +22,8 @@ public class SttBridge {
     SpeechRecognizer rec;
     String lang = "es-US";
     boolean interim = true, continuous = false, active = false, pending = false, ended = true;
+    // the last words shown while speaking; some phones end a segment with "no match" instead of a result, so they are kept
+    String lastPartial = "";
 
     SttBridge(MainActivity act, WebView web) { this.act = act; this.web = web; }
 
@@ -68,16 +70,19 @@ public class SttBridge {
                 @Override public void onEvent(int t, Bundle b) { }
                 @Override public void onPartialResults(Bundle b) {
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    if (interim && r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("partial", r.get(0));
+                    if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) { lastPartial = r.get(0); if (interim) js("partial", r.get(0)); }
                 }
                 @Override public void onResults(Bundle b) {
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
+                    else if (!lastPartial.isEmpty()) js("final", lastPartial);
+                    lastPartial = "";
                     if (continuous && active) { main.postDelayed(() -> { if (active) listenOnce(); }, 150); }
                     else { active = false; end(); }
                 }
                 @Override public void onError(int e) {
                     if (ended) return;
+                    if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
                     if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
                     if (continuous && active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
                         main.postDelayed(() -> { if (active) listenOnce(); }, 150);
@@ -104,6 +109,7 @@ public class SttBridge {
     }
 
     void listenOnce() {
+        lastPartial = "";
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         if (android.os.Build.VERSION.SDK_INT >= 33 && !bias.isEmpty()) i.putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, new ArrayList<>(bias));
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -111,7 +117,7 @@ public class SttBridge {
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, lang);
         i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, interim);
         i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
-        i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, continuous ? 3000 : 1500);
+        i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, continuous ? 3500 : 2000);
         try { rec.startListening(i); } catch (Exception e) { active = false; js("error", "aborted"); end(); }
     }
 
