@@ -1,0 +1,17 @@
+{
+ "model": "smart",
+ "scenarios": 32,
+ "turns": 107,
+ "clean": 69,
+ "score": 64.5,
+ "flags": {
+  "repeat": 3,
+  "missed-fix": 2,
+  "qonly": 31,
+  "fallback": 2,
+  "too-english": 4,
+  "mixed": 1,
+  "missing": 1
+ },
+ "medianSecs": 14
+}
