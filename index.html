@@ -2104,6 +2104,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const PXG = [["perifrasis", /acabar de|volver a|dejar de|soler|llevar \+|seguir \+|empezar a|ponerse a|a punto de|periphrasis/i], ["tener-hacer-dar-echar", /tener (hambre|sed|calor|fr[ií]o|sue[nñ]o|miedo|raz[oó]n)|hace (calor|fr[ií]o|sol)|me da |echar|darse cuenta/i], ["modismos", /idiom|saying|refr[aá]n/i], ["subjuntivo", /subjun/i], ["imperativo", /imperat|command/i], ["por-para", /\bpor\b.*\bpara\b|\bpara\b.*\bpor\b/i], ["ser-estar", /\bser\b.*\bestar\b|\bestar\b.*\bser\b/i], ["pret-imp", /imperfect/i], ["pasados", /perfecto|indefinido|pluscuam|pret[eé]rit/i], ["presente-futuro", /futur|condicional|conditional/i], ["pronombres", /pronoun|pronomb/i], ["reflexivos-gustar", /reflexive|gustar|\bgusta/i], ["preposiciones", /preposition|preposici/i], ["conectores", /connector|conector/i], ["haber-perifrasis", /\bhaber\b|\bhay\b|gerund/i], ["preguntas-comparar", /comparativ|superlativ|comparison/i], ["sustantivos", /gender|g[eé]nero|agreement|plural/i], ["determinantes", /article|art[ií]culo|possessive|demonstrative/i], ["pronunciacion", /tilde|written accent/i]];
     const gm = PXG.find(([id, re]) => re.test(it.why || "") && !location.hash.includes(id)); const g = gm ? GUIDES.find((x) => x.id === gm[0]) : null;
     if (g) links.push('<a class="btn small rvl" href="#guia-' + g.id + '">📘 Guide: <b>' + esc(g.en) + "</b></a>");
+    links.push('<button class="btn small rvl" data-act="t-ask" data-p="' + esc("Explain this question: " + it.q) + '">🧑‍🏫 Ask Profe why</button>');
     return '<div class="pxrev"><p class="small muted" style="margin:0 0 6px">Go back to the lesson:</p><div class="row">' + links.join("") + "</div></div>";
   }
 
@@ -4041,6 +4042,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (h === "gramatica") return { label: "Gramática", text: "Parts-of-speech hub: nouns, pronouns, verbs, adjectives, adverbs, articles, prepositions, conjunctions, interjections, determiners, numbers, connectors, reflexive verbs." };
     if ((m = h.match(/^verbo-(\d+)$/)) && VI) { const r = VI[+m[1] - 1]; if (r) return { label: "Verbo " + r[0], text: "Verb page for «" + r[0] + "» (" + r[1] + "), showing meanings, examples and full conjugation.", verb: r[0] }; }
     if ((m = h.match(/^(a1|a2|b1|b2|c1|c2)-(exam|mock|cards|vocab)$/))) return { label: LV[m[1]].name + " " + m[2], lvl: m[1], text: "DELE " + LV[m[1]].name + " " + m[2] + " page." };
+    if ((m = h.match(/^guia-(.+)$/))) { const G = GUIDES.find((g) => g.id === m[1]); if (G) { const ex = PX && PX.items && document.getElementById("runner") ? "\nPractice so far: " + PX.items.map((it, k) => PX.res[k] ? (k + 1) + ". " + it.q + " | learner: «" + (PX.res[k].val || "") + "» " + (PX.res[k].ok ? "(right)" : "(wrong, answer: " + (it.t === "mc" ? it.opts[it.c] : it.a[0]) + ")") : "").filter(Boolean).join("\n") : ""; return { label: "Guide · " + G.en, lvl: G.lvl, text: G.en + " (" + G.t + "). " + String(G.intro || "").slice(0, 400) + "\n" + (G.sec || []).map((x) => x.t + " — " + x.r + " " + (x.n || []).map((k) => String(k).replace("|", ": ")).join("; ") + " Examples: " + (x.e || []).map((e) => e[0]).join(" ")).join("\n") + ex }; } }
     if (lv) return { label: LV[lv].name, lvl: lv, text: "Level " + LV[lv].name + " with units: " + LV[lv].units.map((u) => u.t).join(", ") };
     if (h === "palabras") return { label: "7.000 palabras", text: "Most-used words list, band " + (WV.band * 250 + 1) + "–" + (WV.band + 1) * 250 + "." };
     return { label: "Ruta DELE", text: "Home screen of the course." };
@@ -4055,7 +4057,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const lastUser = tCur ? [...tCur.msgs].reverse().find((m) => m.r === "u") : null;
     const gn = guideNotes(lastUser ? lastUser.c : (ctx.text || "").slice(0, 300));
     if (compact && gn) ctx = Object.assign({}, ctx, { text: "Topic notes (reliable):\n" + gn + "\n\n" + (ctx.text || "") });
-    if (compact && TB === "native") return "You are Profe, a friendly Spanish teacher. The learner is an English speaker in Panama, level " + lvl + ". " + lang + " Use Latin American Spanish.\n" +
+    if (compact && TB === "native") return "You are Profe, a friendly Spanish teacher inside a DELE course app. The learner is an English speaker in Panama, level " + lvl + ". " + lang + " Use Latin American Spanish. The learner has this page open: " + (ctx.label || "the course") + ". When they ask about the page, explain it clearly with short examples.\n" +
       "Reply in 1 to 3 short sentences, then ask ONE simple question. If the learner's Spanish has a real mistake, show the right Spanish in **bold** and give a short reason. Put any English on its own line in *italics*. If unsure, keep it simple. If the learner says yes or answers briefly, act on it straight away with a concrete example or a short exercise. Never ask the same question twice. Never repeat yourself or these instructions.\n" +
       "Learner notes: " + (TS.memory || "none").slice(0, 200);
     if (compact) return "You are Profe, a warm, patient Spanish tutor. The learner lives in Panama and is preparing the DELE " + lvl + ". " + lang + " Use " + (es ? "Spain Spanish" : "Latin American Spanish (ustedes, not vosotros)") + ".\n" +
@@ -4251,9 +4253,141 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     return I ? drStart(I, q) : null;
   }
+
+  /* ---------- Profe and the page you're on: exact answers from the page's own content ---------- */
+  const hashNow = () => location.hash.replace(/^#/, "");
+  function curGuide() { const m = /^guia-(.+)$/.exec(hashNow()); return m ? GUIDES.find((g) => g.id === m[1]) || null : null; }
+  function curUnit() { const m = /^(a1|a2|b1|b2|c1|c2|esc)-u(\d+)$/.exec(hashNow()); if (!m || !LV[m[1]]) return null; const u = LV[m[1]].units[+m[2] - 1]; return u ? { L: LV[m[1]], u } : null; }
+  const PSTOP = new Set("the and for with that this you your are not use used when what which from have has una uno los las del que con its can one two why how does did mean means wrong right answer question explain tell please about instead".split(" "));
+  const ptoks = (t) => new Set((String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").match(/[a-z]{3,}/g) || []).filter((w) => !PSTOP.has(w)));
+  const noteMd = (n) => { const [a, b] = String(n).split("|"); return b ? "**" + a + ":** " + b : a; };
+  const qnorm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
+  function pageBlocks() {
+    const G = curGuide(); if (G) return (G.sec || []).map((x) => ({ t: x.t, r: x.r || "", n: (x.n || []).map(String), ex: (x.e || []).map((e) => e[0] + " — *" + e[1] + "*") }));
+    const U = curUnit(); if (U) return (U.u.g || []).map((g) => ({ t: g.t, r: g.r || "", n: (g.n || []).map(String), ex: (g.rows || []).slice(0, 1).map((r) => r.map((c, i) => (g.h && g.h[i] ? g.h[i] + ": " : "") + c).join(" · ")) }));
+    return [];
+  }
+  // rank texts by shared words; words found in most of the texts (like por/para on the por-para page) count for little
+  function idfRank(texts, query, titles) {
+    const sets = texts.map((t) => ptoks(t)), tset = (titles || []).map((t) => ptoks(t)), Q = ptoks(query), n = sets.length || 1;
+    return texts.map((t, i) => { let sc = 0; Q.forEach((w) => { if (!sets[i].has(w)) return; const df = sets.filter((x) => x.has(w)).length; sc += Math.log(1 + n / df) * (tset[i] && tset[i].has(w) ? 2 : 1); }); return [i, sc]; }).sort((a, b) => b[1] - a[1]);
+  }
+  function bestBlock(text) {
+    const B = pageBlocks(); if (!B.length) return null;
+    const top = idfRank(B.map((b) => b.t + " " + b.r + " " + b.n.join(" ") + " " + b.ex.join(" ")), text, B.map((b) => b.t))[0];
+    return top && top[1] > 0.3 ? B[top[0]] : null;
+  }
+  // the questions on this page, with the learner's answers when there are any
+  function pageItems() {
+    try { if (PX && PX.items && document.getElementById("runner")) return PX.items.map((it, k) => ({ it, r: PX.res[k] })); } catch (e) {}
+    const x = LI[hashNow()];
+    if (x) return [...document.querySelectorAll('.mc[data-scope="lq"] > li')].map((li, k) => { const q = x.q[k]; if (!q) return null; const w = li.querySelector(".opt.wrong"), r = li.querySelector(".opt.right"); return { it: { t: "mc", q: q[0], opts: q[1], c: q[2], why: "" }, r: r ? { ok: !w, val: w ? w.textContent.trim() : r.textContent.trim() } : null, li: x }; }).filter(Boolean);
+    const G = curGuide(); if (G) return (G.mc || []).map((m) => ({ it: { t: "mc", q: m[0], opts: m[1], c: m[2], why: m[3] || "" } })).concat((G.x || []).map((m) => ({ it: { q: m[0], a: [m[1]], why: m[2] || "" } })));
+    const U = curUnit(); if (U) return (U.u.x || []).map((m) => ({ it: { q: m[0], a: [m[1]], why: "" }, xi: U.u.xi }));
+    return [];
+  }
+  const rightOf = (it) => String(it.t === "mc" ? it.opts[it.c] : (it.a || [])[0] || "").replace(/[.]+$/, "");
+  // where a story answer comes from: the sentence of the text that shares most words with the question and answer
+  function textLine(li, it) { const T = ptoks(it.q + " " + rightOf(it)); let best = null, bs = 1; li.paras.forEach((p) => p.s.forEach((x) => { const S2 = ptoks(x[0]); let sc = 0; T.forEach((w) => S2.has(w) && sc++); if (sc > bs) { bs = sc; best = x; } })); return best; }
+  function itemExplain(x, n) {
+    const it = x.it, r = x.r, out = ["**" + (n ? "Question " + n : "The question") + ":** " + it.q.replace(/_{2,}/g, "____")];
+    if (it.t === "mc") out.push("*Options:* " + it.opts.join(" · "));
+    if (r && r.ok) out.push("✅ You answered **" + (r.val || rightOf(it)) + "**. That’s right.");
+    else if (r) out.push("❌ You answered «" + (r.val || "nothing") + "». The answer is **" + rightOf(it) + "**.");
+    else out.push("✅ The answer is **" + rightOf(it) + "**" + (it.a && it.a.length > 1 ? " *(also accepted: " + it.a.slice(1).join(", ") + ")*" : "") + ".");
+    if (it.why) out.push("**Why:** " + it.why);
+    if (x.li) { const l = textLine(x.li, it); if (l) out.push("📖 **In the text:** “" + l[0] + "”\n*" + l[1] + "*"); }
+    const b = bestBlock(it.q + " " + rightOf(it) + " " + (it.why || ""));
+    if (b) {
+      out.push("📘 **From the lesson, “" + b.t + "”:** " + b.r);
+      const T = ptoks(it.q + " " + rightOf(it)); const nn = b.n.find((k) => [...ptoks(k)].some((w) => T.has(w))) || b.n[0];
+      if (nn) out.push(noteMd(nn));
+      if (b.ex[0]) out.push("*Example:* " + b.ex[0]);
+    }
+    return out.join("\n");
+  }
+  function explainMistakes() {
+    const all = pageItems(), P = all.filter((x) => x.r);
+    if (!P.length) return all.length ? "You haven’t answered any questions on this page yet. Do the practice, then tap **Check my answers** and I’ll go through each mistake.\n*Or say «quiz me» and I’ll ask you the questions here, one at a time.*" : null;
+    const wrong = P.filter((x) => !x.r.ok);
+    if (!wrong.length) return "🎉 All **" + P.length + "** answers you’ve given on this page are right.\n*Say «quiz me» for more practice, or ask me about any rule on the page.*";
+    const parts = ["You got **" + wrong.length + " of " + P.length + "** wrong. Here they are, one by one:"];
+    wrong.slice(0, 5).forEach((x) => parts.push("---\n" + itemExplain(x, all.indexOf(x) + 1)));
+    if (wrong.length > 5) parts.push("*…and " + (wrong.length - 5) + " more. Ask me «explain the rest».*");
+    const tally = {}; wrong.forEach((x) => { const b = bestBlock(x.it.q + " " + rightOf(x.it) + " " + (x.it.why || "")); if (b) tally[b.t] = (tally[b.t] || 0) + 1; });
+    const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+    parts.push("---\n" + (top && top[1] >= 2 ? "**The pattern:** " + top[1] + " of your mistakes come from **" + top[0] + "**. Review that part, then say «quiz me» to try again." : "*Say «quiz me» to practise these again, or ask me why about any of them.*"));
+    return parts.join("\n\n");
+  }
+  function explainPage() {
+    const G = curGuide(), U = curUnit(), B = pageBlocks();
+    if (!G && !U) return null;
+    const head = G ? "**" + G.en + "** *(" + G.t + ")*\n" + String(G.intro || "").split(/(?<=\.)\s+/).slice(0, 2).join(" ") : "**" + U.u.t + "** *(" + U.L.name + (U.u.s ? " · " + U.u.s : "") + ")*";
+    const body = B.slice(0, 6).map((b, i) => "**" + (i + 1) + ". " + b.t + "**\n" + b.r + (b.n[0] ? "\n" + noteMd(b.n[0]) : "") + (b.ex[0] ? "\n*Example:* " + b.ex[0] : ""));
+    return head + "\n\n" + body.join("\n\n") + (B.length > 6 ? "\n\n*…plus " + (B.length - 6) + " more sections on the page.*" : "") + "\n\n*Ask me about any of these (for example «explain number 2 with more examples»), or say «quiz me».*";
+  }
+  // a quiz in the chat, built from the page's own questions
+  function pqAsk(Q) { const x = Q.items[Q.i], it = x.it, how = it.t && typeof PXT !== "undefined" && PXT[it.t] ? PXT[it.t][0] : x.xi && Q.i === 0 ? x.xi : ""; return "**" + (Q.i + 1) + " / " + Q.items.length + "** " + (how ? "*" + how + "*\n" : "") + it.q.replace(/_{2,}/g, "____") + (it.t === "mc" ? "\n" + it.opts.map((o, j) => "**" + "abcd"[j] + ")** " + o).join("\n") : ""); }
+  function pqStart() {
+    const items = pageItems().slice().sort(() => Math.random() - 0.5).slice(0, 6);
+    if (!items.length) return null;
+    tCur.pq = { items, i: 0, ok: 0 };
+    return "Vamos. **" + items.length + " questions** from this page.\n*Type your answer" + (items.some((x) => x.it.t === "mc") ? " (or the letter)" : "") + ". Say «stop» to finish.*\n\n" + pqAsk(tCur.pq);
+  }
+  function pqGrade(Q, text) {
+    const x = Q.items[Q.i], it = x.it, t = qnorm(text);
+    let ok;
+    if (it.t === "mc") { const L = /^[abcd]$/.exec(t); ok = L ? "abcd".indexOf(t) === it.c : t === qnorm(it.opts[it.c]); }
+    else ok = (it.a || []).some((a) => qnorm(a) === t || (t.length > 2 && qnorm(a).split(" ").length > 1 && t.endsWith(qnorm(a))));
+    if (ok) Q.ok++;
+    try { actAdd(ok ? 2 : 1); } catch (e) {}
+    let out = (ok ? "✅ **¡Correcto!** " : "❌ **Casi.** The answer is **" + rightOf(it) + "**. ") + (it.why ? "\n*" + it.why + "*" : "");
+    if (!ok && !it.why) { const b = bestBlock(it.q + " " + rightOf(it)); if (b) out += "\n📘 " + b.t + ": " + b.r; }
+    Q.i++;
+    if (Q.i >= Q.items.length) { Q.done = 1; return out + "\n\n🎉 **" + Q.ok + " / " + Q.items.length + "**.\n*Say «quiz me» for another round, or «check my answers» after the page practice.*"; }
+    return out + "\n\n" + pqAsk(Q);
+  }
+  function pageAnswer(text) {
+    if (!tCur || String(text || "").length > 300) return null;
+    const raw = String(text || "").trim(), q = xnorm(raw), Q = tCur.pq;
+    if (Q && !Q.done) {
+      if (/^(stop|para|basta|salir|exit|quit|enough|termina)\b/.test(q)) { Q.done = 1; return "👍 Paramos: **" + Q.ok + " / " + Q.i + "**.\n*Ask me anything about the page.*"; }
+      if (!/\?/.test(raw) && q.split(" ").length <= 10) return pqGrade(Q, raw);
+      Q.done = 1;
+    }
+    let m;
+    if ((m = /^explain this question:\s*([\s\S]+)$/i.exec(raw))) {
+      const all = pageItems(), k = all.findIndex((x) => qnorm(x.it.q) === qnorm(m[1]));
+      if (k >= 0) return itemExplain(all[k], k + 1) + "\n\n*Ask me for more examples, or about anything that’s still unclear.*";
+    }
+    if (/(explain|check|go through|review|look at).*(my )?(answers|mistakes|errors)|why (did i get|is my|was my|were my|did i fail)|por qu[eé].*(mal|incorrect)|mis (errores|respuestas)|explain the rest/.test(q)) { const r = explainMistakes(); if (r) return r; }
+    if (/^(explain|explica|expl[ií]came|teach me)\s+(this|the|esta|este)\s*(page|lesson|topic|unit|guide|p[aá]gina|lecci[oó]n|tema|unidad)?( to me)?$|what is this (page|lesson|unit) about/.test(q)) { const r = explainPage(); if (r) return r; }
+    if (/quiz me( on this| here)?$|quiz me on this|one question at a time|hazme preguntas|preg[uú]ntame/.test(q) && !drVerbIn(raw)) { const r = pqStart(); if (r) return r; }
+    return null;
+  }
+  // what the on-phone AI is told about the page, when the message is about it or the page changed
+  function pageNote(lastU) {
+    if (String(lastU).length > 400) return "";
+    let ctx; try { ctx = pageCtx(); } catch (e) { return ""; } if (!ctx || !ctx.text || !tCur) return "";
+    const refers = /\b(this|page|lesson|question|answer|wrong|why|explain|mistake|text|story|rule|example|esto|esta|este|p[aá]gina|pregunta|respuesta|mal|error|texto|historia|regla|ejemplo|por qu[eé])\b/i.test(lastU);
+    const changed = tCur.ctxLabel !== ctx.label; tCur.ctxLabel = ctx.label;
+    let note = "";
+    const px = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending);
+    if (px && px.x) note += "(Your last reply to the learner was: " + px.c.replace(/\*+/g, "").replace(/\n+/g, " ").slice(0, natWhich() === "fast" ? 200 : 400) + ")\n";
+    if (refers || changed) {
+      const lim = natWhich() === "fast" ? 260 : 600;
+      const lines = ctx.text.split("\n").map((l) => l.trim()).filter(Boolean);
+      // the lines that share most words with the question first; long lines are trimmed so several fit
+      const ranked = idfRank(lines, lastU).map(([i, sc]) => [lines[i].length > 240 ? lines[i].slice(0, 240) + "…" : lines[i], sc, i]);
+      let snip = ""; for (const [l] of ranked) { if ((snip + " | " + l).length > lim) { if (snip) break; } snip += (snip ? " | " : "") + l; }
+      note += "(The learner has this page open: " + ctx.label + ". On the page: " + snip.slice(0, lim) + ")\n";
+    }
+    return note;
+  }
   let EXPERT_LAST = "";
   function expertAnswer(text) { const ea = expertAnswer0(text); EXPERT_LAST = ea || ""; return ea; }
   function expertAnswer0(text) {
+    const pa = pageAnswer(text); if (pa) return pa;
     const dr = drillAnswer(text); if (dr) return dr;
     const raw = String(text || "").trim();
     let mm = /^(?:corrige|corr[ií]geme|correct(?: this| me)?|check(?: this)?|is this (?:correct|right)|est[aá] bien)\s*[:\-–]?\s*(.+)$/i.exec(raw);
@@ -4325,7 +4459,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         // the app keeps one model session per conversation: only the new message is sent, so replies start sooner and stay on topic
         const key = (tCur ? tCur.id : "x") + ":" + (TS.pname || "") + ":" + S.region;
         const sys = rules(small, true) + "\n\nYou are now talking with the learner. Answer their message below.";
-        const user = lastU + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
+        const user = pageNote(lastU) + lastU + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
         out = await natChat(key, sys, user, 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
         // the small model sometimes asks the same question again: tell it to move on, once
         const prevA = turns.filter((t) => t.role === "assistant").slice(-1)[0];
@@ -4515,6 +4649,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try {
       let t;
       if (TB === "claude") t = (await SAMPLE(prompt, { modelTier: "quick", cache: false })).text;
+      else if (TB === "native" || TB === "local") t = await aiText("You keep short notes about a Spanish learner for their tutor.", prompt);
       else t = await ask([{ role: "user", content: prompt }], { text: "", label: "" }, () => {});
       if (t && t.length < 2000) { TS.memory = t.trim(); tPushMemory(); if (tView === "hist") tRender(); }
     } catch (e) {}
@@ -5689,7 +5824,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110537";
+  var BUILD = "202611110556";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
