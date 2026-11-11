@@ -60,7 +60,7 @@ function score(turn, reply, prev, fix, learnerEn) {
     await p.goto("http://127.0.0.1:8766/#" + sc.lvl); await p.waitForTimeout(1500);
     await p.click("#tutor-fab"); await p.waitForTimeout(500);
     const conv = []; let prev = "";
-    for (const turn of sc.turns) {
+    for (const [k, turn] of sc.turns.entries()) { turn.k = k;
       const nBefore = await p.evaluate(() => document.querySelectorAll("#tutor .tm.a").length);
       const t0 = Date.now();
       await p.evaluate((q) => { const t = document.querySelector("#tutor textarea"); t.value = q; const f = document.querySelector("#tutor form"); if (f) f.requestSubmit(); else document.querySelector("#tutor button[type=submit]").click(); }, turn.u);

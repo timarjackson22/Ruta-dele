@@ -1,34 +1,571 @@
 [
- {"id":"haber-si","lvl":"a2","note":"the phone transcript: offer to practise, learner says yes","turns":[{"u":"Quiero practicar el verbo haber en diferentes tiempos"},{"u":"sí","move":1},{"u":"he"},{"u":"habíamos"}]},
- {"id":"greet-a1","lvl":"a1","turns":[{"u":"Hola Profe"},{"u":"bien gracias y tú"},{"u":"me llamo Timar y soy de Panamá"},{"u":"tengo treinta años"}]},
- {"id":"mistake-ser-estar","lvl":"a1","turns":[{"u":"Hola, yo soy cansado hoy","fix":"estoy"},{"u":"porque yo trabajo mucho"},{"u":"mi trabajo es en la ciudad de Panamá"}]},
- {"id":"mistake-gender","lvl":"a1","turns":[{"u":"Ayer comí en un restaurante con mi amiga, la comida fue muy bueno","fix":"buena"},{"u":"comí el arroz con pollo"},{"u":"sí me gusta mucho"}]},
- {"id":"mistake-conj","lvl":"a2","turns":[{"u":"Ayer yo va a la playa con mis amigos","fix":"fui"},{"u":"nosotros nadamos y comemos pescado","fix":"comimos"},{"u":"fue muy divertido"}]},
- {"id":"short-answers","lvl":"a1","turns":[{"u":"Hola"},{"u":"sí","move":1},{"u":"no sé","move":1},{"u":"ok","move":1}]},
- {"id":"english-question","lvl":"a2","turns":[{"u":"What is the difference between por and para?","en":1},{"u":"can you give me an example with para","en":1},{"u":"Estudio español para el examen"}]},
- {"id":"how-say","lvl":"a1","turns":[{"u":"How do you say I am hungry in Spanish","en":1,"has":"hambre"},{"u":"tengo hambre"},{"u":"quiero comer arroz con pollo"}]},
- {"id":"quiz-me","lvl":"a2","turns":[{"u":"Quiz me on the preterite","en":1,"move":1},{"u":"comí"},{"u":"fuimos"},{"u":"otra pregunta por favor","move":1}]},
- {"id":"school","lvl":"a2","note":"short reply after an open question","turns":[{"u":"Quiero aprender español para la escuela"},{"u":"para escuela","move":1},{"u":"para mi examen DELE"},{"u":"en diciembre"}]},
- {"id":"daily-routine","lvl":"a2","turns":[{"u":"Por la mañana yo me levanto a las seis"},{"u":"después me ducho y desayuno café con pan"},{"u":"voy al trabajo en metro"},{"u":"termino a las cinco"}]},
- {"id":"weekend-plans","lvl":"b1","turns":[{"u":"Este fin de semana voy a ir a Boquete con mi familia"},{"u":"vamos a hacer senderismo y tomar café"},{"u":"si hace buen tiempo vamos a subir al volcán"},{"u":"nunca he subido antes"}]},
- {"id":"subjunctive-b1","lvl":"b1","turns":[{"u":"Quiero que mi hijo aprende español","fix":"aprenda"},{"u":"es importante que él habla con su abuela","fix":"hable"},{"u":"ella vive en Colombia"}]},
- {"id":"past-story-b1","lvl":"b1","turns":[{"u":"Cuando era niño, vivía en Colón"},{"u":"todos los días jugaba fútbol con mis primos"},{"u":"un día me rompí el brazo"},{"u":"fue muy doloroso"}]},
- {"id":"opinion-b2","lvl":"b2","turns":[{"u":"Creo que el turismo es bueno para Panamá, pero también tiene problemas"},{"u":"por ejemplo, los precios suben y la gente local no puede pagar"},{"u":"el gobierno debería controlar más el desarrollo"}]},
- {"id":"recognition-slip","lvl":"a1","note":"speech recognition misheard día as tía","turns":[{"u":"buenos tías profe"},{"u":"mi tía fue muy bien"},{"u":"trabajé mucho"}]},
- {"id":"explain-request","lvl":"a2","turns":[{"u":"explain the difference between ser and estar","en":1},{"u":"ok","move":1},{"u":"la sopa está caliente"}]},
- {"id":"vocab-food","lvl":"a1","turns":[{"u":"Quiero aprender palabras de comida","move":1},{"u":"sí","move":1},{"u":"manzana"},{"u":"me gusta el plátano"}]},
- {"id":"doctor-roleplay","lvl":"a2","turns":[{"u":"Vamos a practicar en el médico. Tú eres el doctor","move":1},{"u":"me duele la cabeza"},{"u":"desde ayer"},{"u":"no, no tengo fiebre"}]},
- {"id":"restaurant-roleplay","lvl":"a1","turns":[{"u":"Let's role play ordering food in a restaurant, you are the waiter","en":1,"move":1},{"u":"quiero un café por favor"},{"u":"y una empanada"},{"u":"la cuenta por favor"}]},
- {"id":"conjugate","lvl":"a2","turns":[{"u":"Conjugate tener in the preterite","en":1,"has":"tuve"},{"u":"ayer tuve una reunión"},{"u":"gracias"}]},
- {"id":"mistake-gustar","lvl":"a1","turns":[{"u":"Yo gusto la música salsa","fix":"me gusta"},{"u":"me gustan bailar","fix":"gusta"},{"u":"los sábados bailo con mi esposa"}]},
- {"id":"mistake-articles","lvl":"a1","turns":[{"u":"El problema es que la agua está fría","fix":"el agua"},{"u":"sí, el agua"},{"u":"gracias profe"}]},
- {"id":"ask-meaning","lvl":"a2","turns":[{"u":"what does chévere mean","en":1},{"u":"y qué significa vaina","has":"(thing|stuff|cosa)"},{"u":"esa vaina está chévere"}]},
- {"id":"tired-learner","lvl":"a2","turns":[{"u":"estoy cansado, solo cinco minutos hoy"},{"u":"sí","move":1},{"u":"comer"}]},
- {"id":"future-plans","lvl":"b1","turns":[{"u":"El año próximo voy a viajar a España"},{"u":"quiero visitar Madrid y Barcelona"},{"u":"me gustaría estudiar allí un mes"}]},
- {"id":"dele-exam","lvl":"b1","turns":[{"u":"How should I prepare for the DELE B1 speaking test?","en":1},{"u":"can we practise a monologue","en":1,"move":1},{"u":"Voy a hablar de mi ciudad. Panamá es una ciudad moderna con muchos edificios"}]},
- {"id":"pronoun-mistake","lvl":"a2","turns":[{"u":"Le compré un regalo a mi madre y lo di ayer","fix":"se lo"},{"u":"sí, se lo di"},{"u":"un collar bonito"}]},
- {"id":"weather","lvl":"a1","turns":[{"u":"hoy hace mucho calor en Panamá"},{"u":"sí, siempre hace calor"},{"u":"en la tarde llueve mucho"}]},
- {"id":"correct-me","lvl":"a2","turns":[{"u":"Corrige: yo tiene dos hijos y ellos estudia en la escuela","fix":"tengo"},{"u":"gracias, y esto: mi hija es más alta que yo"}]},
- {"id":"family","lvl":"a1","turns":[{"u":"Tengo una familia grande"},{"u":"tengo tres hermanos y dos hermanas"},{"u":"mi hermano mayor vive en David"},{"u":"es ingeniero"}]},
- {"id":"preterite-vs-imperfect","lvl":"b1","turns":[{"u":"When do I use imperfect vs preterite","en":1},{"u":"ok give me an exercise","en":1,"move":1},{"u":"llovía"}]}
+{
+"id": "haber-si",
+"lvl": "a2",
+"note": "the phone transcript: offer to practise, learner says yes",
+"turns": [
+{
+"u": "Quiero practicar el verbo haber en diferentes tiempos"
+},
+{
+"u": "sí",
+"move": 1
+},
+{
+"u": "he",
+"err": 1
+},
+{
+"u": "habíamos",
+"err": 1
+}
+]
+},
+{
+"id": "greet-a1",
+"lvl": "a1",
+"turns": [
+{
+"u": "Hola Profe"
+},
+{
+"u": "bien gracias y tú"
+},
+{
+"u": "me llamo Timar y soy de Panamá"
+},
+{
+"u": "tengo treinta años"
+}
+]
+},
+{
+"id": "mistake-ser-estar",
+"lvl": "a1",
+"turns": [
+{
+"u": "Hola, yo soy cansado hoy",
+"fix": "estoy"
+},
+{
+"u": "porque yo trabajo mucho"
+},
+{
+"u": "mi trabajo es en la ciudad de Panamá"
+}
+]
+},
+{
+"id": "mistake-gender",
+"lvl": "a1",
+"turns": [
+{
+"u": "Ayer comí en un restaurante con mi amiga, la comida fue muy bueno",
+"fix": "buena"
+},
+{
+"u": "comí el arroz con pollo"
+},
+{
+"u": "sí me gusta mucho"
+}
+]
+},
+{
+"id": "mistake-conj",
+"lvl": "a2",
+"turns": [
+{
+"u": "Ayer yo va a la playa con mis amigos",
+"fix": "fui"
+},
+{
+"u": "nosotros nadamos y comemos pescado",
+"fix": "comimos"
+},
+{
+"u": "fue muy divertido"
+}
+]
+},
+{
+"id": "short-answers",
+"lvl": "a1",
+"turns": [
+{
+"u": "Hola"
+},
+{
+"u": "sí",
+"move": 1
+},
+{
+"u": "no sé",
+"move": 1,
+"err": 1
+},
+{
+"u": "ok",
+"move": 1
+}
+]
+},
+{
+"id": "english-question",
+"lvl": "a2",
+"turns": [
+{
+"u": "What is the difference between por and para?",
+"en": 1
+},
+{
+"u": "can you give me an example with para",
+"en": 1
+},
+{
+"u": "Estudio español para el examen"
+}
+]
+},
+{
+"id": "how-say",
+"lvl": "a1",
+"turns": [
+{
+"u": "How do you say I am hungry in Spanish",
+"en": 1,
+"has": "hambre"
+},
+{
+"u": "tengo hambre"
+},
+{
+"u": "quiero comer arroz con pollo"
+}
+]
+},
+{
+"id": "quiz-me",
+"lvl": "a2",
+"turns": [
+{
+"u": "Quiz me on the preterite",
+"en": 1,
+"move": 1
+},
+{
+"u": "comí",
+"err": 1
+},
+{
+"u": "fuimos",
+"err": 1
+},
+{
+"u": "otra pregunta por favor",
+"move": 1
+}
+]
+},
+{
+"id": "school",
+"lvl": "a2",
+"note": "short reply after an open question",
+"turns": [
+{
+"u": "Quiero aprender español para la escuela"
+},
+{
+"u": "para escuela",
+"move": 1,
+"err": 1
+},
+{
+"u": "para mi examen DELE"
+},
+{
+"u": "en diciembre"
+}
+]
+},
+{
+"id": "daily-routine",
+"lvl": "a2",
+"turns": [
+{
+"u": "Por la mañana yo me levanto a las seis"
+},
+{
+"u": "después me ducho y desayuno café con pan"
+},
+{
+"u": "voy al trabajo en metro"
+},
+{
+"u": "termino a las cinco"
+}
+]
+},
+{
+"id": "weekend-plans",
+"lvl": "b1",
+"turns": [
+{
+"u": "Este fin de semana voy a ir a Boquete con mi familia"
+},
+{
+"u": "vamos a hacer senderismo y tomar café"
+},
+{
+"u": "si hace buen tiempo vamos a subir al volcán"
+},
+{
+"u": "nunca he subido antes"
+}
+]
+},
+{
+"id": "subjunctive-b1",
+"lvl": "b1",
+"turns": [
+{
+"u": "Quiero que mi hijo aprende español",
+"fix": "aprenda"
+},
+{
+"u": "es importante que él habla con su abuela",
+"fix": "hable"
+},
+{
+"u": "ella vive en Colombia"
+}
+]
+},
+{
+"id": "past-story-b1",
+"lvl": "b1",
+"turns": [
+{
+"u": "Cuando era niño, vivía en Colón"
+},
+{
+"u": "todos los días jugaba fútbol con mis primos"
+},
+{
+"u": "un día me rompí el brazo"
+},
+{
+"u": "fue muy doloroso"
+}
+]
+},
+{
+"id": "opinion-b2",
+"lvl": "b2",
+"turns": [
+{
+"u": "Creo que el turismo es bueno para Panamá, pero también tiene problemas"
+},
+{
+"u": "por ejemplo, los precios suben y la gente local no puede pagar"
+},
+{
+"u": "el gobierno debería controlar más el desarrollo"
+}
+]
+},
+{
+"id": "recognition-slip",
+"lvl": "a1",
+"note": "speech recognition misheard día as tía",
+"turns": [
+{
+"u": "buenos tías profe",
+"err": 1
+},
+{
+"u": "mi tía fue muy bien",
+"err": 1
+},
+{
+"u": "trabajé mucho"
+}
+]
+},
+{
+"id": "explain-request",
+"lvl": "a2",
+"turns": [
+{
+"u": "explain the difference between ser and estar",
+"en": 1
+},
+{
+"u": "ok",
+"move": 1,
+"err": 1
+},
+{
+"u": "la sopa está caliente"
+}
+]
+},
+{
+"id": "vocab-food",
+"lvl": "a1",
+"turns": [
+{
+"u": "Quiero aprender palabras de comida",
+"move": 1
+},
+{
+"u": "sí",
+"move": 1
+},
+{
+"u": "manzana",
+"err": 1
+},
+{
+"u": "me gusta el plátano"
+}
+]
+},
+{
+"id": "doctor-roleplay",
+"lvl": "a2",
+"turns": [
+{
+"u": "Vamos a practicar en el médico. Tú eres el doctor",
+"move": 1
+},
+{
+"u": "me duele la cabeza"
+},
+{
+"u": "desde ayer"
+},
+{
+"u": "no, no tengo fiebre"
+}
+]
+},
+{
+"id": "restaurant-roleplay",
+"lvl": "a1",
+"turns": [
+{
+"u": "Let's role play ordering food in a restaurant, you are the waiter",
+"en": 1,
+"move": 1
+},
+{
+"u": "quiero un café por favor"
+},
+{
+"u": "y una empanada"
+},
+{
+"u": "la cuenta por favor"
+}
+]
+},
+{
+"id": "conjugate",
+"lvl": "a2",
+"turns": [
+{
+"u": "Conjugate tener in the preterite",
+"en": 1,
+"has": "tuve"
+},
+{
+"u": "ayer tuve una reunión"
+},
+{
+"u": "gracias"
+}
+]
+},
+{
+"id": "mistake-gustar",
+"lvl": "a1",
+"turns": [
+{
+"u": "Yo gusto la música salsa",
+"fix": "me gusta"
+},
+{
+"u": "me gustan bailar",
+"fix": "gusta"
+},
+{
+"u": "los sábados bailo con mi esposa"
+}
+]
+},
+{
+"id": "mistake-articles",
+"lvl": "a1",
+"turns": [
+{
+"u": "El problema es que la agua está fría",
+"fix": "el agua"
+},
+{
+"u": "sí, el agua"
+},
+{
+"u": "gracias profe"
+}
+]
+},
+{
+"id": "ask-meaning",
+"lvl": "a2",
+"turns": [
+{
+"u": "what does chévere mean",
+"en": 1
+},
+{
+"u": "y qué significa vaina",
+"has": "(thing|stuff|cosa)"
+},
+{
+"u": "esa vaina está chévere"
+}
+]
+},
+{
+"id": "tired-learner",
+"lvl": "a2",
+"turns": [
+{
+"u": "estoy cansado, solo cinco minutos hoy"
+},
+{
+"u": "sí",
+"move": 1
+},
+{
+"u": "comer",
+"err": 1
+}
+]
+},
+{
+"id": "future-plans",
+"lvl": "b1",
+"turns": [
+{
+"u": "El año próximo voy a viajar a España"
+},
+{
+"u": "quiero visitar Madrid y Barcelona"
+},
+{
+"u": "me gustaría estudiar allí un mes"
+}
+]
+},
+{
+"id": "dele-exam",
+"lvl": "b1",
+"turns": [
+{
+"u": "How should I prepare for the DELE B1 speaking test?",
+"en": 1
+},
+{
+"u": "can we practise a monologue",
+"en": 1,
+"move": 1
+},
+{
+"u": "Voy a hablar de mi ciudad. Panamá es una ciudad moderna con muchos edificios"
+}
+]
+},
+{
+"id": "pronoun-mistake",
+"lvl": "a2",
+"turns": [
+{
+"u": "Le compré un regalo a mi madre y lo di ayer",
+"fix": "se lo"
+},
+{
+"u": "sí, se lo di"
+},
+{
+"u": "un collar bonito"
+}
+]
+},
+{
+"id": "weather",
+"lvl": "a1",
+"turns": [
+{
+"u": "hoy hace mucho calor en Panamá"
+},
+{
+"u": "sí, siempre hace calor"
+},
+{
+"u": "en la tarde llueve mucho"
+}
+]
+},
+{
+"id": "correct-me",
+"lvl": "a2",
+"turns": [
+{
+"u": "Corrige: yo tiene dos hijos y ellos estudia en la escuela",
+"fix": "tengo"
+},
+{
+"u": "gracias, y esto: mi hija es más alta que yo"
+}
+]
+},
+{
+"id": "family",
+"lvl": "a1",
+"turns": [
+{
+"u": "Tengo una familia grande"
+},
+{
+"u": "tengo tres hermanos y dos hermanas"
+},
+{
+"u": "mi hermano mayor vive en David"
+},
+{
+"u": "es ingeniero"
+}
+]
+},
+{
+"id": "preterite-vs-imperfect",
+"lvl": "b1",
+"turns": [
+{
+"u": "When do I use imperfect vs preterite",
+"en": 1
+},
+{
+"u": "ok give me an exercise",
+"en": 1,
+"move": 1
+},
+{
+"u": "llovía",
+"err": 1
+}
+]
+}
 ]
