@@ -3911,6 +3911,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function natGenerate(prompt, maxTokens, temp, onPart, signal, onWait) {
     return natRun((id) => window.AndroidLLM.generate(id, prompt, maxTokens, temp), onPart, signal, onWait);
   }
+  // sentences, normalised, to spot a model that is repeating itself
+  const sents = (t) => String(t).split(/(?<=[.!?…])\s+|\n+/).map((x) => x.trim()).filter(Boolean);
+  const snorm = (x) => x.toLowerCase().replace(/[*_¿¡?!.,;:]/g, "").replace(/\s+/g, " ").trim();
+  function looped(t) { const seen = new Set(); let rep = 0; for (const x of sents(t)) { const k = snorm(x); if (k.length < 6) continue; if (seen.has(k)) rep++; seen.add(k); } return rep >= 2; }
+  function deloop(t) { const seen = new Set(), out = []; for (const x of sents(t)) { const k = snorm(x); if (k.length >= 6 && seen.has(k)) break; seen.add(k); out.push(x); } return out.join(" "); }
   function natRun(start, onPart, signal, onWait) {
     return new Promise((res, rej) => {
       const id = "g" + (++NAT.seq), t0 = Date.now(); let text = "", first = 0;
@@ -3921,7 +3926,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         if (!first && sec > 180) { clearInterval(natWatch); try { window.AndroidLLM.cancel(); } catch (e) {} delete NAT.cbs[id]; rej({ code: "native", message: "no answer after 3 minutes (the phone may be low on memory; close other apps and try again)", text }); }
       }, 1000);
       const fin = () => { clearInterval(natWatch); delete NAT.cbs[id]; };
-      NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (onPart) onPart(fixUtf(text)); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(fixUtf(text)); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
+      NAT.cbs[id] = { part: (d) => { if (!first) first = Date.now(); text += d; if (looped(text)) { try { window.AndroidLLM.cancel(); } catch (e) {} fin(); NAT.looped = (NAT.looped || 0) + 1; res(deloop(fixUtf(text))); return; } if (onPart) onPart(deloop(fixUtf(text))); }, done: () => { fin(); NAT.lastMs = Date.now() - t0; res(fixUtf(text)); }, err: (m) => { fin(); NAT.lastErr = m; rej({ code: "native", message: m, text }); } };
       if (signal) signal.addEventListener("abort", () => { try { window.AndroidLLM.cancel(); } catch (e) {} });
       try { start(id); } catch (e) { fin(); rej({ code: "native", message: String(e) }); }
     });
@@ -4132,22 +4137,43 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const pts = g.ai.split(/(?<=[.;])\s+(?=[A-ZÁÉÍÓÚ¿¡])/).slice(0, 6).map((x) => "- " + x.trim());
     return "Here’s the short version from the **" + g.en.replace(/^the\s+/i, "") + "** guide:\n" + pts.join("\n") + "\n\n*The full guide, with tables and 38 practice questions, is in Grammar guides › " + g.en + ". Want me to quiz you on it?*";
   }
-  const PCHECK = [["Conjugate tener in the preterite", "tuve"], ["What does hay mean", "there is"], ["How do you say to eat in Spanish", "comer"], ["When do I use por and para", "por"], ["Conjugate ir", "voy"], ["How do you say house in Spanish", "casa"]];
+  const PCHECK = [["Corrige: yo tengo veinte años y yo soy de Londres.", "tengo veinte años y soy de londres"], ["Conjugate tener in the preterite", "tuve"], ["What does hay mean", "there is"], ["How do you say to eat in Spanish", "comer"], ["When do I use por and para", "por"], ["Conjugate ir", "voy"], ["How do you say house in Spanish", "casa"]];
   async function profeCheck() {
     const box = document.getElementById("p-check"); if (!box) return;
     try { if (!VI) await loadIndex(); } catch (e) {}
     const rows = [];
     PCHECK.forEach(([q, want]) => { const t0 = performance.now(), a = expertAnswer(q) || "", ok = a.toLowerCase().includes(want); rows.push([q, ok ? "✓ exact answer" : "✗", Math.round(performance.now() - t0) + " ms"]); });
     box.innerHTML = '<table class="ntbl"><tbody>' + rows.map((r) => "<tr><th>" + esc(r[0]) + "</th><td>" + r[1] + " · " + r[2] + "</td></tr>").join("") + "</tbody></table><p>Now asking the AI on your phone two questions…</p>";
-    for (const q of ["Corrige: yo tengo veinte años y yo soy de Londres.", "¿Qué hiciste ayer? Responde con una frase sencilla."]) {
+    for (const q of ["Hola Profe, ayer fui a la playa con mis amigos.", "¿Qué hiciste ayer? Responde con una frase sencilla."]) {
       const t0 = performance.now(); let out = "";
-      try { out = await natGenerate(natPrompt(rules({ label: "Profe check", text: "" }, true), [{ role: "user", content: q }], 600), 120, 0.35, () => {}, null, () => {}); } catch (e) { out = "(error: " + (e && (e.message || e.code) || e) + ")"; }
+      const sys = rules({ label: "Profe check", text: "" }, true) + "\n\nYou are now talking with the learner. Answer their message below.";
+      try { out = typeof window.AndroidLLM.chat === "function" ? await natChat("check" + Date.now(), sys, q, 120, 0.35, () => {}, null, () => {}) : await natGenerate(natPrompt(sys, [{ role: "user", content: q }], 600), 120, 0.35, () => {}, null, () => {}); } catch (e) { out = "(error: " + (e && (e.message || e.code) || e) + ")"; }
       rows.push([q, cleanLocal(out || "").slice(0, 160), Math.round((performance.now() - t0) / 100) / 10 + " s"]);
       box.innerHTML = '<table class="ntbl"><tbody>' + rows.map((r) => "<tr><th>" + esc(r[0]) + "</th><td>" + esc(r[1]) + " · " + r[2] + "</td></tr>").join("") + "</tbody></table>";
     }
+    if (natWhich() === "fast") box.insertAdjacentHTML("beforeend", "<p><b>The Fast model is small and can ramble.</b> On your phone, Smart gives much better chat answers. Exact answers (conjugations, meanings, corrections) are the same with either.</p>");
   }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="t-check"]'); if (t) { t.disabled = true; profeCheck().finally(() => (t.disabled = false)); } });
+  function applyFixes(text, fixes) {
+    let k = -1; return text.replace(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+|\d+/g, (w) => { k++; const f = fixes.find((x) => x.at === k); return f ? f.to : w; });
+  }
+  function correctAnswer(sent) {
+    sent = sent.trim().replace(/^["“«]|["”»]$/g, ""); if (!sent || !/[a-záéíóúñ]/i.test(sent)) return null;
+    let fixes = []; try { fixes = quickFixes(sent) || []; } catch (e) {}
+    const fixed = fixes.length ? applyFixes(sent, fixes) : sent;
+    const out = [];
+    if (fixes.length) { out.push("✏️ **" + fixed.charAt(0).toUpperCase() + fixed.slice(1) + "**", ""); fixes.forEach((f) => out.push("- " + f.from + " → **" + f.to + "**" + (f.why ? ": " + f.why : ""))); }
+    else out.push("✓ That sentence looks correct.");
+    // style: Spanish usually drops yo/tú when the verb already shows the person
+    const lw = fixed.toLowerCase();
+    if (/^(yo|tú)\s/.test(lw) || /\by (yo|tú)\s/.test(lw)) { const nat = fixed.replace(/^(yo|tú)\s+/i, "").replace(/\by (yo|tú)\s+/gi, "y "); out.push("", "More natural: **" + nat.charAt(0).toUpperCase() + nat.slice(1) + "**", "*Spanish usually leaves out yo/tú because the verb ending already shows who it is.*"); }
+    out.push("", "*Write another sentence and I'll check it.*");
+    return out.join("\n");
+  }
   function expertAnswer(text) {
+    const raw = String(text || "").trim();
+    let mm = /^(?:corrige|corr[ií]geme|correct(?: this| me)?|check(?: this)?|is this (?:correct|right)|est[aá] bien)\s*[:\-–]?\s*(.+)$/i.exec(raw);
+    if (mm && mm[1].length < 200) return correctAnswer(mm[1]);
     const q = xnorm(text); if (!q || q.length > 160) return null;
     let m;
     if ((m = /\b(?:conjugate|conjugation of|conjugaci[oó]n de|conjuga|conjugar)\s+(?:the verb\s+|el verbo\s+)?([a-záéíóúñ]+)/.exec(q))) return conjAnswer(m[1], q);
@@ -4173,6 +4199,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // small on-device models sometimes echo their instructions: cut the reply where that starts
   const ECHO = /\n\s*(\*\*)?(learner notes|notes|on screen|page open|background|private reference|reference facts|meanings|how to reply|rules)\b\s*(\(|:)/i;
   function cleanLocal(t) {
+    if (typeof deloop === "function") t = deloop(t);
     t = String(t).replace(/^\s*(profe|assistant|asistente)\s*:\s*/i, "");
     const cut = t.search(/\n\s*(learner|student|estudiante|alumno|user|usuario|profe|assistant)\s*:/i); if (cut > 0) t = t.slice(0, cut); const m = ("\n" + t).search(ECHO); let out = m >= 0 ? ("\n" + t).slice(0, m).trim() : t; return out.replace(/^profe:\s*/i, "").trim(); }
   async function ask(turns, ctx, onText, signal) {
@@ -5513,7 +5540,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110425";
+  var BUILD = "202611110432";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
