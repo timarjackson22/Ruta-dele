@@ -449,8 +449,12 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .pitbl del { color: var(--bad) } .pitbl ins { color: var(--good); text-decoration: none }
 .dectbl td.use { font-weight: 700; color: var(--cobalt); width: 38% }
 @media (max-width: 540px) { .ntbl th, .pitbl th[scope=row] { width: 38% } .extbl td.exen { width: 42% } }
-/* Spanish inside English text: a calm tint, no bold or italics */
-.es-w, strong.q { color: var(--es-ink); font-style: normal; font-weight: 500 }
+/* Spanish inside English text: single words look like the text around them (they are only tagged
+   lang="es" so the reader switches voice); whole Spanish phrases and sentences get the usual
+   typographic convention for another language: italics, same colour */
+.es-w { color: inherit; font-style: normal; font-weight: inherit }
+.es-w.es-phrase { font-style: italic }
+strong.q { color: inherit; font-style: normal; font-weight: 600 }
 .lx b, .lx strong { color: inherit; font-weight: 600 }
 :root { --es-ink: #2F5C9E }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --es-ink: #A9C1EE } }
@@ -2303,6 +2307,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       });
     });
   }
+  function esPhrase(root) {
+    root.querySelectorAll(".es-w:not(.es-k)").forEach((e) => { e.classList.add("es-k"); const t = e.textContent.trim(); if (t.split(/\s+/).length >= 3 || /[¿¡?!]/.test(t)) e.classList.add("es-phrase"); });
+  }
   function markRun(t) {
         if (!/[a-záéíóúñü]/i.test(t)) return null;
         const toks = t.split(/([^A-Za-zÁÉÍÓÚÑÜáéíóúñü¿¡?!]+)/);
@@ -2529,7 +2536,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const k = RA.q.findIndex((x) => x.el === e.target || x.el.contains(e.target)); if (k >= 0 && k !== RA.i) { RA.i = k; RA.paused = false; try { speechSynthesis.cancel(); } catch (x) {} raPlay(); }
   });
   let fxQ = false;
-  new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); esMark(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
+  new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); esMark(app); esPhrase(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
 
   /* ---------- reading aloud: free scrolling, screen kept on and dimmed ---------- */
   const FOL = { free: false };
@@ -5249,7 +5256,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110347";
+  var BUILD = "202611110350";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
