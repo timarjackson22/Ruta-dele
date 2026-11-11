@@ -4202,8 +4202,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   // small on-device models sometimes echo their instructions: cut the reply where that starts
   const ECHO = /\n\s*(\*\*)?(learner notes|notes|on screen|page open|background|private reference|reference facts|meanings|how to reply|rules)\b\s*(\(|:)/i;
+  function oneQuestion(t) {
+    const parts = String(t).split(/(?<=[.!?…])\s+/); const out = []; let words = 0;
+    for (const x of parts) { out.push(x); words += x.split(/\s+/).length; if (/\?\s*\**\s*$/.test(x) && out.length >= 1) break; if (out.length >= 4 || words > 70) break; }
+    return out.join(" ");
+  }
   function cleanLocal(t) {
     if (typeof deloop === "function") t = deloop(t);
+    if (TB === "native" && !/\n\s*[-*•]\s/.test(t)) t = oneQuestion(t);
     t = String(t).replace(/^\s*(profe|assistant|asistente)\s*:\s*/i, "");
     const cut = t.search(/\n\s*(learner|student|estudiante|alumno|user|usuario|profe|assistant)\s*:/i); if (cut > 0) t = t.slice(0, cut); const m = ("\n" + t).search(ECHO); let out = m >= 0 ? ("\n" + t).slice(0, m).trim() : t; return out.replace(/^profe:\s*/i, "").trim(); }
   async function ask(turns, ctx, onText, signal) {
@@ -5550,7 +5556,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110440";
+  var BUILD = "202611110443";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
