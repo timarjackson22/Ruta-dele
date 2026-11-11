@@ -2183,13 +2183,16 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   /* ---------- read the lesson aloud ---------- */
   const RA = { q: [], i: 0, on: false, paused: false, rate: (() => { try { return +(localStorage.getItem("ra-rate") || 1) || 1; } catch (e) { return 1; } })(), gen: 0, el: null };
   const RA_PAGES = /^(a1|a2|b1|b2|c1|c2|esc)(-u\d+|-exam)?$|^guia-|^g-|^gramatica$|^verbos-reflexivos$/;
-  const RA_SKIP = "#runner, #s-pra, .crumbs, .eyebrow, nav, .tabs, .jump, .unav, .pxrev, .ra-bar, .ra-player, button, .say, .tutor, .sheet, select, input, .glegend, .gcards, .vbs, .pill, .row, script, style";
+  const RA_SKIP = "#runner, #s-pra, .crumbs, .eyebrow, nav, .tabs, .jump, .unav, .pxrev, .ra-bar, .ra-player, button, .say, .tutor, .sheet, select, input, .glegend, .vbs, .pill, script, style, .sr, [aria-hidden=true], .ipa";
   const EN_W = /\b(the|and|is|are|you|to|of|in|it|for|with|that|this|when|use|used|was|be|an|as|on|or|not|but|if|have|has|there|people|still|means|which|after|before|your|they|we|what|how|why|word|words|verb|verbs|tense|instead|especially|including|today|week|life|experiences?)\b/gi;
   const ES_W = /\b(el|la|los|las|que|de|del|es|y|en|un|una|unos|unas|por|para|con|muy|bien|yo|tú|usted|qué|cómo|está|son|hola|gracias|se|lo|le|les|me|te|nos|mi|tu|su|al|ha|he|has|han|hay|no|sí|pero|como|más|este|esta|ya|nunca|todavía|ayer|hoy)\b/gi;
   function langOf(t) {
-    const en = (t.match(EN_W) || []).length, es = (t.match(ES_W) || []).length + (/[¿¡ñ]/.test(t) ? 2 : 0) + ((t.match(/[áéíóú]/gi) || []).length ? 0.5 : 0);
+    const en = (t.match(EN_W) || []).length * 1.5, es = (t.match(ES_W) || []).length + (/[¿¡ñ]/.test(t) ? 2 : 0) + ((t.match(/[áéíóú]/gi) || []).length ? 0.5 : 0);
     if (es > en) return "es"; if (en > es) return "en";
-    return /(ción|ciones|dad|dades|mente|encias?|ancias?|ismo|ías?|iones)\b/i.test(t) || /[áéíóúñ]/i.test(t) ? "es" : "en";
+    if (/[áéíóúñ]/i.test(t) || /(ción|ciones|dad|dades|mente|encias?|ancias?|ismo|ías?|iones)\b/i.test(t)) return "es";
+    const ws = t.toLowerCase().match(/\p{L}+/gu) || [];
+    const esEnd = ws.filter((w) => /(os|as|o|a|ar|er|ir|ado|ido)$/.test(w) && w.length > 2).length;
+    return ws.length && esEnd / ws.length > 0.5 ? "es" : "en";
   }
   function raSegs(el) {
     const segs = [], push = (t, es) => {
@@ -2204,14 +2207,20 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         if (forceEs != null) { push(t, forceEs); return; }
         const base = langOf(t) === "es";
         // Spanish examples in brackets inside an English sentence get the Spanish voice
-        t.split(/(\([^()]*\))/).forEach((x) => { if (!x.trim()) return; push(x, /^\(/.test(x) ? langOf(x) === "es" : base); });
+        t.split(/(\([^()]*\))/).forEach((x) => {
+          if (!x.trim()) return;
+          if (/^\(/.test(x)) { push(x, langOf(x) === "es"); return; }
+          // "English intro: Spanish list" → each side in its own voice
+          x.split(/(?<=:)\s+/).forEach((y) => { if (y.trim()) push(y, y.trim().split(/\s+/).length >= 2 ? langOf(y) === "es" : base); });
+        });
         return;
       }
       if (n.nodeType !== 1 || n.matches(RA_SKIP) || n.hidden) return;
+      if (n.matches(".gnum")) { push("Rule " + n.textContent.trim() + ".", false); return; }
       if (/^(LI|P|H\d|DIV|TR|UL|TD)$/.test(n.tagName)) stop();
       let es = forceEs;
       if (n.matches("td.es, .exr > b, .es-sub, del, ins, .gw, .face")) es = true;
-      else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && (isSpanish(t) || /[áéíóúñ¿¡]/i.test(t)); }
+      else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && langOf(t) === "es"; }
       else if (n.matches("td.en, .tr, .muted.small, .en")) es = false;
       n.childNodes.forEach((c) => walk(c, es));
       if (/^(LI|P|H\d|TR|TD)$/.test(n.tagName) || n.classList.contains("fx-h")) stop();
@@ -2219,13 +2228,33 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     walk(el, null);
     return segs;
   }
+  // every visible piece of text on the page, in reading order: the smallest block that holds text is one step
+  const RA_INLINE = /^(inline|inline-block|inline-flex|inline-grid|inline-table|contents)$/;
   function raCollect() {
-    const sel = "h1, h2, h3, h4, .es-sub, .fx-lead, .lx > p, .fx-card, .fx-tip, .fx-ex, .fx-note, p.rule, .notes li, .pits li, .exr, .gblock tbody tr, .grule, .gmist li, .callout:not(.fxd), section > p, .gblock > p, .stack > div > p, .lead2, .tbl tbody tr";
-    const els = [...app.querySelectorAll(sel)].filter((e) => !e.closest(RA_SKIP) && e.offsetParent !== null);
-    const leaf = els.filter((e) => !els.some((o) => o !== e && e.contains(o)));
-    const q = []; leaf.forEach((e) => { const sg = raSegs(e); if (sg.length) q.push({ el: e, segs: sg }); });
+    const q = [];
+    const visible = (e) => e.offsetParent !== null || getComputedStyle(e).position === "fixed";
+    const addItem = (el, nodes) => {
+      const box = document.createElement("span"); nodes.forEach((n) => box.appendChild(n.cloneNode(true)));
+      const sg = raSegs(box); if (sg.length) q.push({ el, segs: sg });
+    };
+    const visit = (e) => {
+      if (e.nodeType !== 1 || e.matches(RA_SKIP) || !visible(e)) return;
+      if (e.tagName === "TR" && /^(español|english|spanish|inglés|\s)*$/i.test([...e.cells].map((c) => c.textContent.trim()).join(" "))) return;
+      if (/^(TR)$/.test(e.tagName) || e.matches(".exr, .fx-h")) { addItem(e, [e]); return; }
+      const kids = [...e.childNodes];
+      const isBlock = (n) => n.nodeType === 1 && !/^(SPAN|B|I|EM|STRONG|SMALL|MARK|INS|DEL|SUB|SUP|CODE|LABEL|Q|ABBR|BR|SVG)$/.test(n.tagName) && !RA_INLINE.test(getComputedStyle(n).display);
+      if (!kids.some(isBlock)) { addItem(e, [e]); return; }
+      // mixed: group loose inline runs between the blocks
+      let run = [];
+      const flush = () => { if (run.length) { addItem(e, run); run = []; } };
+      kids.forEach((n) => { if (isBlock(n)) { flush(); visit(n); } else if (n.nodeType === 3 || (n.nodeType === 1 && !n.matches(RA_SKIP))) run.push(n); });
+      flush();
+    };
+    [...app.children].forEach(visit);
     return q;
   }
+  window.__raCollect = () => raCollect().map((x) => x.segs.map((s) => (s.es ? "[es] " : "[en] ") + s.t).join(" | "));
+
   function raStop(silent) {
     RA.gen++; RA.on = false; RA.paused = false;
     try { speechSynthesis.cancel(); } catch (e) {}
@@ -4921,7 +4950,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110058";
+  var BUILD = "202611110110";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
