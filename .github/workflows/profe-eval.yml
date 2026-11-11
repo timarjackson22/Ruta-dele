@@ -46,7 +46,7 @@ jobs:
         run: |
           pip install -q huggingface_hub
           pip install -q llama-cpp-python==0.3.16 --prefer-binary --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-          cd eval && npm init -y >/dev/null && npm i -s playwright@1.55.0 && npx playwright install --with-deps chromium >/dev/null
+          cd eval && npm init -y >/dev/null && npm i -s playwright@1.55.0 && (npx playwright install chromium >/dev/null || npx playwright install --with-deps chromium >/dev/null)
       - name: Download model
         run: test -f models/$FILE || python3 -c "import os;from huggingface_hub import hf_hub_download as d;d(os.environ['REPO'],os.environ['FILE'],local_dir='models')"
       - name: Run
