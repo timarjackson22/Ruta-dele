@@ -439,6 +439,16 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.ntbl th { width: 34%; text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink); background: var(--surface-2); vertical-align: top }
+.ntbl td, .pitbl td, .dectbl td { vertical-align: top }
+.extbl td.exen { color: var(--muted); width: 45% }
+.extbl td.exes b { color: var(--ink) }
+.exsp { display: flex; gap: 8px; align-items: flex-start }
+.pitbl th[scope=row] { width: 32%; text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink); background: var(--bad-soft); vertical-align: top }
+.pitbl .pfix { display: block; margin-bottom: 4px; font-weight: 600 }
+.pitbl del { color: var(--bad) } .pitbl ins { color: var(--good); text-decoration: none }
+.dectbl td.use { font-weight: 700; color: var(--cobalt); width: 38% }
+@media (max-width: 540px) { .ntbl th, .pitbl th[scope=row] { width: 38% } .extbl td.exen { width: 42% } }
 .es-w, strong.q { color: var(--cobalt); font-style: italic; font-weight: 600 }
 .lx b, .lx strong { color: var(--cobalt) }
 .lx-intro { gap: 10px }
@@ -615,6 +625,11 @@ table.words td:first-child { font-weight: 400 }
   .qopts { grid-template-columns: minmax(0, 1fr) }
   .words .rk { width: 2.6em }
   .words th:nth-child(5), .words td:nth-child(5) { padding-left: 4px }
+  table.words { table-layout: fixed; width: 100% }
+  .words th:nth-child(1) { width: 2.6em } .words th:nth-child(2) { width: 34% } .words th:nth-child(3) { width: 40px } .words th:nth-child(5) { width: 44px }
+  .words td.gl { min-width: 0; font-size: .92rem; overflow-wrap: anywhere }
+  .words td.ww { overflow-wrap: anywhere }
+  .words th, .words td { padding-left: 6px; padding-right: 6px }
 }
 
 /* Gramática: parts of speech. One pastel per part of speech, echoing sticky notes; light mode */
@@ -1672,9 +1687,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { if (!VI) loadIndex(); } catch (e) {}
     const st = (S.gd || {})[id] || {};
     app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#guias">Grammar guides</a><span aria-hidden="true">›</span><span>' + esc(g.en) + '</span></p><div><p class="eyebrow">Grammar guide</p><h1>' + esc(g.en) + '</h1><p class="es-sub">' + esc(g.t) + '</p></div><div class="callout intro">' + esc(g.intro) + "</div>" +
-      (g.decide && g.decide.length ? '<section class="block"><div class="shead"><h2>How to decide <span class="es">(Cómo decidir)</span></h2></div><ol class="decide">' + g.decide.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ol></section>" : "") +
+      (g.decide && g.decide.length ? '<section class="block"><div class="shead"><h2>How to decide <span class="es">(Cómo decidir)</span></h2></div>' + decideTable(g.decide) + "</section>" : "") +
       '<section class="block"><div class="shead"><h2>Explanation <span class="es">(Explicación)</span></h2></div>' + g.sec.map((x) => grammarBlock(x)).join("") + "</section>" +
-      (g.pit && g.pit.length ? '<section class="block"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div><ul class="pits">' + g.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>" : "") +
+      (g.pit && g.pit.length ? '<section class="block"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div>' + pitsTable(g.pit) + "</section>" : "") +
       '<section class="block" id="s-pra"><div class="shead"><h2>Practice <span class="es">(Práctica)</span></h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(g) + "</span>" : "") + "</div>" + pxHTML(g, "Fill in the blank.") + "</section></div>";
     bindPractice(g, (score) => { S.gd = S.gd || {}; const o = S.gd[id] || {}; o.best = Math.max(o.best || 0, score); S.gd[id] = o; save(); return ""; });
   }
@@ -1740,18 +1755,42 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   function vocabGroup(g) {
-    const h = g.h || ["Español", "English"];
-    return '<div class="gblock"><h3>' + esc(g.t) + '</h3><div class="tbl"><table class="vocab"><thead><tr><th></th><th>' + esc(h[0]) + "</th><th>" + esc(h[1]) + "</th></tr></thead><tbody>" +
-      g.w.map((w) => '<tr><td class="sp">' + sayBtn(w[0]) + '</td><td class="es">' + esc(w[0]) + '</td><td class="en"><span data-act="reveal">' + esc(w[1]) + "</span></td></tr>").join("") + "</tbody></table></div></div>";
+    const h = g.h || ["Spanish", "English"];
+    return '<div class="gblock"><h3>' + esc(g.t) + '</h3><div class="tbl"><table class="vocab"><thead><tr><th>' + esc(/^espa/i.test(h[1]) ? "Spanish" : h[1]) + "</th><th></th><th>" + esc(/^espa/i.test(h[0]) ? "Spanish" : h[0]) + "</th></tr></thead><tbody>" +
+      g.w.map((w) => '<tr><td class="en"><span data-act="reveal">' + esc(w[1]) + '</span></td><td class="sp">' + sayBtn(w[0]) + '</td><td class="es">' + esc(w[0]) + "</td></tr>").join("") + "</tbody></table></div></div>";
+  }
+  // "Label|detail" notes read better as a two-column table
+  function notesHTML(n) {
+    if (!n || !n.length) return "";
+    const piped = n.filter((x) => x.indexOf("|") > 0).length;
+    if (piped >= 2 && piped >= n.length * 0.6) return '<div class="tbl"><table class="ntbl"><tbody>' + n.map((x) => { const k = x.indexOf("|"); return k < 0 ? '<tr><td colspan="2">' + esc(x) + "</td></tr>" : '<tr><th scope="row">' + esc(x.slice(0, k)) + "</th><td>" + esc(x.slice(k + 1)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+    return '<ul class="notes">' + n.map((x) => "<li>" + rich(x) + "</li>").join("") + "</ul>";
+  }
+  // examples: English first, then the Spanish (with its listen button)
+  function exTable(e) {
+    if (!e || !e.length) return "";
+    return '<div class="tbl"><table class="extbl"><thead><tr><th>English</th><th>Spanish</th></tr></thead><tbody>' + e.map((x) => '<tr><td class="exen">' + esc(x[1]) + '</td><td class="exes"><span class="exsp">' + sayBtn(x[0]) + '<b lang="es">' + esc(x[0]) + "</b></span></td></tr>").join("") + "</tbody></table></div>";
+  }
+  function pitsTable(list) {
+    return '<div class="tbl"><table class="pitbl"><thead><tr><th>Mistake</th><th>Not this → say this, and why</th></tr></thead><tbody>' + list.map((x) => {
+      const k = x.indexOf("|"), head = k < 0 ? "" : x.slice(0, k), body = k < 0 ? x : x.slice(k + 1);
+      const fixed = esc(body).replace(/«([^»]+)»\s*→\s*«([^»]+)»/g, '<span class="pfix"><del>$1</del> <span aria-hidden="true">→</span> <ins>$2</ins></span>');
+      return "<tr><th scope=\"row\">" + esc(head || "Watch out") + "</th><td>" + fixed.replace(/^\s*:\s*/, "").replace(/<\/span>\s*:\s*/g, "</span>") + "</td></tr>";
+    }).join("") + "</tbody></table></div>";
+  }
+  function decideTable(list) {
+    return '<div class="tbl"><table class="dectbl"><thead><tr><th>Ask yourself</th><th>Use</th></tr></thead><tbody>' + list.map((x) => { const k = x.lastIndexOf("→"); return k < 0 ? '<tr><td colspan="2">' + esc(x) + "</td></tr>" : "<tr><td>" + esc(x.slice(0, k).trim()) + '</td><td class="use">' + esc(x.slice(k + 1).trim()) + "</td></tr>"; }).join("") + "</tbody></table></div>";
   }
   function grammarBlock(g) {
-    if (!g.rows || !g.rows.length || !g.h) return '<div class="gblock"><h3>' + esc(g.t) + "</h3>" + (g.r ? '<p class="rule">' + esc(g.r) + "</p>" : "") + (g.n && g.n.length ? '<ul class="notes">' + g.n.map((x) => "<li>" + rich(x) + "</li>").join("") + "</ul>" : "") + (g.e && g.e.length ? '<div class="exs">' + g.e.map((x) => '<p class="exr">' + sayBtn(x[0]) + "<span><b>" + esc(x[0]) + '</b><br><span class="muted">' + esc(x[1]) + "</span></span></p>").join("") + "</div>" : "") + "</div>";
-    return '<div class="gblock"><h3>' + esc(g.t) + "</h3>" + (g.r ? '<p class="rule">' + esc(g.r) + "</p>" : "") +
+    const head = '<div class="gblock"><h3>' + esc(g.t) + "</h3>" + (g.r ? '<p class="rule">' + esc(g.r) + "</p>" : "");
+    if (!g.rows || !g.rows.length || !g.h) return head + notesHTML(g.n) + exTable(g.e) + "</div>";
+    return head +
       '<div class="tbl"><table><thead><tr>' + g.h.map((x) => "<th>" + esc(x) + "</th>").join("") + "</tr></thead><tbody>" +
       g.rows.filter((r) => !(S.region !== "es" && /^vosotros/.test(r[0]))).map((r) => "<tr>" + r.map((c) => "<td>" + esc(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table></div>" +
       (S.region !== "es" && g.rows.some((r) => /^vosotros/.test(r[0])) ? '<p class="muted small">LatAm mode: the <i>vosotros</i> row is hidden (Latin America uses ustedes). Spain: ' + esc(g.rows.find((r) => /^vosotros/.test(r[0])).slice(1).join(" · ")) + "</p>" : "") +
-      (g.n ? '<ul class="notes">' + g.n.map((n) => "<li>" + rich(n) + "</li>").join("") + "</ul>" : "") + "</div>";
+      notesHTML(g.n) + exTable(g.e) + "</div>";
   }
+
   function mcList(qs, scope) {
     return '<ol class="mc" data-scope="' + scope + '">' + qs.map((q, i) => '<li><p class="mq">' + blanks(q[0]) + '</p><div class="opts">' + q[1].map((o, j) => '<button class="opt" data-act="mc" data-q="' + i + '" data-o="' + j + '">' + esc(o) + "</button>").join("") + "</div></li>").join("") + "</ol>";
   }
@@ -1770,8 +1809,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="jump">' + jump.map(([id, n]) => '<button class="btn small" data-act="jump" data-to="' + id + '">' + n + "</button>").join("") + "</div>";
     h += '<section class="block" id="s-voc"><div class="shead"><h2>Vocabulary <span class="es">(Vocabulario)</span></h2><button class="btn small" data-act="hide-en" aria-pressed="false">Hide translations to test yourself</button></div>' + u.v.map(vocabGroup).join("") + '<p class="small"><a href="#' + (L.school ? "repaso-esc" : L.id + "-cards") + '">Study these words with spaced repetition ›</a></p></section>';
     h += '<section class="block" id="s-gra"><div class="shead"><h2>Grammar <span class="es">(Gramática)</span></h2></div>' + u.g.map(grammarBlock).join("") + (u.acc ? '<div class="callout acc"><b>Accents (tildes):</b> ' + esc(u.acc) + "</div>" : "") + "</section>";
-    if (has.e) h += '<section class="block" id="s-eje"><div class="shead"><h2>Examples <span class="es">(Ejemplos)</span></h2><button class="btn small tts-only" data-act="say" data-t="' + esc(u.e.map((x) => x[0]).join(" ")) + '">Listen to all</button></div><div class="exs">' + u.e.map((x) => '<p class="exr">' + sayBtn(x[0]) + "<span><b>" + esc(x[0]) + '</b><br><span class="muted">' + esc(x[1]) + "</span></span></p>").join("") + "</div></section>";
-    if (has.pit) h += '<section class="block" id="s-err"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div><ul class="pits">' + u.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>";
+    if (has.e) h += '<section class="block" id="s-eje"><div class="shead"><h2>Examples <span class="es">(Ejemplos)</span></h2><button class="btn small tts-only" data-act="say" data-t="' + esc(u.e.map((x) => x[0]).join(" ")) + '">Listen to all</button></div>' + exTable(u.e) + "</section>";
+    if (has.pit) h += '<section class="block" id="s-err"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div>' + pitsTable(u.pit) + "</section>";
     if (has.d) h += '<section class="block" id="s-dia"><div class="shead"><h2>Dialogue <span class="es">(Diálogo)</span></h2><button class="btn small tts-only" data-act="play-dlg">Play the whole dialogue</button></div><p class="muted">' + esc(u.d.c) + ' Read it aloud, then swap roles.</p><div class="dlg">' + u.d.l.map((l, k) => '<div class="line' + (k % 2 ? " b" : "") + '">' + sayBtn(l[1]) + '<p><span class="who">' + esc(l[0]) + ":</span> " + esc(l[1]) + '<span class="tr">' + esc(l[2]) + "</span></p></div>").join("") + "</div></section>";
     if (has.r) h += '<section class="block" id="s-lec"><div class="shead"><h2>Reading <span class="es">(Lectura)</span></h2></div><p class="muted">' + esc(u.r.c) + '</p><div class="passage"><div class="row" style="margin-bottom:8px">' + sayBtn(u.r.text, "the text") + '<span class="muted">Listen to the text</span></div>' + esc(u.r.text) + "</div>" + mcList(u.r.q, "read") + "</section>";
     h += '<section class="block" id="s-pra"><div class="shead"><h2>Practice <span class="es">(Práctica)</span></h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(u) + "</span>" : "") + "</div>" + pxHTML(u, u.xi) + "</section>";
@@ -1859,7 +1898,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const toks = (x) => new Set(nz(x).split(" ").filter((w) => w.length > 2 && !STOP.has(w)));
     const ans = (it.a ? it.a : [it.opts[it.c]]).map(nz).filter((x) => x.length > 1);
     const whyT = toks(it.why), qT = toks(it.q.replace(/_+/g, " ")), ansT = new Set(ans.join(" ").split(" ").filter((w) => w.length > 1));
-    const cands = [...app.querySelectorAll("p.rule, .gblock tbody tr, .notes li, .callout, .exr, .pits li, .gblock > p, .gblock > ul > li, .grule, .gmist li")].filter((e) => !e.closest("#runner, .crumbs") && e.textContent.trim().length > 2);
+    const cands = [...app.querySelectorAll("p.rule, .gblock tbody tr, .notes li, .callout, .exr, .pits li, .extbl tbody tr, .pitbl tbody tr, .ntbl tr, .gblock > p, .gblock > ul > li, .grule, .gmist li")].filter((e) => !e.closest("#runner, .crumbs") && e.textContent.trim().length > 2);
     const titleOf = (e) => { const b = e.closest(".gblock, .grule, section"); const h = b && b.querySelector("h3, h2"); return h ? h.textContent.replace(/\s+/g, " ").trim() : "the lesson"; };
     const score = (e) => {
       const t = " " + nz(e.textContent) + " ", T = toks(e.textContent), tt = toks(titleOf(e)); let sc = 0;
@@ -2241,7 +2280,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const ES_SKIP = "b, strong, em, i, .es-w, td.es, .exr, .es, .es-sub, .gw, .sel-es, a, button, input, textarea, select, .say, .pa, .tutor, .story, .pod, .verse, .passage, .mtext, .dlg, del, ins, mark, code, .crumbs, .eyebrow, h1, h2";
   function esMark(root) {
     if (!root || !root.querySelectorAll) return; esSets();
-    root.querySelectorAll(".lx p, .lx li, .fx-h, .callout:not(.fxd), p.rule, .notes li, .pits li, .grule p, .gblock > p, section > p, .lead2, .fx-tip p, .fx-ex p, .fx-note p, .gmist p, .decide li, .fxwrap p").forEach((el) => {
+    root.querySelectorAll(".ntbl td, .ntbl th, .pitbl td, .dectbl td, .lx p, .lx li, .fx-h, .callout:not(.fxd), p.rule, .notes li, .pits li, .grule p, .gblock > p, section > p, .lead2, .fx-tip p, .fx-ex p, .fx-note p, .gmist p, .decide li, .fxwrap p").forEach((el) => {
       if (el.dataset.esm || el.closest(".tutor, .story, .pod, .verse, .passage, .mtext, .dlg, .crumbs, #runner, .pxcard, .sheet")) return;
       el.dataset.esm = "1";
       const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.parentElement.closest(ES_SKIP) && n.parentElement.closest(ES_SKIP) !== el ? 2 : 1 });
@@ -2338,7 +2377,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (n.matches(".gnum")) { push("Rule " + n.textContent.trim() + ".", false); return; }
       if (/^(LI|P|H\d|DIV|TR|UL|TD)$/.test(n.tagName)) stop();
       let es = forceEs;
-      if (n.matches("td.es, .exr > b, .es-sub, del, ins, .gw, .face, .es-w, strong.q")) es = true;
+      if (n.matches("td.es, td.exes, .exr > b, .es-sub, del, ins, .gw, .face, .es-w, strong.q, .ww > b")) es = true;
+      else if (n.matches("td.exen, td.gl")) es = false;
       else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && langOf(t) === "es"; }
       else if (n.matches("td.en, .tr, .muted.small, .en")) es = false;
       n.childNodes.forEach((c) => walk(c, es));
@@ -2358,7 +2398,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     const visit = (e) => {
       if (e.nodeType !== 1 || e.matches(RA_SKIP) || !visible(e)) return;
-      if (e.tagName === "TR" && /^(español|english|spanish|inglés|\s)*$/i.test([...e.cells].map((c) => c.textContent.trim()).join(" "))) return;
+      if (e.tagName === "TR" && /^(español|english|spanish|inglés|mistake|ask yourself|use|not this → say this, and why|\s)*$/i.test([...e.cells].map((c) => c.textContent.trim()).join(" "))) return;
       if (e.tagName === "TR" && e.closest("table.vocab") && e.querySelector("td.es") && e.querySelector("td.en")) {
         const es = e.querySelector("td.es").textContent.replace(/🇵🇦/gu, "").replace(/\((Esp|LatAm)[^)]*\)/g, "").trim(), en = e.querySelector("td.en").textContent.trim();
         let o = { reps: 3, gap: 1.5, en: 1 }; try { o = GP.o; } catch (x) {}
@@ -2547,7 +2587,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   /* ---------- 🇵🇦 words especially common in Panama ---------- */
   const paKey = (t) => String(t || "").toLowerCase().replace(/\([^)]*\)/g, "").replace(/[¡!¿?.,;:]/g, "").replace(/^(el|la|los|las|un|una)\s+/, "").replace(/\s+/g, " ").trim();
   function paMark(root) {
-    (root || app).querySelectorAll("td.es, table.words td:nth-child(3) > b, .gw b, .srcard .face:not(.back), .gpnow b, .sw").forEach((el) => {
+    (root || app).querySelectorAll("td.es, table.words td.ww > b, .gw b, .srcard .face:not(.back), .gpnow b, .sw").forEach((el) => {
       if (el.dataset.pa) return; el.dataset.pa = "1";
       const k = paKey(el.textContent), note = PANAMA[k];
       if (!note) return;
@@ -2830,7 +2870,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap “Show text” to read along.</p>' : "") +
       '<p class="muted small">Tap a word for its meaning · highlight any part of the text to see it in English</p>' +
       '<section class="block" id="ltext">' + body + "</section>" + playerBar(x) +
-      '<section class="block"><div class="shead"><h2>Glosario</h2></div><div class="tbl"><table class="vocab"><tbody>' + x.gl.map((g) => '<tr><td class="sp">' + sayBtn(g[0]) + '</td><td class="es">' + esc(g[0]) + "</td><td>" + esc(g[1]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
+      '<section class="block"><div class="shead"><h2>Glosario</h2></div><div class="tbl"><table class="vocab"><tbody>' + x.gl.map((g) => '<tr><td class="en">' + esc(g[1]) + '</td><td class="sp">' + sayBtn(g[0]) + '</td><td class="es">' + esc(g[0]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
       '<section class="block"><div class="shead"><h2>Comprensión</h2><span class="result" id="lq-res" aria-live="polite"></span></div>' + mcList(x.q, "lq") + '<div class="row"><button class="btn small" data-act="t-ask" data-p="Talk me through this text and my answers to the comprehension questions. Then ask me one follow-up question about it.">Talk it through with Profe</button></div></section>' +
       (dict.length ? '<section class="block"><div class="shead"><h2>Dictado</h2></div><p class="muted">Play each sentence, type what you hear, then check. Accents count, punctuation doesn’t.</p><ol class="dict">' +
         dict.map((s, k) => '<li><div class="row"><button class="say" data-act="l-dsay" data-k="' + k + '" aria-label="Play sentence ' + (k + 1) + '">' + ICON + '</button><input id="dict-' + k + '" autocomplete="off" spellcheck="false" autocapitalize="off" aria-label="Sentence ' + (k + 1) + '"><button class="btn small" data-act="l-dcheck" data-k="' + k + '">Check</button></div><p class="dfb" id="dfb-' + k + '" aria-live="polite"></p></li>').join("") + "</ol></section>" : "") +
@@ -2988,8 +3028,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     idx = idx.filter((i) => (!WV.types.length || WV.types.includes(POSGRP(W[i][1]))) && !(WV.hideKnown && S.w[i]));
     WV.idx = idx; if (WP.on) wpStop(); WP.q = [];
     el.innerHTML = (q ? '<p class="muted">' + idx.length + (idx.length === 200 ? "+" : "") + " matches across all 7,000 words</p>" : "") +
-      '<div class="tbl"><table class="words' + (WV.hideEn ? " blur-en" : "") + '"><thead><tr><th>#</th><th></th><th>Word</th><th>Meaning</th><th>Known</th></tr></thead><tbody>' +
-      idx.map((i) => { const e = W[i]; return '<tr data-wi="' + i + '"><td class="rk">' + (i < WN ? i + 1 : '<span class="core" title="Core word, added by type">core</span>') + '</td><td class="sp">' + sayBtn(e[0].split(",")[0]) + "</td><td><b>" + esc(e[0]) + '</b> <span class="tag">' + e[1] + "</span>" + (e[3] ? '<small class="forms">' + (WFX[i] ? WFX[i].map(([f, fe]) => "<b>" + esc(f) + "</b> " + esc(fe.replace(/\s*\([^)]*[:+=][^)]*\)/g, ""))).join(" · ") + (e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).length ? " · " + esc(e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).join(", ")) : "") : esc(e[3])) + "</small>" : "") + '</td><td class="gl"><span data-act="reveal">' + esc(e[2]) + '</span></td><td><button class="kn" data-act="w-known" data-i="' + i + '" aria-pressed="' + !!S.w[i] + '" aria-label="Mark ' + esc(e[0]) + ' as known">✓</button></td></tr>'; }).join("") +
+      '<div class="tbl"><table class="words' + (WV.hideEn ? " blur-en" : "") + '"><thead><tr><th>#</th><th>English</th><th></th><th>Spanish</th><th>Known</th></tr></thead><tbody>' +
+      idx.map((i) => { const e = W[i]; return '<tr data-wi="' + i + '"><td class="rk">' + (i < WN ? i + 1 : '<span class="core" title="Core word, added by type">core</span>') + '</td><td class="gl"><span data-act="reveal">' + esc(e[2]) + '</span></td><td class="sp">' + sayBtn(e[0].split(",")[0]) + '</td><td class="ww"><b>' + esc(e[0]) + '</b> <span class="tag">' + e[1] + "</span>" + (e[3] ? '<small class="forms">' + (WFX[i] ? WFX[i].map(([f, fe]) => esc(fe.replace(/\s*\([^)]*[:+=][^)]*\)/g, "")) + ": <b>" + esc(f) + "</b>").join(" · ") + (e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).length ? " · " + esc(e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).join(", ")) : "") : esc(e[3])) + "</small>" : "") + '</td><td><button class="kn" data-act="w-known" data-i="' + i + '" aria-pressed="' + !!S.w[i] + '" aria-label="Mark ' + esc(e[0]) + ' as known">✓</button></td></tr>'; }).join("") +
       "</tbody></table></div>" + (idx.length ? "" : '<p class="muted">No words match. Try another spelling or clear the filters.</p>');
   }
   function startQuiz() {
@@ -4546,7 +4586,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="row"><button class="btn small" data-act="hide-en" aria-pressed="false">Hide translations to test yourself</button><a class="btn small" href="#' + L.id + '-cards">Flashcards for this level</a><button class="btn small" data-act="th-rep" aria-pressed="' + TP.rep + '">Spanish ×3</button></div>' +
       '<div class="themes">' + th.map((t, ti) => '<details class="theme"' + (ti === 0 ? " open" : "") + '><summary><span><b>' + esc(t.t) + '</b><span class="muted"> · ' + esc(t.en) + '</span></span><span class="pill new">' + t.w.length + "</span></summary>" +
         '<div class="row"><button class="btn small" data-act="th-play" data-t="' + ti + '" aria-pressed="false">▶ Play all: English, then Spanish ×3</button><button class="btn small" data-act="t-ask" data-p="Quiz me on the vocabulary topic «' + esc(t.t) + '» for DELE ' + L.name + ', one word at a time, mixing Spanish→English and English→Spanish.">Practise with Profe</button></div>' +
-        '<div class="tbl"><table class="vocab"><tbody>' + t.w.map((w, k) => '<tr data-tw="' + ti + "-" + k + '"><td class="sp">' + sayBtn(w[0].replace(/\(Esp\.[^)]*\)/g, "").trim()) + '</td><td class="es">' + esc(w[0]) + '</td><td class="en"><span data-act="reveal">' + esc(w[1]) + "</span></td></tr>").join("") + "</tbody></table></div></details>").join("") + "</div></div>";
+        '<div class="tbl"><table class="vocab"><tbody>' + t.w.map((w, k) => '<tr data-tw="' + ti + "-" + k + '"><td class="en"><span data-act="reveal">' + esc(w[1]) + '</span></td><td class="sp">' + sayBtn(w[0].replace(/\(Esp\.[^)]*\)/g, "").trim()) + '</td><td class="es">' + esc(w[0]) + "</td></tr>").join("") + "</tbody></table></div></details>").join("") + "</div></div>";
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest("[data-act]"); if (!t) return;
@@ -5205,7 +5245,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110332";
+  var BUILD = "202611110339";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
