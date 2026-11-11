@@ -439,8 +439,9 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
-.aw-back { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 13; border: 0; border-radius: 999px; padding: 10px 18px; background: var(--ink); color: var(--bg); font: inherit; font-weight: 700; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); cursor: pointer }
-@media (max-width: 820px) { .aw-back { bottom: calc(210px + env(safe-area-inset-bottom, 0px)) } }
+.aw-back { position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 13; border: 1px solid rgba(31, 79, 163, .25); border-radius: 999px; padding: 5px 11px; background: rgba(232, 237, 245, .82); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); color: var(--cobalt); font: inherit; font-size: .8rem; font-weight: 600; box-shadow: 0 2px 8px rgba(0, 0, 0, .08); cursor: pointer; opacity: .9 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .aw-back { background: rgba(29, 39, 65, .8); border-color: rgba(134, 169, 240, .3) } }
+@media (max-width: 820px) { .aw-back { bottom: calc(200px + env(safe-area-inset-bottom, 0px)) } }
 .aw-dim { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px; transition: background 1.2s }
 .aw-dim p { color: rgba(255, 255, 255, .55); font-size: .9rem; margin: 0 }
 .aw-dim.dark { background: #000 }
@@ -2390,7 +2391,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let b = document.getElementById("aw-back");
     const show = AW.on && FOL.free && !!curReading();
     if (!show) { if (b) b.remove(); return; }
-    if (!b) { b = document.createElement("button"); b.id = "aw-back"; b.className = "aw-back"; b.dataset.act = "aw-back"; b.innerHTML = '<span aria-hidden="true">📍</span> Back to the reading'; document.body.appendChild(b); }
+    if (!b) { b = document.createElement("button"); b.id = "aw-back"; b.className = "aw-back"; b.dataset.act = "aw-back"; b.innerHTML = '<span aria-hidden="true">↩</span> Back to reading'; document.body.appendChild(b); }
   }
   async function awLock(on) {
     if (NATIVE_TTS()) { try { AndroidTTS.keepScreenOn(!!on); } catch (e) {} }
@@ -5058,7 +5059,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110219";
+  var BUILD = "202611110226";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
