@@ -4205,7 +4205,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const T = DR_T.find((x) => x[0] === k), ans = R[k][pi[1]];
     D.q = { k, p: pi, ans };
     D.n++;
-    return "**" + D.n + " / " + D.total + "** · **" + pi[2] + "** + **" + D.v + "** · " + T[2] + "\n*(" + pi[0] + " — " + T[1].toLowerCase() + ")*";
+    return D.qt = "**" + D.n + " / " + D.total + "** · **" + pi[2] + "** + **" + D.v + "** · " + T[2] + "\n*(" + pi[0] + " — " + T[1].toLowerCase() + ")*";
   }
   function drStart(I, q) {
     let ts = DR_T.map((x) => x[0]).filter((k) => TENSES.some(([kk, re]) => kk === k && re.test(q)));
@@ -4235,6 +4235,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const D = tCur.drill, nw = q.split(" ").length;
     if (D && !D.done) {
       if (/^(stop|para|basta|salir|exit|quit|enough|no m[aá]s|termina|fin)\b/.test(q)) { D.done = 1; return "👍 Paramos aquí" + (D.n > 1 ? ": **" + D.ok + " / " + (D.n - 1) + "**" : "") + ".\n*We’ll stop here. Ask me anything, or say «practicar " + D.v + "» to go again.*"; }
+      if (/^(s[ií]|no|ok|okay|vale|claro|yes|dale|listo|bueno)$/.test(q)) return "👉 Write just the verb form.\n\n" + D.qt;
       // a verb form ("hubimos", "yo hube"), not a new question or a sentence
       if (!/\?/.test(text) && (nw === 1 || (nw === 2 && /^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/.test(q.split(" ")[0])))) return drGrade(D, q);
       D.done = 1; return null; // the learner moved on to something else
@@ -4331,7 +4332,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         if (prevA && sameReply(cleanLocal(out), cleanLocal(prevA.content)) && !(signal && signal.aborted)) {
           NAT.repeats = (NAT.repeats || 0) + 1;
           out = await natChat(key, sys, "(You just repeated your previous question. The learner already answered: «" + lastU.slice(0, 120) + "». Do not ask it again. Act on their answer now: give one short example in Spanish, then ask a different, simple question.)", 220, 0.6, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
-          if (sameReply(cleanLocal(out), cleanLocal(prevA.content))) { const I = drVerbIn(lastU + " " + prevA.content); out = (I && drStart(I, xnorm(lastU))) || "Vamos a hacer algo concreto. Dime tres cosas que hiciste ayer.\n*Let’s do something concrete. Tell me three things you did yesterday.*"; }
+          if (sameReply(cleanLocal(out), cleanLocal(prevA.content))) { const off = sents(prevA.content).find((x) => /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || "Vamos a hacer algo concreto. Dime tres cosas que hiciste ayer.\n*Let’s do something concrete. Tell me three things you did yesterday.*"; }
         }
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
@@ -4763,7 +4764,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!t || t.length > text.length * 1.6 + 20 || !isSpanish(t + " de")) return null;
     const d = wordDiff(text, t);
     if (d.pairs.length > Math.max(3, (text.match(/\S+/g) || []).length / 2)) return null;
-    if (d.ops.filter(([o]) => o === "-").length > Math.max(2, (text.match(/\S+/g) || []).length * 0.4) || t.length < text.length * 0.6) return null; // the model rewrote everything: don't trust it
+    if (d.ops.filter(([o]) => o !== "=").length > Math.max(2, (text.match(/\S+/g) || []).length * 0.5) || t.length < text.length * 0.6 || (/\?/.test(t) && !/\?/.test(text))) return null; // the model rewrote everything: don't trust it
     return { better: d.pairs.length ? t : "", items: d.pairs.map((x) => ({ from: x.from, to: x.to, why: "" })) };
   }
   async function checkMsg(m) {
@@ -5688,7 +5689,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110513";
+  var BUILD = "202611110537";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

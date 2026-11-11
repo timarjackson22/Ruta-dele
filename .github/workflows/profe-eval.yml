@@ -1,0 +1,82 @@
+name: Profe eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "smart (1.5B) or fast (0.5B)"
+        default: smart
+
+jobs:
+  eval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      SHARD: ${{ matrix.shard }}
+      SHARDS: 4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Pick model
+        run: |
+          if [ "${{ inputs.model }}" = "fast" ]; then
+            echo "REPO=Qwen/Qwen2.5-0.5B-Instruct-GGUF" >> $GITHUB_ENV; echo "FILE=qwen2.5-0.5b-instruct-q8_0.gguf" >> $GITHUB_ENV
+            echo "MODEL_NAME=Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task" >> $GITHUB_ENV
+          else
+            echo "REPO=Qwen/Qwen2.5-1.5B-Instruct-GGUF" >> $GITHUB_ENV; echo "FILE=qwen2.5-1.5b-instruct-q8_0.gguf" >> $GITHUB_ENV
+            echo "MODEL_NAME=Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task" >> $GITHUB_ENV
+          fi
+      - uses: actions/cache@v4
+        with:
+          path: models
+          key: gguf-${{ env.FILE }}
+      - name: Install
+        run: |
+          pip install -q huggingface_hub
+          pip install -q llama-cpp-python==0.3.16 --prefer-binary --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
+          cd eval && npm init -y >/dev/null && npm i -s playwright@1.55.0 && npx playwright install --with-deps chromium >/dev/null
+      - name: Download model
+        run: test -f models/$FILE || python3 -c "import os;from huggingface_hub import hf_hub_download as d;d(os.environ['REPO'],os.environ['FILE'],local_dir='models')"
+      - name: Run
+        run: |
+          mkdir -p eval/out
+          python3 -m http.server 8766 --bind 127.0.0.1 >/dev/null 2>&1 &
+          python3 eval/server.py models/$FILE eval/out/raw-$SHARD.jsonl > server.log 2>&1 &
+          for i in $(seq 1 120); do grep -q "model loaded" server.log && break; sleep 2; done; cat server.log
+          cd eval && OUT=out node run.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-${{ matrix.shard }}
+          path: eval/out
+  report:
+    needs: eval
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          path: all
+          merge-multiple: true
+      - name: Report
+        env:
+          MODEL_NAME: ${{ inputs.model }}
+        run: node eval/report.js all && cat all/summary.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: |
+            all/report.md
+            all/summary.json
+            all/results-*.json
+            all/raw-*.jsonl
