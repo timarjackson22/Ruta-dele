@@ -25,6 +25,9 @@ function score(turn, reply, prev, fix, learnerEn) {
   if (/en qu[eé] (te )?puedo ayudar|c[oó]mo (te )?puedo ayudar|gracias por tu (mensaje|pregunta)|no dudes en|is there anything else/i.test(body)) f.push("generic");
   if (turn.k > 0 && /^¡?hola\b/i.test(body)) f.push("regreet");
   if (/Cuéntame un poco más|¿Y por qué\?|¿Y qué piensas de eso\?/.test(body)) f.push("fallback");
+  // copying: the prompt's example lines, or the learner's own sentence handed back as Profe's
+  if (/playa venao|rubén blades|a mí también me encanta el mar|una edad estupenda|¡a mí también!/i.test(body)) f.push("copy");
+  else { const L = new Set((turn.u.toLowerCase().match(/[a-záéíóúñ]{3,}/g) || [])); const echo = body.split(/(?<=[.!?…])\s+|\n+/).some((x) => { if (/\?\s*$/.test(x)) return false; const W0 = x.toLowerCase().match(/[a-záéíóúñ]{3,}/g) || []; const sh = W0.filter((w) => L.has(w)).length; return L.size >= 3 && sh >= 3 && sh >= L.size * 0.7; }); if (echo && !turn.en) f.push("echo"); }
   if (/(^|[,¡]\s*)(chic[oa]|amig[oa]|cariño)\b(?!\s+(de|que|del))/i.test(body)) f.push("nickname");
   // a question machine: nothing said apart from a quick reaction and a question
   if (!/\d+ \/ \d+|Casi|Inténtalo|answer is|Corrections/.test(body)) {

@@ -4059,8 +4059,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const gn = guideNotes(lastUser ? lastUser.c : (ctx.text || "").slice(0, 300));
     if (compact && gn) ctx = Object.assign({}, ctx, { text: "Topic notes (reliable):\n" + gn + "\n\n" + (ctx.text || "") });
     if (compact && TB === "native") return "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level " + lvl + ". The learner has this page open: " + (ctx.label || "the course") + ".\n" +
-      "How you talk:\n- Speak simple Latin American Spanish for level " + lvl + ". If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- Match the feeling: if the learner is tired, sick or sad, be sympathetic (¡Lo siento!, ¡Qué pena!), never «me alegro».\n- The app corrects grammar separately, so keep talking about the topic.\n" +
-      "Examples:\nLearner: ayer fui a la playa → Profe: ¡Qué bien! A mí me encanta el mar; en Panamá, Playa Venao es preciosa. ¿A qué playa fuiste?\nLearner: me gusta bailar salsa → Profe: ¡A mí también! La salsa es parte de la cultura panameña, como la música de Rubén Blades. ¿Dónde bailas?\nLearner: hoy hace mucho calor en Panamá → Profe: Sí, en Panamá casi siempre hace calor. ¿Qué haces cuando hace tanto calor?\nLearner: mi hermano vive en David → Profe: ¡David, en Chiriquí! ¿Lo visitas a menudo?\nLearner: What does «pana» mean? → Profe: «Pana» means friend or buddy in Panama. Example: «Él es mi pana.»\n" +
+      "How you talk:\n- Speak simple Latin American Spanish for level " + lvl + ". If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\n" +
+      "Examples (match the shape, never copy the words):\n" + exPick() +
       (TS.lname ? "The learner's name is " + TS.lname + "; use it now and then. " : "") + "Never call the learner chico, chica, amigo, cariño or any other nickname.\n" +
       "Learner notes: " + (TS.memory || "none").slice(0, 200);
     if (compact) return "You are Profe, a warm, patient Spanish tutor. The learner lives in Panama and is preparing the DELE " + lvl + ". " + lang + " Use " + (es ? "Spain Spanish" : "Latin American Spanish (ustedes, not vosotros)") + ".\n" +
@@ -4305,7 +4305,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
 
   /* ---------- steering the small on-phone model, turn by turn ---------- */
-  const GENERIC = /en qu[eé] (te )?puedo ayudar|c[oó]mo (te )?puedo ayudar|gracias por tu (mensaje|pregunta)|si tienes (alguna )?(otra )?pregunta|no dudes en|estoy aqu[ií] para ayudar|is there anything else|how can i help/i;
+  const GENERIC = /(en qu[eé]|en lo que) (te )?pued[ao] ayudar|algo m[aá]s en lo que|c[oó]mo (te )?puedo ayudar|gracias por tu (mensaje|pregunta)|si tienes (alguna )?(otra )?pregunta|no dudes en|estoy aqu[ií] para ayudar|is there anything else|how can i help/i;
   const looksEnglish = (t) => { const w = (String(t).toLowerCase().match(/[a-z']+/g) || []); const en = w.filter((x) => /^(the|and|is|are|what|how|do|does|i|you|can|in|of|to|with|my|me|when|why|which|give|let's|please|should|mean|say)$/.test(x)).length; return en >= 2 && en >= w.length * 0.25 && !/[ñ¿¡áéíóú]/.test(t); };
   function roleOf(t) {
     const m = /(?:you are|you're|you play|t[uú] eres|eres)\s+(?:the\s+|el\s+|la\s+|un\s+|una\s+)?([a-záéíóúñ ]{3,30}?)(?:[.,!]|$| and | y )/i.exec(t);
@@ -4313,6 +4313,28 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const k = /(restaurante?|caf[eé]|m[eé]dico|doctor|hotel|tienda|shop|store|taxi|banco|bank|aeropuerto|airport|farmacia|pharmacy|entrevista|interview)/i.exec(t);
     if (k && /role ?play|juego de rol|vamos a practicar|let'?s practi|simula/i.test(t)) return { restaurante: "waiter", restaurant: "waiter", cafe: "waiter", café: "waiter", médico: "doctor", medico: "doctor", doctor: "doctor", hotel: "hotel receptionist", tienda: "shop assistant", shop: "shop assistant", store: "shop assistant", taxi: "taxi driver", banco: "bank clerk", bank: "bank clerk", aeropuerto: "airline agent", airport: "airline agent", farmacia: "pharmacist", pharmacy: "pharmacist", entrevista: "job interviewer", interview: "job interviewer" }[k[1].toLowerCase()];
     return null;
+  }
+
+  // example turns for the small model: two per chat, picked at random, so no single line gets copied everywhere
+  const EX_POOL = [
+    ["estudio inglés los lunes", "¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?"],
+    ["mi perro se llama Max", "¡Max es un nombre muy simpático! Los perros son muy buena compañía. ¿Qué le gusta hacer a Max?"],
+    ["anoche vi una película", "¡Buen plan para la noche! Ver películas en español es una gran práctica. ¿De qué trataba la película?"],
+    ["quiero comprar una bicicleta", "¡Buena idea! Una bicicleta es práctica y sana. ¿La quieres para ir al trabajo o para pasear?"],
+    ["mi madre cocina muy bien", "¡Qué suerte tienes! La comida de casa siempre es la mejor. ¿Cuál es su plato especial?"],
+    ["el sábado jugué al béisbol", "¡Qué divertido! El béisbol es muy popular en Panamá. ¿Ganó tu equipo?"],
+    ["no me gusta el tráfico", "Te entiendo, el tráfico cansa mucho. Una palabra útil: «el tranque», como dicen en Panamá. ¿Cuánto tiempo pasas en el tráfico cada día?"],
+    ["leo un libro en español", "¡Excelente costumbre! Leer en español mejora mucho tu vocabulario. ¿Cómo se llama el libro?"],
+  ];
+  function exPick() {
+    if (!tCur) return "";
+    if (!tCur.ex) { const k = EX_POOL.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 2); tCur.ex = k; }
+    return tCur.ex.map((i) => "Learner: " + EX_POOL[i][0] + " → Profe: " + EX_POOL[i][1] + "\n").join("");
+  }
+  // a sentence lifted from an example reply
+  function copiesExample(y) {
+    const W0 = xnorm(y).match(/[a-záéíóúñ]{4,}/g) || []; if (W0.length < 3) return false;
+    return EX_POOL.some(([, r]) => { const R = new Set(xnorm(r).match(/[a-záéíóúñ]{4,}/g) || []); return W0.filter((w) => R.has(w)).length >= Math.max(3, W0.length * 0.6); });
   }
   function steerNote(lastU, prevA) {
     const q = xnorm(lastU);
@@ -4346,6 +4368,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return es + "\n*" + en + "*";
   }
   // drop a re-greeting and the "how can I help" filler; empty means the reply had nothing else
+  function dropMeToo(x, lastU) {
+    const L = new Set((xnorm(lastU).match(/[a-záéíóúñ]{3,}/g) || []));
+    const kept = sents(x).filter((y) => { if (copiesExample(y)) return false; if (/\?\s*$/.test(y)) return true; const W0 = xnorm(y).match(/[a-záéíóúñ]{3,}/g) || []; const sh0 = W0.filter((w) => L.has(w)).length; if (W0.length >= 3 && sh0 >= 3 && (sh0 >= W0.length * 0.6 || sh0 >= L.size * 0.6)) return false; if (!/^¡?a m[ií] tambi[eé]n\b/i.test(y.trim())) return true; const W = xnorm(y).match(/[a-záéíóúñ]{3,}/g) || []; const sh = W.filter((w) => L.has(w)).length; return sh < Math.max(2, W.length * 0.4); });
+    return kept.join(" ");
+  }
   function tidyReply(t, nth) {
     let x = String(t || "").trim().replace(/(^|[.!?]\s+)(chic[oa]|amig[oa]|cariño|querid[oa]),\s*/gi, "$1").replace(/,\s*(mi\s+)?(chic[oa]|amig[oa]|cariño|querid[oa]|mi amor)(?=\s*[!?.,])/gi, "").replace(/¡(chic[oa]|amig[oa])!\s*/gi, "");
     if (nth > 0) x = x.replace(/^(¡?hola[^.!?¡¿]*[.!]?\s*)/i, "").replace(/^(¡?(genial|perfecto|claro)!?\s*)(?=¿(c[oó]mo est[aá]s|en qu[eé]))/i, "");
@@ -4533,8 +4560,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!hits.length) return null;
     return "In Spanish, «" + en.trim() + "» is said like this:\n" + hits.map((h) => "- **" + h[0] + "** — *" + h[1] + "*").join("\n") + "\n\n*Try saying it, or make your own sentence with it and I’ll check it.*";
   }
+  function exampleAnswer(q) {
+    const m = /\b(?:examples?|ejemplos?)\s+(?:with|of|using|for|con|de|usando)\s+(?:the word\s+|la palabra\s+)?[«"']?([a-záéíóúñü]+(?: [a-záéíóúñü]+)?)/.exec(q); if (!m) return null;
+    const w = m[1].trim(); if (w.length < 2) return null;
+    if (!PHR) phraseAnswer("x y");
+    const re = new RegExp("(^|[^a-záéíóúñü])" + w.replace(/[.*+?^${}()|[\]\\]/g, "") + "([^a-záéíóúñü]|$)", "i");
+    const hits = (PHR || []).filter((e) => re.test(e[0]) && e[0].length > 18).sort((a, b) => Math.abs(a[0].length - 40) - Math.abs(b[0].length - 40)).filter((e, k, A) => A.findIndex((x) => x[0] === e[0]) === k).slice(0, 4);
+    if (!hits.length) return null;
+    return "Here are some examples with **" + w + "**:\n" + hits.map((h) => "- **" + h[0] + "** — *" + h[1] + "*").join("\n") + "\n\n*Now you: write your own sentence with «" + w + "» and I’ll check it.*";
+  }
   function expertAnswer0(text) {
     const pa = pageAnswer(text); if (pa) return pa;
+    try { const exa = exampleAnswer(xnorm(text)); if (exa) return exa; } catch (e) {}
     const dr = drillAnswer(text); if (dr) return dr;
     const raw = String(text || "").trim();
     let mm = /^(?:corrige|corr[ií]geme|correct(?: this| me)?|check(?: this)?|is this (?:correct|right)|est[aá] bien)\s*[:\-–]?\s*(.+)$/i.exec(raw);
@@ -4578,6 +4615,33 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // what the learner did well in a correct sentence: the most advanced grammar they used
   const PRAISE_T = { subj: ["the subjunctive", "subjuntivo"], impf: ["the imperfect", "imperfecto"], pret: ["the preterite", "pretérito"], cond: ["the conditional", "condicional"], fut: ["the future", "futuro"] };
   const PRAISE_RANK = { subj: 5, impf: 4, pret: 4, cond: 3, fut: 3, pres: 1 };
+
+  // a useful word from the course's vocabulary topic closest to what the learner talked about
+  function wordTip(lastU) {
+    const low = xnorm(lastU), L = ptoks(lastU); if (L.size < 2) return "";
+    const lv = curLvl(), order = ["a1", "a2", "b1", "b2", "c1"]; const top = order.indexOf(lv);
+    const topics = []; order.forEach((l, k) => { if (k <= Math.max(1, top + 1)) (VOCAB[l] || []).forEach((T) => topics.push(T)); });
+    const used = tCur && (tCur.tips = tCur.tips || []);
+    const bareOf = (es) => es.replace(/\s*\([^)]*\)/g, "").replace(/^(el|la|los|las|un|una)\s+/i, "").split(/[;/,]/)[0].trim().toLowerCase();
+    const plain = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "");
+    const lw = " " + plain(low) + " ";
+    // a word the learner used, found in a course list: suggest a neighbour from that list (lists are grouped by meaning)
+    let pick = null;
+    const rank = (b) => { const k = W.findIndex((e) => e[0].split(", ").includes(b)); return k < 0 ? 4000 : k; };
+    const allHits = [];
+    topics.forEach((T) => { const hs = []; T.w.forEach(([es], k) => { const b = plain(bareOf(es)); if (b.length > 3 && (lw.includes(" " + b + " ") || lw.includes(" " + b + "s "))) hs.push(k); }); hs.forEach((k) => allHits.push([T, k, hs, rank(bareOf(T.w[k][0]))])); });
+    // the rarest word the learner used is the most telling (playa beats amigos)
+    allHits.sort((a, b) => b[3] - a[3]);
+    for (const [T, k, hs] of allHits) {
+      for (let d = 1; d <= 4 && !pick; d++) for (const m of [k + d, k - d]) { if (m < 0 || m >= T.w.length || hs.includes(m)) continue; const w = T.w[m], b = bareOf(w[0]); if (b.length > 2 && !lw.includes(" " + plain(b) + " ") && !(used || []).includes(b)) { pick = w; break; } }
+      if (pick) break;
+    }
+    if (!pick) return "";
+    const [es, en] = pick, bare = bareOf(es);
+    if (used) used.push(bare);
+    const clean = es.replace(/\s*\(Esp\.[^)]*\)/g, "").trim();
+    return "💡 *Useful word:* **" + clean + "** — " + String(en).split(";")[0].trim() + (PANAMA[bare] ? " 🇵🇦" : "");
+  }
   function praiseFor(text) {
     const low = String(text || "").toLowerCase(), W = low.match(/[a-záéíóúüñ]+/g) || [];
     if (W.length < 3 || /\b(practicar|vamos a|quiero aprender|expl[ií]ca|t[uú] eres|eres el|eres la|ens[eé]ñame|preg[uú]ntame)\b/.test(low)) return "";
@@ -4671,7 +4735,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
           out = await natChat(key, sys, "(That reply did not answer the learner. They said: «" + lastU.slice(0, 160) + "». Reply to exactly that: one short sentence about what they said, then one new question about it. No greeting, no «¿en qué puedo ayudarte?».)", 220, 0.6, (t) => { const ct = tidyReply(cleanLocal(t), nth); if (ct) onText(ct); }, signal, wait);
           if (weak(out)) { const off = prevA && sents(prevA.content).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || followUp(lastU); }
         }
-        out = tidyReply(cleanLocal(out), nth) || out;
+        out = tidyReply(dropMeToo(cleanLocal(out), lastU), nth) || tidyReply(cleanLocal(out), nth) || out;
+        try {
+          const say = sents(out).filter((y) => !/\?\s*$/.test(y)).join(" ").split(/\s+/).filter(Boolean).length;
+          if (say < 8 && !(tCur && tCur.role) && !looksEnglish(lastU)) { const tip = wordTip(lastU); if (tip) { const qs = sents(out), qi = qs.findIndex((y) => /\?\s*$/.test(y)); out = qi >= 0 ? qs.slice(0, qi).join(" ") + (qi ? "\n" : "") + tip + "\n" + qs.slice(qi).join(" ") : out + "\n" + tip; } }
+        } catch (e) {}
         if (!/\?/.test(out) && out.split(/\s+/).length <= 5 && !(tCur && tCur.role) && !looksEnglish(lastU) && !/^(adi[oó]s|chao|hasta luego|bye|gracias,? (adi[oó]s|chao))/i.test(xnorm(lastU))) out = out.replace(/\s*$/, "") + " " + followUp(lastU);
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
@@ -6081,7 +6149,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611111325";
+  var BUILD = "202611111751";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
