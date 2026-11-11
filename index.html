@@ -4320,7 +4320,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const role = tCur && tCur.role;
     if (role) return "(Role-play: you are the " + role + ". Stay in character. Answer as the " + role + " with one short line in simple Spanish, and move the scene forward.)";
     if (/\b(cansad[oa]|enferm[oa]|triste|me duele|mal|aburrid[oa]|estresad[oa]|preocupad[oa])\b/.test(q)) return "(The learner feels bad: be sympathetic first (¡Lo siento!), then say one kind or useful thing, then ask one gentle question. No greeting, no nicknames.)";
-    if (/^(bien|muy bien|todo bien|bastante bien)\b.*\b(y t[uú]|y usted)\b/.test(q)) return "(The learner asked how you are: say you are well and add one short thing about your day as a teacher, then ask them one question. No nicknames.)";
+    if (/^(bien|muy bien|todo bien|bastante bien)\b.*\b(y t[uú]|y usted)/.test(q)) return "(The learner asked how you are: say you are well and add one short thing about your day as a teacher, then ask them one question. No nicknames.)";
     if (looksEnglish(lastU)) return "(The learner wrote in English: answer clearly in English in 2 or 3 sentences, with one short Spanish example. No greeting.)";
     if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo|yes|sure)\b/.test(q) && q.split(" ").length <= 3 && prevA) return "(The learner said yes to what you last proposed: «" + prevA.slice(0, 160) + "». Do it now: start the activity with a concrete example or question. No greeting.)";
     return "(Reply as Profe: respond to what the learner said by sharing something yourself (an opinion, a fact about Panama, or an example) in 1 or 2 short sentences, then ask at most one question. No greeting, no nicknames.)";
@@ -4340,6 +4340,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function followUp(lastU) {
     const q = xnorm(lastU), f = FOLLOW.find(([re]) => re.test(q));
     if (/\b(me llamo|mi nombre es)\b/.test(q)) return "¡Mucho gusto" + (TS.lname ? ", " + TS.lname : "") + "! Yo soy Profe, tu profesor de español. ¿De qué parte de Panamá eres?\n*Nice to meet you! I'm Profe, your Spanish teacher. Which part of Panama are you from?*";
+    if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo)$/.test(q)) return "¡Genial! Entonces, cuéntame: ¿qué hiciste hoy? Dos o tres frases.\n*Great! Then tell me: what did you do today? Two or three sentences.*";
     if (/^(no s[eé]|no sé|ni idea|nada)\b/.test(q)) return "¡No pasa nada! Te propongo algo: cuéntame qué hiciste ayer, con dos o tres frases.\n*No problem! Here's an idea: tell me what you did yesterday, in two or three sentences.*";
     const [es, en] = f ? [f[1], f[2]] : [["¡Interesante! Cuéntame un poco más, por favor.", "Interesting! Tell me a bit more, please."], ["¡Qué bien! ¿Y qué piensas de eso?", "Nice! And what do you think about that?"]][Math.floor(Math.random() * 2)];
     return es + "\n*" + en + "*";
@@ -4579,7 +4580,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const PRAISE_RANK = { subj: 5, impf: 4, pret: 4, cond: 3, fut: 3, pres: 1 };
   function praiseFor(text) {
     const low = String(text || "").toLowerCase(), W = low.match(/[a-záéíóúüñ]+/g) || [];
-    if (W.length < 3) return "";
+    if (W.length < 3 || /\b(practicar|vamos a|quiero aprender|expl[ií]ca|t[uú] eres|eres el|eres la|ens[eé]ñame|preg[uú]ntame)\b/.test(low)) return "";
     try { if (quickFixes(text).length) return ""; } catch (e) {}
     let best = null;
     W.forEach((w) => { if (w.length < 3) return; const rd = verbReadings(w); if (!rd.length) return; const ts = new Set(rd.map((r) => r.t)); if (ts.size !== 1) return; const t = rd[0].t; if (!best || PRAISE_RANK[t] > PRAISE_RANK[best.t]) best = { t, w }; });
@@ -4621,6 +4622,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const CO = turns.length > 0 && lastU.length < 300 ? convoCoach(lastU) : null;
     if (CO && CO.stop) { EXPERT_LAST = CO.text; onText(CO.text); return CO.text; }
     let pre = CO && CO.prefix ? CO.prefix + "\n\n" : "";
+    try { if (tCur) { const rr = roleOf(lastU); if (rr) tCur.role = rr; } } catch (e) {}
     if (!pre && !(tCur && tCur.role) && lastU.length < 300 && !looksEnglish(lastU)) { let pr = ""; try { pr = praiseFor(lastU); } catch (e) {} if (pr) pre = pr + "\n\n"; }
     const r = await ask0(turns, ctx, (t) => onText(/^\*?(Thinking|Loading|Starting)/.test(t) ? t : pre + t), signal, true);
     return pre + r;
@@ -4670,7 +4672,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
           if (weak(out)) { const off = prevA && sents(prevA.content).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || followUp(lastU); }
         }
         out = tidyReply(cleanLocal(out), nth) || out;
-        if (!/\?/.test(out) && out.split(/\s+/).length < 9 && !(tCur && tCur.role) && !looksEnglish(lastU) && !/^(adi[oó]s|chao|hasta luego|bye|gracias,? (adi[oó]s|chao))/i.test(xnorm(lastU))) out = out.replace(/\s*$/, "") + " " + followUp(lastU);
+        if (!/\?/.test(out) && out.split(/\s+/).length <= 5 && !(tCur && tCur.role) && !looksEnglish(lastU) && !/^(adi[oó]s|chao|hasta luego|bye|gracias,? (adi[oó]s|chao))/i.test(xnorm(lastU))) out = out.replace(/\s*$/, "") + " " + followUp(lastU);
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
         out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
@@ -6079,7 +6081,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611111243";
+  var BUILD = "202611111325";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

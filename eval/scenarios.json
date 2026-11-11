@@ -51,7 +51,8 @@
 "u": "porque yo trabajo mucho"
 },
 {
-"u": "mi trabajo es en la ciudad de Panamá"
+"u": "mi trabajo es en la ciudad de Panamá",
+"fix": "está"
 }
 ]
 },
@@ -337,16 +338,20 @@
 "turns": [
 {
 "u": "Vamos a practicar en el médico. Tú eres el doctor",
-"move": 1
+"move": 1,
+"rp": 1
 },
 {
-"u": "me duele la cabeza"
+"u": "me duele la cabeza",
+"rp": 1
 },
 {
-"u": "desde ayer"
+"u": "desde ayer",
+"rp": 1
 },
 {
-"u": "no, no tengo fiebre"
+"u": "no, no tengo fiebre",
+"rp": 1
 }
 ]
 },
@@ -357,16 +362,20 @@
 {
 "u": "Let's role play ordering food in a restaurant, you are the waiter",
 "en": 1,
-"move": 1
+"move": 1,
+"rp": 1
 },
 {
-"u": "quiero un café por favor"
+"u": "quiero un café por favor",
+"rp": 1
 },
 {
-"u": "y una empanada"
+"u": "y una empanada",
+"rp": 1
 },
 {
-"u": "la cuenta por favor"
+"u": "la cuenta por favor",
+"rp": 1
 }
 ]
 },
