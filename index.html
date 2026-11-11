@@ -439,6 +439,19 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.es-w, strong.q { color: var(--cobalt); font-style: italic; font-weight: 600 }
+.lx b, .lx strong { color: var(--cobalt) }
+.lx-intro { gap: 10px }
+.lx-intro .fx-lead { font-size: 1.15rem; padding-bottom: 4px; border-bottom: 2px solid var(--saffron-soft) }
+.callout.fxd:has(.lx-intro) { padding: 12px 10px 12px 12px }
+.fx-pt { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; padding: 10px 10px; border-radius: 12px; background: var(--surface-2) }
+.fx-pt .fx-ic { font-size: 1.05rem; text-align: center; line-height: 1.4 }
+.fx-pt.pt-plain .fx-ic { color: var(--cobalt); font-size: 1.6rem; line-height: 1 }
+.fx-pt.pt-region { background: var(--good-soft) }
+.fx-pt.pt-exam { background: #E8EEFB }
+.fx-pt.pt-warn { background: var(--saffron-soft) }
+.fx-pt.pt-how { background: var(--surface-2); border-left: 4px solid var(--cobalt) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fx-pt.pt-exam { background: #1D2741 } }
 .pa { border: 0; background: none; padding: 0 2px; font-size: .9em; cursor: pointer; vertical-align: baseline; line-height: 1 }
 .pa-toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(160px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, .18); max-width: min(92vw, 420px); font-size: .92rem }
 .rk .core { font-size: .72rem; font-weight: 700; color: var(--warn); background: var(--saffron-soft); border-radius: 4px; padding: 1px 4px }
@@ -2150,13 +2163,28 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return parts.map((x) => x.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[+i]).trim()).filter(Boolean);
   }
   const fxText = (h) => h.replace(/<[^>]+>/g, "");
+  // split a list at top-level commas / "and" / "or" only (never inside brackets)
+  function fxTop(t) {
+    const out = []; let depth = 0, cur = "";
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i];
+      if (c === "(" || c === "«") depth++; else if ((c === ")" || c === "»") && depth) depth--;
+      if (!depth && (c === "," || c === ";")) { out.push(cur); cur = ""; continue; }
+      cur += c;
+    }
+    out.push(cur);
+    const last = out.pop(); const m = /^(.*\S)\s+(?:and|or|y|o)\s+(\S.*)$/.exec(last.trim());
+    if (m && out.length && m[1].split(/\s+/).length <= 5) out.push(m[1], m[2]); else out.push(last);
+    return out.map((x) => x.trim().replace(/^(?:and|or)\s+/i, "")).filter((x) => fxText(x).length > 1);
+  }
   function fxKind(h) {
     const t = fxText(h);
     if (/^(so\s+)?(ask yourself|a quick test|quick test|the test|tip|rule of thumb|remember|the trick|to decide|in short|in practice)\b/i.test(t)) return "tip";
     const ci = h.indexOf(":");
-    if (ci > 8 && ci < h.length - 12) {
-      const after = h.slice(ci + 1), items = after.split(/,\s+(?:or\s+|and\s+)?|;\s+|\s+\/\s+/).filter((x) => fxText(x).trim().length > 1);
-      if (items.length >= 3 && fxText(h.slice(0, ci)).length < 120) return "list";
+    if (ci > 8 && ci < h.length - 12 && !/\([^)]*:/.test(h.slice(0, ci + 1))) {
+      const items = fxTop(h.slice(ci + 1));
+      const words = (x) => fxText(x).trim().split(/\s+/).length;
+      if (items.length >= 3 && items.every((x) => words(x) <= 5) && fxText(h.slice(0, ci)).length < 120) return "list";
     }
     if (/<(b|strong)[^>]*>/.test(h) && /\b(means?|meaning|=|→|versus|while)\b/.test(t)) return "ex";
     if (/memoris|memoriz|exception|careful|watch out|note that|be aware|don.t confuse|common mistake/i.test(t)) return "note";
@@ -2164,9 +2192,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function fxList(h) {
     const ci = h.indexOf(":"), head = h.slice(0, ci).trim();
-    let items = h.slice(ci + 1).replace(/[.]\s*$/, "").split(/,\s+(?:or\s+|and\s+)?|;\s+|\s+\/\s+/).map((x) => x.trim()).filter((x) => fxText(x).length > 1);
-    items = items.map((x) => x.replace(/^(or|and)\s+/i, "")).map((x) => x.replace(/^([a-záéíóúñ])/, (m) => m.toUpperCase()));
-    return '<div class="fx-card"><p class="fx-h">' + head.replace(/^(\S+)/, "<b>$1</b>") + '</p><ul class="fx-ul">' + items.map((x) => "<li>" + x + "</li>").join("") + "</ul></div>";
+    const items = fxTop(h.slice(ci + 1).replace(/[.]\s*$/, ""));
+    return '<div class="fx-card"><p class="fx-h">' + head + ':</p><ul class="fx-ul">' + items.map((x) => "<li>" + x + "</li>").join("") + "</ul></div>";
   }
   function fmtHTML(h) {
     const ss = fxSentences(h); if (ss.length < 3) return null;
@@ -2187,11 +2214,83 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     flushC(); flushP();
     return '<div class="lx">' + out.join("") + "</div>";
   }
+  function fmtIntro(h) {
+    const ss = fxSentences(h); if (ss.length < 2) return null;
+    const row = (ic, cls, lbl, x) => '<div class="fx-pt ' + cls + '"><span class="fx-ic" aria-hidden="true">' + ic + "</span><div>" + (lbl ? '<b class="fx-lbl">' + lbl + "</b>" : "") + "<p>" + x + "</p></div></div>";
+    const out = ['<p class="fx-lead">' + ss[0] + "</p>"];
+    ss.slice(1).forEach((x) => {
+      const t = fxText(x);
+      if (fxKind(x) === "list") out.push(fxList(x));
+      else if (/latin america|latam|panam|central america/i.test(t)) out.push(row("🌎", "pt-region", "In Latin America", x));
+      else if (/\bDELE\b|exam/i.test(t)) out.push(row("🎯", "pt-exam", "For the exam", x));
+      else if (/\b(never|don.t|avoid|careful|not\b.*\binstead|instead)\b/i.test(t)) out.push(row("⚠️", "pt-warn", "Watch out", x));
+      else if (/^(so |to |use |you (need|use)|if )/i.test(t)) out.push(row("👉", "pt-how", "", x));
+      else out.push(row("•", "pt-plain", "", x));
+    });
+    return '<div class="lx lx-intro">' + out.join("") + "</div>";
+  }
+  let ESW = null; const ENW = new Set(["a", "abc", "abdomen", "abdominal", "abu", "academia", "accidental", "actor", "actual", "admirable", "adorable", "agenda", "ala", "alas", "alba", "alcohol", "alias", "alien", "altar", "am", "amos", "ancestral", "animal", "anti", "are", "arena", "aroma", "arsenal", "arterial", "artificial", "audio", "ava", "avatar", "ave", "baba", "baby", "bacon", "bacteria", "bah", "balance", "banana", "bar", "barca", "base", "bases", "bates", "bay", "bella", "beta", "bilateral", "bingo", "blues", "bo", "bobo", "bono", "boom", "boy", "bravo", "brutal", "bum", "bus", "cable", "cables", "calibre", "camilla", "campus", "canal", "capital", "cargo", "cartel", "cas", "cases", "casino", "casual", "ce", "celeste", "celestial", "central", "cereal", "cerebral", "cesar", "cha", "champagne", "chance", "chao", "charles", "cheque", "cheques", "chocolate", "circular", "civil", "clan", "clara", "club", "co", "cobra", "coca", "coco", "coincide", "col", "cola", "collar", "colonial", "color", "coma", "come", "compatible", "concede", "conceptual", "conductor", "considerable", "consume", "continental", "control", "convoy", "cool", "coral", "corporal", "corral", "cosmos", "costa", "crack", "criminal", "crisis", "cross", "crucial", "cruel", "cultural", "dale", "dame", "data", "dea", "debate", "debates", "decide", "decimal", "defender", "define", "delta", "dental", "describe", "detective", "detectives", "detector", "diabetes", "digital", "diploma", "director", "disco", "disparate", "divide", "doctor", "don", "dong", "down", "drama", "dude", "duran", "e", "echo", "eco", "editor", "editorial", "eh", "electoral", "elemental", "enigma", "epa", "er", "error", "escape", "euro", "euros", "eventual", "experimental", "exterior", "extra", "extras", "f", "facial", "factor", "familiar", "fatal", "fauna", "favor", "favorable", "federal", "ferrari", "ferry", "festival", "film", "films", "final", "fiscal", "flexible", "flora", "formal", "formidable", "frances", "franco", "fray", "frontal", "fu", "fundamental", "funeral", "gabe", "gala", "gallo", "gas", "gases", "gene", "general", "genes", "global", "gloria", "go", "grave", "graves", "green", "grey", "guerrilla", "hale", "hall", "he", "helena", "hey", "hippie", "hit", "hockey", "honda", "honor", "honorable", "hood", "hope", "horizontal", "horrible", "horror", "hospital", "hotel", "house", "humor", "ida", "idea", "ideal", "ideas", "ii", "imperial", "improbable", "inclusive", "indispensable", "individual", "industrial", "inevitable", "inexplicable", "inferior", "infernal", "informal", "innumerable", "insignia", "inspector", "instructor", "instrumental", "integral", "interior", "introduce", "invisible", "ira", "iris", "irregular", "ja", "jade", "jeep", "jo", "judicial", "juveniles", "karma", "kilo", "kit", "labor", "lagos", "laguna", "lana", "lance", "late", "lateral", "latino", "lava", "lee", "legal", "liar", "liberal", "lila", "linda", "line", "local", "lord", "luca", "lunar", "ma", "macho", "madame", "mafia", "mama", "man", "manager", "manga", "mango", "manual", "mar", "marco", "marginal", "marino", "marketing", "martini", "mate", "material", "mates", "maya", "me", "media", "medieval", "mediocre", "mental", "mentor", "meta", "metal", "meter", "metro", "mia", "micro", "miles", "mineral", "mini", "miserable", "molecular", "mona", "monitor", "mono", "monte", "monumental", "moral", "morgue", "mortal", "mosquito", "motel", "moto", "motor", "municipal", "muscular", "musical", "na", "nana", "nasal", "natal", "natural", "naval", "nazi", "nazis", "neutral", "ninja", "no", "nobel", "noble", "nobles", "non", "normal", "norman", "nostalgia", "notable", "nuclear", "off", "oh", "once", "opera", "oral", "oriental", "original", "out", "paces", "pagan", "pai", "pan", "panda", "panel", "panorama", "par", "particular", "pasta", "pastel", "pastor", "patio", "peculiar", "perfume", "personal", "pete", "piano", "picnic", "pie", "pillar", "pisa", "plan", "planes", "plato", "pm", "polar", "polo", "popular", "portal", "pos", "post", "postal", "pp", "press", "primordial", "principal", "pro", "probable", "produce", "propaganda", "protector", "provincial", "provisional", "punk", "r", "racial", "radar", "radical", "radio", "radios", "raja", "rana", "rancho", "re", "reactor", "real", "receptor", "recital", "rector", "red", "reduce", "regional", "registrar", "regular", "relieve", "reno", "reside", "retire", "revolver", "reza", "rico", "rigor", "rio", "ritual", "rival", "rodeo", "romance", "ron", "royal", "rubio", "rumor", "rural", "sale", "sales", "saliva", "salsa", "sandwich", "scout", "sea", "sector", "semen", "semifinal", "sensible", "sensor", "sensual", "sentimental", "serena", "series", "shh", "shock", "similar", "simple", "singular", "sip", "so", "social", "socio", "soda", "solar", "son", "sonar", "status", "suite", "sumo", "superficial", "superior", "supervisor", "surge", "susceptible", "ta", "taco", "tacos", "tales", "taller", "tango", "tara", "taxi", "taxis", "temporal", "tender", "tenor", "tequila", "terminal", "terrible", "territorial", "terror", "time", "times", "toni", "tony", "top", "tornado", "torpedo", "tortilla", "tos", "total", "tractor", "trance", "trauma", "tribal", "tribunal", "triple", "tropical", "troy", "tumor", "tutor", "u", "uf", "universal", "ups", "usa", "usual", "uva", "val", "vapor", "variable", "variables", "verbal", "versus", "vertical", "veto", "viable", "victoria", "video", "vigilante", "viola", "virtual", "virus", "visible", "visual", "vital", "vocal", "vodka", "vulnerable", "was", "we", "whisky", "won", "wow", "ye", "yen", "yes", "zoo"]);
+  function esSets() {
+    if (ESW) return;
+    ESW = new Set();
+    const add = (w) => { w = w.toLowerCase().replace(/[¡!¿?]/g, ""); if (w) ESW.add(w); };
+    W.forEach((e) => { e[0].split(/[,\s]+/).forEach(add); (e[3] || "").split(/[,\s]+/).forEach(add); });
+    try { Object.values(WFX).forEach((l) => l.forEach(([f]) => add(f))); } catch (x) {}
+  }
+  const ES_GLUE = new Set("no a me te se le les lo la las los el de del al en y e o u mi mis tu tus su sus es un una he ha has han con por sin que nos ya muy más".split(" "));
+  const ES_SKIP = "b, strong, em, i, .es-w, td.es, .exr, .es, .es-sub, .gw, .sel-es, a, button, input, textarea, select, .say, .pa, .tutor, .story, .pod, .verse, .passage, .mtext, .dlg, del, ins, mark, code, .crumbs, .eyebrow, h1, h2";
+  function esMark(root) {
+    if (!root || !root.querySelectorAll) return; esSets();
+    root.querySelectorAll(".lx p, .lx li, .fx-h, .callout:not(.fxd), p.rule, .notes li, .pits li, .grule p, .gblock > p, section > p, .lead2, .fx-tip p, .fx-ex p, .fx-note p, .gmist p, .decide li, .fxwrap p").forEach((el) => {
+      if (el.dataset.esm || el.closest(".tutor, .story, .pod, .verse, .passage, .mtext, .dlg, .crumbs, #runner, .pxcard, .sheet")) return;
+      el.dataset.esm = "1";
+      const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.parentElement.closest(ES_SKIP) && n.parentElement.closest(ES_SKIP) !== el ? 2 : 1 });
+      const nodes = []; let n; while ((n = w.nextNode())) nodes.push(n);
+      nodes.forEach((tn) => {
+        const t0 = tn.nodeValue; if (!/[a-záéíóúñü]/i.test(t0)) return;
+        const esc2 = (x) => x.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+        let changed = false;
+        const html = t0.split(/(\([^()]*\))/).map((pc) => {
+          const m = /^\((.*)\)$/.exec(pc);
+          if (m && m[1].trim() && langOf(m[1]) === "es") { changed = true; return '(<i class="es-w" lang="es">' + esc2(m[1]) + "</i>)"; }
+          const r = markRun(pc); if (r !== null) { changed = true; return r; } return esc2(pc);
+        }).join("");
+        if (!changed) return;
+        const span = document.createElement("span"); span.innerHTML = html; tn.replaceWith(...span.childNodes);
+      });
+    });
+  }
+  function markRun(t) {
+        if (!/[a-záéíóúñü]/i.test(t)) return null;
+        const toks = t.split(/([^A-Za-zÁÉÍÓÚÑÜáéíóúñü¿¡?!]+)/);
+        // a token is Spanish if it is a Spanish word that is not also English, or carries an accent/ñ/¿¡
+        const kind = toks.map((x, k) => { if (k % 2) return null; const lw = x.toLowerCase().replace(/[¿¡?!]/g, ""); if (!lw) return null; const hard = (/[áéíóúñü¿¡]/i.test(x) && !ENW.has(lw)) || (ESW.has(lw) && !ENW.has(lw) && lw.length > 1); const soft = ES_GLUE.has(lw); return hard ? 2 : soft ? 1 : 0; });
+        // grow runs: hard words, plus soft words joined to them
+        const isEs = kind.map((k) => k === 2);
+        for (let pass = 0; pass < 2; pass++) for (let k = 0; k < toks.length; k += 2) if (kind[k] === 1 && !isEs[k] && ((k >= 2 && isEs[k - 2] && /^[\s'-]*$/.test(toks[k - 1])) || (k + 2 < toks.length && isEs[k + 2] && /^[\s'-]*$/.test(toks[k + 1])))) isEs[k] = true;
+        if (!isEs.some(Boolean)) return null;
+        let html = "", open = false;
+        for (let k = 0; k < toks.length; k++) {
+          const x = toks[k], e = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+          if (k % 2 === 0) {
+            if (isEs[k] && !open) { html += '<i class="es-w" lang="es">'; open = true; }
+            if (!isEs[k] && open && x) { html += "</i>"; open = false; }
+            html += e(x);
+          } else {
+            const nextEs = k + 1 < toks.length && isEs[k + 1];
+            if (open && !(nextEs && /^[\s'-]+$/.test(x))) { html += "</i>"; open = false; }
+            html += e(x);
+          }
+        }
+        if (open) html += "</i>";
+        return html;
+  }
   function fmtProse(root) {
     if (!root || !root.querySelectorAll) return;
     root.querySelectorAll(".callout.intro, .gblock > p, section > p, .stack > div > p, .grule > p, .ghead p, .callout").forEach((el) => {
       if (el.dataset.fx || el.closest(FX_SKIP)) return;
       el.dataset.fx = "1";
+      if (el.matches(".callout.intro") && !el.querySelector("button, input, table, .lx") && el.textContent.length > 120) { const h = fmtIntro(el.innerHTML.replace(/<\/?p[^>]*>/g, " ")); if (h) { el.innerHTML = h; el.classList.add("fxd"); return; } }
       if (el.textContent.length < 300 || el.querySelector("button, input, ul, table, .lx")) return;
       const h = fmtHTML(el.innerHTML); if (!h) return;
       if (el.tagName === "P") { const d = document.createElement("div"); d.className = "fxwrap"; d.dataset.fx = "1"; d.innerHTML = h; el.replaceWith(d); }
@@ -2202,7 +2301,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   /* ---------- read the lesson aloud ---------- */
   const RA = { q: [], i: 0, on: false, paused: false, rate: (() => { try { return +(localStorage.getItem("ra-rate") || 1) || 1; } catch (e) { return 1; } })(), gen: 0, el: null };
   const RA_PAGES = /^(a1|a2|b1|b2|c1|c2|esc)(-u\d+|-exam)?$|^guia-|^g-|^gramatica$|^verbos-reflexivos$/;
-  const RA_SKIP = "#runner, #s-pra, .crumbs, .eyebrow, nav, .tabs, .jump, .unav, .pxrev, .ra-bar, .ra-player, button, .say, .tutor, .sheet, select, input, .glegend, .vbs, .pill, script, style, .sr, [aria-hidden=true], .ipa";
+  const RA_SKIP = ".fx-lbl, #runner, #s-pra, .crumbs, .eyebrow, nav, .tabs, .jump, .unav, .pxrev, .ra-bar, .ra-player, button, .say, .tutor, .sheet, select, input, .glegend, .vbs, .pill, script, style, .sr, [aria-hidden=true], .ipa";
   const EN_W = /\b(the|and|is|are|you|to|of|in|it|for|with|that|this|when|use|used|was|be|an|as|on|or|not|but|if|have|has|there|people|still|means|which|after|before|your|they|we|what|how|why|word|words|verb|verbs|tense|instead|especially|including|today|week|life|experiences?)\b/gi;
   const ES_W = /\b(el|la|los|las|que|de|del|es|y|en|un|una|unos|unas|por|para|con|muy|bien|yo|tú|usted|qué|cómo|está|son|hola|gracias|se|lo|le|les|me|te|nos|mi|tu|su|al|ha|he|has|han|hay|no|sí|pero|como|más|este|esta|ya|nunca|todavía|ayer|hoy)\b/gi;
   function langOf(t) {
@@ -2239,7 +2338,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (n.matches(".gnum")) { push("Rule " + n.textContent.trim() + ".", false); return; }
       if (/^(LI|P|H\d|DIV|TR|UL|TD)$/.test(n.tagName)) stop();
       let es = forceEs;
-      if (n.matches("td.es, .exr > b, .es-sub, del, ins, .gw, .face")) es = true;
+      if (n.matches("td.es, .exr > b, .es-sub, del, ins, .gw, .face, .es-w, strong.q")) es = true;
       else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && langOf(t) === "es"; }
       else if (n.matches("td.en, .tr, .muted.small, .en")) es = false;
       n.childNodes.forEach((c) => walk(c, es));
@@ -2386,7 +2485,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const k = RA.q.findIndex((x) => x.el === e.target || x.el.contains(e.target)); if (k >= 0 && k !== RA.i) { RA.i = k; RA.paused = false; try { speechSynthesis.cancel(); } catch (x) {} raPlay(); }
   });
   let fxQ = false;
-  new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
+  new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); esMark(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
 
   /* ---------- reading aloud: free scrolling, screen kept on and dimmed ---------- */
   const FOL = { free: false };
@@ -5106,7 +5205,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110318";
+  var BUILD = "202611110332";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
