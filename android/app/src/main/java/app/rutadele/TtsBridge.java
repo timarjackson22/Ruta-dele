@@ -105,6 +105,25 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
         });
     }
 
+    /** Keeps the screen on while the app is reading aloud (the app dims it itself). */
+    @JavascriptInterface
+    public void keepScreenOn(final boolean on) {
+        main.post(() -> {
+            if (on) act.getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            else act.getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        });
+    }
+
+    /** Screen brightness for this app only: 0.0 to 1.0, or a negative value for the phone's normal brightness. */
+    @JavascriptInterface
+    public void setBrightness(final float level) {
+        main.post(() -> {
+            android.view.WindowManager.LayoutParams lp = act.getWindow().getAttributes();
+            lp.screenBrightness = level < 0 ? android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE : Math.max(0.01f, Math.min(1f, level));
+            act.getWindow().setAttributes(lp);
+        });
+    }
+
     @JavascriptInterface
     public void refreshVoices() { js("window.__atts && __atts.voices()"); }
 

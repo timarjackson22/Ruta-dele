@@ -439,6 +439,14 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.aw-back { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(150px + env(safe-area-inset-bottom, 0px)); z-index: 13; border: 0; border-radius: 999px; padding: 10px 18px; background: var(--ink); color: var(--bg); font: inherit; font-weight: 700; box-shadow: 0 6px 20px rgba(0, 0, 0, .25); cursor: pointer }
+@media (max-width: 820px) { .aw-back { bottom: calc(210px + env(safe-area-inset-bottom, 0px)) } }
+.aw-dim { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px; transition: background 1.2s }
+.aw-dim p { color: rgba(255, 255, 255, .55); font-size: .9rem; margin: 0 }
+.aw-dim.dark { background: #000 }
+.aw-dim.waking { background: transparent !important; transition: background .3s }
+.aw-dim.waking p { opacity: 0 }
+.aw-dim.dark p { color: rgba(255, 255, 255, .18) }
 /* structured explanations */
 .lx { display: flex; flex-direction: column; gap: 14px; line-height: 1.6 }
 .lx p { margin: 0 }
@@ -2278,7 +2286,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!item) { raStop(); return; }
     if (RA.el) RA.el.classList.remove("ra-now");
     RA.el = item.el; item.el.classList.add("ra-now");
-    const r = item.el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 170) item.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    const r = item.el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 170) followTo(item.el);
     raPlayerUI();
     let k = 0;
     const next = () => {
@@ -2364,6 +2372,63 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   });
   let fxQ = false;
   new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
+
+  /* ---------- reading aloud: free scrolling, screen kept on and dimmed ---------- */
+  const FOL = { free: false };
+  function followTo(el) { if (!FOL.free && el) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  const AW = { on: false, last: Date.now(), stage: 0, lock: null };
+  const NATIVE_TTS = () => window.AndroidTTS && typeof AndroidTTS.keepScreenOn === "function";
+  function awActive() {
+    try { if (typeof RA !== "undefined" && RA.on && !RA.paused) return true; } catch (e) {}
+    try { if (WP.on) return true; } catch (e) {}
+    try { if (PL.playing) return true; } catch (e) {}
+    try { if (GP.on && !GP.paused) return true; } catch (e) {}
+    return false;
+  }
+  const curReading = () => document.querySelector(".ra-now, tr.playing, .gp-now, #ltext .playing");
+  function awBack() {
+    let b = document.getElementById("aw-back");
+    const show = AW.on && FOL.free && !!curReading();
+    if (!show) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("button"); b.id = "aw-back"; b.className = "aw-back"; b.dataset.act = "aw-back"; b.innerHTML = '<span aria-hidden="true">📍</span> Back to the reading'; document.body.appendChild(b); }
+  }
+  async function awLock(on) {
+    if (NATIVE_TTS()) { try { AndroidTTS.keepScreenOn(!!on); } catch (e) {} }
+    try { if (on && "wakeLock" in navigator && !AW.lock) { AW.lock = await navigator.wakeLock.request("screen"); AW.lock.addEventListener("release", () => { AW.lock = null; }); } if (!on && AW.lock) { AW.lock.release(); AW.lock = null; } } catch (e) { AW.lock = null; }
+  }
+  function awStage(n) {
+    if (AW.stage === n) return; AW.stage = n;
+    let ov = document.getElementById("aw-dim");
+    if (!n) { if (ov) { ov.classList.add("waking"); ov.id = ""; setTimeout(() => ov.remove(), 450); } if (NATIVE_TTS()) try { AndroidTTS.setBrightness(-1); } catch (e) {} return; }
+    if (!ov) { ov = document.createElement("div"); ov.id = "aw-dim"; ov.className = "aw-dim"; ov.innerHTML = '<p>Still reading aloud · tap to wake</p>'; document.body.appendChild(ov); }
+    ov.classList.toggle("dark", n === 2);
+    if (NATIVE_TTS()) try { AndroidTTS.setBrightness(n === 2 ? 0.01 : 0.12); } catch (e) {}
+  }
+  function awTick() {
+    const act = awActive();
+    if (act !== AW.on) { AW.on = act; awLock(act); if (!act) { awStage(0); FOL.free = false; try { PL.follow = true; } catch (e) {} } else AW.last = Date.now(); }
+    if (AW.on) { const idle = Date.now() - AW.last; awStage(idle > 60000 ? 2 : idle > 30000 ? 1 : 0); }
+    awBack();
+  }
+  setInterval(awTick, 1000);
+  // the wake lock is dropped when the page is hidden; take it again on return
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && AW.on) { AW.lock = null; awLock(true); } });
+  const awTouch = (e) => {
+    const wasDim = AW.stage > 0; AW.last = Date.now();
+    if (wasDim) { awStage(0); if (e && e.type !== "scroll") { e.preventDefault && e.cancelable && e.preventDefault(); e.stopPropagation && e.stopPropagation(); } }
+  };
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => document.addEventListener(t, awTouch, { capture: true, passive: false }));
+  // the first tap on a dimmed screen only wakes it
+  document.addEventListener("click", (e) => { if (e.target.closest && e.target.closest(".aw-dim")) { e.stopPropagation(); e.preventDefault(); } }, true);
+  // scrolling by hand while something is reading: stop following the reading until asked
+  const awFree = () => { if (!AW.on && !awActive()) return; if (!FOL.free) { FOL.free = true; try { PL.follow = false; } catch (e) {} awBack(); } };
+  document.addEventListener("touchmove", awFree, { passive: true });
+  document.addEventListener("wheel", awFree, { passive: true });
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest('[data-act="aw-back"]'); if (!t) return;
+    FOL.free = false; try { PL.follow = true; } catch (x) {}
+    const el = curReading(); if (el) el.scrollIntoView({ block: "center", behavior: "smooth" }); awBack();
+  });
 
   function studyView(id, inLevel) {
     document.body.classList.add("study");
@@ -2499,7 +2564,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const b = document.getElementById("pl-play");
     if (b) { b.innerHTML = PL.playing ? PAUSE : PLAY; b.setAttribute("aria-label", PL.playing ? "Pause" : "Play"); }
     const c = document.getElementById("pl-pos"); if (c) c.textContent = (PL.i + 1) + " / " + PL.items.length;
-    if (PL.playing && PL.follow) { const el = document.querySelector('#ltext [data-pi="' + PL.i + '"]'); if (el) { const r = el.getBoundingClientRect(); if (r.top < 90 || r.bottom > innerHeight - 170) el.scrollIntoView({ block: "center", behavior: "smooth" }); } }
+    if (PL.playing && PL.follow) { const el = document.querySelector('#ltext [data-pi="' + PL.i + '"]'); if (el) { const r = el.getBoundingClientRect(); if (r.top < 90 || r.bottom > innerHeight - 170) followTo(el); } }
   }
   function plSpeak() {
     const it = PL.items[PL.i]; if (!it) { plStop(); return; }
@@ -2727,7 +2792,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const pos = document.getElementById("wp-pos");
     if (step) {
       const row = document.querySelector('tr[data-wi="' + step.r + '"]');
-      if (row && WP.on) { row.classList.add("playing"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 170) row.scrollIntoView({ block: "center", behavior: "smooth" }); }
+      if (row && WP.on) { row.classList.add("playing"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 170) followTo(row); }
       if (pos) pos.textContent = "#" + (step.r + 1);
     }
   }
@@ -3364,7 +3429,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (GP.src === "g") { const id = document.body.dataset.gcat; const pos = gFilter(id).indexOf(it.i); if (GF[id] && pos >= GF[id].shown) { GF[id].shown = Math.ceil((pos + 1) / 100) * 100; gList(); row = gpRowEl(it); } }
       else if (GP.src === "v" && VF) { const pos = vfilter().indexOf(it.i); if (pos >= VF.shown) { VF.shown = Math.ceil((pos + 1) / 100) * 100; verbsList(); row = gpRowEl(it); } }
     }
-    if (row) { row.classList.add("gp-now"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 220) row.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    if (row) { row.classList.add("gp-now"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 220) followTo(row); }
     gpBtns();
   }
   function gpBtns() { document.querySelectorAll("[data-act=gp-play]").forEach((b) => { b.setAttribute("aria-pressed", GP.on); b.innerHTML = GP.on ? "■ Stop listening" : "▶ Listen: " + (GP.o.en ? "English, then " : "") + "Spanish ×" + GP.o.reps; }); }
@@ -4311,7 +4376,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function tpUI() {
     document.querySelectorAll("tr.playing").forEach((r) => r.classList.remove("playing"));
     document.querySelectorAll("[data-act=th-play]").forEach((b) => { const on = TP.on && +b.dataset.t === TP.ti; b.textContent = on ? "Stop" : "Play all"; b.setAttribute("aria-pressed", on); });
-    const st = TP.q[TP.i]; if (TP.on && st) { const row = document.querySelector('tr[data-tw="' + TP.ti + "-" + st.k + '"]'); if (row) { row.classList.add("playing"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 170) row.scrollIntoView({ block: "center", behavior: "smooth" }); } }
+    const st = TP.q[TP.i]; if (TP.on && st) { const row = document.querySelector('tr[data-tw="' + TP.ti + "-" + st.k + '"]'); if (row) { row.classList.add("playing"); const rr = row.getBoundingClientRect(); if (rr.top < 90 || rr.bottom > innerHeight - 170) followTo(row); } }
   }
   function tpSpeak() {
     const st = TP.q[TP.i]; if (!st) { tpStop(); return; }
@@ -4993,7 +5058,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110209";
+  var BUILD = "202611110219";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
