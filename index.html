@@ -410,6 +410,29 @@ mark.sp { background: var(--bad-soft); color: var(--bad); font-weight: 700; padd
 .xfb { margin-top: 8px } .xfb.ok { color: var(--good) } .xfb.no { color: var(--bad) }
 .decide { margin: 0; padding-left: 1.3em; display: grid; gap: 6px }
 .quick { display: flex; gap: 8px; flex-wrap: wrap }
+.es-sub { color: var(--muted); font-style: italic; font-size: 1.05rem; margin-top: 4px }
+h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 400; font-size: .8em; font-style: italic }
+.feature .es { display: block; font-size: .9rem }
+.runner { display: flex; flex-direction: column; gap: 12px }
+.pxcard { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px }
+.pxbar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden } .pxbar i { display: block; height: 100%; background: var(--good); border-radius: 999px; transition: width .3s }
+.pxhead { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; color: var(--muted); font-size: .92rem }
+.pxhead .ok, .pxcard b.ok { color: var(--good) } .pxhead .no { color: var(--bad) }
+.pxtype { margin: 0; font-weight: 700; color: var(--cobalt); font-size: .9rem; text-transform: none }
+.pxq { margin: 0; font-size: 1.3rem; line-height: 1.5; font-family: var(--display) }
+.pxin { width: 100%; padding: 12px 14px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; font-size: 1.1rem }
+.pxin:focus { border-color: var(--cobalt); outline: none } .pxin.ok { border-color: var(--good); background: var(--good-soft) } .pxin.no { border-color: var(--bad); background: var(--bad-soft) } .pxin.near { border-color: var(--saffron); background: var(--saffron-soft) }
+.pxin.shake { animation: shake .3s } @keyframes shake { 25% { transform: translateX(-6px) } 75% { transform: translateX(6px) } }
+.pxopts { flex-direction: column } .pxopts .opt { text-align: left; padding: 10px 14px; font-size: 1.05rem }
+.pxfb { border-radius: 10px; padding: 10px 12px; line-height: 1.5 } .pxfb.ok { background: var(--good-soft); color: var(--good) } .pxfb.no { background: var(--bad-soft); color: var(--ink) } .pxfb.near { background: var(--saffron-soft); color: var(--ink) }
+.pxfb ul { margin: 6px 0 0; padding-left: 1.2em } .pxfb .why { display: block; margin-top: 8px; color: var(--ink); background: var(--surface); border-radius: 8px; padding: 8px 10px; font-size: .95rem }
+.pxfb .fxline { display: block; font-size: 1.05rem; margin: 4px 0 } .pxfb del { color: var(--bad) } .pxfb ins { color: var(--good); text-decoration: none; font-weight: 700 }
+.pxrev { margin-top: 10px }
+.pxbig { font-family: var(--display); font-size: 1.6rem; font-weight: 700; margin: 0 }
+.pxmiss ol { margin: 6px 0 0; padding-left: 1.3em; display: grid; gap: 8px }
+.pxback { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 12; box-shadow: 0 6px 18px rgba(0, 0, 0, .25) }
+.flash { animation: flash 1.8s } @keyframes flash { 0%, 60% { box-shadow: 0 0 0 4px var(--saffron); border-radius: 8px } 100% { box-shadow: none } }
+@media (prefers-reduced-motion: reduce) { .flash, .pxin.shake { animation: none } }
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
@@ -620,7 +643,7 @@ body.gp-on .tutor-fab { display: none }
 <body>
 <header class="top"><div class="wrap">
   <a class="brand" href="#inicio"><i class="tiles" aria-hidden="true"></i>Ruta DELE</a>
-  <nav class="secnav" aria-label="Sections"><a data-s="curso" href="#inicio">Curso</a><a data-s="escuchar" href="#escuchar">Escuchar</a><a data-s="leer" href="#leer">Leer</a><a data-s="gramatica" href="#gramatica">Gramática</a><a data-s="verbos" href="#verbos">Verbos</a><a data-s="palabras" href="#palabras">2.500 palabras</a></nav>
+  <nav class="secnav" aria-label="Sections"><a data-s="curso" href="#inicio">Course</a><a data-s="escuchar" href="#escuchar">Listen</a><a data-s="leer" href="#leer">Read</a><a data-s="gramatica" href="#gramatica">Grammar</a><a data-s="verbos" href="#verbos">Verbs</a><a data-s="palabras" href="#palabras">2,500 words</a></nav>
   <button class="regbtn" id="regbtn" data-act="region" type="button">LatAm</button>
   <nav class="lvls" id="lvls" aria-label="Levels"></nav>
 </div></header>
@@ -629,12 +652,12 @@ body.gp-on .tutor-fab { display: none }
 <button class="tutor-fab" id="tutor-fab" data-act="t-open" hidden aria-label="Open Profe, your AI tutor"><span aria-hidden="true">P</span>Profe</button>
 <aside class="tutor" id="tutor" hidden aria-label="Profe, your AI tutor"></aside>
 <nav class="tabbar" aria-label="Sections">
-  <a data-s="curso" href="#inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>Curso</a>
-  <a data-s="escuchar" href="#escuchar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>Escuchar</a>
-  <a data-s="leer" href="#leer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Leer</a>
-  <a data-s="gramatica" href="#gramatica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Gramática</a>
-  <a data-s="verbos" href="#verbos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>Verbos</a>
-  <a data-s="palabras" href="#palabras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Palabras</a>
+  <a data-s="curso" href="#inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>Course</a>
+  <a data-s="escuchar" href="#escuchar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>Listen</a>
+  <a data-s="leer" href="#leer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</a>
+  <a data-s="gramatica" href="#gramatica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Grammar</a>
+  <a data-s="verbos" href="#verbos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>Verbs</a>
+  <a data-s="palabras" href="#palabras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Words</a>
 </nav>
 
 <script>
@@ -1560,18 +1583,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   /* ---------- views ---------- */
   function guidesHome() {
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><span>Guías</span></p><div><p class="eyebrow">Topic guides</p><h1>Guías</h1><p class="lead2">The big topics that trip learners up, explained in depth, each with 38 practice items and explanations.</p></div><div class="features">' +
-      GUIDES.map((g) => '<a class="feature" href="#guia-' + g.id + '"><span class="ic" aria-hidden="true">' + esc(g.t.slice(0, 2)) + '</span><span><b>' + esc(g.t) + "</b>" + esc(g.en) + "</span></a>").join("") + "</div></div>";
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><span>Grammar guides</span></p><div><p class="eyebrow">In-depth topics</p><h1>Grammar guides</h1><p class="es-sub">Guías de gramática</p><p class="lead2">The big topics that trip learners up, explained in depth, each with 38 practice items and explanations.</p></div><div class="features">' +
+      GUIDES.map((g) => '<a class="feature" href="#guia-' + g.id + '"><span class="ic" aria-hidden="true">' + esc(g.en.slice(0, 2)) + '</span><span><b>' + esc(g.en) + '</b><span class="es">' + esc(g.t) + "</span></span></a>").join("") + "</div></div>";
   }
   function guideView(id) {
     const g = GUIDES.find((x) => x.id === id); if (!g) return guidesHome();
     try { if (!VI) loadIndex(); } catch (e) {}
     const st = (S.gd || {})[id] || {};
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#guias">Guías</a><span aria-hidden="true">›</span><span>' + esc(g.t) + '</span></p><div><p class="eyebrow">Guía · ' + esc(g.en) + "</p><h1>" + esc(g.t) + '</h1></div><div class="callout intro">' + esc(g.intro) + "</div>" +
-      (g.decide && g.decide.length ? '<section class="block"><div class="shead"><h2>How to decide</h2></div><ol class="decide">' + g.decide.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ol></section>" : "") +
-      '<section class="block"><div class="shead"><h2>Explicación</h2></div>' + g.sec.map((x) => grammarBlock(x)).join("") + "</section>" +
-      (g.pit && g.pit.length ? '<section class="block"><div class="shead"><h2>Errores comunes</h2></div><ul class="pits">' + g.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>" : "") +
-      '<section class="block" id="s-pra"><div class="shead"><h2>Práctica</h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(g) + "</span>" : "") + "</div>" + pxHTML(g, "Fill in the blank.") + "</section></div>";
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#guias">Grammar guides</a><span aria-hidden="true">›</span><span>' + esc(g.en) + '</span></p><div><p class="eyebrow">Grammar guide</p><h1>' + esc(g.en) + '</h1><p class="es-sub">' + esc(g.t) + '</p></div><div class="callout intro">' + esc(g.intro) + "</div>" +
+      (g.decide && g.decide.length ? '<section class="block"><div class="shead"><h2>How to decide <span class="es">(Cómo decidir)</span></h2></div><ol class="decide">' + g.decide.map((x) => "<li>" + esc(x) + "</li>").join("") + "</ol></section>" : "") +
+      '<section class="block"><div class="shead"><h2>Explanation <span class="es">(Explicación)</span></h2></div>' + g.sec.map((x) => grammarBlock(x)).join("") + "</section>" +
+      (g.pit && g.pit.length ? '<section class="block"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div><ul class="pits">' + g.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>" : "") +
+      '<section class="block" id="s-pra"><div class="shead"><h2>Practice <span class="es">(Práctica)</span></h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(g) + "</span>" : "") + "</div>" + pxHTML(g, "Fill in the blank.") + "</section></div>";
     bindPractice(g, (score) => { S.gd = S.gd || {}; const o = S.gd[id] || {}; o.best = Math.max(o.best || 0, score); S.gd[id] = o; save(); return ""; });
   }
   function schoolHome() {
@@ -1595,7 +1618,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function srBanner() {
     const tot = allDeckIds().reduce((a, id) => { const c = counts(id); return { due: a.due + c.due + c.lrn, nw: a.nw + (LV[id] && S.last && S.last.l === id ? c.nw : 0) }; }, { due: 0, nw: 0 });
     const st = srStats();
-    return '<div class="quick">' + (LV.esc ? '<a class="btn small" href="#esc">🏫 Mi escuela</a>' : "") + (GUIDES.length ? '<a class="btn small" href="#guias">📘 Guías</a>' : "") + '<a class="btn small" href="#repaso">🗂️ Repaso</a><a class="btn small" href="#recursos">🔗 Recursos</a></div><a class="srbanner" href="#repaso"><div><b>Repaso de hoy</b><span>' + (tot.due ? tot.due + " cards to review" : "No reviews due") + (tot.nw ? " · " + tot.nw + " new" : "") + (st.streak ? " · 🔥 " + st.streak + "-day streak" : "") + '</span></div><span class="btn small primary">Study</span></a>';
+    return '<div class="quick">' + (LV.esc && !HIDDEN.esc ? '<a class="btn small" href="#esc">🏫 Mi escuela</a>' : "") + (GUIDES.length ? '<a class="btn small" href="#guias">📘 Grammar guides</a>' : "") + '<a class="btn small" href="#repaso">🗂️ Flashcard review</a>' + (HIDDEN.recursos ? "" : '<a class="btn small" href="#recursos">🔗 Recursos</a>') + '</div><a class="srbanner" href="#repaso"><div><b>Today’s flashcard review</b><span>' + (tot.due ? tot.due + " cards to review" : "No reviews due") + (tot.nw ? " · " + tot.nw + " new" : "") + (st.streak ? " · 🔥 " + st.streak + "-day streak" : "") + '</span></div><span class="btn small primary">Study</span></a>';
   }
   function home() {
     const last = S.last && LV[S.last.l] ? S.last : null;
@@ -1657,19 +1680,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { if (!VI) loadIndex(); } catch (e) {}
     const st = unitState(L.id, i);
     const has = { d: !!u.d, r: !!u.r, e: !!(u.e && u.e.length), pit: !!(u.pit && u.pit.length) };
-    const jump = [["voc", "Vocabulario"], ["gra", "Gramática"]].concat(has.e ? [["eje", "Ejemplos"]] : []).concat(has.pit ? [["err", "Errores comunes"]] : []).concat(has.d ? [["dia", "Diálogo"]] : []).concat(has.r ? [["lec", "Lectura"]] : []).concat([["pra", "Práctica"]]);
+    const jump = [["voc", "Vocabulary"], ["gra", "Grammar"]].concat(has.e ? [["eje", "Examples"]] : []).concat(has.pit ? [["err", "Common mistakes"]] : []).concat(has.d ? [["dia", "Dialogue"]] : []).concat(has.r ? [["lec", "Reading"]] : []).concat([["pra", "Practice"]]);
     const home = L.school ? "#esc" : "#" + L.id;
     let h = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="' + home + '">' + L.name + '</a><span aria-hidden="true">›</span><span>' + (L.school ? esc(u.school || "Unidad " + (i + 1)) : "Unidad " + (i + 1)) + "</span></p>" +
       '<div><p class="eyebrow">' + L.name + " · Unidad " + (i + 1) + " of " + L.units.length + "</p><h1>" + esc(u.t) + '</h1><p class="muted" style="font-size:1.15rem;margin-top:6px">' + esc(u.s) + "</p></div>" +
       (u.intro ? '<div class="callout intro">' + esc(u.intro) + "</div>" : "") +
       '<div class="jump">' + jump.map(([id, n]) => '<button class="btn small" data-act="jump" data-to="' + id + '">' + n + "</button>").join("") + "</div>";
-    h += '<section class="block" id="s-voc"><div class="shead"><h2>Vocabulario</h2><button class="btn small" data-act="hide-en" aria-pressed="false">Hide translations to test yourself</button></div>' + u.v.map(vocabGroup).join("") + '<p class="small"><a href="#' + (L.school ? "repaso-esc" : L.id + "-cards") + '">Study these words with spaced repetition ›</a></p></section>';
-    h += '<section class="block" id="s-gra"><div class="shead"><h2>Gramática</h2></div>' + u.g.map(grammarBlock).join("") + (u.acc ? '<div class="callout acc"><b>Tildes (accents):</b> ' + esc(u.acc) + "</div>" : "") + "</section>";
-    if (has.e) h += '<section class="block" id="s-eje"><div class="shead"><h2>Ejemplos</h2><button class="btn small tts-only" data-act="say" data-t="' + esc(u.e.map((x) => x[0]).join(" ")) + '">Listen to all</button></div><div class="exs">' + u.e.map((x) => '<p class="exr">' + sayBtn(x[0]) + "<span><b>" + esc(x[0]) + '</b><br><span class="muted">' + esc(x[1]) + "</span></span></p>").join("") + "</div></section>";
-    if (has.pit) h += '<section class="block" id="s-err"><div class="shead"><h2>Errores comunes</h2></div><ul class="pits">' + u.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>";
-    if (has.d) h += '<section class="block" id="s-dia"><div class="shead"><h2>Diálogo</h2><button class="btn small tts-only" data-act="play-dlg">Play the whole dialogue</button></div><p class="muted">' + esc(u.d.c) + ' Read it aloud, then swap roles.</p><div class="dlg">' + u.d.l.map((l, k) => '<div class="line' + (k % 2 ? " b" : "") + '">' + sayBtn(l[1]) + '<p><span class="who">' + esc(l[0]) + ":</span> " + esc(l[1]) + '<span class="tr">' + esc(l[2]) + "</span></p></div>").join("") + "</div></section>";
-    if (has.r) h += '<section class="block" id="s-lec"><div class="shead"><h2>Lectura</h2></div><p class="muted">' + esc(u.r.c) + '</p><div class="passage"><div class="row" style="margin-bottom:8px">' + sayBtn(u.r.text, "the text") + '<span class="muted">Listen to the text</span></div>' + esc(u.r.text) + "</div>" + mcList(u.r.q, "read") + "</section>";
-    h += '<section class="block" id="s-pra"><div class="shead"><h2>Práctica</h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(u) + "</span>" : "") + "</div>" + pxHTML(u, u.xi) + "</section>";
+    h += '<section class="block" id="s-voc"><div class="shead"><h2>Vocabulary <span class="es">(Vocabulario)</span></h2><button class="btn small" data-act="hide-en" aria-pressed="false">Hide translations to test yourself</button></div>' + u.v.map(vocabGroup).join("") + '<p class="small"><a href="#' + (L.school ? "repaso-esc" : L.id + "-cards") + '">Study these words with spaced repetition ›</a></p></section>';
+    h += '<section class="block" id="s-gra"><div class="shead"><h2>Grammar <span class="es">(Gramática)</span></h2></div>' + u.g.map(grammarBlock).join("") + (u.acc ? '<div class="callout acc"><b>Accents (tildes):</b> ' + esc(u.acc) + "</div>" : "") + "</section>";
+    if (has.e) h += '<section class="block" id="s-eje"><div class="shead"><h2>Examples <span class="es">(Ejemplos)</span></h2><button class="btn small tts-only" data-act="say" data-t="' + esc(u.e.map((x) => x[0]).join(" ")) + '">Listen to all</button></div><div class="exs">' + u.e.map((x) => '<p class="exr">' + sayBtn(x[0]) + "<span><b>" + esc(x[0]) + '</b><br><span class="muted">' + esc(x[1]) + "</span></span></p>").join("") + "</div></section>";
+    if (has.pit) h += '<section class="block" id="s-err"><div class="shead"><h2>Common mistakes <span class="es">(Errores comunes)</span></h2></div><ul class="pits">' + u.pit.map((x) => "<li>" + pitHTML(x) + "</li>").join("") + "</ul></section>";
+    if (has.d) h += '<section class="block" id="s-dia"><div class="shead"><h2>Dialogue <span class="es">(Diálogo)</span></h2><button class="btn small tts-only" data-act="play-dlg">Play the whole dialogue</button></div><p class="muted">' + esc(u.d.c) + ' Read it aloud, then swap roles.</p><div class="dlg">' + u.d.l.map((l, k) => '<div class="line' + (k % 2 ? " b" : "") + '">' + sayBtn(l[1]) + '<p><span class="who">' + esc(l[0]) + ":</span> " + esc(l[1]) + '<span class="tr">' + esc(l[2]) + "</span></p></div>").join("") + "</div></section>";
+    if (has.r) h += '<section class="block" id="s-lec"><div class="shead"><h2>Reading <span class="es">(Lectura)</span></h2></div><p class="muted">' + esc(u.r.c) + '</p><div class="passage"><div class="row" style="margin-bottom:8px">' + sayBtn(u.r.text, "the text") + '<span class="muted">Listen to the text</span></div>' + esc(u.r.text) + "</div>" + mcList(u.r.q, "read") + "</section>";
+    h += '<section class="block" id="s-pra"><div class="shead"><h2>Practice <span class="es">(Práctica)</span></h2>' + (st.best != null ? '<span class="muted">Best: ' + st.best + " / " + pxTotal(u) + "</span>" : "") + "</div>" + pxHTML(u, u.xi) + "</section>";
     const pre = L.school ? "esc" : L.id;
     const prev = i > 0 ? '<a class="btn" href="#' + pre + "-u" + i + '">‹ ' + esc(L.units[i - 1].t) + "</a>" : '<a class="btn" href="' + home + '">‹ All units</a>';
     const next = i < L.units.length - 1 ? '<a class="btn" href="#' + pre + "-u" + (i + 2) + '">' + esc(L.units[i + 1].t) + " ›</a>" : L.school ? '<a class="btn" href="#esc">All units ›</a>' : '<a class="btn" href="#' + L.id + '-exam">Exam guide ›</a>';
@@ -1686,22 +1709,95 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const pitHTML = (x) => { const k = x.indexOf("|"); const head = k < 0 ? "" : x.slice(0, k), body = k < 0 ? x : x.slice(k + 1); return (head ? "<b>" + esc(head) + ":</b> " : "") + esc(body).replace(/«([^»]+)»\s*→\s*«([^»]+)»/g, '<del>$1</del> → <ins>$2</ins>'); };
   const pxTotal = (o) => o.x.length + (o.tr || []).length + (o.fix || []).length + (o.mc || []).length;
   // the four kinds of practice: complete, choose, translate, correct
-  function pxHTML(o, instr) {
-    const sec = (t, sub) => '<h3 class="pxh">' + t + (sub ? ' <span class="muted small">' + sub + "</span>" : "") + "</h3>";
-    let h = '<form id="exf" autocomplete="off">' + sec("A · Completa", esc(instr || "Fill in the blank.")) + '<ol class="ex">' +
-      o.x.map((x, k) => '<li><label class="q" for="ex-' + k + '">' + blanks(x[0]) + '</label><input id="ex-' + k + '" data-k="' + k + '" spellcheck="false" autocapitalize="off"><span class="fb" id="fb-' + k + '" aria-live="polite"></span></li>').join("") + "</ol>";
-    if (o.mc && o.mc.length) h += sec("B · Elige", "Choose the right option; you'll see why at once.") + '<ol class="mc xmc">' + o.mc.map((q, k) => '<li><p class="mq">' + blanks(q[0]) + '</p><div class="opts">' + q[1].map((op, j) => '<button type="button" class="opt" data-act="xmc" data-q="' + k + '" data-o="' + j + '">' + esc(op) + "</button>").join("") + '</div><p class="fb xfb" id="mcfb-' + k + '"></p></li>').join("") + "</ol>";
-    if (o.tr && o.tr.length) h += sec("C · Traduce", "Write it in Spanish, with accents.") + '<ol class="ex ex1">' + o.tr.map((x, k) => '<li><label class="q" for="tr-' + k + '">' + esc(x[0]) + '</label><input id="tr-' + k + '" spellcheck="false" autocapitalize="off"><span class="fb" id="trfb-' + k + '" aria-live="polite"></span></li>').join("") + "</ol>";
-    if (o.fix && o.fix.length) h += sec("D · Corrige", "Each sentence has one mistake. Write the correct sentence.") + '<ol class="ex ex1">' + o.fix.map((x, k) => '<li><label class="q" for="fx-' + k + '"><span class="wrongs">' + esc(x[0]) + '</span></label><input id="fx-' + k + '" spellcheck="false" autocapitalize="off" placeholder="Correct sentence"><span class="fb" id="fxfb-' + k + '" aria-live="polite"></span></li>').join("") + "</ol>";
-    h += '<div class="row" style="margin-top:16px"><button class="btn primary" type="submit">Check answers</button><button class="btn" type="button" data-act="px-show">Show answers</button><button class="btn" type="button" data-act="px-reset">Clear</button><button class="btn" type="button" data-act="t-ask" data-p="Go through my practice answers on this page. Explain each mistake briefly, then give me two similar items to try, one at a time.">Ask Profe</button><span class="result" id="res" aria-live="polite"></span></div></form>';
-    return h;
-  }
+  function pxHTML(o, instr) { return '<div id="runner" class="runner" data-instr="' + esc(instr || "") + '"></div>'; }
+
   let PX = null; // the practice on screen
-  function bindPractice(o, onScore) {
-    PX = { o, onScore, mc: {} };
-    const form = document.getElementById("exf");
-    if (form) form.addEventListener("submit", (e) => { e.preventDefault(); checkPractice(false); });
+  const PXT = { x: ["Complete the sentence", "Completa"], mc: ["Choose the right option", "Elige"], tr: ["Translate into Spanish", "Traduce"], fix: ["Correct the mistake", "Corrige"] };
+  function pxItems(o) {
+    const L = [];
+    o.x.forEach((x, k) => L.push({ t: "x", k, q: x[0], a: String(x[1]).split("|"), why: x[2] || "" }));
+    (o.mc || []).forEach((x, k) => L.push({ t: "mc", k, q: x[0], opts: x[1], c: x[2], why: x[3] || "" }));
+    (o.tr || []).forEach((x, k) => L.push({ t: "tr", k, q: x[0], a: String(x[1]).split("|"), why: x[2] || "" }));
+    (o.fix || []).forEach((x, k) => L.push({ t: "fix", k, q: x[0], a: String(x[1]).split("|"), why: x[2] || "" }));
+    return L;
   }
+  function bindPractice(o, onScore) {
+    const key = location.hash.replace(/^#/, ""), items = pxItems(o);
+    S.pr = S.pr || {}; const sv = S.pr[key];
+    PX = { o, onScore, items, key, i: 0, res: [], phase: "start", order: items.map((_, k) => k), instr: (document.getElementById("runner") || {}).dataset ? document.getElementById("runner").dataset.instr : "" };
+    if (sv && sv.n === items.length && sv.res && sv.res.length) { PX.res = sv.res; PX.order = sv.order || PX.order; PX.i = sv.i || 0; }
+    pxRender();
+  }
+  const pxSave = () => { S.pr = S.pr || {}; S.pr[PX.key] = { n: PX.items.length, i: PX.i, res: PX.res, order: PX.order }; save(); };
+  function pxRender(focus) {
+    const R = document.getElementById("runner"); if (!R || !PX) return;
+    const n = PX.order.length, done = PX.order.filter((k) => PX.res[k]).length, ok = PX.order.filter((k) => PX.res[k] && PX.res[k].ok).length;
+    const bar = '<div class="pxbar" role="progressbar" aria-valuemin="0" aria-valuemax="' + n + '" aria-valuenow="' + done + '"><i style="width:' + Math.round((done / Math.max(1, n)) * 100) + '%"></i></div>';
+    if (PX.phase === "start") {
+      const parts = Object.keys(PXT).map((t) => { const c = PX.items.filter((x) => x.t === t).length; return c ? "<li>" + PXT[t][0] + ' <span class="es">(' + PXT[t][1] + ")</span>: " + c + "</li>" : ""; }).join("");
+      R.innerHTML = '<div class="pxcard"><p class="pxbig">' + PX.items.length + ' questions</p><ul class="small">' + parts + '</ul><p class="muted small">One at a time. Type your answer and press Submit: you will see at once whether it is right, why, and where to review it in the lesson.</p>' +
+        '<div class="row">' + (done && done < PX.items.length ? '<button class="btn primary" data-act="px-go">Continue (question ' + (done + 1) + ")</button>" + '<button class="btn" data-act="px-restart">Start again</button>' : '<button class="btn primary" data-act="px-restart">Start</button>') + "</div></div>";
+      return;
+    }
+    if (PX.phase === "end") {
+      const miss = PX.order.filter((k) => !PX.res[k] || !PX.res[k].ok), pct = Math.round((ok / n) * 100);
+      R.innerHTML = '<div class="pxcard">' + bar + '<p class="pxbig">' + ok + " / " + n + ' correct <span class="muted">(' + pct + "%)</span></p><p>" + (pct >= 80 ? "Great work: you’ve got this topic. ✓" : pct >= 60 ? "Good progress. Retry the ones you missed, then review the lesson sections they point to." : "Review the lesson sections below, then try the missed questions again.") + (PX.extra ? '<span class="muted">' + esc(PX.extra) + "</span>" : "") + "</p>" +
+        (miss.length ? '<details class="pxmiss" open><summary>' + miss.length + " to review</summary><ol>" + miss.map((k) => { const it = PX.items[k]; return "<li><span>" + blanks(it.q) + '</span><br><b class="ok">' + esc(it.t === "mc" ? it.opts[it.c] : it.a[0]) + "</b>" + (PX.res[k] && PX.res[k].val ? ' <span class="muted">(you: ' + esc(PX.res[k].val) + ")</span>" : "") + "</li>"; }).join("") + "</ol></details>" : "") +
+        '<div class="row">' + (miss.length ? '<button class="btn primary" data-act="px-retry">Retry the ' + miss.length + " I missed</button>" : "") + '<button class="btn" data-act="px-restart">Start again</button><button class="btn" data-act="t-ask" data-p="I just finished the practice on this page. Look at the questions I got wrong and explain the pattern in my mistakes, then give me three new questions on it, one at a time.">Ask Profe about my mistakes</button></div></div>';
+      return;
+    }
+    const k = PX.order[PX.i], it = PX.items[k], r = PX.res[k], answered = PX.phase === "fb";
+    let input;
+    if (it.t === "mc") input = '<div class="opts pxopts">' + it.opts.map((op, j) => '<button type="button" class="opt' + (answered ? (j === it.c ? " right" : r && r.pick === j ? " wrong" : "") : "") + '" data-act="px-pick" data-o="' + j + '"' + (answered ? " disabled" : "") + ">" + esc(op) + "</button>").join("") + "</div>";
+    else input = '<input id="px-in" class="pxin' + (answered ? " " + r.cls : "") + '" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="' + (it.t === "fix" ? "Write the correct sentence" : it.t === "tr" ? "Write it in Spanish" : "Your answer") + '" value="' + esc(answered ? r.val : PX.draft || "") + '"' + (answered ? " readonly" : "") + ">";
+    const fb = answered ? '<div class="pxfb ' + r.cls + '">' + r.html + reviewLinks(it) + "</div>" : "";
+    R.innerHTML = '<div class="pxcard">' + bar + '<div class="pxhead"><span>Question <b>' + (PX.i + 1) + "</b> of " + n + '</span><span><span class="ok">✓ ' + ok + '</span> · <span class="no">✗ ' + (done - ok) + "</span></span></div>" +
+      '<p class="pxtype">' + PXT[it.t][0] + ' <span class="es">(' + PXT[it.t][1] + ")</span>" + (it.t === "x" && PX.instr ? ' · <span class="muted">' + esc(PX.instr) + "</span>" : "") + "</p>" +
+      '<p class="pxq' + (it.t === "fix" ? " wrongs" : "") + '">' + blanks(it.q) + "</p>" + input + fb +
+      '<div class="row pxbtns">' + (answered ? '<button class="btn primary" data-act="px-next">' + (PX.i + 1 < n ? "Next question →" : "See results") + "</button>" : (it.t === "mc" ? "" : '<button class="btn primary" data-act="px-submit">Submit</button>') + '<button class="btn" data-act="px-dunno">Show answer</button>') +
+      (PX.i > 0 ? '<button class="btn small" data-act="px-prev">‹ Back</button>' : "") + "</div></div>";
+    const inp = document.getElementById("px-in");
+    if (inp && !answered) { inp.addEventListener("input", () => (PX.draft = inp.value)); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); pxSubmit(inp.value); } }); if (focus !== false) inp.focus({ preventScroll: true }); }
+  }
+  function pxSubmit(val, pick) {
+    const k = PX.order[PX.i], it = PX.items[k];
+    let r;
+    if (it.t === "mc") { const ok = pick === it.c; r = { ok, cls: ok ? "ok" : "no", pick, val: it.opts[pick], html: (ok ? "✓ Correct. " : "✗ Not quite. The answer is <b>" + esc(it.opts[it.c]) + "</b>. ") + (it.why ? '<span class="why">' + esc(it.why) + "</span>" : "") }; }
+    else if (pick === -1) r = { ok: false, cls: "no", val: "", html: "The answer is <b>" + esc(it.a[0]) + "</b>" + (it.a.length > 1 ? ' <span class="muted">(also: ' + esc(it.a.slice(1).join(" · ")) + ")</span>" : "") + (it.why ? '<span class="why">' + esc(it.why) + "</span>" : "") };
+    else { if (!String(val || "").trim()) { const i = document.getElementById("px-in"); if (i) { i.classList.add("shake"); i.focus(); setTimeout(() => i.classList.remove("shake"), 400); } return; }
+      const e = explainAns(val, it.a, it.why); r = { ok: e.cls === "ok", cls: e.cls, val, html: (e.cls === "ok" ? "" : e.cls === "near" ? "" : "✗ Not quite. ") + e.html + (e.cls === "ok" && it.why ? "" : "") }; if (e.cls === "ok" && it.why) r.html = "✓ Correct." + '<span class="why">' + esc(it.why) + "</span>"; }
+    PX.res[k] = r; PX.phase = "fb"; PX.draft = ""; pxSave(); pxRender();
+  }
+  // where in the lesson this question is taught: the grammar block whose words overlap most with the question and its explanation
+  const STOPW = new Set("this that with from your have they them their there what when which will would could should about into than then here only also very more most some each other because after before where while these those being been were does doesn the and for are not you use used uses form forms word words verb verbs sentence answer right correct wrong mistake means meaning spanish english".split(" "));
+  const toksOf = (t) => new Set((strip(String(t || "").toLowerCase()).match(/[a-zñ]{4,}/g) || []).filter((w) => !STOPW.has(w)));
+  function reviewLinks(it) {
+    const blocks = [...app.querySelectorAll(".gblock")].filter((b) => !b.closest("#runner"));
+    const q = toksOf(it.q + " " + it.why + " " + (it.a ? it.a.join(" ") : it.opts.join(" ")));
+    let best = null, bs = 0;
+    blocks.forEach((b, i) => {
+      if (!b.id) b.id = "gb-" + i;
+      const h = b.querySelector("h3"), title = toksOf(h ? h.textContent : ""), body = toksOf(b.textContent);
+      let sc = 0; q.forEach((w) => { if (title.has(w)) sc += 3; else if (body.has(w)) sc += 1; });
+      if (sc > bs) { bs = sc; best = b; }
+    });
+    const links = [];
+    if (best && bs >= 2) links.push('<button class="btn small" data-act="px-review" data-to="' + best.id + '">📖 Review: ' + esc((best.querySelector("h3") || {}).textContent || "the lesson") + "</button>");
+    else if (document.getElementById("s-gra")) links.push('<button class="btn small" data-act="px-review" data-to="s-gra">📖 Review the grammar</button>');
+    const pit = document.getElementById("s-err"); if (pit && /accent|tilde/i.test(it.why + " " + ((PX.res[PX.order[PX.i]] || {}).html || ""))) links.push('<button class="btn small" data-act="px-review" data-to="s-err">⚠️ Common mistakes</button>');
+    // guide link only on a clear topic match in the explanation (tighter than the Profe keys)
+    const PXG = [["subjuntivo", /subjun/i], ["imperativo", /imperat|command/i], ["por-para", /\\bpor\\b.*\\bpara\\b|\\bpara\\b.*\\bpor\\b/i], ["ser-estar", /\\bser\\b.*\\bestar\\b|\\bestar\\b.*\\bser\\b/i], ["pret-imp", /imperfect/i], ["pasados", /perfecto|indefinido|pluscuam|pret[eé]rit/i], ["presente-futuro", /futur|condicional|conditional/i], ["pronombres", /pronoun|pronomb/i], ["reflexivos-gustar", /reflexive|gustar|\\bgusta/i], ["preposiciones", /preposition|preposici/i], ["conectores", /connector|conector/i], ["haber-perifrasis", /\\bhaber\\b|\\bhay\\b|gerund/i], ["preguntas-comparar", /comparativ|superlativ|comparison/i], ["sustantivos", /gender|g[eé]nero|agreement|plural/i], ["determinantes", /article|art[ií]culo|possessive|demonstrative/i], ["pronunciacion", /tilde|written accent/i]];
+    const t = it.why || ""; const gm = PXG.find(([id, re]) => re.test(t) && !location.hash.includes(id) && (id !== "pronunciacion" || /accent|tilde/i.test((PX.res[PX.order[PX.i]] || {}).html || ""))); const g = gm ? GUIDES.find((x) => x.id === gm[0]) : null;
+    if (g) links.push('<a class="btn small" href="#guia-' + g.id + '">📘 Guide: ' + esc(g.en) + "</a>");
+    return links.length ? '<div class="row pxrev">' + links.join("") + "</div>" : "";
+  }
+  function pxFinish() {
+    PX.phase = "end";
+    const total = PX.items.length, score = PX.items.filter((_, k) => PX.res[k] && PX.res[k].ok).length;
+    PX.extra = PX.onScore ? PX.onScore(score, total) || "" : "";
+    pxSave(); pxRender();
+  }
+
   function checkPractice(reveal) {
     if (!PX) return; const o = PX.o; let score = 0;
     const run = (items, id, fbid, alts, why) => items.forEach((x, k) => {
@@ -1854,8 +1950,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (id !== "mine") DECKS[id] = out;
     return out;
   }
-  const deckName = (id) => (id === "esc" ? "Mi escuela" : LV[id] ? "Nivel " + LV[id].name : id === "w2500" ? "2.500 palabras" : id === "mine" ? "Mis palabras" : ((VPRO.find((x) => x.id === id) || {}).t || id));
-  const allDeckIds = () => (LV.esc ? ["esc"] : []).concat(COURSE.map((l) => l.id), ["w2500"], VPRO.map((d) => d.id), ["mine"]);
+  const deckName = (id) => (id === "esc" ? "My school (Mi escuela)" : LV[id] ? "Level " + LV[id].name + " (Nivel " + LV[id].name + ")" : id === "w2500" ? "2,500 most-used words (2.500 palabras)" : id === "mine" ? "My words (Mis palabras)" : ((d) => (d ? d.en + " (" + d.t + ")" : id))(VPRO.find((x) => x.id === id)));
+  const HIDDEN = { esc: true, recursos: true }; // hidden for now: set to false to show them again
+  const allDeckIds = () => (LV.esc && !HIDDEN.esc ? ["esc"] : []).concat(COURSE.map((l) => l.id), ["w2500"], VPRO.map((d) => d.id), ["mine"]);
   // the cards of a deck in both directions when "Both directions" is on
   function deckItems(id) { const c = deckCards(id); return SRD.opt.rev ? c.flatMap((x) => [x, Object.assign({}, x, { id: x.id + "|r", rev: true })]) : c; }
   function counts(id) {
@@ -1921,7 +2018,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!SV || SV.deck !== id) SV = { deck: id, card: null, shown: false, typed: "" };
     if (!SV.card || !SV.shown) SV.card = nextCard(id);
     const card = SV.card ? Object.assign({ deck: id }, SV.card) : null, c = counts(id);
-    const head = inLevel && L ? levelHead(L, "-cards") : '<p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#repaso">Repaso</a><span aria-hidden="true">›</span><span>' + esc(deckName(id)) + "</span></p><h1>" + esc(deckName(id)) + "</h1>";
+    const head = inLevel && L ? levelHead(L, "-cards") : '<p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#repaso">Flashcard review</a><span aria-hidden="true">›</span><span>' + esc(deckName(id)) + "</span></p><h1>" + esc(deckName(id)) + "</h1>";
     const cnt = '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
     let body;
     if (!card) {
@@ -1960,9 +2057,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function srHome() {
     const st = srStats();
-    const rows = allDeckIds().map((id) => { const c = counts(id); if (!c.total) return id === "mine" ? '<li class="srdeck"><div><b>Mis palabras</b><span class="muted small">Tap a word in any reading, then “Add to flashcards”.</span></div></li>' : ""; return '<li class="srdeck"><a href="#repaso-' + id + '"><div><b>' + esc(deckName(id)) + '</b><span class="muted small">' + c.seen + " of " + c.total + ' started</span></div><span class="srnums"><span class="cn">' + c.nw + '</span><span class="cl">' + c.lrn + '</span><span class="cd">' + c.due + "</span></span></a></li>"; }).join("");
+    const rows = allDeckIds().map((id) => { const c = counts(id); if (!c.total) return id === "mine" ? '<li class="srdeck"><div><b>My words (Mis palabras)</b><span class="muted small">Tap a word in any reading, then “Add to flashcards”.</span></div></li>' : ""; return '<li class="srdeck"><a href="#repaso-' + id + '"><div><b>' + esc(deckName(id)) + '</b><span class="muted small">' + c.seen + " of " + c.total + ' started</span></div><span class="srnums"><span class="cn">' + c.nw + '</span><span class="cl">' + c.lrn + '</span><span class="cd">' + c.due + "</span></span></a></li>"; }).join("");
     const max = Math.max(1, ...st.fc);
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><span>Repaso</span></p><div><p class="eyebrow">Flashcards</p><h1>Repaso</h1><p class="lead2">Spaced repetition, the Anki method: each day you review the words that are about to fade, so they move into long-term memory.</p></div>' +
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><span>Flashcard review</span></p><div><p class="eyebrow">Flashcards · spaced repetition</p><h1>Flashcard review</h1><p class="es-sub">Repaso</p><p class="lead2">Spaced repetition, the Anki method: each day you review the words that are about to fade, so they move into long-term memory.</p></div>' +
       '<div class="srstats"><div><b>' + st.done + "</b><span>cards today</span></div><div><b>" + st.streak + '</b><span>day streak</span></div><div><b>' + (st.ret == null ? "–" : st.ret + "%") + '</b><span>recall (30 days)</span></div><div><b>' + st.mature + '</b><span>mastered (21+ days)</span></div><div><b>' + st.young + "</b><span>young</span></div></div>" +
       '<section class="block"><div class="shead"><h2>Decks</h2><span class="muted small"><span class="cn">new</span> · <span class="cl">learning</span> · <span class="cd">review</span></span></div><ul class="srdecks">' + rows + "</ul></section>" +
       '<section class="block"><div class="shead"><h2>Next 7 days</h2></div><div class="srfc">' + st.fc.map((n, k) => '<div><i style="height:' + Math.round((n / max) * 60) + 'px"></i><b>' + n + "</b><span>" + (k === 0 ? "tmrw" : "+" + (k + 1)) + "</span></div>").join("") + "</div></section></div>";
@@ -2113,7 +2210,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const pool = LISTEN.filter((x) => x.cat !== "reading");
     const items = pool.filter((x) => (LF === "all" || x.lvl === LF) && (CF === "all" || x.cat === CF)).sort(byLvl);
     const cats = Object.keys(CATS).filter((k) => k !== "reading").map((k) => [k, CATS[k][0] + " " + pool.filter((x) => x.cat === k).length]);
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Comprensión auditiva</p><h1>Escuchar</h1><p class="lead2">' + pool.length + ' listening exercises from Latin America: stories, podcasts, news, history, culture, songs and poems. Tap any word for its meaning, or highlight a phrase to see it in English.</p></div>' +
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Listening comprehension</p><h1>Listening</h1><p class="es-sub">Escuchar · comprensión auditiva</p><p class="lead2">' + pool.length + ' listening exercises from Latin America: stories, podcasts, news, history, culture, songs and poems. Tap any word for its meaning, or highlight a phrase to see it in English.</p></div>' +
       '<div class="row">' + chips(LF, [["all", "All levels"]].concat(COURSE.map((l) => [l.id, l.name])), "l-lf") + "</div>" +
       '<div class="row">' + chips(CF, [["all", "Everything"]].concat(cats), "l-cf") + "</div>" +
       '<p class="muted small">' + items.length + " shown</p>" +
@@ -2124,10 +2221,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const pool = LISTEN.filter((x) => x.cat === "reading");
     const items = pool.filter((x) => RF === "all" || x.lvl === RF).sort(byLvl);
     if (!DOCS_LOADED) docsReady.then(() => { if (location.hash === "#leer") readHub(); });
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Comprensión de lectura</p><h1>Leer</h1><p class="lead2">' + pool.length + ' DELE-style reading texts: messages, notices, articles, letters, opinion pieces and essays, each with five questions. Tap a word or highlight a sentence to see the English, and play any text aloud.</p></div>' + myHub() +
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Reading comprehension</p><h1>Reading</h1><p class="es-sub">Leer · comprensión de lectura</p><p class="lead2">' + pool.length + ' DELE-style reading texts: messages, notices, articles, letters, opinion pieces and essays, each with five questions. Tap a word or highlight a sentence to see the English, and play any text aloud.</p></div>' + myHub() +
       '<h2 class="hsub">DELE readings</h2>' +
       '<div class="row">' + chips(RF, [["all", "All levels"]].concat(COURSE.map((l) => [l.id, l.name])), "l-rf") + "</div>" +
-      '<div class="lgrid">' + items.map(card).join("") + '</div><p class="callout">Want more reading? Every piece in <a href="#escuchar">Escuchar</a> also has its full text and translation.</p></div>';
+      '<div class="lgrid">' + items.map(card).join("") + '</div><p class="callout">Want more reading? Every piece in <a href="#escuchar">Listen</a> also has its full text and translation.</p></div>';
   }
 
   /* ---------- item view ---------- */
@@ -2268,7 +2365,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function wordsView() {
     const total = knownIn(0, W.length), pct = Math.round((total / W.length) * 100);
     const bands = []; for (let b = 0; b < W.length / BAND; b++) { const k = knownIn(b * BAND, (b + 1) * BAND); bands.push('<button class="band-chip" data-act="w-band" data-b="' + b + '" aria-pressed="' + (WV.band === b && !WV.q) + '"><b>' + (b * BAND + 1) + "–" + (b + 1) * BAND + "</b><span>" + k + " known</span></button>"); }
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Vocabulario por frecuencia</p><h1>Las 2.500 palabras</h1><p class="lead2">The 2,500 most-used Spanish words, ranked by how often they occur in real speech. The first 1,000 cover roughly 80% of everyday conversation. Play a band as continuous audio (Spanish, English, Spanish again), test yourself, and mark the ones you know.</p></div>' +
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Vocabulary by frequency</p><h1>The 2,500 most-used words</h1><p class="es-sub">Las 2.500 palabras más usadas</p><p class="lead2">The 2,500 most-used Spanish words, ranked by how often they occur in real speech. The first 1,000 cover roughly 80% of everyday conversation. Play a band as continuous audio (Spanish, English, Spanish again), test yourself, and mark the ones you know.</p></div>' +
       '<div class="ebar"><div><span class="muted">You know</span><b>' + total.toLocaleString("en") + " / 2,500</b><div class=\"bar\" style=\"margin-top:6px\"><i style=\"width:" + pct + '%"></i></div></div><div><span class="muted">How to study</span><p>Listen to one band of 250 on repeat, hide the English and test yourself, then take the band quiz. Correct answers are marked as known.</p></div></div>' +
       '<div class="bands">' + bands.join("") + "</div>" +
       '<div class="wtools"><label class="sr" for="w-search">Search</label><input id="w-search" type="search" placeholder="Search Spanish or English" value="' + esc(WV.q) + '" autocomplete="off">' +
@@ -2511,7 +2608,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return out.join("");
   }
   function verbsView() {
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Diccionario de verbos</p><h1>Verbos</h1><p class="lead2" id="v-lead">Loading the verb list…</p></div><div id="v-body"></div></div>';
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Verb dictionary</p><h1>Verbs</h1><p class="es-sub">Verbos · diccionario de verbos</p><p class="lead2" id="v-lead">Loading the verb list…</p></div><div id="v-body"></div></div>';
     loadIndex().then(() => verbsList()).catch(() => { document.getElementById("v-lead").textContent = "The verb list couldn’t load. Check your internet connection and open this tab again; after the first load it works offline."; });
   }
   function vfilter() {
@@ -2620,8 +2717,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   const regHi = (t) => esc(t).replace(/(LatAm:|Spain:)/g, (m) => '<b class="' + ((m === "Spain:") === (S.region === "es") ? "here" : "") + '">' + m + "</b>");
   function verbDetail(i) {
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbos</a></p><p class="muted">Loading…</p></div>';
-    loadIndex().then(() => loadDetail(i).then((d) => renderVerb(i, d))).catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbos</a></p><p class="callout">This verb couldn’t load. Check your internet connection and try again; after the first load it works offline.</p></div>'; });
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbs</a></p><p class="muted">Loading…</p></div>';
+    loadIndex().then(() => loadDetail(i).then((d) => renderVerb(i, d))).catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbs</a></p><p class="callout">This verb couldn’t load. Check your internet connection and try again; after the first load it works offline.</p></div>'; });
   }
   function renderVerb(i, d) {
     const r = VI[i]; if (!r) { verbsView(); return; }
@@ -2637,7 +2734,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const next = i < VI.length - 1 ? '<a class="btn" href="#verbo-' + (i + 2) + '">' + esc(VI[i + 1][0]) + " ›</a>" : "";
     const tabs = [["ind", "Indicativo"], ["sub", "Subjuntivo"], ["imp", "Imperativo"], ["nf", "Formas no personales"]];
     const infShow = refl ? base.replace(/se$/, "") + "se" : base;
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbos</a><span aria-hidden="true">›</span><span>' + (r[4] ? "#" + (i + 1) + " most used" : "Less common verb") + "</span></p>" +
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbs</a><span aria-hidden="true">›</span><span>' + (r[4] ? "#" + (i + 1) + " most used" : "Less common verb") + "</span></p>" +
       '<div class="vhead"><div><p class="eyebrow">' + (r[4] ? "Verbo #" + (i + 1) : "Verbo") + " · " + (isEs ? "España" : "Latinoamérica") + '</p><div class="row"><h1>' + esc(v) + "</h1>" + sayBtn(base.replace(/se$/, "")) + '</div><p class="pron"><span class="ipa">' + esc(ipa(base)) + '</span> · <span class="resp">' + esc(respell(base)) + '</span></p><p class="vg1">' + esc(r[1]) + '</p><div class="vbs">' + badges(r) + "</div></div></div>" +
       (expr ? '<p class="callout">An expression built on <b>' + esc(base) + "</b> plus a pronoun. The tables below show " + esc(base) + ".</p>" : "") +
       '<section class="block"><div class="shead"><h2>Significados</h2></div><ol class="senses">' + (senses || "<li>" + esc(r[1]) + "</li>") + "</ol>" +
@@ -2708,7 +2805,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     const SENT = [["¡Ay!", "interjecciones"], ["Mi", "determinantes"], ["hermana", "sustantivos"], ["siempre", "adverbios"], ["lee", "verbos"], ["dos", "numerales"], ["libros", "sustantivos"], ["nuevos", "adjetivos"], ["en", "preposiciones"], ["la", "articulos"], ["playa", "sustantivos"], [",", ""], ["pero", "conjunciones"], ["hoy", "adverbios"], ["no", "adverbios"], ["los", "pronombres"], ["encontró", "verbos"], [".", ""], ["Sin embargo", "conectores"], [",", ""], ["ella", "pronombres"], ["se divierte", "reflexivos"], [".", ""]];
     const sent = SENT.map(([w, k]) => (k ? '<span class="gs ' + gCat(k).c + '" title="' + esc(gCat(k).en) + '">' + esc(w) + "</span>" : esc(w))).join(" ").replace(/ ([,.])/g, "$1");
-    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Partes de la oración · Parts of speech</p><h1>Gramática</h1><p class="lead2">Every part of speech in Spanish, with its words ranked from most to least used. Each one has the key rules, the mistakes English speakers make, and examples with audio. Start at the top of each list: the first words cover most of what you will hear.</p></div>' +
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">Parts of speech</p><h1>Grammar</h1><p class="es-sub">Gramática · partes de la oración</p><p class="lead2">Every part of speech in Spanish, with its words ranked from most to least used. Each one has the key rules, the mistakes English speakers make, and examples with audio. Start at the top of each list: the first words cover most of what you will hear.</p></div>' +
       '<section class="gsent"><p class="eyebrow">One sentence, every part</p><p class="gsline">' + sent + '</p><p class="muted small">My sister always reads two new books at the beach, but today she didn’t find them. However, she is having fun.</p><div class="glegend">' + GCAT.filter((c) => c.id !== "reflexivos").map((c) => '<span class="gs ' + c.c + '">' + esc(c.en) + "</span>").join("") + "</div></section>" +
       '<div class="gcards">' + GCAT.filter((c) => c.id !== "reflexivos").map(card).join("") + "</div>" +
       '<p class="callout">How to study a list: listen to each word, read the example out loud, then turn on <b>Test yourself</b> to hide the English. Ask <b>Profe</b> to quiz you on any list.</p></div>';
@@ -2717,14 +2814,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   /* ---------- category page ---------- */
   function gPage(id) {
     const C = gCat(id); if (!C) { gHub(); return; }
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#gramatica">Gramática</a></p><p class="muted">Loading ' + esc(C.es) + "…</p></div>";
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#gramatica">Grammar</a></p><p class="muted">Loading ' + esc(C.es) + "…</p></div>";
     const need = id === "reflexivos" ? Promise.all([gLoad(id), loadIndex().catch(() => null)]) : gLoad(id);
-    need.then(() => gRender(C, GD[id])).catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#gramatica">Gramática</a></p><p class="callout">This list couldn’t load. Check your internet connection and open it again; after the first load it works offline.</p></div>'; });
+    need.then(() => gRender(C, GD[id])).catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#gramatica">Grammar</a></p><p class="callout">This list couldn’t load. Check your internet connection and open it again; after the first load it works offline.</p></div>'; });
   }
   function gRender(C, d) {
     const id = C.id, isR = id === "reflexivos", G = d.guide || {};
     if (!GF[id]) GF[id] = { q: "", lvl: "all", type: "all", shown: 100, test: false };
-    const crumbs = isR ? '<a href="#verbos">Verbos</a><span aria-hidden="true">›</span><span>Reflexive verbs</span>' : '<a href="#gramatica">Gramática</a><span aria-hidden="true">›</span><span>' + esc(C.es) + "</span>";
+    const crumbs = isR ? '<a href="#verbos">Verbs</a><span aria-hidden="true">›</span><span>Reflexive verbs</span>' : '<a href="#gramatica">Grammar</a><span aria-hidden="true">›</span><span>' + esc(C.es) + "</span>";
     const rules = (G.rules || []).map((r, k) => '<li class="grule"><h3><span class="gnum">' + (k + 1) + "</span>" + esc(r.t) + "</h3><p>" + esc(r.d) + "</p>" + (r.ex ? '<p class="gexl">' + sayBtn(r.ex) + "<span><b>" + esc(r.ex) + "</b>" + (r.exEn ? '<br><span class="muted">' + esc(r.exEn) + "</span>" : "") + "</span></p>" : "") + "</li>").join("");
     const mist = (G.mistakes || []).map((m) => '<li><p><s class="gwrong">' + esc(m.wrong) + '</s></p><p class="gright">' + sayBtn(m.right) + "<b>" + esc(m.right) + '</b></p><p class="muted small">' + esc(m.why) + "</p></li>").join("");
     const types = [...new Set(d.items.map((x) => x.type).filter(Boolean))];
@@ -3077,7 +3174,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let m;
     if ((m = h.match(/^(a1|a2|b1|b2|c1|c2|esc)-u(\d+)$/))) {
       const L = LV[m[1]], u = L.units[+m[2] - 1]; if (!u) return { label: L.name, lvl: m[1], text: "" };
-      const ex = u.x.map((x, k) => { const inp = document.getElementById("ex-" + k), fb = document.getElementById("fb-" + k); return (k + 1) + ". " + x[0] + " | learner wrote: " + (inp && inp.value ? "«" + inp.value + "»" : "(blank)") + (fb && fb.textContent ? " | app said: " + fb.textContent : "") + " | expected: " + x[1].split("|")[0]; }).join("\n");
+      const ex = PX && PX.items && document.getElementById("runner") ? PX.items.map((it, k) => (k + 1) + ". [" + PXT[it.t][0] + "] " + it.q + " | learner: " + (PX.res[k] ? "«" + (PX.res[k].val || "") + "» " + (PX.res[k].ok ? "(right)" : "(wrong)") : "(not answered)") + " | expected: " + (it.t === "mc" ? it.opts[it.c] : it.a[0])).join("\n") : u.x.map((x, k) => { const inp = document.getElementById("ex-" + k), fb = document.getElementById("fb-" + k); return (k + 1) + ". " + x[0] + " | learner wrote: " + (inp && inp.value ? "«" + inp.value + "»" : "(blank)") + (fb && fb.textContent ? " | app said: " + fb.textContent : "") + " | expected: " + x[1].split("|")[0]; }).join("\n");
       return { label: L.name + " · " + u.t, lvl: m[1], text: "Course unit " + L.name + " " + m[2] + ": " + u.t + " (" + u.s + ").\nGrammar: " + u.g.map((g) => g.t + " — " + (g.r || "") + " " + (g.n || []).join("; ")).join("\n") + "\nVocabulary sample: " + u.v.flatMap((g) => g.w).slice(0, 30).map((w) => w[0] + " = " + w[1]).join("; ") + "\nPractice: " + u.xi + "\n" + ex };
     }
     if (LI[h]) {
@@ -4256,7 +4353,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (ADD.tab === "link") form = '<label class="flabel" for="my-url">Web address of a Spanish article</label><input id="my-url" type="url" inputmode="url" autocomplete="off" placeholder="https://elpais.com/…" value="' + esc(p.url || "") + '"><p class="muted small">Works with most news sites, blogs, Wikipedia and public Google Docs. The address is sent to the free reader service r.jina.ai when the site doesn’t allow apps to read it directly. Pages behind a login or paywall can’t be read: copy the text and paste it instead.</p>';
     else if (ADD.tab === "file") form = '<label class="flabel" for="my-file">Choose a file</label><input id="my-file" type="file" accept=".pdf,.docx,.txt,.md,.html,.htm,.srt,.vtt,application/pdf,text/plain,text/html"><p class="muted small">PDF (with real text, not scans), Word (.docx), web pages (.html), text (.txt) and subtitles (.srt). The file stays on your phone.</p>';
     else form = '<label class="flabel" for="my-text">Spanish text</label><textarea id="my-text" rows="10" placeholder="Pega aquí tu texto…">' + esc(p.text || "") + "</textarea>";
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Leer</a><span aria-hidden="true">›</span><span>Add a text</span></p><div><p class="eyebrow">Mis lecturas</p><h1>Add a text</h1><p class="lead2">Turn any Spanish article or document into a reading with audio, tap-to-translate, a glossary and questions.</p></div>' +
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Read</a><span aria-hidden="true">›</span><span>Add a text</span></p><div><p class="eyebrow">Mis lecturas</p><h1>Add a text</h1><p class="lead2">Turn any Spanish article or document into a reading with audio, tap-to-translate, a glossary and questions.</p></div>' +
       '<section class="block"><div class="row">' + tabs + '</div><div class="myform">' + form +
       '<label class="flabel" for="my-title">Title <span class="muted">(optional)</span></label><input id="my-title" autocomplete="off" value="' + esc(p.title || "") + '">' +
       '<div class="row"><button class="btn primary" data-act="my-import"' + (ADD.busy ? " disabled" : "") + ">" + (ADD.busy ? "Reading…" : "Add to Mis lecturas") + '</button></div><p class="result" id="my-err" aria-live="polite">' + esc(ADD.err) + "</p></div></section>" +
@@ -4306,7 +4403,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     loadLex().then(() => { if (!x.gl.length && x.paras.length) { x.gl = makeGlossary(x); if (!x.q.length) { x.q = vocabQuiz(x); x.qKind = "vocab"; } if (x.gl.length) { myPut(x); if (CUR === x) listenItem(x); } } }).catch(() => {});
   }
   function cleanView(x) {
-    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Leer</a><span aria-hidden="true">›</span><a href="#' + x.id + '">' + esc(x.t) + '</a><span aria-hidden="true">›</span><span>Clean up</span></p>' +
+    app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#leer">Read</a><span aria-hidden="true">›</span><a href="#' + x.id + '">' + esc(x.t) + '</a><span aria-hidden="true">›</span><span>Clean up</span></p>' +
       '<div><h1>Clean up text</h1><p class="lead2">Untick anything that isn’t part of the article (ads, photo captions, “read also” links, author lines), then save.</p></div>' +
       '<div class="row"><button class="btn primary" data-act="my-clean-save">Save</button><a class="btn" href="#' + x.id + '">Cancel</a><span class="muted small" id="my-clean-n"></span></div>' +
       '<ol class="cleanl">' + x.paras.map((p, i) => { const t = p.s.map((y) => y[0]).join(" "), sus = junkBlock(t) || toks(t).length < 6; return '<li><label><input type="checkbox" data-pi="' + i + '"' + (sus ? "" : " checked") + '><span' + (sus ? ' class="muted"' : "") + ">" + esc(t.length > 400 ? t.slice(0, 400) + "…" : t) + "</span></label></li>"; }).join("") + "</ol>" +
@@ -4411,6 +4508,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     window.scrollTo(0, 0);
   }
   window.addEventListener("hashchange", route);
+  window.addEventListener("hashchange", () => { const b = document.getElementById("px-back"); if (b) b.hidden = true; });
+  document.addEventListener("keydown", (e) => { if (e.key === "Enter" && PX && PX.phase === "fb" && !/input|textarea|select|button/i.test(e.target.tagName)) { e.preventDefault(); const n = document.querySelector('[data-act="px-next"]'); if (n) n.click(); } });
 
   /* ---------- events ---------- */
   document.addEventListener("click", (e) => {
@@ -4423,6 +4522,16 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (act === "hide-en") { const on = app.classList.toggle("hide-en"); t.setAttribute("aria-pressed", on); t.textContent = on ? "Show translations" : "Hide translations to test yourself"; app.querySelectorAll(".shown").forEach((s) => s.classList.remove("shown")); }
     else if (act === "reveal") t.classList.toggle("shown");
     else if (act === "play-dlg" && L) { const lines = L.units[ui].d.l.map((l) => l[1]); try { speechSynthesis.cancel(); lines.forEach((ln) => { const u = new SpeechSynthesisUtterance(ln); u.lang = voice ? voice.lang : "es-ES"; if (voice) u.voice = voice; u.rate = 0.9; speechSynthesis.speak(u); }); } catch (err) {} }
+    else if (act === "px-restart" && PX) { PX.res = []; PX.order = PX.items.map((_, k) => k); PX.i = 0; PX.phase = "q"; pxSave(); pxRender(); document.getElementById("runner").scrollIntoView({ block: "start", behavior: "smooth" }); }
+    else if (act === "px-go" && PX) { PX.i = Math.max(0, PX.order.findIndex((k) => !PX.res[k])); PX.phase = "q"; pxRender(); }
+    else if (act === "px-retry" && PX) { PX.order = PX.order.filter((k) => !PX.res[k] || !PX.res[k].ok); PX.order.forEach((k) => delete PX.res[k]); PX.i = 0; PX.phase = "q"; pxSave(); pxRender(); }
+    else if (act === "px-submit" && PX) { const i = document.getElementById("px-in"); pxSubmit(i ? i.value : ""); }
+    else if (act === "px-pick" && PX) pxSubmit(null, +t.dataset.o);
+    else if (act === "px-dunno" && PX) pxSubmit("", -1);
+    else if (act === "px-next" && PX) { if (PX.i + 1 < PX.order.length) { PX.i++; PX.phase = PX.res[PX.order[PX.i]] ? "fb" : "q"; pxSave(); pxRender(); } else pxFinish(); }
+    else if (act === "px-prev" && PX) { PX.i = Math.max(0, PX.i - 1); PX.phase = PX.res[PX.order[PX.i]] ? "fb" : "q"; pxRender(); }
+    else if (act === "px-review") { const el = document.getElementById(t.dataset.to); if (el) { el.scrollIntoView({ behavior: "smooth", block: "start" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1800); let b = document.getElementById("px-back"); if (!b) { b = document.createElement("button"); b.id = "px-back"; b.className = "btn primary pxback"; b.dataset.act = "px-back"; b.textContent = "Back to the question ↓"; document.body.appendChild(b); } b.hidden = false; } }
+    else if (act === "px-back") { const r = document.getElementById("runner"); if (r) r.scrollIntoView({ behavior: "smooth", block: "start" }); t.hidden = true; }
     else if (act === "px-show") checkPractice(true);
     else if (act === "px-reset") { app.querySelectorAll("#exf input").forEach((x) => { x.value = ""; x.className = ""; }); app.querySelectorAll("#exf .fb").forEach((x) => { x.innerHTML = ""; x.className = "fb"; }); app.querySelectorAll("#exf .xmc .opt").forEach((b) => { b.disabled = false; b.className = "opt"; }); if (PX) PX.mc = {}; document.getElementById("res").textContent = ""; }
     else if (act === "xmc" && PX && PX.o.mc) {
@@ -4479,7 +4588,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611102353";
+  var BUILD = "202611110014";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
