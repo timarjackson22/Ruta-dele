@@ -2162,8 +2162,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const UNQ_SKIP = ".story, .pod, .verse, .passage, .mtext, .dlg, .doc-body, input, textarea, script, style, [contenteditable]";
   function unquote(root) {
     if (!root || !root.querySelectorAll) return;
-    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => /[«»]/.test(n.nodeValue) && !(n.parentElement && n.parentElement.closest(UNQ_SKIP)) ? 1 : 2 });
-    const list = []; let n; while ((n = w.nextNode())) list.push(n);
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => /[«»]/.test(n.nodeValue) && !(n.parentElement && n.parentElement.closest("input, textarea, script, style, [contenteditable]")) ? 1 : 2 });
+    const all = []; let n; while ((n = w.nextNode())) all.push(n);
+    // Spanish texts (stories, readings, dialogues, songs): keep them as quotation marks, written the usual way “ ”
+    const list = all.filter((t) => { if (t.parentElement && t.parentElement.closest(UNQ_SKIP)) { t.nodeValue = t.nodeValue.replace(/«\s?/g, "“").replace(/\s?»/g, "”"); return false; } return true; });
     list.forEach((t) => {
       const v = t.nodeValue;
       if (/«[^«»]+»/.test(v)) {
@@ -5256,7 +5258,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110350";
+  var BUILD = "202611110353";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
