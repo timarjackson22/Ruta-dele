@@ -33,8 +33,8 @@
       try {
         var v = JSON.parse(A.voices() || "[]");
         if (!v.length) return false;
-        v.sort(function (a, b) { return (a.network ? 1 : 0) - (b.network ? 1 : 0); });
-        voices = v.map(function (o) { return { name: o.name, lang: o.lang, voiceURI: o.name, localService: !o.network, "default": false }; });
+        v.sort(function (a, b) { return ((b.quality || 300) - (a.quality || 300)) || ((a.network ? 1 : 0) - (b.network ? 1 : 0)); });
+        voices = v.map(function (o) { return { name: o.name, lang: o.lang, voiceURI: o.name, localService: !o.network, quality: o.quality || 300, network: !!o.network, "default": false }; });
         if (typeof S.onvoiceschanged === "function") try { S.onvoiceschanged(); } catch (e) {}
         return true;
       } catch (e) { return false; }

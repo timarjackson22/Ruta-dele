@@ -180,6 +180,13 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // pick up voices downloaded in Android's text-to-speech settings
+        if (tts != null) tts.refreshVoices();
+    }
+
+    @Override
     protected void onDestroy() {
         stt.destroy();
         llm.destroy();

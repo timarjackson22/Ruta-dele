@@ -436,6 +436,42 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+/* structured explanations */
+.lx { display: flex; flex-direction: column; gap: 14px; line-height: 1.6 }
+.lx p { margin: 0 }
+.fx-lead { font-family: var(--display); font-size: 1.22rem; line-height: 1.45; font-weight: 600; color: var(--ink) }
+.callout.fxd { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--cobalt); padding: 16px 18px }
+.fxwrap { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px 18px }
+.fx-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px }
+.fx-cards.two { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)) }
+.fx-card { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; border-top: 4px solid var(--cobalt) }
+.fx-cards .fx-card:nth-child(2) { border-top-color: var(--saffron) }
+.fx-cards .fx-card:nth-child(3) { border-top-color: var(--good) }
+.fx-h { font-weight: 600; margin-bottom: 6px !important }
+.fx-h b { color: var(--cobalt); font-size: 1.12em }
+.fx-cards .fx-card:nth-child(2) .fx-h b { color: var(--warn) }
+.fx-ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px }
+.fx-ul li { padding-left: 20px; position: relative }
+.fx-ul li::before { content: ""; position: absolute; left: 4px; top: .6em; width: 7px; height: 7px; border-radius: 2px; background: currentColor; opacity: .35; transform: rotate(45deg) }
+.fx-tip, .fx-ex, .fx-note { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; border-radius: 12px; padding: 12px 14px }
+.fx-tip { background: var(--saffron-soft) } .fx-ex { background: var(--good-soft) } .fx-note { background: var(--surface-2) }
+.fx-ic { font-size: 1.3rem; line-height: 1.2 }
+.fx-lbl { display: block; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px }
+/* read aloud */
+.ra-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px }
+.ra-now { background: var(--saffron-soft) !important; box-shadow: 0 0 0 4px var(--saffron-soft); border-radius: 6px; transition: background .2s }
+.ra-player { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 12; display: flex; gap: 6px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 8px 10px; box-shadow: 0 8px 26px rgba(0, 0, 0, .2); width: min(calc(100% - 24px), 560px); flex-wrap: wrap; justify-content: center }
+.ra-pos { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .88rem; min-width: 52px; text-align: center }
+.ra-player select { padding: 4px 6px }
+body.ra-on .tutor-fab { display: none }
+body.ra-on main { padding-bottom: 180px }
+@media (max-width: 820px) { .ra-player { bottom: calc(74px + env(safe-area-inset-bottom, 0px)); gap: 4px; padding: 6px 8px } .ra-player .pbtn { width: 38px; height: 38px } .ra-player .pbtn.main { width: 46px; height: 46px } }
+@media (max-width: 440px) { .ra-pos { display: none } }
+/* voices sheet */
+.vsheet { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .35); display: flex; align-items: flex-end; justify-content: center; padding: 12px }
+.vsheet-in { background: var(--surface); border-radius: 18px; padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px)); width: min(100%, 560px); display: flex; flex-direction: column; gap: 6px; max-height: 88vh; overflow-y: auto }
+.vsheet-in select { flex: 1; min-width: 0 }
+.vs-help { margin-top: 12px; background: var(--surface-2); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start }
 .srcard.tapflip { cursor: pointer; -webkit-tap-highlight-color: transparent } .srcard.tapflip:active { transform: scale(.985) }
 strong.q { font-weight: 700 }
 body.kb .tabbar, body.kb .tutor-fab { display: none !important }
@@ -2086,6 +2122,216 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const c = e.target.closest('[data-act="sr-flip"]'); if (!c || !SV || e.target.closest("input, button, a")) return;
     const i = document.getElementById("sr-in"); if (i) SV.typed = i.value; SV.shown = true; studyView(SV.deck, SV.inLevel);
   });
+  /* ---------- long explanations → short, structured pieces ---------- */
+  const FX_SKIP = ".story, .pod, .verse, .passage, .mtext, .dlg, #runner, .tutor, .fx, .lx, .sheet, td, th, .pxcard, .lcard2, .feature, .gcard, .crumbs";
+  function fxSentences(h) {
+    const keep = [];
+    h = h.replace(/\b(e\.g\.|i\.e\.|etc\.|vs\.|p\. ej\.|Ud\.|Uds\.|Sr\.|Sra\.|approx\.)/gi, (m) => { keep.push(m); return "\u0001" + (keep.length - 1) + "\u0002"; });
+    const parts = h.split(/(?<=[.!?…])\s+(?=(?:<[^>]+>)*[A-ZÁÉÍÓÚÑ¿¡'"‘“(])/);
+    return parts.map((x) => x.replace(/\u0001(\d+)\u0002/g, (m, i) => keep[+i]).trim()).filter(Boolean);
+  }
+  const fxText = (h) => h.replace(/<[^>]+>/g, "");
+  function fxKind(h) {
+    const t = fxText(h);
+    if (/^(so\s+)?(ask yourself|a quick test|quick test|the test|tip|rule of thumb|remember|the trick|to decide|in short|in practice)\b/i.test(t)) return "tip";
+    const ci = h.indexOf(":");
+    if (ci > 8 && ci < h.length - 12) {
+      const after = h.slice(ci + 1), items = after.split(/,\s+(?:or\s+|and\s+)?|;\s+|\s+\/\s+/).filter((x) => fxText(x).trim().length > 1);
+      if (items.length >= 3 && fxText(h.slice(0, ci)).length < 120) return "list";
+    }
+    if (/<(b|strong)[^>]*>/.test(h) && /\b(means?|meaning|=|→|versus|while)\b/.test(t)) return "ex";
+    if (/memoris|memoriz|exception|careful|watch out|note that|be aware|don.t confuse|common mistake/i.test(t)) return "note";
+    return "p";
+  }
+  function fxList(h) {
+    const ci = h.indexOf(":"), head = h.slice(0, ci).trim();
+    let items = h.slice(ci + 1).replace(/[.]\s*$/, "").split(/,\s+(?:or\s+|and\s+)?|;\s+|\s+\/\s+/).map((x) => x.trim()).filter((x) => fxText(x).length > 1);
+    items = items.map((x) => x.replace(/^(or|and)\s+/i, "")).map((x) => x.replace(/^([a-záéíóúñ])/, (m) => m.toUpperCase()));
+    return '<div class="fx-card"><p class="fx-h">' + head.replace(/^(\S+)/, "<b>$1</b>") + '</p><ul class="fx-ul">' + items.map((x) => "<li>" + x + "</li>").join("") + "</ul></div>";
+  }
+  function fmtHTML(h) {
+    const ss = fxSentences(h); if (ss.length < 3) return null;
+    const out = []; let para = [], cards = [];
+    const flushP = () => { if (para.length) { out.push("<p>" + para.join(" ") + "</p>"); para = []; } };
+    const flushC = () => { if (cards.length) { out.push('<div class="fx-cards' + (cards.length > 1 ? " two" : "") + '">' + cards.join("") + "</div>"); cards = []; } };
+    ss.forEach((x, i) => {
+      const k = i === 0 && fxKind(x) === "p" ? "lead" : fxKind(x);
+      if (k !== "list") flushC();
+      if (k !== "p") flushP();
+      if (k === "lead") out.push('<p class="fx-lead">' + x + "</p>");
+      else if (k === "list") cards.push(fxList(x));
+      else if (k === "tip") out.push('<div class="fx-tip"><span class="fx-ic" aria-hidden="true">💡</span><div><b class="fx-lbl">Quick test</b><p>' + x.replace(/^(so\s+)?/i, "").replace(/^([a-z])/, (m) => m.toUpperCase()) + "</p></div></div>");
+      else if (k === "ex") out.push('<div class="fx-ex"><span class="fx-ic" aria-hidden="true">💬</span><div><b class="fx-lbl">Example</b><p>' + x + "</p></div></div>");
+      else if (k === "note") out.push('<div class="fx-note"><span class="fx-ic" aria-hidden="true">📌</span><div><b class="fx-lbl">Note</b><p>' + x + "</p></div></div>");
+      else { para.push(x); if (para.length >= 2) flushP(); }
+    });
+    flushC(); flushP();
+    return '<div class="lx">' + out.join("") + "</div>";
+  }
+  function fmtProse(root) {
+    if (!root || !root.querySelectorAll) return;
+    root.querySelectorAll(".callout.intro, .gblock > p, section > p, .stack > div > p, .grule > p, .ghead p, .callout").forEach((el) => {
+      if (el.dataset.fx || el.closest(FX_SKIP)) return;
+      el.dataset.fx = "1";
+      if (el.textContent.length < 300 || el.querySelector("button, input, ul, table, .lx")) return;
+      const h = fmtHTML(el.innerHTML); if (!h) return;
+      if (el.tagName === "P") { const d = document.createElement("div"); d.className = "fxwrap"; d.dataset.fx = "1"; d.innerHTML = h; el.replaceWith(d); }
+      else { el.innerHTML = h; el.classList.add("fxd"); }
+    });
+  }
+
+  /* ---------- read the lesson aloud ---------- */
+  const RA = { q: [], i: 0, on: false, paused: false, rate: (() => { try { return +(localStorage.getItem("ra-rate") || 1) || 1; } catch (e) { return 1; } })(), gen: 0, el: null };
+  const RA_PAGES = /^(a1|a2|b1|b2|c1|c2|esc)(-u\d+|-exam)?$|^guia-|^g-|^gramatica$|^verbos-reflexivos$/;
+  const RA_SKIP = "#runner, #s-pra, .crumbs, .eyebrow, nav, .tabs, .jump, .unav, .pxrev, .ra-bar, .ra-player, button, .say, .tutor, .sheet, select, input, .glegend, .gcards, .vbs, .pill, .row, script, style";
+  const EN_W = /\b(the|and|is|are|you|to|of|in|it|for|with|that|this|when|use|used|was|be|an|as|on|or|not|but|if|have|has|there|people|still|means|which|after|before|your|they|we|what|how|why|word|words|verb|verbs|tense|instead|especially|including|today|week|life|experiences?)\b/gi;
+  const ES_W = /\b(el|la|los|las|que|de|del|es|y|en|un|una|unos|unas|por|para|con|muy|bien|yo|tú|usted|qué|cómo|está|son|hola|gracias|se|lo|le|les|me|te|nos|mi|tu|su|al|ha|he|has|han|hay|no|sí|pero|como|más|este|esta|ya|nunca|todavía|ayer|hoy)\b/gi;
+  function langOf(t) {
+    const en = (t.match(EN_W) || []).length, es = (t.match(ES_W) || []).length + (/[¿¡ñ]/.test(t) ? 2 : 0) + ((t.match(/[áéíóú]/gi) || []).length ? 0.5 : 0);
+    if (es > en) return "es"; if (en > es) return "en";
+    return /(ción|ciones|dad|dades|mente|encias?|ancias?|ismo|ías?|iones)\b/i.test(t) || /[áéíóúñ]/i.test(t) ? "es" : "en";
+  }
+  function raSegs(el) {
+    const segs = [], push = (t, es) => {
+      t = t.replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, " ").replace(/\s*(→|⇒|·|•|\|)\s*/g, ", ").replace(/\s+\/\s+/g, " or ").replace(/_{2,}/g, " blank ").replace(/\s+/g, " ").trim();
+      if (!t || !/[\p{L}\d]/u.test(t)) return;
+      const last = segs[segs.length - 1]; if (last && last.es === es) last.t += " " + t; else segs.push({ t, es });
+    };
+    const stop = () => { const last = segs[segs.length - 1]; if (last && !/[.!?:,;]$/.test(last.t)) last.t += "."; };
+    const walk = (n, forceEs) => {
+      if (n.nodeType === 3) {
+        const t = n.nodeValue; if (!t.trim()) return;
+        if (forceEs != null) { push(t, forceEs); return; }
+        const base = langOf(t) === "es";
+        // Spanish examples in brackets inside an English sentence get the Spanish voice
+        t.split(/(\([^()]*\))/).forEach((x) => { if (!x.trim()) return; push(x, /^\(/.test(x) ? langOf(x) === "es" : base); });
+        return;
+      }
+      if (n.nodeType !== 1 || n.matches(RA_SKIP) || n.hidden) return;
+      if (/^(LI|P|H\d|DIV|TR|UL|TD)$/.test(n.tagName)) stop();
+      let es = forceEs;
+      if (n.matches("td.es, .exr > b, .es-sub, del, ins, .gw, .face")) es = true;
+      else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && (isSpanish(t) || /[áéíóúñ¿¡]/i.test(t)); }
+      else if (n.matches("td.en, .tr, .muted.small, .en")) es = false;
+      n.childNodes.forEach((c) => walk(c, es));
+      if (/^(LI|P|H\d|TR|TD)$/.test(n.tagName) || n.classList.contains("fx-h")) stop();
+    };
+    walk(el, null);
+    return segs;
+  }
+  function raCollect() {
+    const sel = "h1, h2, h3, h4, .es-sub, .fx-lead, .lx > p, .fx-card, .fx-tip, .fx-ex, .fx-note, p.rule, .notes li, .pits li, .exr, .gblock tbody tr, .grule, .gmist li, .callout:not(.fxd), section > p, .gblock > p, .stack > div > p, .lead2, .tbl tbody tr";
+    const els = [...app.querySelectorAll(sel)].filter((e) => !e.closest(RA_SKIP) && e.offsetParent !== null);
+    const leaf = els.filter((e) => !els.some((o) => o !== e && e.contains(o)));
+    const q = []; leaf.forEach((e) => { const sg = raSegs(e); if (sg.length) q.push({ el: e, segs: sg }); });
+    return q;
+  }
+  function raStop(silent) {
+    RA.gen++; RA.on = false; RA.paused = false;
+    try { speechSynthesis.cancel(); } catch (e) {}
+    if (RA.el) RA.el.classList.remove("ra-now"); RA.el = null;
+    const pl = document.getElementById("ra-player"); if (pl) pl.remove();
+    document.body.classList.remove("ra-on");
+    if (!silent) raBtn();
+  }
+  function raStart(from) {
+    try { speechSynthesis.cancel(); } catch (e) {}
+    RA.q = raCollect(); if (!RA.q.length) return;
+    RA.i = from || 0; RA.on = true; RA.paused = false; document.body.classList.add("ra-on");
+    raPlayer(); raPlay();
+  }
+  function raPlay() {
+    const gen = ++RA.gen, item = RA.q[RA.i];
+    if (!item) { raStop(); return; }
+    if (RA.el) RA.el.classList.remove("ra-now");
+    RA.el = item.el; item.el.classList.add("ra-now");
+    const r = item.el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 170) item.el.scrollIntoView({ block: "center", behavior: "smooth" });
+    raPlayerUI();
+    let k = 0;
+    const next = () => {
+      if (gen !== RA.gen || !RA.on || RA.paused) return;
+      if (k >= item.segs.length) { RA.i++; setTimeout(() => { if (gen === RA.gen && RA.on && !RA.paused) raPlay(); }, 350); return; }
+      const sg = item.segs[k++], u = utter(sg.t, sg.es ? "es" : "en", (sg.es ? 0.9 : 1) * RA.rate);
+      let moved = false; const go = () => { if (moved) return; moved = true; next(); };
+      u.onend = go; u.onerror = (e) => { if (e && e.error === "interrupted") return; go(); };
+      try { speechSynthesis.speak(u); } catch (e) { go(); }
+    };
+    next();
+  }
+  const RA_ICON = { play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>', pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="currentColor"/></svg>', prev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z" fill="currentColor"/></svg>', next: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z" fill="currentColor"/></svg>', x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>' };
+  function raPlayer() {
+    let pl = document.getElementById("ra-player");
+    if (!pl) { pl = document.createElement("div"); pl.id = "ra-player"; pl.className = "ra-player"; pl.setAttribute("role", "region"); pl.setAttribute("aria-label", "Read aloud"); document.body.appendChild(pl); }
+    pl.innerHTML = '<button class="pbtn" data-act="ra-prev" aria-label="Previous part">' + RA_ICON.prev + '</button><button class="pbtn main" id="ra-pp" data-act="ra-pp" aria-label="Pause">' + RA_ICON.pause + '</button><button class="pbtn" data-act="ra-next" aria-label="Next part">' + RA_ICON.next + '</button>' +
+      '<span class="ra-pos" id="ra-pos"></span><select id="ra-rate" aria-label="Speed">' + [[0.8, "0.8×"], [0.9, "0.9×"], [1, "1×"], [1.15, "1.15×"], [1.3, "1.3×"]].map(([r, n]) => '<option value="' + r + '"' + (RA.rate == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
+      '<button class="btn small" data-act="voices">Voices</button><button class="pbtn" data-act="ra-stop" aria-label="Stop reading">' + RA_ICON.x + "</button>";
+  }
+  function raPlayerUI() {
+    const b = document.getElementById("ra-pp"); if (b) { b.innerHTML = RA.paused ? RA_ICON.play : RA_ICON.pause; b.setAttribute("aria-label", RA.paused ? "Play" : "Pause"); }
+    const c = document.getElementById("ra-pos"); if (c) c.textContent = Math.min(RA.i + 1, RA.q.length) + " / " + RA.q.length;
+  }
+  function raBtn() {
+    const h = location.hash.replace(/^#/, ""); if (!RA_PAGES.test(h) || document.getElementById("ra-bar")) return;
+    const h1 = app.querySelector("h1"); if (!h1) return;
+    const bar = document.createElement("div"); bar.id = "ra-bar"; bar.className = "ra-bar";
+    bar.innerHTML = '<button class="btn primary small" data-act="ra-start"><span aria-hidden="true">🔊</span> Read this ' + (/^guia-|^g-|^gramatica/.test(h) ? "page" : /-exam$/.test(h) ? "guide" : /-u\d+$/.test(h) ? "lesson" : "page") + ' aloud</button><button class="btn small" data-act="voices">Choose voices</button>';
+    const host = h1.closest(".ghead, .lhead > div, div") || h1.parentElement;
+    if (host === app) h1.after(bar); else host.appendChild(bar);
+  }
+
+  /* ---------- voice picker (shared by lessons, readings, flashcards and Profe) ---------- */
+  function voicesSheet() {
+    let vs = []; try { vs = speechSynthesis.getVoices(); } catch (e) {}
+    const es = vs.filter((v) => /^es/i.test(v.lang)).sort((a, b) => vq(b) - vq(a)), en = vs.filter((v) => /^en/i.test(v.lang)).sort((a, b) => vq(b) - vq(a));
+    const REG_ES = { US: "US Latino", MX: "Mexico", ES: "Spain", "419": "Latin America", CO: "Colombia", AR: "Argentina" }, REG_EN = { US: "US", GB: "UK", AU: "Australia", IN: "India", CA: "Canada", IE: "Ireland", ZA: "South Africa", NG: "Nigeria" };
+    const label = (v, i, list) => {
+      const REG = /^es/i.test(v.lang) ? REG_ES : REG_EN;
+      const rg = (v.lang.split(/[-_]/)[1] || "").toUpperCase(), same = list.filter((x) => x.lang === v.lang), n = same.indexOf(v) + 1;
+      const base = v.name.replace(/^(Google|Microsoft|Samsung|Apple)\s*/i, "").replace(/\s*\(.*?\)\s*/g, " ");
+      const nice = /x-[a-z]{3}/i.test(v.name) ? (REG[rg] || rg) + " · voice " + n : base.trim() + (REG[rg] ? " · " + REG[rg] : "");
+      return (isNatural(v) ? "★ " : "") + nice + (v.network || v.localService === false ? " (online)" : "");
+    };
+    const opt = (list, cur) => '<option value="">Automatic (best available)</option>' + list.map((v, i) => '<option value="' + esc(v.name) + '"' + (v.name === cur ? " selected" : "") + ">" + esc(label(v, i, list)) + "</option>").join("");
+    const nNat = es.filter(isNatural).length;
+    const help = window.AndroidTTS && AndroidTTS.openSettings
+      ? '<p class="small">For more natural voices, open your phone’s voice settings and download the <b>Spanish (United States)</b> and <b>English</b> voices (choose the high-quality ones). Come back here and pick one with a ★.</p><button class="btn small" data-act="tts-settings">Open phone voice settings</button>'
+      : '<p class="small">More natural voices come from your phone or computer: on Android go to <b>Settings → General management → Text-to-speech → Preferred engine: Speech Services by Google → ⚙ → Install voice data</b> and download Spanish (United States) and English. In the Ruta DELE app (APK) you can also open those settings from here.</p>';
+    const d = document.createElement("div"); d.className = "vsheet"; d.id = "vsheet";
+    d.innerHTML = '<div class="vsheet-in" role="dialog" aria-label="Voices"><div class="row" style="justify-content:space-between"><h3>Voices</h3><button class="pbtn" data-act="vs-close" aria-label="Close">' + RA_ICON.x + "</button></div>" +
+      '<p class="small muted">Used for lessons, readings, flashcards and ' + esc(typeof pName === "function" ? pName() : "Profe") + ". ★ = natural-sounding voice.</p>" +
+      '<label class="small" for="vs-es"><b>Spanish voice</b></label><div class="row"><select id="vs-es">' + opt(es, TS.pvEs) + '</select><button class="btn small" data-act="vs-try" data-l="es">▶ Test</button></div>' +
+      '<label class="small" for="vs-en" style="margin-top:10px"><b>English voice</b> (explanations)</label><div class="row"><select id="vs-en">' + opt(en, TS.pvEn) + '</select><button class="btn small" data-act="vs-try" data-l="en">▶ Test</button></div>' +
+      '<div class="vs-help">' + (es.length && !nNat ? '<p class="small"><b>Your phone only has basic Spanish voices right now.</b></p>' : "") + help + "</div></div>";
+    const old = document.getElementById("vsheet"); if (old) old.remove();
+    document.body.appendChild(d);
+  }
+  document.addEventListener("change", (e) => {
+    if (e.target.id === "vs-es") { TS.pvEs = e.target.value; tsave(); pickVoices(); speakVs("es"); }
+    else if (e.target.id === "vs-en") { TS.pvEn = e.target.value; tsave(); pickVoices(); speakVs("en"); }
+    else if (e.target.id === "ra-rate") { RA.rate = +e.target.value; try { localStorage.setItem("ra-rate", RA.rate); } catch (x) {} if (RA.on && !RA.paused) raPlay(); }
+  });
+  function speakVs(l) { try { speechSynthesis.cancel(); speechSynthesis.speak(utter(l === "es" ? "Hola, ¿qué tal? Vamos a practicar español juntos." : "Hi! This is the voice for the explanations.", l, l === "es" ? 0.9 : 1)); } catch (e) {} }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest("[data-act]"); if (!t) { if (e.target.id === "vsheet") e.target.remove(); return; }
+    const a = t.dataset.act;
+    if (a === "ra-start") raStart(0);
+    else if (a === "ra-stop") raStop();
+    else if (a === "ra-pp") { if (RA.paused) { RA.paused = false; raPlay(); } else { RA.paused = true; RA.gen++; try { speechSynthesis.cancel(); } catch (x) {} raPlayerUI(); } }
+    else if (a === "ra-next") { RA.i = Math.min(RA.q.length - 1, RA.i + 1); RA.paused = false; try { speechSynthesis.cancel(); } catch (x) {} raPlay(); }
+    else if (a === "ra-prev") { RA.i = Math.max(0, RA.i - 1); RA.paused = false; try { speechSynthesis.cancel(); } catch (x) {} raPlay(); }
+    else if (a === "voices") voicesSheet();
+    else if (a === "vs-close") { const v = document.getElementById("vsheet"); if (v) v.remove(); }
+    else if (a === "vs-try") speakVs(t.dataset.l);
+    else if (a === "tts-settings") { try { AndroidTTS.openSettings(); } catch (x) {} }
+  });
+  // tap any part of the lesson while it is reading to jump there
+  document.addEventListener("click", (e) => {
+    if (!RA.on || e.target.closest("button, a, input, select, .ra-player")) return;
+    const k = RA.q.findIndex((x) => x.el === e.target || x.el.contains(e.target)); if (k >= 0 && k !== RA.i) { RA.i = k; RA.paused = false; try { speechSynthesis.cancel(); } catch (x) {} raPlay(); }
+  });
+  let fxQ = false;
+  new MutationObserver(() => { if (fxQ) return; fxQ = true; requestAnimationFrame(() => { fxQ = false; fmtProse(app); raBtn(); }); }).observe(app, { childList: true, subtree: true });
+
   function studyView(id, inLevel) {
     document.body.classList.add("study");
     const L = LV[id];
@@ -2177,19 +2423,32 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function pickVoices() {
     try {
       const all = speechSynthesis.getVoices();
-      const vs = all.filter((v) => /^es/i.test(v.lang));
+      const vs = all.filter((v) => /^es/i.test(v.lang)).sort((x, y) => vq(y) - vq(x));
       const latam = vs.find((v) => /^es[-_](MX|US|419|CO|PA|AR|CL|PE|VE|EC|CR|DO|PR|CU|GT|HN|SV|NI|BO|PY|UY)/i.test(v.lang));
       const spain = vs.find((v) => /^es[-_]ES/i.test(v.lang));
       const a = latam || spain || vs[0] || null;
       const b = vs.find((v) => a && v !== a && v.lang !== a.lang) || vs.find((v) => v !== a) || null;
       V2 = [a, b];
-      VEN = all.find((v) => /^en[-_](US|GB)/i.test(v.lang)) || all.find((v) => /^en/i.test(v.lang)) || null;
+      const ens = all.filter((v) => /^en/i.test(v.lang)).sort((x, y) => vq(y) - vq(x));
+      VEN = ens.find((v) => /^en[-_](US|GB)/i.test(v.lang)) || ens[0] || null;
     } catch (e) {}
   }
   if (canSpeak) { pickVoices(); speechSynthesis.onvoiceschanged = () => { pickVoice(); pickVoices(); }; }
+  // how natural a voice sounds: Android reports a quality score; online and "natural/neural" voices are the newer ones
+  function vq(v) {
+    let q = (v.quality || 300) / 100;
+    if (/natural|neural|premium|enhanced|wavenet|studio|journey|online/i.test(v.name)) q += 2;
+    if ((v.network || v.localService === false) && navigator.onLine !== false) q += 1;
+    if (/compact|espeak|pico/i.test(v.name)) q -= 3;
+    return q;
+  }
+  const isNatural = (v) => vq(v) >= 5;
+  function prefVoice(lang) {
+    try { const want = lang === "en" ? TS.pvEn : TS.pvEs; if (!want) return null; return speechSynthesis.getVoices().find((x) => x.name === want) || null; } catch (e) { return null; }
+  }
   function utter(text, lang, rate, v, pitch) {
     const u = new SpeechSynthesisUtterance(text);
-    const vv = v || (lang === "en" ? VEN : V2[0] || voice);
+    const vv = v || prefVoice(lang) || (lang === "en" ? VEN : V2[0] || voice);
     if (vv) { u.voice = vv; u.lang = vv.lang; } else u.lang = lang === "en" ? "en-US" : "es-ES";
     u.rate = rate || 0.9; u.pitch = pitch || 1;
     return u;
@@ -4549,7 +4808,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function route() {
     const h = location.hash.replace(/^#/, "");
     const m = h.match(/^(a1|a2|b1|b2|c1|c2|esc)(?:-(?:u(\d+)|(exam|cards|mock|vocab)))?$/);
-    stopAll(); app.classList.remove("hide-en"); document.body.classList.remove("study"); delete document.body.dataset.gcat;
+    stopAll(); raStop(true); app.classList.remove("hide-en"); document.body.classList.remove("study"); delete document.body.dataset.gcat;
     const sh = document.getElementById("sheet"); if (sh) sh.hidden = true;
     if (h === "escuchar") { setSec("escuchar"); navChips(null); listenHub(); }
     else if (h === "leer-add") { setSec("leer"); navChips(null); docAdd(); }
@@ -4662,7 +4921,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110043";
+  var BUILD = "202611110058";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

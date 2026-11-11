@@ -91,6 +91,23 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
         tts.setLanguage(Locale.forLanguageTag(lang == null || lang.isEmpty() ? "es-US" : lang));
     }
 
+    /** Opens Android's text-to-speech settings, where more (and more natural) voices can be downloaded. */
+    @JavascriptInterface
+    public void openSettings() {
+        main.post(() -> {
+            try {
+                Intent i = new Intent(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                act.startActivity(i);
+            } catch (Exception e) {
+                try { Intent j = new Intent("com.android.settings.TTS_SETTINGS"); j.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK); act.startActivity(j); } catch (Exception ignored) { }
+            }
+        });
+    }
+
+    @JavascriptInterface
+    public void refreshVoices() { js("window.__atts && __atts.voices()"); }
+
     // ---------- speechSynthesis replacement ----------
     @JavascriptInterface
     public String voices() {
@@ -102,13 +119,15 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
                 String lang = v.getLocale().toLanguageTag();
                 if (!(lang.startsWith("es") || lang.startsWith("en"))) continue;
                 if (v.getFeatures() != null && v.getFeatures().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED)) continue;
-                String key = lang + (v.isNetworkConnectionRequired() ? ":n" : "");
-                if (seen.contains(key)) continue;
-                seen.add(key);
+                // every distinct voice (Google has several per accent, male and female); skip legacy low-quality ones
+                if (seen.contains(v.getName())) continue;
+                seen.add(v.getName());
+                if (v.getQuality() < Voice.QUALITY_NORMAL) continue;
                 JSONObject o = new JSONObject();
                 o.put("name", v.getName());
                 o.put("lang", lang);
                 o.put("network", v.isNetworkConnectionRequired());
+                o.put("quality", v.getQuality());
                 out.put(o);
             }
         } catch (Exception ignored) { }
