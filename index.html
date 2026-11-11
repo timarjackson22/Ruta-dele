@@ -20,6 +20,7 @@ img { max-width: 100% }
 [hidden] { display: none !important }
 .t-en { margin: 8px 0 2px; padding: 6px 9px; border-left: 3px solid var(--line, #d0d7e2); background: color-mix(in srgb, currentColor 4%, transparent); border-radius: 6px; font-size: .86em; line-height: 1.4; color: var(--muted, #5b6472) }
 .t-enl { display: inline-block; font-size: .72em; font-weight: 700; letter-spacing: .05em; margin-right: 6px; padding: 0 5px; border-radius: 4px; border: 1px solid currentColor; opacity: .75; vertical-align: 1px }
+.prpraise { margin: 0 0 4px; font-size: 1.05em; color: var(--ok, #1f7a4d) }
 </style>
 <title>Ruta DELE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -4058,8 +4059,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const gn = guideNotes(lastUser ? lastUser.c : (ctx.text || "").slice(0, 300));
     if (compact && gn) ctx = Object.assign({}, ctx, { text: "Topic notes (reliable):\n" + gn + "\n\n" + (ctx.text || "") });
     if (compact && TB === "native") return "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level " + lvl + ". The learner has this page open: " + (ctx.label || "the course") + ".\n" +
-      "How you talk:\n- Speak simple Latin American Spanish for level " + lvl + ". If the learner writes in English, answer in English and add one short Spanish example.\n- Each reply: react to what the learner just said, using their words (one short sentence), then ask ONE follow-up question about the same topic. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\n" +
-      "Examples:\nLearner: tengo treinta años → Profe: ¡Treinta años, qué bien! ¿Y a qué te dedicas?\nLearner: hoy hace mucho calor en Panamá → Profe: Sí, en Panamá casi siempre hace calor. ¿Qué haces cuando hace tanto calor?\nLearner: mi hermano vive en David → Profe: ¡David, en Chiriquí! ¿Lo visitas a menudo?\nLearner: What does «pana» mean? → Profe: «Pana» means friend or buddy in Panama. Example: «Él es mi pana.»\n" +
+      "How you talk:\n- Speak simple Latin American Spanish for level " + lvl + ". If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher. Each reply: react warmly to what the learner just said, using their words (when their Spanish is good, praise it: ¡Muy bien!, ¡Excelente!), then ask ONE follow-up question about the same topic. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- Match the feeling: if the learner is tired, sick or sad, be sympathetic (¡Lo siento!, ¡Qué pena!), never «me alegro».\n- The app corrects grammar separately, so keep talking about the topic.\n" +
+      "Examples:\nLearner: tengo treinta años → Profe: ¡Treinta años, qué bien! ¿Y a qué te dedicas?\nLearner: estoy cansado hoy → Profe: ¡Uy, lo siento! ¿Trabajaste mucho hoy?\nLearner: bien, gracias, ¿y tú? → Profe: ¡Muy bien, gracias! ¿Qué hiciste hoy?\nLearner: hoy hace mucho calor en Panamá → Profe: Sí, en Panamá casi siempre hace calor. ¿Qué haces cuando hace tanto calor?\nLearner: mi hermano vive en David → Profe: ¡David, en Chiriquí! ¿Lo visitas a menudo?\nLearner: What does «pana» mean? → Profe: «Pana» means friend or buddy in Panama. Example: «Él es mi pana.»\n" +
       "Learner notes: " + (TS.memory || "none").slice(0, 200);
     if (compact) return "You are Profe, a warm, patient Spanish tutor. The learner lives in Panama and is preparing the DELE " + lvl + ". " + lang + " Use " + (es ? "Spain Spanish" : "Latin American Spanish (ustedes, not vosotros)") + ".\n" +
       "The learner usually speaks to you through speech recognition, so a word may be misheard (for example «tía» for «día»). Read their message in the context of the conversation and answer what they most likely meant; never correct a recognition slip, only real grammar mistakes.\n" +
@@ -4190,6 +4191,32 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return out.join("\n");
   }
 
+
+  /* ---------- the teacher's voice: praise, try again, kind reveal ---------- */
+  const TEACH = {
+    first: [["¡Excelente! 🎉", "Great answer!"], ["¡Perfecto! 🌟", "Spot on!"], ["¡Muy bien! 👏", "Very good!"], ["¡Genial! 💪", "Brilliant!"], ["¡Eso es! 🙌", "That’s it!"], ["¡Fantástico! ✨", "Fantastic!"], ["¡Bravo! 🎯", "Nailed it!"]],
+    again: [["¡Ahora sí! 🎉", "You got it this time!"], ["¡Eso es! 💪", "There you go!"], ["¡Muy bien, lo lograste! 👏", "Well done, you got it!"], ["¡Perfecto! Así se hace 🌟", "Perfect, that’s how it’s done!"]],
+    retry: [["¡Casi! 😊", "Almost! Let’s try that again."], ["¡Muy cerca! 🤏", "So close! Have another go."], ["Casi, casi… 💡", "Nearly there! Try once more."]],
+    reveal: [["¡No pasa nada! 👍", "No worries, this one is tricky."], ["¡Tranquilo! 😊", "Don’t worry, you’ll get it next time."], ["¡Buen intento! 💪", "Good try! Here’s the answer."]],
+    next: ["¡Vamos con la siguiente!", "¡Sigamos!", "¡A por la siguiente!", "¡Otra!"],
+  };
+  const tpick = (a) => a[Math.floor(Math.random() * a.length)];
+  const tline = (k) => { const [es, en] = tpick(TEACH[k]); return "**" + es + "** *" + en + "*"; };
+  const tnext = () => "**" + tpick(TEACH.next) + "**";
+  // what is wrong with a verb form: another person or tense of the same verb, or another word
+  const PERS_ES = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
+  const TN_ES = { pres: "presente", pret: "pretérito", impf: "imperfecto", fut: "futuro", cond: "condicional", subj: "subjuntivo" };
+  const TENSE_TIP = { pres: "Present: -ar → o, as, a, amos, an · -er/-ir → o, es, e, emos/imos, en (watch the irregulars: soy, voy, tengo, he…).", pret: "Preterite: -ar → é, aste, ó, amos, aron · -er/-ir → í, iste, ió, imos, ieron; irregular stems have no accents (tuve, hice, fui, hube).", impf: "Imperfect: -ar → aba, abas, aba, ábamos, aban · -er/-ir → ía, ías, ía, íamos, ían (only ser, ir, ver are irregular).", fut: "Future: infinitive + é, ás, á, emos, án (a few short stems: tendr-, har-, habr-, podr-, dir-).", cond: "Conditional: infinitive + ía, ías, ía, íamos, ían (same short stems as the future).", subj: "Present subjunctive: -ar → e, es, e, emos, en · -er/-ir → a, as, a, amos, an, from the yo stem (tengo → tenga)." };
+  function formWhy(v, said, t, pi, ans) {
+    const w = String(said || "").toLowerCase().trim(), rd = w ? verbReadings(w).filter((r) => r.v === v) : [];
+    const want = "**" + PERS_ES[pi] + "** · **" + (TN_ES[t] || t) + "**";
+    let why;
+    if (!w) why = "We need " + want + ".";
+    else if (rd.length) { const r = rd[0]; why = "«" + w + "» is the **" + PERS_ES[r.pi] + "** form of the **" + (TN_ES[r.t] || r.t) + "**. Here we need " + want + "."; }
+    else why = "«" + w + "» isn’t a form of **" + v + "**. We need " + want + ".";
+    const hint = ans && ans.length > 3 ? "💡 Hint: it starts with **" + ans.slice(0, Math.max(2, Math.ceil(ans.length / 2) - 1)) + "…**" : "";
+    return why + (hint ? "\n" + hint : "");
+  }
   /* ---------- chat drills: "practise haber" gives one form at a time, checks it, moves on ---------- */
   const DR_T = [["pres", "Present", "presente", "I have"], ["pret", "Preterite (simple past)", "pretérito indefinido"], ["impf", "Imperfect", "pretérito imperfecto"], ["fut", "Future", "futuro"], ["cond", "Conditional", "condicional"]];
   const DR_SKIP = new Set(["practicar", "conjugar", "aprender", "estudiar", "repasar", "querer", "hablar", "decir"]);
@@ -4224,17 +4251,27 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function drGrade(D, q) {
     const a = D.q.ans, said = q.replace(/^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)\s+/, "").trim();
     const right = said === a.toLowerCase(), close = !right && drAcc(said) === drAcc(a.toLowerCase());
+    D.q.tries = D.q.tries || 0;
     let out;
-    if (right) { D.ok++; out = "✅ **¡Correcto!** " + D.q.p[2] + " **" + a + "**."; }
-    else if (close) { D.ok++; out = "✅ **¡Bien!** Watch the accent: **" + a + "**."; }
-    else { D.miss.push(D.q.p[2] + " " + a); out = "❌ **Casi.** It’s " + D.q.p[2] + " **" + a + "**." + (said ? "\n*You wrote «" + said + "».*" : ""); }
-    try { actAdd(1); } catch (e) {}
+    if (right || close) {
+      D.ok++; if (!D.q.tries) D.first = (D.first || 0) + 1;
+      out = tline(D.q.tries ? "again" : "first") + "\n" + D.q.p[2] + " **" + a + "**" + (close ? ". Just watch the accent: **" + a + "**" : "") + ".";
+    } else if (!D.q.tries) {
+      D.q.tries = 1; try { actAdd(1); } catch (e) {}
+      return tline("retry") + "\n" + formWhy(D.v, said, D.q.k, D.q.p[1], a) + "\n\n👉 " + D.qt;
+    } else {
+      D.miss.push(D.q.p[2] + " " + a);
+      out = tline("reveal") + "\nIt’s " + D.q.p[2] + " **" + a + "**.\n*" + (TENSE_TIP[D.q.k] || "") + "*";
+    }
+    try { actAdd(right || close ? 2 : 1); } catch (e) {}
     if (D.n >= D.total) {
       D.done = 1;
-      return out + "\n\n🎉 **" + D.ok + " / " + D.total + "** con **" + D.v + "**." + (D.miss.length ? "\n*Review: " + D.miss.join(", ") + ".*" : "") + "\n\n¿Otra ronda? Escribe una frase con **" + D.v + "** y la corrijo.\n*Another round? Say «otra vez». Or write a sentence with " + D.v + " and I’ll check it.*";
+      const pct = D.ok / D.total, cheer = pct === 1 ? "🏆 **¡Perfecto, todo bien!** *Every single one!*" : pct >= 0.66 ? "🎉 **¡Muy buen trabajo!** *Great work!*" : "💪 **¡Buen esfuerzo!** *Good effort, practice makes perfect!*";
+      return out + "\n\n" + cheer + " **" + D.ok + " / " + D.total + "**" + (D.first ? " · " + D.first + " first try" : "") + (D.miss.length ? "\n*Review: " + D.miss.join(", ") + ".*" : "") + "\n\n¿Otra ronda? Escribe una frase con **" + D.v + "** y la corrijo.\n*Another round? Say «otra vez». Or write a sentence with " + D.v + " and I’ll check it.*";
     }
-    return out + "\n\n" + drNext(D);
+    return out + "\n\n" + tnext() + "\n" + drNext(D);
   }
+
   function drillAnswer(text) {
     if (!tCur) return null;
     if (String(text || "").length > 200 || /\n/.test(text)) return null; // notes and other long prompts are not drill answers
@@ -4282,7 +4319,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (role) return "(Role-play: you are the " + role + ". Stay in character. Answer as the " + role + " with one short line in simple Spanish, and move the scene forward.)";
     if (looksEnglish(lastU)) return "(The learner wrote in English: answer clearly in English in 2 or 3 sentences, with one short Spanish example. No greeting.)";
     if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo|yes|sure)\b/.test(q) && q.split(" ").length <= 3 && prevA) return "(The learner said yes to what you last proposed: «" + prevA.slice(0, 160) + "». Do it now: start the activity with a concrete example or question. No greeting.)";
-    return "(Reply as Profe: react to what the learner said in one short sentence, then ask one follow-up question about it. No greeting.)";
+    return "(Reply as Profe, an enthusiastic teacher: react warmly to what the learner said in one short sentence, then ask one follow-up question about it. No greeting.)";
   }
   // a follow-up question about what the learner said, when the model has nothing useful
   const FOLLOW = [
@@ -4394,22 +4431,56 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let ok;
     if (it.t === "mc") { const L = /^[abcd]$/.exec(t); ok = L ? "abcd".indexOf(t) === it.c : t === qnorm(it.opts[it.c]); }
     else ok = (it.a || []).some((a) => qnorm(a) === t || (t.length > 2 && qnorm(a).split(" ").length > 1 && t.endsWith(qnorm(a))));
-    if (ok) Q.ok++;
+    x.tries = x.tries || 0;
+    let out;
+    // a whole sentence when the answer is a word or two: the learner has moved on to something else
+    if (!ok && t.split(" ").length > qnorm(rightOf(it)).split(" ").length + 2) { Q.done = 1; return null; }
+    if (ok) {
+      Q.ok++; if (!x.tries) Q.first = (Q.first || 0) + 1;
+      out = tline(x.tries ? "again" : "first") + (it.why ? "\n*" + it.why + "*" : "");
+    } else if (!x.tries) {
+      x.tries = 1; try { actAdd(1); } catch (e) {}
+      const b = bestBlock(it.q + " " + rightOf(it) + " " + (it.why || "")), ra = rightOf(it);
+      const said = it.t === "mc" && /^[abcd]$/.test(t) ? it.opts["abcd".indexOf(t)] : text.trim();
+      return tline("retry") + "\n" + (said ? "«" + said + "» doesn’t fit here. " : "") + (b ? "Remember, from the lesson (**" + b.t + "**): " + b.r : /\(/.test(it.q) ? "Read the clue in brackets again." : "That’s not quite it.") + (it.t !== "mc" && ra.length > 3 ? "\n💡 Hint: it starts with **" + ra.slice(0, Math.max(1, Math.ceil(ra.length / 3))) + "…**" : "") + "\n\n👉 " + pqAsk(Q);
+    } else {
+      out = tline("reveal") + "\nThe answer is **" + rightOf(it) + "**." + (it.why ? "\n*" + it.why + "*" : "");
+      if (!it.why) { const b = bestBlock(it.q + " " + rightOf(it)); if (b) out += "\n📘 " + b.t + ": " + b.r; }
+    }
     try { actAdd(ok ? 2 : 1); } catch (e) {}
-    let out = (ok ? "✅ **¡Correcto!** " : "❌ **Casi.** The answer is **" + rightOf(it) + "**. ") + (it.why ? "\n*" + it.why + "*" : "");
-    if (!ok && !it.why) { const b = bestBlock(it.q + " " + rightOf(it)); if (b) out += "\n📘 " + b.t + ": " + b.r; }
     Q.i++;
-    if (Q.i >= Q.items.length) { Q.done = 1; return out + "\n\n🎉 **" + Q.ok + " / " + Q.items.length + "**.\n*Say «quiz me» for another round, or «check my answers» after the page practice.*"; }
-    return out + "\n\n" + pqAsk(Q);
+    if (Q.i >= Q.items.length) { Q.done = 1; const pct = Q.ok / Q.items.length; return out + "\n\n" + (pct === 1 ? "🏆 **¡Perfecto!**" : pct >= 0.66 ? "🎉 **¡Muy buen trabajo!**" : "💪 **¡Buen esfuerzo!**") + " **" + Q.ok + " / " + Q.items.length + "**" + (Q.first ? " · " + Q.first + " first try" : "") + ".\n*Say «quiz me» for another round, or «check my answers» after the page practice.*"; }
+    return out + "\n\n" + tnext() + "\n" + pqAsk(Q);
+  }
+
+
+  // "Quiero aprender palabras de comida" / "quiz me on food words": the course's topic list as a quiz
+  function topicVocabQuiz(text) {
+    const q = xnorm(text);
+    if (!/\b(palabras|vocabulario|vocabulary|words|vocab)\b/.test(q) || !/\b(aprender|aprendo|learn|practi[cs]e|practicar|quiz|test|ens[eé]ñame|teach|repasar|review)/.test(q)) return null;
+    const topic = q.replace(/.*\b(de|sobre|about|for|on)\b\s+(la |el |los |las |the )?/, "");
+    const lv = curLvl(), order = ["a1", "a2", "b1", "b2", "c1"].sort((a, b) => (a === lv ? -1 : b === lv ? 1 : 0));
+    const all = []; order.forEach((l) => (VOCAB[l] || []).forEach((T) => all.push(T)));
+    const SYN = { comida: "food comida bebida", food: "food comida", familia: "family familia", family: "family familia", trabajo: "work trabajo profesiones", work: "work trabajo", ropa: "clothes ropa", clothes: "clothes ropa", casa: "house home casa vivienda", house: "house home casa", cuerpo: "body cuerpo salud", body: "body cuerpo", viajes: "travel viajes transporte", travel: "travel viajes", tiempo: "weather tiempo clima", weather: "weather tiempo clima", ciudad: "city ciudad", city: "city ciudad", animales: "animals animales", animals: "animals animales", colores: "colours colors colores", colors: "colours colors colores", numeros: "numbers números", numbers: "numbers números" };
+    const query = topic.split(" ").map((w) => SYN[w] || w).join(" ");
+    const r = idfRank(all.map((T) => T.t + " " + T.en), query, all.map((T) => T.t + " " + T.en))[0];
+    const T = r && r[1] > 0 ? all[r[0]] : null; if (!T) return null;
+    const items = T.w.slice().sort(() => Math.random() - 0.5).slice(0, 8).map(([es, en]) => {
+      const base = es.replace(/\s*\([^)]*\)/g, "").split(/\s*[;/]\s*/)[0].trim(), bare = base.replace(/^(el|la|los|las|un|una)\s+/i, "");
+      return { it: { q: "How do you say «" + String(en).split(";")[0].trim() + "»?", a: [bare, base], why: "«" + base + "» = " + en + (PANAMA[bare] ? " · 🇵🇦 " + PANAMA[bare] : "") } };
+    });
+    tCur.pq = { items, i: 0, ok: 0 };
+    return "¡Vamos a aprender! **" + T.en + "** *(" + T.t + ")*\n*I’ll give you a word in English: say or type it in Spanish. Say «stop» to finish.*\n\n" + pqAsk(tCur.pq);
   }
   function pageAnswer(text) {
     if (!tCur || String(text || "").length > 300) return null;
     const raw = String(text || "").trim(), q = xnorm(raw), Q = tCur.pq;
     if (Q && !Q.done) {
       if (/^(stop|para|basta|salir|exit|quit|enough|termina)\b/.test(q)) { Q.done = 1; return "👍 Paramos: **" + Q.ok + " / " + Q.i + "**.\n*Ask me anything about the page.*"; }
-      if (!/\?/.test(raw) && q.split(" ").length <= 10) return pqGrade(Q, raw);
+      if (!/\?/.test(raw) && q.split(" ").length <= 10) { const g = pqGrade(Q, raw); if (g) return g; }
       Q.done = 1;
     }
+    const vq = topicVocabQuiz(raw); if (vq) return vq;
     let m;
     if ((m = /^explain this question:\s*([\s\S]+)$/i.exec(raw))) {
       const all = pageItems(), k = all.findIndex((x) => qnorm(x.it.q) === qnorm(m[1]));
@@ -4494,9 +4565,39 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (TB === "native" && !/\n\s*[-*•]\s/.test(t)) t = oneQuestion(t);
     t = String(t).replace(/^\s*(profe|assistant|asistente)\s*:\s*/i, "");
     const cut = t.search(/\n\s*(learner|student|estudiante|alumno|user|usuario|profe|assistant)\s*:/i); if (cut > 0) t = t.slice(0, cut); const m = ("\n" + t).search(ECHO); let out = m >= 0 ? ("\n" + t).slice(0, m).trim() : t; return out.replace(/^profe:\s*/i, "").trim(); }
+
+  // conversation coaching: rule-based mistakes (reliable) are corrected straight away and the learner says it again
+  function convoCoach(text) {
+    if (TS.noFix || !tCur || !text || text.length > 300) return null;
+    const words = (text.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g) || []);
+    if (words.length < 2 || !isSpanish(text + " ") || looksEnglish(text)) { tCur.retry = null; return null; }
+    let fx = []; try { fx = quickFixes(text); } catch (e) {}
+    const better = fx.length ? applyFx(text, fx) : "";
+    const R = tCur.retry; tCur.retry = null;
+    if (R) {
+      const close = (a, b) => sameReply(a, b) || qnorm(a) === qnorm(b);
+      if (!fx.length && close(text, R.want)) return { prefix: tline("again") + "\n«" + text.trim() + "» ✅" };
+      // second try still has the mistake: show the right sentence kindly and carry on
+      if (fx.length) { tCur.coached = text; return { prefix: tline("reveal") + "\nSay it like this: **" + better + "**\n" + fx.map((f) => f.why).join(" ") + "\n**¡Sigamos!** *Let’s keep going.*" }; }
+    }
+    if (fx.length) {
+      tCur.retry = { want: better }; tCur.coached = text;
+      return { stop: true, text: tline("retry") + "\n" + fx.map((f) => "«" + f.from + "» → **" + f.to + "**: " + f.why).join("\n") + "\n\n👉 **¡Inténtalo otra vez!** Di la frase completa.\n*Try again: say the whole sentence.*" };
+    }
+    return null;
+  }
   async function ask(turns, ctx, onText, signal) {
     const lastU = turns[turns.length - 1] ? turns[turns.length - 1].content : "";
     if (TB === "native" || TB === "local") { try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(lastU); if (ex) { onText(ex); return ex; } }
+    const CO = turns.length > 0 && lastU.length < 300 ? convoCoach(lastU) : null;
+    if (CO && CO.stop) { EXPERT_LAST = CO.text; onText(CO.text); return CO.text; }
+    const pre = CO && CO.prefix ? CO.prefix + "\n\n" : "";
+    const r = await ask0(turns, ctx, (t) => onText(/^\*?(Thinking|Loading|Starting)/.test(t) ? t : pre + t), signal, true);
+    return pre + r;
+  }
+  async function ask0(turns, ctx, onText, signal, skipEx) {
+    const lastU = turns[turns.length - 1] ? turns[turns.length - 1].content : "";
+    if (!skipEx && (TB === "native" || TB === "local")) { try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(lastU); if (ex) { onText(ex); return ex; } }
     const ref = TB === "local" ? "" : facts(lastU + " " + (ctx.verb || ""));
     if (TB === "claude") {
       const input = [{ role: "user", content: rules(ctx) + (ref ? "\n\n" + ref : "") + "\n\n(The conversation follows. Reply as Profe.)" }].concat(turns);
@@ -4539,6 +4640,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
           if (weak(out)) { const off = prevA && sents(prevA.content).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || followUp(lastU); }
         }
         out = tidyReply(cleanLocal(out), nth) || out;
+        if (!/\?/.test(out) && !(tCur && tCur.role) && !looksEnglish(lastU) && !/^(adi[oó]s|chao|hasta luego|bye|gracias,? (adi[oó]s|chao))/i.test(xnorm(lastU))) out = out.replace(/\s*$/, "") + " " + followUp(lastU);
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
         out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
@@ -4707,7 +4809,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else { live.c = (e && e.text) || ""; live.err = e && e.code === "native" ? "The on-device AI couldn’t answer: " + (e.message || "unknown error") + ". Try again, or run “Test the AI” in History & settings." : ERRS[e && e.code] || (TB === "local" ? ERRS.local_failed + (e && e.message ? " (" + e.message + ")" : "") : ERRS.upstream_error); }
     }
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
-    checkMsg(um);
+    if (!(tCur && tCur.coached === um.c)) checkMsg(um);
     trReply(live);
     if (spk) { if (live.c && !live.err) { spk.finish(live.c); afterSpeech(); } else { SPK_GEN++; } }
     else if ((voiceMode || lastVoice) && live.c && !live.err) { speakMixed(live.c, () => autoAgain()); afterSpeech(); }
@@ -4721,7 +4823,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       let t;
       if (TB === "claude") t = (await SAMPLE(prompt, { modelTier: "quick", cache: false })).text;
       else if (TB === "native" || TB === "local") t = await aiText("You keep short notes about a Spanish learner for their tutor.", prompt);
-      else t = await ask([{ role: "user", content: prompt }], { text: "", label: "" }, () => {});
+      else t = await ask0([{ role: "user", content: prompt }], { text: "", label: "" }, () => {}, null, true);
       if (t && t.length < 2000) { TS.memory = t.trim(); tPushMemory(); if (tView === "hist") tRender(); }
     } catch (e) {}
   }
@@ -4819,7 +4921,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const st = PR.sc.steps[PR.step];
       const rj = rejectHit(st, said), miss = missing(st.accept, said), wc = rj || miss.length ? null : wrongChoice(st, said);
       if (!rj && !wc && !miss.length) {
-        PR.score += PR.tries ? 0.5 : 1; PR.tries = 0; PR.fb = { ok: true, text: st.ok[0], en: st.ok[1], heard: said }; PR.step++;
+        PR.score += PR.tries ? 0.5 : 1; PR.fb = { ok: true, text: st.ok[0], en: st.ok[1], heard: said, praise: tpick(PR.tries ? TEACH.again : TEACH.first).join(" ") }; PR.tries = 0; PR.step++;
         const nx = PR.sc.steps[PR.step];
         if (nx) { logMsg("a", st.ok[0] + " " + nx.say[0]); tRender(); speakMixed(st.ok[0] + " " + nx.say[0], () => { if (PR && CAN_MIC && PR.autoMic) listen(prAnswer); }); }
         else { const summ = PR.sc.end[0] + " — Score: " + PR.score + " / " + PR.sc.steps.length; logMsg("a", summ); PR.done = true; tRender(); speakMixed(st.ok[0] + " " + PR.sc.end[0]); }
@@ -4827,20 +4929,30 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         PR.tries++; PR.fb = { ok: false, said, hint: st.hint, model: st.model, wrong: wc, rej: rj, miss: miss.map((g) => g[0]) };
         const why = rj ? rj.why + " " : wc ? "You said «" + wc.said + "», but the task asks for *" + wc.want + "*. " : "Not quite: your answer doesn’t yet cover the whole task (" + st.hint + ") ";
         logMsg("a", why + "Example: **" + st.model + "**"); tRender();
-        speakMixed((wc ? "Ojo: " : "Casi. ") + "Por ejemplo: " + st.model, () => { if (PR && CAN_MIC && PR.autoMic && !PR.done) listen(prAnswer); });
+        speakMixed((wc ? "¡Ojo! " : "¡Casi! ") + (PR.tries >= 2 ? "Por ejemplo: " + st.model : "Inténtalo otra vez."), () => { if (PR && CAN_MIC && PR.autoMic && !PR.done) listen(prAnswer); });
       }
       return;
     }
     if (PR.kind === "sp") { PR.text = (PR.text + " " + said).trim(); tRender(); return; }
     if (PR.kind === "vo" || PR.kind === "cj") {
-      if (PR.fb || PR.done) return;
+      if ((PR.fb && !PR.fb.retry) || PR.done) return;
       const it = PR.items[PR.i];
       const target = PR.kind === "vo" ? it[0].replace(/\(.*?\)/g, "").split(/[\/;,]/)[0].replace(/^(el|la|los|las)\s+/i, "").trim() : it.ans;
       const ok = (" " + nrm(said) + " ").includes(" " + nrm(target) + " ") || nrm(said) === nrm(target) || (" " + sounds(said) + " ").includes(" " + sounds(target) + " ");
-      if (ok) PR.score++;
       const full = PR.kind === "vo" ? it[0].replace(/\(Esp\.[^)]*\)/g, "").trim() : it.ans;
-      PR.fb = { ok, said, model: full }; logMsg("a", (ok ? "✓ " : "✗ ") + (PR.kind === "vo" ? it[1] + " → " : it.v + ", " + it.p + ", " + TNAME[it.t] + " → ") + "**" + full + "**");
-      const at = PR.i; tRender(); speakMixed((ok ? "¡Bien! " : "") + full, () => { setTimeout(() => { if (PR && PR.i === at && PR.fb) prNext(); }, 500); });
+      const again = !!(PR.fb && PR.fb.retry);
+      if (!ok && !again) {
+        // first miss: what went wrong, a hint, and another go
+        const hint = PR.kind === "cj" ? formWhy(it.v, nrm(said).split(" ").pop(), it.t, Math.max(0, PERS_ES.indexOf(it.p.split(" ")[0])), it.ans) : "💡 Hint: it starts with **" + target.slice(0, Math.max(2, Math.ceil(target.length / 3))) + "…** (" + target.replace(/\s/g, "").length + " letters)";
+        PR.fb = { retry: true, said, hint };
+        logMsg("a", "¡Casi! " + hint.replace(/\*\*/g, ""));
+        tRender(); speakMixed("¡Casi! Inténtalo otra vez.", () => { if (PR && CAN_MIC && PR.autoMic && PR.fb && PR.fb.retry) listen(prAnswer); });
+        return;
+      }
+      if (ok) PR.score++;
+      const [pes, pen] = tpick(ok ? (again ? TEACH.again : TEACH.first) : TEACH.reveal);
+      PR.fb = { ok, said, model: full, praise: pes + " " + pen }; logMsg("a", pes + " " + (ok ? "✓ " : "") + (PR.kind === "vo" ? it[1] + " → " : it.v + ", " + it.p + ", " + TNAME[it.t] + " → ") + "**" + full + "**");
+      const at = PR.i; tRender(); speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + full, () => { setTimeout(() => { if (PR && PR.i === at && PR.fb && !PR.fb.retry) prNext(); }, 700); });
     }
   }
   function prNext() { if (!PR || !PR.items) return; PR.i++; PR.fb = null; if (PR.i >= PR.items.length) { PR.done = true; logMsg("a", "Score: " + PR.score + " / " + PR.items.length); tRender(); } else { tRender(); PR.kind === "vo" ? prAskVocab() : prAskConj(); } }
@@ -5057,9 +5169,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       h += "<h3>" + esc(PR.sc.t) + '</h3><p class="muted small">Step ' + Math.min(PR.step + 1, PR.sc.steps.length) + " of " + PR.sc.steps.length + "</p>";
       if (PR.done) h += '<div class="prbox ok"><p><b>' + esc(PR.sc.end[0]) + "</b></p><p class=\"muted\">" + esc(PR.sc.end[1]) + "</p><p class=\"result\">Score: " + PR.score + " / " + PR.sc.steps.length + '</p><button class="btn small" data-act="pr-rp" data-id="' + PR.sc.id + '">Try again</button></div>';
       else {
-        if (PR.fb && PR.fb.ok) h += '<p class="small muted">You said: «' + esc(PR.fb.heard || "") + '»</p><p class="prok">✓ ' + esc(PR.fb.text) + ' <span class="muted">(' + esc(PR.fb.en) + ")</span></p>" + (PR.um ? '<div class="prfx">' + fixCard(PR.um) + "</div>" : "");
+        if (PR.fb && PR.fb.ok) h += (PR.fb.praise ? '<p class="prpraise"><b>' + esc(PR.fb.praise) + "</b></p>" : "") + '<p class="small muted">You said: «' + esc(PR.fb.heard || "") + '»</p><p class="prok">✓ ' + esc(PR.fb.text) + ' <span class="muted">(' + esc(PR.fb.en) + ")</span></p>" + (PR.um ? '<div class="prfx">' + fixCard(PR.um) + "</div>" : "");
         h += '<div class="prbox"><p class="prsay">' + sayBtn(st.say[0]) + " <b>" + esc(st.say[0]) + '</b></p><p class="muted">' + esc(st.say[1]) + '</p><p class="small"><b>Your turn:</b> ' + esc(st.hint) + "</p></div>";
-        if (PR.fb && !PR.fb.ok) h += '<div class="prbox bad"><p>You said: «' + esc(PR.fb.said) + '»</p>' + (PR.fb.rej ? '<p><b>Check the task:</b> ' + esc(PR.fb.rej.why) + "</p>" : PR.fb.wrong ? '<p><b>Check the task:</b> you said «' + esc(PR.fb.wrong.said) + "», but it asks for <b>" + esc(PR.fb.wrong.want) + "</b>.</p>" : PR.fb.miss && PR.fb.miss.length ? '<p><b>Not quite:</b> that doesn’t do the whole task yet. <b>Task:</b> ' + esc(st.hint) + "</p>" : "") + '<p>Try something like: <b>' + esc(st.model) + "</b> " + sayBtn(st.model) + "</p>" + (PR.tries >= 2 ? '<button class="btn small" data-act="pr-skip">Skip this step</button>' : "") + "</div>";
+        if (PR.fb && !PR.fb.ok) h += '<div class="prbox bad"><p><b>' + (PR.tries >= 2 ? "Buen intento 💪" : "¡Casi! 😊") + '</b> <span class="muted">' + (PR.tries >= 2 ? "Good try! Here’s a model answer." : "Almost! Let’s try that again.") + '</span></p><p>You said: «' + esc(PR.fb.said) + '»</p>' + (PR.fb.rej ? '<p><b>Check the task:</b> ' + esc(PR.fb.rej.why) + "</p>" : PR.fb.wrong ? '<p><b>Check the task:</b> you said «' + esc(PR.fb.wrong.said) + "», but it asks for <b>" + esc(PR.fb.wrong.want) + "</b>.</p>" : PR.fb.miss && PR.fb.miss.length ? '<p><b>Not quite:</b> that doesn’t do the whole task yet. <b>Task:</b> ' + esc(st.hint) + "</p>" : "") + '<p>Try something like: <b>' + esc(st.model) + "</b> " + sayBtn(st.model) + "</p>" + (PR.tries >= 2 ? '<button class="btn small" data-act="pr-skip">Skip this step</button>' : "") + "</div>";
         if (PR.fb && !PR.fb.ok && PR.um) h += '<div class="prfx">' + fixCard(PR.um) + "</div>";
       }
     } else if (PR.kind === "sp") {
@@ -5075,7 +5187,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (PR.done) h += '<div class="prbox ok"><p class="result">Score: ' + PR.score + " / " + PR.items.length + '</p><button class="btn small" data-act="' + (PR.kind === "vo" ? "pr-vocab" : "pr-conj") + '">New round</button></div>';
       else {
         h += '<div class="prbox"><p class="prsay"><b>' + (PR.kind === "vo" ? esc(it[1]) : esc(it.v) + " · " + esc(it.p) + " · " + esc(TNAME[it.t])) + "</b></p><p class=\"small muted\">Say it in Spanish.</p></div>";
-        if (PR.fb) h += '<div class="prbox ' + (PR.fb.ok ? "ok" : "bad") + '"><p>' + (PR.fb.ok ? "✓ " : "You said «" + esc(PR.fb.said) + "». ") + "<b>" + esc(PR.fb.model) + '</b></p><button class="btn small" data-act="pr-next">Next ›</button></div>';
+        if (PR.fb && PR.fb.retry) h += '<div class="prbox bad"><p><b>¡Casi!</b> <span class="muted">Almost! Let’s try that again.</span></p><p>You said «' + esc(PR.fb.said) + "».</p><p>" + md(PR.fb.hint).replace(/^<p>|<\/p>$/g, "") + '</p><button class="btn small" data-act="pr-next">Skip ›</button></div>';
+        else if (PR.fb) h += '<div class="prbox ' + (PR.fb.ok ? "ok" : "bad") + '"><p class="prpraise"><b>' + esc(PR.fb.praise || "") + "</b></p><p>" + (PR.fb.ok ? "✓ " : "You said «" + esc(PR.fb.said) + "». The answer is ") + "<b>" + esc(PR.fb.model) + '</b></p><button class="btn small" data-act="pr-next">Next ›</button></div>';
       }
     }
     h += "</div>";
@@ -5929,7 +6042,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110626";
+  var BUILD = "202611111151";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
