@@ -436,6 +436,11 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.srcard.tapflip { cursor: pointer; -webkit-tap-highlight-color: transparent } .srcard.tapflip:active { transform: scale(.985) }
+strong.q { font-weight: 700 }
+body.kb .tabbar, body.kb .tutor-fab { display: none !important }
+body.kb .top { position: static }
+body.kb main { padding-bottom: 50vh }
 .srcard .face.back { font-size: clamp(1.2rem, 4vw, 1.6rem); font-weight: 600 }
 .srhr { border: 0; border-top: 1px solid var(--line); margin: 12px auto; width: 60% }
 .srtag { position: absolute; top: 12px; left: 12px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px }
@@ -2013,6 +2018,49 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   let SV = null; // study view state
   function cardsView(L) { studyView(L.id, true); }
+  // «x» in app text reads like code: show it as bold instead. Spanish reading texts keep their real quotation marks.
+  const UNQ_SKIP = ".story, .pod, .verse, .passage, .mtext, .dlg, .doc-body, input, textarea, script, style, [contenteditable]";
+  function unquote(root) {
+    if (!root || !root.querySelectorAll) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: (n) => /[«»]/.test(n.nodeValue) && !(n.parentElement && n.parentElement.closest(UNQ_SKIP)) ? 1 : 2 });
+    const list = []; let n; while ((n = w.nextNode())) list.push(n);
+    list.forEach((t) => {
+      const v = t.nodeValue;
+      if (/«[^«»]+»/.test(v)) {
+        const f = document.createDocumentFragment(); let last = 0;
+        v.replace(/«([^«»]+)»/g, (m, inner, at) => { if (at > last) f.appendChild(document.createTextNode(v.slice(last, at))); const b = document.createElement("strong"); b.className = "q"; b.textContent = inner; f.appendChild(b); last = at + m.length; return m; });
+        if (last < v.length) f.appendChild(document.createTextNode(v.slice(last).replace(/[«»]/g, "")));
+        t.parentNode.replaceChild(f, t);
+      } else t.nodeValue = v.replace(/[«»]/g, "");
+    });
+  }
+  let unqQ = false;
+  new MutationObserver(() => { if (unqQ) return; unqQ = true; requestAnimationFrame(() => { unqQ = false; unquote(document.body); }); }).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+  document.addEventListener("DOMContentLoaded", () => unquote(document.body));
+  // keyboard mode: while typing, hide the bottom bar and Profe button, let the header scroll away,
+  // and bring the question, the answer box and the Submit button into view above the keyboard
+  const isTyping = (el) => el && (el.tagName === "TEXTAREA" || (el.tagName === "INPUT" && /^(text|search|email|url|)$/.test(el.getAttribute("type") || ""))) && !el.closest("#tutor");
+  function fitTyping(el) {
+    if (!el || document.activeElement !== el) return;
+    const H = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const card = el.closest(".pxcard, .srcard, .myform, .quiz, li, .gblock") || el;
+    const r = card.getBoundingClientRect(), ir = el.getBoundingClientRect();
+    const below = el.closest(".pxcard") ? 70 : 16; // keep the Submit row visible too
+    let dy = r.top - 8;
+    if (ir.bottom - dy + below > H) dy = ir.bottom + below - H;
+    if (Math.abs(dy) > 2) window.scrollBy(0, dy);
+  }
+  document.addEventListener("focusin", (e) => {
+    if (!isTyping(e.target)) return;
+    document.body.classList.add("kb");
+    const el = e.target; [60, 350, 700].forEach((t) => setTimeout(() => fitTyping(el), t));
+  });
+  document.addEventListener("focusout", () => setTimeout(() => { if (!isTyping(document.activeElement)) document.body.classList.remove("kb"); }, 150));
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", () => { if (isTyping(document.activeElement)) fitTyping(document.activeElement); });
+  document.addEventListener("click", (e) => {
+    const c = e.target.closest('[data-act="sr-flip"]'); if (!c || !SV || e.target.closest("input, button, a")) return;
+    const i = document.getElementById("sr-in"); if (i) SV.typed = i.value; SV.shown = true; studyView(SV.deck, SV.inLevel);
+  });
   function studyView(id, inLevel) {
     const L = LV[id];
     if (!SV || SV.deck !== id) SV = { deck: id, card: null, shown: false, typed: "" };
@@ -2031,10 +2079,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (card.rev && SRD.opt.type) {
         typed = SV.shown ? '<div class="srtyped">' + typedDiff(SV.typed, card.es) + "</div>" : '<input id="sr-in" class="srin" placeholder="Type the Spanish (with accents)…" autocomplete="off" spellcheck="false" autocapitalize="off" value="' + esc(SV.typed) + '">';
       }
-      body = '<div class="fc srcard' + (SV.shown ? " flipped" : "") + '">' + tag + (card.rev && !SV.shown ? "" : sayBtn(card.es)) +
+      body = '<div class="fc srcard' + (SV.shown ? " flipped" : " tapflip") + '"' + (SV.shown ? "" : ' data-act="sr-flip" role="button" tabindex="0" aria-label="Flip the card"') + ">" + tag + (card.rev && !SV.shown ? "" : sayBtn(card.es)) +
         '<div><p class="face">' + esc(front) + "</p>" + (SV.shown ? '<hr class="srhr"><p class="face back">' + esc(back) + '</p>' + (card.rev || true ? '<p class="ipa">' + esc(ipa(card.es.replace(/\s*\(.*?\)/g, "").split(/[,;/]/)[0].trim())) + "</p>" : "") + '<p class="muted small">' + esc(card.src || "") + "</p>" : "") + typed + "</div></div>" +
         (SV.shown ? '<div class="srbtns">' + [[1, "Again"], [2, "Hard"], [3, "Good"], [4, "Easy"]].map(([e, n]) => '<button class="srb e' + e + '" data-act="sr-rate" data-e="' + e + '"><small>' + ivlLabel(card, e) + "</small>" + n + "</button>").join("") + "</div>"
-          : '<div class="row" style="justify-content:center"><button class="btn primary" data-act="sr-show">Show answer</button></div>');
+          : '<p class="muted small" style="text-align:center">' + (typed ? 'Type your answer, then press Enter or <button class="btn small primary" data-act="sr-show">Check</button>' : "Tap the card to flip it") + "</p>");
     }
     const opts = '<details class="small srset"><summary>Deck settings</summary><div class="row" style="margin-top:8px"><label for="sr-new">New cards per day</label><select id="sr-new">' + [5, 10, 15, 20, 30, 50].map((n) => '<option' + (SRD.opt.newPerDay === n ? " selected" : "") + ">" + n + "</option>").join("") + '</select></div><label class="row"><input type="checkbox" id="sr-rev"' + (SRD.opt.rev ? " checked" : "") + '> Both directions (also English → Spanish, to practise speaking)</label><label class="row"><input type="checkbox" id="sr-type"' + (SRD.opt.type ? " checked" : "") + '> Type the Spanish on English → Spanish cards (checks accents)</label></div></details>';
     app.innerHTML = '<div class="stack">' + head + '<div class="fc-wrap">' + cnt + (body || "") + '<p class="muted small" style="text-align:center">Rate honestly: <b>Again</b> if you forgot, <b>Hard</b> if it took effort, <b>Good</b> if you knew it, <b>Easy</b> if it was instant. The app brings each word back just before you would forget it.</p>' + opts + "</div></div>";
@@ -4588,7 +4636,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110014";
+  var BUILD = "202611110031";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
