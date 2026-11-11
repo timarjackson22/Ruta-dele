@@ -1,0 +1,419 @@
+[
+ {
+  "id": "haber-si",
+  "lvl": "a2",
+  "note": "the phone transcript: offer to practise, learner says yes",
+  "conv": [
+   {
+    "u": "Quiero practicar el verbo haber en diferentes tiempos",
+    "reply": "¡Vamos! Practicamos haber.Let’s practise haber (to have). Type or say just the verb form. Say stop to finish.1 / 6 · tú + haber · futuro(you — future)",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "sí",
+    "reply": "👉 Write just the verb form.1 / 6 · tú + haber · futuro(you — future)",
+    "fix": "",
+    "secs": 0,
+    "flags": [
+     "repeat"
+    ]
+   },
+   {
+    "u": "he",
+    "reply": "¡Muy cerca! 🤏 So close! Have another go.he is the yo form of the presente. Here we need tú · futuro.💡 Hint: it starts with ha…👉 1 / 6 · tú + haber · futuro(you — future)",
+    "fix": "",
+    "secs": 0,
+    "flags": []
+   },
+   {
+    "u": "habíamos",
+    "reply": "¡No pasa nada! 👍 No worries, this one is tricky.It’s tú habrás.Future: infinitive + é, ás, á, emos, án (a few short stems: tendr-, har-, habr-, podr-, dir-).¡A por la siguiente!2 / 6 · nosotros + haber · futuro(we — future)",
+    "fix": "",
+    "secs": 0,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/gen",
+    "out": "Quiero practicar el verbo haber en diferentes tiempos",
+    "s": 2.4165501594543457
+   }
+  ],
+  "sys": "",
+  "errs": []
+ },
+ {
+  "id": "mistake-conj",
+  "lvl": "a2",
+  "note": "",
+  "conv": [
+   {
+    "u": "Ayer yo va a la playa con mis amigos",
+    "reply": "¡Casi! 😊 Almost! Let’s try that again.va → fui: With yo, ir in the preterite is fui (yo), and ayer needs the past.👉 ¡Inténtalo otra vez! Di la frase completa.Try again: say the whole sentence.",
+    "fix": "",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "nosotros nadamos y comemos pescado",
+    "reply": "Entiendo, nadar y comer pescado es una actividad saludable. ¿Tienes alguna otra actividad que te gustaría hacer?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 11,
+    "flags": [
+     "missed-fix:comimos"
+    ]
+   },
+   {
+    "u": "fue muy divertido",
+    "reply": "¡Excelente frase! 🌟 Nice use of the preterite: fue.¡Me alegra que te haya gustado! Las vacaciones en Panamá son una experiencia muy divertida. ¿Tienes alguna otra actividad que te gustaría hacer?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 13,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "Entiendo, nadar y comer pescado es una actividad saludable. ¿Tienes alguna otra actividad que te gustaría hacer?",
+    "s": 10.879045486450195
+   },
+   {
+    "path": "/gen",
+    "out": "Nosotros nadamos y comemos pescado.",
+    "s": 1.788092851638794
+   },
+   {
+    "path": "/chat",
+    "out": "¡Me alegra que te haya gustado! Las vacaciones en Panamá son una experiencia muy divertida. ¿Tienes alguna otra actividad que te gustaría hacer?",
+    "s": 13.2764573097229
+   },
+   {
+    "path": "/gen",
+    "out": "fue muy divertido",
+    "s": 1.2303249835968018
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level A2. The learner has this page open: A2.\nHow you talk:\n- Speak simple Latin American Spanish for level A2. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: no me gusta el tráfico → Profe: Te entiendo, el tráfico cansa mucho. Una palabra útil: «el tranque», como dicen en Panamá. ¿Cuánto tiempo pasas en el tráfico cada día?\nLearner: quiero comprar una bicicleta → Profe: ¡Buena idea! Una bicicleta es práctica y sana. ¿La quieres para ir al trabajo o para pasear?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ },
+ {
+  "id": "quiz-me",
+  "lvl": "a2",
+  "note": "",
+  "conv": [
+   {
+    "u": "Quiz me on the preterite",
+    "reply": "¡Vamos! Preterite (simple past) with common verbs.Type or say just the verb form. Say stop to finish.1 / 6 · tú + vivir (to live) · pretérito indefinido(you — preterite (simple past))",
+    "fix": "",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "comí",
+    "reply": "¡Casi! 😊 Almost! Let’s try that again.comí isn’t a form of vivir. We need tú · pretérito.💡 Hint: it starts with viv…👉 1 / 6 · tú + vivir (to live) · pretérito indefinido(you — preterite (simple past))",
+    "fix": "",
+    "secs": 0,
+    "flags": []
+   },
+   {
+    "u": "fuimos",
+    "reply": "¡No pasa nada! 👍 No worries, this one is tricky.It’s tú viviste.Preterite: -ar → é, aste, ó, amos, aron · -er/-ir → í, iste, ió, imos, ieron; irregular stems have no accents (tuve, hice, fui, hube).¡Otra!2 / 6 · él/ella/usted + dar (to give) · pretérito indefinido(he/she/you (formal) — preterite (simple past))",
+    "fix": "",
+    "secs": 0,
+    "flags": []
+   },
+   {
+    "u": "otra pregunta por favor",
+    "reply": "OK, the answer was dio. ¡Vamos con la siguiente!3 / 6 · tú + querer (to want) · pretérito indefinido(you — preterite (simple past))",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 0,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/gen",
+    "out": "otra pregunta por favor",
+    "s": 0.7022531032562256
+   }
+  ],
+  "sys": "",
+  "errs": []
+ },
+ {
+  "id": "subjunctive-b1",
+  "lvl": "b1",
+  "note": "",
+  "conv": [
+   {
+    "u": "Quiero que mi hijo aprende español",
+    "reply": "¡Qué bueno! Aprender español es una excelente idea. Es un idioma muy útil y universal. ¿Qué te parece enseñarlo a tu hijo?",
+    "fix": "✏️ Corrections\n\nQuiero que mi hijo aprende aprenda español\n\naprende → aprenda After a wish or need + que (quiero que, es importante que, para que), use the subjunctive.\n\nBetter:\nQuiero que mi hijo aprenda español",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "es importante que él habla con su abuela",
+    "reply": "¡Es verdad! Hablar con la abuela es una excelente manera de aprender a escuchar y comunicarse. ¿Qué te parece si te proporcione un libro o un programa para que tu hijo aprenda a hablar con su abuela?",
+    "fix": "✏️ Corrections\n\nes importante que él habla hable con su abuela\n\nhabla → hable After a wish or need + que (quiero que, es importante que, para que), use the subjunctive.\n\nBetter:\nes importante que él hable con su abuela",
+    "secs": 14,
+    "flags": []
+   },
+   {
+    "u": "ella vive en Colombia",
+    "reply": "¡Qué interesante! Colombia es un país con una rica cultura y una diversidad de dialectos. ¿Qué te parece si tu hijo aprende a hablar con alguien que habla en español?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 16,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "¡Qué bueno! Aprender español es una excelente idea. Es un idioma muy útil y universal. ¿Qué te parece enseñarlo a tu hijo? ¿Hay algo en particular que te gustaría que aprenda?",
+    "s": 11.788137197494507
+   },
+   {
+    "path": "/gen",
+    "out": "Quiero que mi hijo aprenda español",
+    "s": 1.6837334632873535
+   },
+   {
+    "path": "/chat",
+    "out": "¡Es verdad! Hablar con la abuela es una excelente manera de aprender a escuchar y comunicarse. ¿Qué te parece si te proporcione un libro o un programa para que tu hijo aprenda a hablar con su abuela?",
+    "s": 14.107516765594482
+   },
+   {
+    "path": "/gen",
+    "out": "Es importante que él hable con su abuela.",
+    "s": 1.7552640438079834
+   },
+   {
+    "path": "/chat",
+    "out": "¡Qué interesante! Colombia es un país con una rica cultura y una diversidad de dialectos. ¿Qué te parece si tu hijo aprende a hablar con alguien que habla en español?",
+    "s": 15.534852027893066
+   },
+   {
+    "path": "/gen",
+    "out": "ella vive en Colombia",
+    "s": 1.1680736541748047
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level B1. The learner has this page open: B1.\nHow you talk:\n- Speak simple Latin American Spanish for level B1. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: estudio inglés los lunes → Profe: ¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?\nLearner: mi madre cocina muy bien → Profe: ¡Qué suerte tienes! La comida de casa siempre es la mejor. ¿Cuál es su plato especial?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ },
+ {
+  "id": "explain-request",
+  "lvl": "a2",
+  "note": "",
+  "conv": [
+   {
+    "u": "explain the difference between ser and estar",
+    "reply": "Ser vs. estar (Ser y estar)Spanish splits English 'to be' into two verbs.1. Ser: identity, profession and category — Use ser to say who or what someone or something is: name, job, nationality, religion, relationship, or any noun that classifies.e.g. Mi vecina es enfermera en el Hospital Santo Tomás. — My neighbour is a nurse at Santo Tomás Hospital.2. Ser: defining characteristics — Use ser for qualities that describe what someone or something is like: personality, appearance, size, colour, inherent nature.e.g. El Canal es enorme y muy antiguo. — The Canal is enormous and very old.3. Ser: origin, material and possession — Ser + de expresses where someone comes from, the material of an object, and its owner.e.g. Rubén Blades es de la ciudad de Panamá. — Rubén Blades is from Panama City.4. Time, dates and amounts — Ser gives the hour, the day, the date and totals; estar a/en positions you in time.e.g. Es la una y media; ya es hora de almorzar. — It's half past one; it's time for lunch.5. Ser: where and when events happen — An event (party, meeting, concert, wedding, exam) 'takes place', so its location and time use ser.e.g. El concierto es en el Teatro Nacional. — The concert is (takes place) at the National Theatre.6. Estar: location and position — Use estar for where people and objects are, even if the location never changes, and for body position.e.g. El Biomuseo está en Amador. — The Biomuseo is in Amador.…5 more in the full guide (Grammar guides › Ser vs. estar).Say quiz me and I’ll quiz you on it, one question at a time.",
+    "fix": "",
+    "secs": 240,
+    "flags": [
+     "copy"
+    ]
+   },
+   {
+    "u": "ok",
+    "reply": "Vamos. 6 questions from this page.Type your answer (or the letter). Say stop to finish.1 / 6 ____ las dos y cuarto. (clock time)",
+    "fix": "",
+    "secs": 0,
+    "flags": []
+   },
+   {
+    "u": "la sopa está caliente",
+    "reply": "¡Qué suerte tienes! 💡 Useful word: la ensalada — salad",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 11,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "¡Qué suerte tienes! La comida de casa siempre es la mejor. ¿Cuál es su plato especial?",
+    "s": 10.77595043182373
+   },
+   {
+    "path": "/gen",
+    "out": "la sopa está caliente",
+    "s": 1.2642426490783691
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level A2. The learner has this page open: A2.\nHow you talk:\n- Speak simple Latin American Spanish for level A2. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: mi madre cocina muy bien → Profe: ¡Qué suerte tienes! La comida de casa siempre es la mejor. ¿Cuál es su plato especial?\nLearner: anoche vi una película → Profe: ¡Buen plan para la noche! Ver películas en español es una gran práctica. ¿De qué trataba la película?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ },
+ {
+  "id": "conjugate",
+  "lvl": "a2",
+  "note": "",
+  "conv": [
+   {
+    "u": "Conjugate tener in the preterite",
+    "reply": "tener = to havePreterite (simple past) (pretérito indefinido)I: tuveyou: tuvistehe/she/you (formal): tuvowe: tuvimosthey/you all: tuvieronGerund: teniendo · past participle: tenidoTell me a sentence with it and I’ll check it.",
+    "fix": "",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "ayer tuve una reunión",
+    "reply": "¡Muy bien dicho! 👏 Nice use of the preterite: tuve.Aunque no me conozco bien, me imagino que las reuniones son importantes para todos. ¿Qué tipo de reuniones son más frecuentes en tu país?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 13,
+    "flags": [
+     "qonly"
+    ]
+   },
+   {
+    "u": "gracias",
+    "reply": "¡De nada! Me alegra que puedas hablar español. ¿Hay algo más en el curso que te gustaría aprender hoy?",
+    "fix": "",
+    "secs": 14,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "¡Qué bien que tuviste una reunión ayer! Aunque no me conozco bien, me imagino que las reuniones son importantes para todos. ¿Qué tipo de reuniones son más frecuentes en tu país?",
+    "s": 13.294586181640625
+   },
+   {
+    "path": "/gen",
+    "out": "ayer tuve una reunión",
+    "s": 1.4274709224700928
+   },
+   {
+    "path": "/chat",
+    "out": "¡De nada! Me alegra que puedas hablar español. ¿Hay algo más en el curso que te gustaría aprender hoy?",
+    "s": 13.743303060531616
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level A2. The learner has this page open: A2.\nHow you talk:\n- Speak simple Latin American Spanish for level A2. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: estudio inglés los lunes → Profe: ¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?\nLearner: mi perro se llama Max → Profe: ¡Max es un nombre muy simpático! Los perros son muy buena compañía. ¿Qué le gusta hacer a Max?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ },
+ {
+  "id": "tired-learner",
+  "lvl": "a2",
+  "note": "",
+  "conv": [
+   {
+    "u": "estoy cansado, solo cinco minutos hoy",
+    "reply": "¡Perfecto! 🙌 Right choice of estar for a state.¡Lo siento mucho! Estoy seguro que puedes hacerlo. ¿Hay algo específico que te gustaría hablar hoy?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "sí",
+    "reply": "¡Entiendo! ¿Hay algún tema específico en el que te gustaría hablar hoy?",
+    "fix": "",
+    "secs": 12,
+    "flags": [
+     "qonly"
+    ]
+   },
+   {
+    "u": "comer",
+    "reply": "¡Claro! ¿Qué tipo de comida te gusta más?",
+    "fix": "",
+    "secs": 3,
+    "flags": [
+     "qonly"
+    ]
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "¡Lo siento mucho! Estoy seguro que puedes hacerlo. ¿Hay algo específico que te gustaría hablar hoy?",
+    "s": 5.725947618484497
+   },
+   {
+    "path": "/gen",
+    "out": "estoy cansado, solo cinco minutos hoy",
+    "s": 1.599074125289917
+   },
+   {
+    "path": "/chat",
+    "out": "¡Entiendo! Estoy aquí para ayudarte a mejorar. ¿Hay algún tema específico en el que te gustaría hablar hoy?",
+    "s": 11.519840002059937
+   },
+   {
+    "path": "/chat",
+    "out": "¡Claro! ¿Qué tipo de comida te gusta más? ¿Hay algún plato específico que te gustaría aprender a hacer?",
+    "s": 3.2883026599884033
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level A2. The learner has this page open: A2.\nHow you talk:\n- Speak simple Latin American Spanish for level A2. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: mi madre cocina muy bien → Profe: ¡Qué suerte tienes! La comida de casa siempre es la mejor. ¿Cuál es su plato especial?\nLearner: estudio inglés los lunes → Profe: ¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ },
+ {
+  "id": "weather",
+  "lvl": "a1",
+  "note": "",
+  "conv": [
+   {
+    "u": "hoy hace mucho calor en Panamá",
+    "reply": "¡Qué constante! Sí, el clima de Panamá es muy especial. ¿Prefieres el calor o el frío?",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 240,
+    "flags": []
+   },
+   {
+    "u": "sí, siempre hace calor",
+    "reply": "¡Qué constante! 💡 Useful word: hace frío — it's cold",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 13,
+    "flags": []
+   },
+   {
+    "u": "en la tarde llueve mucho",
+    "reply": "¡Qué constante! 💡 Useful word: la noche — night",
+    "fix": "✓ Your Spanish looks good.",
+    "secs": 14,
+    "flags": []
+   }
+  ],
+  "raw": [
+   {
+    "path": "/chat",
+    "out": "¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?",
+    "s": 10.28933072090149
+   },
+   {
+    "path": "/gen",
+    "out": "hoy hace mucho calor en Panamá",
+    "s": 1.5911166667938232
+   },
+   {
+    "path": "/chat",
+    "out": "¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?",
+    "s": 12.636968851089478
+   },
+   {
+    "path": "/gen",
+    "out": "Sí, siempre hace calor.",
+    "s": 1.3854691982269287
+   },
+   {
+    "path": "/chat",
+    "out": "¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?",
+    "s": 14.37380051612854
+   },
+   {
+    "path": "/gen",
+    "out": "En la tarde llovió mucho.",
+    "s": 1.5887019634246826
+   }
+  ],
+  "sys": "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level A1. The learner has this page open: A1.\nHow you talk:\n- Speak simple Latin American Spanish for level A1. If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- The app corrects grammar separately, so keep talking about the topic.\nExamples (match the shape, never copy the words):\nLearner: estudio inglés los lunes → Profe: ¡Qué constante! Estudiar un día fijo ayuda mucho a recordar. ¿Qué es lo más difícil del inglés para ti?\nLearner: quiero comprar una bicicleta → Profe: ¡Buena idea! Una bicicleta es práctica y sana. ¿La quieres para ir al trabajo o para pasear?\nNever call the learner chico, chica, amigo, cariño or any other nickname.\nLearner notes: none\n\nYou are now talking with the learner. Answer their message below.",
+  "errs": []
+ }
+]
