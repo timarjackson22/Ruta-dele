@@ -442,15 +442,19 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .ntbl th { width: 34%; text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink); background: var(--surface-2); vertical-align: top }
 .ntbl td, .pitbl td, .dectbl td { vertical-align: top }
 .extbl td.exen { color: var(--muted); width: 45% }
-.extbl td.exes b { color: var(--ink) }
+.extbl td.exes b { color: var(--ink); font-weight: 600 }
 .exsp { display: flex; gap: 8px; align-items: flex-start }
 .pitbl th[scope=row] { width: 32%; text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink); background: var(--bad-soft); vertical-align: top }
 .pitbl .pfix { display: block; margin-bottom: 4px; font-weight: 600 }
 .pitbl del { color: var(--bad) } .pitbl ins { color: var(--good); text-decoration: none }
 .dectbl td.use { font-weight: 700; color: var(--cobalt); width: 38% }
 @media (max-width: 540px) { .ntbl th, .pitbl th[scope=row] { width: 38% } .extbl td.exen { width: 42% } }
-.es-w, strong.q { color: var(--cobalt); font-style: italic; font-weight: 600 }
-.lx b, .lx strong { color: var(--cobalt) }
+/* Spanish inside English text: a calm tint, no bold or italics */
+.es-w, strong.q { color: var(--es-ink); font-style: normal; font-weight: 500 }
+.lx b, .lx strong { color: inherit; font-weight: 600 }
+:root { --es-ink: #2F5C9E }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --es-ink: #A9C1EE } }
+:root[data-theme="dark"] { --es-ink: #A9C1EE }
 .lx-intro { gap: 10px }
 .lx-intro .fx-lead { font-size: 1.15rem; padding-bottom: 4px; border-bottom: 2px solid var(--saffron-soft) }
 .callout.fxd:has(.lx-intro) { padding: 12px 10px 12px 12px }
@@ -5245,7 +5249,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110339";
+  var BUILD = "202611110347";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
