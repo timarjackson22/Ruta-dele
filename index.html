@@ -439,6 +439,7 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.prfx .fx { max-width: 100%; margin: 6px 0 0; align-self: stretch }
 html { font-size: calc(100% * var(--fs, 1)) }
 body { font-size: 1.0625rem }
 .today { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 12px }
@@ -4499,6 +4500,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function prAnswer(said) {
     if (!PR) return;
     logMsg("u", said);
+    try { const um = tCur.msgs[tCur.msgs.length - 1]; PR.um = um; checkMsg(um); } catch (e) {}
     if (PR.kind === "rp") {
       const st = PR.sc.steps[PR.step];
       const rj = rejectHit(st, said), miss = missing(st.accept, said), wc = rj || miss.length ? null : wrongChoice(st, said);
@@ -4662,6 +4664,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     } catch (e) {}
     m.fx.state = "done"; if (tCur) tPush(tCur); tRender();
   }
+  // speaking tasks: check the whole answer when the learner taps "Finish and check"
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="pr-report"]'); if (!t || !PR || PR.kind !== "sp" || !PR.text) return; PR.spm = { r: "u", c: PR.text }; checkMsg(PR.spm); });
   function bubble(m, i) {
     if (m.r === "u") return '<div class="tm u"><div class="tb">' + esc(m.c).replace(/\n/g, "<br>") + "</div></div>" + fixCard(m);
     const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' : md(m.c || "").replace(/<p>((?:(?!<\/p>)[\s\S])*)<\/p>/g, (all, inner) => { const txt = inner.replace(/<[^>]+>/g, ""); return txt && !isSpanish(txt) && !/<em>/.test(inner) && /[a-z]/i.test(txt) ? '<p class="en-line"><em>' + inner + "</em></p>" : all; });
@@ -4689,9 +4693,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       h += "<h3>" + esc(PR.sc.t) + '</h3><p class="muted small">Step ' + Math.min(PR.step + 1, PR.sc.steps.length) + " of " + PR.sc.steps.length + "</p>";
       if (PR.done) h += '<div class="prbox ok"><p><b>' + esc(PR.sc.end[0]) + "</b></p><p class=\"muted\">" + esc(PR.sc.end[1]) + "</p><p class=\"result\">Score: " + PR.score + " / " + PR.sc.steps.length + '</p><button class="btn small" data-act="pr-rp" data-id="' + PR.sc.id + '">Try again</button></div>';
       else {
-        if (PR.fb && PR.fb.ok) h += '<p class="small muted">You said: «' + esc(PR.fb.heard || "") + '»</p><p class="prok">✓ ' + esc(PR.fb.text) + ' <span class="muted">(' + esc(PR.fb.en) + ")</span></p>";
+        if (PR.fb && PR.fb.ok) h += '<p class="small muted">You said: «' + esc(PR.fb.heard || "") + '»</p><p class="prok">✓ ' + esc(PR.fb.text) + ' <span class="muted">(' + esc(PR.fb.en) + ")</span></p>" + (PR.um ? '<div class="prfx">' + fixCard(PR.um) + "</div>" : "");
         h += '<div class="prbox"><p class="prsay">' + sayBtn(st.say[0]) + " <b>" + esc(st.say[0]) + '</b></p><p class="muted">' + esc(st.say[1]) + '</p><p class="small"><b>Your turn:</b> ' + esc(st.hint) + "</p></div>";
         if (PR.fb && !PR.fb.ok) h += '<div class="prbox bad"><p>You said: «' + esc(PR.fb.said) + '»</p>' + (PR.fb.rej ? '<p><b>Check the task:</b> ' + esc(PR.fb.rej.why) + "</p>" : PR.fb.wrong ? '<p><b>Check the task:</b> you said «' + esc(PR.fb.wrong.said) + "», but it asks for <b>" + esc(PR.fb.wrong.want) + "</b>.</p>" : PR.fb.miss && PR.fb.miss.length ? '<p><b>Not quite:</b> that doesn’t do the whole task yet. <b>Task:</b> ' + esc(st.hint) + "</p>" : "") + '<p>Try something like: <b>' + esc(st.model) + "</b> " + sayBtn(st.model) + "</p>" + (PR.tries >= 2 ? '<button class="btn small" data-act="pr-skip">Skip this step</button>' : "") + "</div>";
+        if (PR.fb && !PR.fb.ok && PR.um) h += '<div class="prfx">' + fixCard(PR.um) + "</div>";
       }
     } else if (PR.kind === "sp") {
       const sp = PR.sp;
@@ -4699,6 +4704,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         '<div class="prbox"><p class="small muted">Your answer (' + (PR.text.match(/\S+/g) || []).length + " words)</p><p>" + esc(PR.text || (CAN_MIC ? "Tap the mic and speak. Tap again to stop. You can do it in several parts." : "Type your answer below.")) + "</p></div>" +
         '<div class="row"><button class="btn small primary" data-act="pr-report">Finish and check</button><button class="btn small" data-act="pr-clear">Start over</button></div>';
       if (PR.report) h += '<div class="prbox"><p><b>' + PR.report.words + " words</b> (aim for " + sp.minWords + "+)</p><ul>" + PR.report.pts.map((p) => "<li>" + (p[1] ? "✓ " : "✗ ") + esc(p[0]) + "</li>").join("") + '</ul><p class="small"><b>Model answer:</b> ' + esc(sp.model) + " " + sayBtn(sp.model) + "</p>" + (resolveTB() ? '<button class="btn small" data-act="t-ask" data-p="' + esc("Assess my answer to this DELE speaking task like an examiner (grammar, vocabulary, coherence, task completion) and give me 3 concrete improvements. Task: " + sp.prompt[0] + " My answer: " + PR.text) + '">Get feedback from Profe</button>' : "") + "</div>";
+      if (PR.report && PR.spm) h += '<div class="prfx">' + fixCard(PR.spm) + "</div>";
     } else {
       const it = PR.items[Math.min(PR.i, PR.items.length - 1)];
       h += "<h3>" + (PR.kind === "vo" ? "Vocabulary by voice" : "Conjugation by voice") + '</h3><p class="muted small">' + Math.min(PR.i + 1, PR.items.length) + " of " + PR.items.length + "</p>";
@@ -5556,7 +5562,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110443";
+  var BUILD = "202611110448";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
