@@ -1,4 +1,5 @@
 """Runs Qwen2.5 (GGUF, llama.cpp) behind a tiny HTTP API that copies how the Android app drives the model:
+import os
 one chat session per key; the first message is "system\n\nuser" sent as a user turn (MediaPipe has no system role),
 later messages are added as user turns; top-k 40, top-p 0.9."""
 import json, sys, time, threading
@@ -10,14 +11,15 @@ if MODEL == "MOCK":  # plumbing test without a model
     llm = Llama()
 else:
     from llama_cpp import Llama
-    llm = Llama(model_path=MODEL, n_ctx=4096, n_threads=4, verbose=False, seed=-1)
+    import os
+    llm = Llama(model_path=MODEL, n_ctx=4096, n_threads=4, verbose=False, seed=int(os.environ.get("EVAL_SEED", "1234")))
 LOCK = threading.Lock()
 SESS = {}   # key -> list of messages
 LOG = open(sys.argv[2] if len(sys.argv) > 2 else "raw.jsonl", "a")
 
 def run(msgs, max_tokens, temp):
     t0 = time.time()
-    out = llm.create_chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temp, top_k=40, top_p=0.9, repeat_penalty=1.0)
+    out = llm.create_chat_completion(messages=msgs, max_tokens=max_tokens, temperature=temp, top_k=40, top_p=0.9, repeat_penalty=1.0, seed=int(os.environ.get("EVAL_SEED", "1234")) + len(msgs))
     return out["choices"][0]["message"]["content"], time.time() - t0
 
 class H(BaseHTTPRequestHandler):
