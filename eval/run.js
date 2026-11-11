@@ -29,7 +29,7 @@ function score(turn, reply, prev, fix, learnerEn) {
   // a question machine: nothing said apart from a quick reaction and a question
   if (!/\d+ \/ \d+|Casi|Inténtalo|answer is|Corrections/.test(body)) {
     const content = body.split(/(?<=[.!?…])\s+|\n+/).filter((x) => !/\?\s*$/.test(x) && words(x).length > 3 && !/Nice use|Perfect use|Good reflexive|Right choice|Right:|long, complete/.test(x));
-    if (/\?/.test(body) && !content.length && !turn.en) f.push("qonly");
+    if (/\?/.test(body) && !content.length && !turn.en && !/^(hola|buenos|buenas)\b/i.test(turn.u)) f.push("qonly");
   }
   if (/Corrections/.test(fix) && !turn.fix && !turn.err) f.push("falsefix:" + fix.replace(/\s+/g, " ").slice(0, 80));
   if (/learner notes|instructions|background \(|private reference|reply as profe|you are profe/i.test(body)) f.push("echo");
@@ -37,7 +37,7 @@ function score(turn, reply, prev, fix, learnerEn) {
   const qs = (body.match(/\?/g) || []).length; if (qs > 2) f.push("questions:" + qs);
   if (prev && same(body, prev)) f.push("repeat");
   // English words inside Spanish sentences (not in an italic English line)
-  const esLines = body.split("\n").filter((l) => { const ws = words(l.toLowerCase()); return ws.filter((w) => ES_W.has(w)).length >= 2 && ws.filter((w) => EN_W.has(w)).length <= 1; });
+  const esLines = body.split("\n").filter((l) => !/Nice use|Perfect use|Good reflexive|Right choice|Right:/.test(l)).filter((l) => { const ws = words(l.toLowerCase()); return ws.filter((w) => ES_W.has(w)).length >= 2 && ws.filter((w) => EN_W.has(w)).length <= 1; });
   const mix = esLines.flatMap((l) => words(l.toLowerCase()).filter((w) => ["tenses", "tense", "verb", "practice", "sentence", "example", "please"].includes(w)));
   if (mix.length) f.push("mixed:" + mix.join(","));
   if (!learnerEn) { const ws = words(body.toLowerCase()); const es = ws.filter((w) => ES_W.has(w)).length, en = ws.filter((w) => EN_W.has(w)).length; if (en > es + 3) f.push("too-english"); }

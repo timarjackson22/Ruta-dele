@@ -77,10 +77,10 @@ jobs:
         run: node eval/report.js all && cat all/summary.json
       - name: Save results to the eval-results branch
         run: |
-          cd all && git init -q && git checkout -q -b eval-results
+          cd all && git init -q && git checkout -q -b eval-results-${{ github.ref_name }}
           git config user.name "profe-eval" && git config user.email "actions@users.noreply.github.com"
           git add report.md summary.json results-*.json raw-*.jsonl 2>/dev/null; git commit -qm "eval ${{ github.run_id }}"
-          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results
+          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results-${{ github.ref_name }}
       - uses: actions/upload-artifact@v4
         with:
           name: eval-report

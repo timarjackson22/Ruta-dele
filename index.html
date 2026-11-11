@@ -4060,7 +4060,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (compact && gn) ctx = Object.assign({}, ctx, { text: "Topic notes (reliable):\n" + gn + "\n\n" + (ctx.text || "") });
     if (compact && TB === "native") return "You are Profe, a warm Spanish conversation teacher in a DELE course app. The learner is an English speaker living in Panama, level " + lvl + ". The learner has this page open: " + (ctx.label || "the course") + ".\n" +
       "How you talk:\n- Speak simple Latin American Spanish for level " + lvl + ". If the learner writes in English, answer in English and add one short Spanish example.\n- You are an enthusiastic, encouraging teacher having a real conversation, not an interview. Each reply: first respond to what the learner said like a real person: share your own opinion, a related fact about Panama or the Spanish-speaking world, or a short example (1 or 2 sentences). Then, if it fits, ask ONE follow-up question. At most 2 or 3 short sentences.\n- Never greet again after the start, never ask «¿En qué puedo ayudarte?» or «¿Cómo estás?» mid-conversation, never repeat a question you already asked.\n- If you offered an activity and the learner says yes, start it at once.\n- Match the feeling: if the learner is tired, sick or sad, be sympathetic (¡Lo siento!, ¡Qué pena!), never «me alegro».\n- The app corrects grammar separately, so keep talking about the topic.\n" +
-      "Examples:\nLearner: tengo treinta años → Profe: ¡Treinta años, una edad estupenda! Yo creo que es la mejor década. ¿Y a qué te dedicas?\nLearner: ayer fui a la playa → Profe: ¡Qué bien! A mí me encanta el mar; en Panamá, Playa Venao es preciosa. ¿A qué playa fuiste?\nLearner: me gusta bailar salsa → Profe: ¡A mí también! La salsa es parte de la cultura panameña, como la música de Rubén Blades. ¿Dónde bailas?\nLearner: estoy cansado hoy → Profe: ¡Uy, lo siento! ¿Trabajaste mucho hoy?\nLearner: bien, gracias, ¿y tú? → Profe: ¡Muy bien, gracias! ¿Qué hiciste hoy?\nLearner: hoy hace mucho calor en Panamá → Profe: Sí, en Panamá casi siempre hace calor. ¿Qué haces cuando hace tanto calor?\nLearner: mi hermano vive en David → Profe: ¡David, en Chiriquí! ¿Lo visitas a menudo?\nLearner: What does «pana» mean? → Profe: «Pana» means friend or buddy in Panama. Example: «Él es mi pana.»\n" +
+      "Examples:\nLearner: ayer fui a la playa → Profe: ¡Qué bien! A mí me encanta el mar; en Panamá, Playa Venao es preciosa. ¿A qué playa fuiste?\nLearner: me gusta bailar salsa → Profe: ¡A mí también! La salsa es parte de la cultura panameña, como la música de Rubén Blades. ¿Dónde bailas?\nLearner: hoy hace mucho calor en Panamá → Profe: Sí, en Panamá casi siempre hace calor. ¿Qué haces cuando hace tanto calor?\nLearner: mi hermano vive en David → Profe: ¡David, en Chiriquí! ¿Lo visitas a menudo?\nLearner: What does «pana» mean? → Profe: «Pana» means friend or buddy in Panama. Example: «Él es mi pana.»\n" +
       (TS.lname ? "The learner's name is " + TS.lname + "; use it now and then. " : "") + "Never call the learner chico, chica, amigo, cariño or any other nickname.\n" +
       "Learner notes: " + (TS.memory || "none").slice(0, 200);
     if (compact) return "You are Profe, a warm, patient Spanish tutor. The learner lives in Panama and is preparing the DELE " + lvl + ". " + lang + " Use " + (es ? "Spain Spanish" : "Latin American Spanish (ustedes, not vosotros)") + ".\n" +
@@ -4280,6 +4280,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const D = tCur.drill, nw = q.split(" ").length;
     if (D && !D.done) {
       if (/^(stop|para|basta|salir|exit|quit|enough|no m[aá]s|termina|fin)\b/.test(q)) { D.done = 1; return "👍 Paramos aquí" + (D.n > 1 ? ": **" + D.ok + " / " + (D.n - 1) + "**" : "") + ".\n*We’ll stop here. Ask me anything, or say «practicar " + D.v + "» to go again.*"; }
+      if (/^(otra|next|siguiente|skip|saltar|pasa|another)\b|otra pregunta/.test(q)) { D.miss.push(D.q.p[2] + " " + D.q.ans); if (D.n >= D.total) { D.done = 1; return "👍 That was the last one. **" + D.ok + " / " + D.total + "**. ¡Buen trabajo!"; } return "OK, the answer was **" + D.q.ans + "**. " + tnext() + "\n" + drNext(D); }
       if (/^(s[ií]|no|ok|okay|vale|claro|yes|dale|listo|bueno)$/.test(q)) return "👉 Write just the verb form.\n\n" + D.qt;
       // a verb form ("hubimos", "yo hube"), not a new question or a sentence
       if (!/\?/.test(text) && (nw === 1 || (nw === 2 && /^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/.test(q.split(" ")[0])))) return drGrade(D, q);
@@ -4318,6 +4319,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (tCur) { const r = roleOf(lastU); if (r) tCur.role = r; if (/^(stop|terminamos|fin del juego|end (the )?role ?play|basta)\b/.test(q)) tCur.role = null; }
     const role = tCur && tCur.role;
     if (role) return "(Role-play: you are the " + role + ". Stay in character. Answer as the " + role + " with one short line in simple Spanish, and move the scene forward.)";
+    if (/\b(cansad[oa]|enferm[oa]|triste|me duele|mal|aburrid[oa]|estresad[oa]|preocupad[oa])\b/.test(q)) return "(The learner feels bad: be sympathetic first (¡Lo siento!), then say one kind or useful thing, then ask one gentle question. No greeting, no nicknames.)";
+    if (/^(bien|muy bien|todo bien|bastante bien)\b.*\b(y t[uú]|y usted)\b/.test(q)) return "(The learner asked how you are: say you are well and add one short thing about your day as a teacher, then ask them one question. No nicknames.)";
     if (looksEnglish(lastU)) return "(The learner wrote in English: answer clearly in English in 2 or 3 sentences, with one short Spanish example. No greeting.)";
     if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo|yes|sure)\b/.test(q) && q.split(" ").length <= 3 && prevA) return "(The learner said yes to what you last proposed: «" + prevA.slice(0, 160) + "». Do it now: start the activity with a concrete example or question. No greeting.)";
     return "(Reply as Profe: respond to what the learner said by sharing something yourself (an opinion, a fact about Panama, or an example) in 1 or 2 short sentences, then ask at most one question. No greeting, no nicknames.)";
@@ -4336,7 +4339,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   ];
   function followUp(lastU) {
     const q = xnorm(lastU), f = FOLLOW.find(([re]) => re.test(q));
-    const [es, en] = f ? [f[1], f[2]] : [["¡Interesante! Cuéntame un poco más, por favor.", "Interesting! Tell me a bit more, please."], ["¿Y por qué?", "And why?"], ["¿Y qué piensas de eso?", "And what do you think about that?"]][Math.floor(Math.random() * 3)];
+    if (/\b(me llamo|mi nombre es)\b/.test(q)) return "¡Mucho gusto" + (TS.lname ? ", " + TS.lname : "") + "! Yo soy Profe, tu profesor de español. ¿De qué parte de Panamá eres?\n*Nice to meet you! I'm Profe, your Spanish teacher. Which part of Panama are you from?*";
+    if (/^(no s[eé]|no sé|ni idea|nada)\b/.test(q)) return "¡No pasa nada! Te propongo algo: cuéntame qué hiciste ayer, con dos o tres frases.\n*No problem! Here's an idea: tell me what you did yesterday, in two or three sentences.*";
+    const [es, en] = f ? [f[1], f[2]] : [["¡Interesante! Cuéntame un poco más, por favor.", "Interesting! Tell me a bit more, please."], ["¡Qué bien! ¿Y qué piensas de eso?", "Nice! And what do you think about that?"]][Math.floor(Math.random() * 2)];
     return es + "\n*" + en + "*";
   }
   // drop a re-greeting and the "how can I help" filler; empty means the reply had nothing else
@@ -4503,7 +4508,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const changed = tCur.ctxLabel !== ctx.label; tCur.ctxLabel = ctx.label;
     let note = "";
     const px = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending);
-    if (px && px.x) note += "(Your last reply to the learner was: " + px.c.replace(/\*+/g, "").replace(/\n+/g, " ").slice(0, natWhich() === "fast" ? 200 : 400) + ")\n";
+    if (px && px.x && /Inténtalo otra vez|¡Casi!|Almost!/.test(px.c)) note += "(You had just corrected the learner\u2019s Spanish and they tried again.)\n";
+    else if (px && px.x) note += "(Your last reply to the learner was: " + px.c.replace(/\*+/g, "").replace(/\n+/g, " ").slice(0, natWhich() === "fast" ? 200 : 400) + ")\n";
     if (refers || changed) {
       const lim = natWhich() === "fast" ? 260 : 600;
       const lines = ctx.text.split("\n").map((l) => l.trim()).filter(Boolean);
@@ -4574,6 +4580,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function praiseFor(text) {
     const low = String(text || "").toLowerCase(), W = low.match(/[a-záéíóúüñ]+/g) || [];
     if (W.length < 3) return "";
+    try { if (quickFixes(text).length) return ""; } catch (e) {}
     let best = null;
     W.forEach((w) => { if (w.length < 3) return; const rd = verbReadings(w); if (!rd.length) return; const ts = new Set(rd.map((r) => r.t)); if (ts.size !== 1) return; const t = rd[0].t; if (!best || PRAISE_RANK[t] > PRAISE_RANK[best.t]) best = { t, w }; });
     let what = "";
@@ -4592,7 +4599,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function convoCoach(text) {
     if (TS.noFix || !tCur || !text || text.length > 300) return null;
     const words = (text.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+/g) || []);
-    if (words.length < 2 || !isSpanish(text + " ") || looksEnglish(text)) { tCur.retry = null; return null; }
+    if (words.length < 2 || looksEnglish(text)) { tCur.retry = null; return null; }
     let fx = []; try { fx = quickFixes(text); } catch (e) {}
     const better = fx.length ? applyFx(text, fx) : "";
     const R = tCur.retry; tCur.retry = null;
@@ -6072,7 +6079,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611111200";
+  var BUILD = "202611111243";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
