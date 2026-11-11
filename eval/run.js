@@ -25,6 +25,12 @@ function score(turn, reply, prev, fix, learnerEn) {
   if (/en qu[eé] (te )?puedo ayudar|c[oó]mo (te )?puedo ayudar|gracias por tu (mensaje|pregunta)|no dudes en|is there anything else/i.test(body)) f.push("generic");
   if (turn.k > 0 && /^¡?hola\b/i.test(body)) f.push("regreet");
   if (/Cuéntame un poco más|¿Y por qué\?|¿Y qué piensas de eso\?/.test(body)) f.push("fallback");
+  if (/(^|[,¡]\s*)(chic[oa]|amig[oa]|cariño)\b(?!\s+(de|que|del))/i.test(body)) f.push("nickname");
+  // a question machine: nothing said apart from a quick reaction and a question
+  if (!/\d+ \/ \d+|Casi|Inténtalo|answer is|Corrections/.test(body)) {
+    const content = body.split(/(?<=[.!?…])\s+|\n+/).filter((x) => !/\?\s*$/.test(x) && words(x).length > 3 && !/Nice use|Perfect use|Good reflexive|Right choice|Right:|long, complete/.test(x));
+    if (/\?/.test(body) && !content.length && !turn.en) f.push("qonly");
+  }
   if (/Corrections/.test(fix) && !turn.fix && !turn.err) f.push("falsefix:" + fix.replace(/\s+/g, " ").slice(0, 80));
   if (/learner notes|instructions|background \(|private reference|reply as profe|you are profe/i.test(body)) f.push("echo");
   if (nw > 90) f.push("long:" + nw);
