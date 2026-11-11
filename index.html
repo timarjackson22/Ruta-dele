@@ -4376,9 +4376,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
     // keep the recognizer open (continuous) and decide ourselves when the learner has finished: after a pause of TS.waitMs
-    const manual = !!opts.continuous, waitMs = TS.waitMs || 3500;
+    const manual = !!opts.continuous, waitMs = TS.waitMs || 2000;
     rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
-    let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => { if (rec === me && listening) stopListening(); }, ms); };
+    let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => {
+      if (rec !== me || !listening) return;
+      const t = (liveText || final || heard).trim();
+      if (t && !done) { done = true; listening = false; try { me.abort(); } catch (e) {} uiVoice(); liveText = ""; paintLive(); onFinal(t); }
+      else stopListening();
+    }, ms); };
     let final = "", heard = "", done = false, kept = "", prevI = "", prevN = 0; liveText = "";
     const me = rec;
     // some phones (Samsung) show the words while you speak but then end with "no match" instead of a final result: keep what was heard
@@ -4464,7 +4469,16 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   /* ---------- chat ---------- */
-  let lastVoice = false;
+  let lastVoice = false, AG = 0;
+  function autoAgain() {
+    if (!(voiceMode || lastVoice) || TS.autoListen === false || listening || !document.getElementById("t-msgs")) return;
+    const g = ++AG; setTimeout(() => { if (g === AG && !listening && !tBusy && document.getElementById("t-msgs")) listen((t) => tSend(t, true)); }, 300);
+  }
+  // in case the voice never reports that it finished: open the mic once it has been quiet for a moment
+  function afterSpeech() {
+    const g = AG; let quietN = 0, n = 0, seen = false;
+    const iv = setInterval(() => { n++; if (g !== AG || listening || n > 240) return clearInterval(iv); let sp = false; try { sp = speechSynthesis.speaking; } catch (e) {} if (sp) seen = true; quietN = sp ? 0 : quietN + 1; if ((seen && quietN >= 4) || (!seen && n > 30)) { clearInterval(iv); autoAgain(); } }, 400);
+  }
   async function tSend(text, byVoice) {
     lastVoice = !!byVoice;
     text = String(text || "").trim(); if (!text) return;
@@ -4478,7 +4492,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     while (turns.length && turns[0].role !== "user") turns.shift();
     const live = { r: "a", c: "", t: Date.now(), pending: true }; tCur.msgs.push(live);
     tBusy = true; tCtl = new AbortController(); tRender();
-    const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); }) : null;
+    const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => autoAgain()) : null;
     EXPERT_LAST = "";
     try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; if (out && out === EXPERT_LAST) live.x = 1; }
     catch (e) {
@@ -4489,8 +4503,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
     checkMsg(um);
     trReply(live);
-    if (spk) { if (live.c && !live.err) spk.finish(live.c); else { SPK_GEN++; } }
-    else if ((voiceMode || lastVoice) && live.c && !live.err) speakMixed(live.c, () => { if (voiceMode && TS.autoListen) listen((t) => tSend(t, true)); });
+    if (spk) { if (live.c && !live.err) { spk.finish(live.c); afterSpeech(); } else { SPK_GEN++; } }
+    else if ((voiceMode || lastVoice) && live.c && !live.err) { speakMixed(live.c, () => autoAgain()); afterSpeech(); }
     if (tCur.msgs.filter((m) => m.r === "u").length % 6 === 0) tRemember();
   }
   async function tRemember() {
@@ -4845,7 +4859,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small" style="margin-top:8px">Colour</p><div class="row pvrow">' + PV_COLORS.map(([c, n]) => '<button class="pvc" data-act="pv-col" data-v="' + c + '" aria-pressed="' + ((TS.pcol || "#1F4FA3") === c) + '" aria-label="' + n + '" style="background:' + c + '"></button>').join("") + "</div>" +
       '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
       '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
-      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2500, "2.5 s"], [3500, "3.5 s"], [5000, "5 s"], [7000, "7 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 3500) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
+      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2000, "2 s"], [2500, "2.5 s"], [3500, "3.5 s"], [5000, "5 s"], [7000, "7 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 2000) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-fix"' + (TS.noFix ? "" : " checked") + '> Correct my Spanish (marks wrong words under each message)</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-enline"' + (TS.noEnLine ? "" : " checked") + '> Show English under Profe’s replies (never read aloud)</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
@@ -4911,7 +4925,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
           '<p class="small">Download once on Wi-Fi. The AI then runs on your phone, with no account and no internet.</p><div class="row"><button class="btn small primary" data-act="t-dlmodel" data-v="light">Light · ' + MODELS.light.size + '</button><button class="btn small" data-act="t-dlmodel" data-v="better">Better · ' + MODELS.better.size + "</button></div>") +
       '<div class="dlp" id="t-dl" hidden><div class="bar"><i id="t-progbar" style="width:0%"></i></div><p class="small muted" id="t-prog">Starting…</p></div></div>' +
       "" +
-      (CAN_MIC ? '<div class="prbox"><p><b>Voice</b></p><div class="row"><span class="small">I speak:</span><select id="t-stt"><option value="">Spanish (' + (S.region === "es" ? "Spain" : "Latin America") + ')</option><option value="es-PA"' + (TS.sttLang === "es-PA" ? " selected" : "") + '>Spanish (Panamá)</option><option value="en-US"' + (TS.sttLang === "en-US" ? " selected" : "") + '>English</option></select></div><label class="row small"><input type="checkbox" id="t-auto"' + (TS.autoListen ? " checked" : "") + "> In voice chat, listen again automatically after Profe speaks</label></div>" : "") +
+      (CAN_MIC ? '<div class="prbox"><p><b>Voice</b></p><div class="row"><span class="small">I speak:</span><select id="t-stt"><option value="">Spanish (' + (S.region === "es" ? "Spain" : "Latin America") + ')</option><option value="es-PA"' + (TS.sttLang === "es-PA" ? " selected" : "") + '>Spanish (Panamá)</option><option value="en-US"' + (TS.sttLang === "en-US" ? " selected" : "") + '>English</option></select></div><label class="row small"><input type="checkbox" id="t-auto"' + (TS.autoListen ? " checked" : "") + "> After you speak, listen again automatically when Profe finishes</label></div>" : "") +
       looksHTML() +
       "<h3>What Profe remembers</h3><p class=\"muted small\">Profe reads these notes at the start of every chat. They update every few messages, and you can edit them.</p><textarea id=\"t-mem\" rows=\"6\">" + esc(TS.memory) + '</textarea><div class="row"><button class="btn small primary" data-act="t-savemem">Save notes</button><button class="btn small" data-act="t-remember">Update from this chat</button></div>' +
       "<h3>Past conversations</h3>" + (TS.sessions.length ? '<ul class="tsess">' + TS.sessions.map((s) => '<li><button class="tsb" data-act="t-open-s" data-id="' + esc(s.id) + '"><b>' + esc(s.title || "Conversation") + '</b><span class="muted small">' + esc(s.where || "") + " · " + new Date(s.updated || s.created).toLocaleString() + " · " + s.msgs.length + " messages</span></button></li>").join("") + "</ul>" : '<p class="muted">No conversations yet.</p>') +
@@ -5674,7 +5688,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110500";
+  var BUILD = "202611110513";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
