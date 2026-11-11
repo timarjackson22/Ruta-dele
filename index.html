@@ -439,6 +439,19 @@ h2 .es, .pxtype .es, .feature .es, li .es { color: var(--muted); font-weight: 40
 .srcount { text-align: center; font-variant-numeric: tabular-nums; margin: 0 }
 .cn { color: #2F6FD6; font-weight: 700 } .cl { color: #C2362B; font-weight: 700 } .cd { color: #2C7449; font-weight: 700 }
 .srcard { cursor: default; flex-direction: column; gap: 8px }
+.notes2 { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)) }
+.note2 { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--cobalt); border-radius: 12px; padding: 10px 12px }
+.note2:nth-child(3n+2) { border-left-color: var(--saffron) } .note2:nth-child(3n+3) { border-left-color: var(--good) }
+.note2 .nl { margin: 0 0 6px; font-size: .74rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted) }
+.note2 .note-body { margin: 0; line-height: 1.55 }
+.ptiles { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch }
+.ptile { display: flex; flex-direction: column; gap: 1px; background: var(--surface-2); border-radius: 10px; padding: 6px 10px; min-width: 5.5em }
+.pt-en { font-size: .78rem; color: var(--muted); line-height: 1.25 }
+.pt-es { font-weight: 600; line-height: 1.3 }
+.ptiles.vs .ptile { flex: 1 1 0; min-width: 0 }
+.vs-sep { align-self: center; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase }
+.gblock > p.rule { font-style: normal; color: var(--ink); background: var(--saffron-soft); border-radius: 10px; padding: 8px 12px; margin: 0 }
+.gblock > p.rule::before { content: "Rule"; display: block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--warn); margin-bottom: 2px }
 .ntbl th { width: 34%; text-transform: none; letter-spacing: 0; font-size: .92rem; color: var(--ink); background: var(--surface-2); vertical-align: top }
 .ntbl td, .pitbl td, .dectbl td { vertical-align: top }
 .extbl td.exen { color: var(--muted); width: 45% }
@@ -1768,10 +1781,25 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       g.w.map((w) => '<tr><td class="en"><span data-act="reveal">' + esc(w[1]) + '</span></td><td class="sp">' + sayBtn(w[0]) + '</td><td class="es">' + esc(w[0]) + "</td></tr>").join("") + "</tbody></table></div></div>";
   }
   // "Label|detail" notes read better as a two-column table
+  // notes become small labelled cards; "word (meaning), …" lists become tiles and "A vs. B" contrasts sit side by side
+  const PAIR = /^(.+?)\s*\(([^()]+)\)\s*$/;
+  function noteTiles(d) {
+    const tile = (es, en) => '<div class="ptile"><span class="pt-en">' + esc(en) + '</span><span class="pt-es" lang="es">' + esc(es) + "</span></div>";
+    const vs = d.split(/\s+vs\.?\s+/i);
+    if (vs.length >= 2 && vs.every((x) => PAIR.test(x.trim()))) return '<div class="ptiles vs">' + vs.map((x) => { const m = PAIR.exec(x.trim()); return tile(m[1], m[2]); }).join('<span class="vs-sep">vs</span>') + "</div>";
+    const items = typeof fxTop === "function" ? fxTop(d) : d.split(/,\s+/);
+    const ok = items.filter((x) => PAIR.test(x.trim()));
+    if (items.length >= 3 && ok.length >= items.length * 0.8) return '<div class="ptiles">' + items.map((x) => { const m = PAIR.exec(x.trim()); return m ? tile(m[1], m[2]) : '<div class="ptile"><span class="pt-es" lang="es">' + esc(x) + "</span></div>"; }).join("") + "</div>";
+    return null;
+  }
   function notesHTML(n) {
     if (!n || !n.length) return "";
     const piped = n.filter((x) => x.indexOf("|") > 0).length;
-    if (piped >= 2 && piped >= n.length * 0.6) return '<div class="tbl"><table class="ntbl"><tbody>' + n.map((x) => { const k = x.indexOf("|"); return k < 0 ? '<tr><td colspan="2">' + esc(x) + "</td></tr>" : '<tr><th scope="row">' + esc(x.slice(0, k)) + "</th><td>" + esc(x.slice(k + 1)) + "</td></tr>"; }).join("") + "</tbody></table></div>";
+    if (piped >= 2 && piped >= n.length * 0.6) return '<div class="notes2">' + n.map((x) => {
+      const k = x.indexOf("|"); if (k < 0) return '<div class="note2"><p class="note-body">' + esc(x) + "</p></div>";
+      const lab = x.slice(0, k), d = x.slice(k + 1).trim(), t = noteTiles(d);
+      return '<div class="note2"><p class="nl">' + esc(lab) + "</p>" + (t || '<p class="note-body">' + esc(d) + "</p>") + "</div>";
+    }).join("") + "</div>";
     return '<ul class="notes">' + n.map((x) => "<li>" + rich(x) + "</li>").join("") + "</ul>";
   }
   // examples: English first, then the Spanish (with its listen button)
@@ -2287,10 +2315,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { Object.values(WFX).forEach((l) => l.forEach(([f]) => add(f))); } catch (x) {}
   }
   const ES_GLUE = new Set("no a me te se le les lo la las los el de del al en y e o u mi mis tu tus su sus es un una he ha has han con por sin que nos ya muy más".split(" "));
-  const ES_SKIP = "b, strong, em, i, .es-w, td.es, .exr, .es, .es-sub, .gw, .sel-es, a, button, input, textarea, select, .say, .pa, .tutor, .story, .pod, .verse, .passage, .mtext, .dlg, del, ins, mark, code, .crumbs, .eyebrow, h1, h2";
+  const ES_SKIP = ".ptile, b, strong, em, i, .es-w, td.es, .exr, .es, .es-sub, .gw, .sel-es, a, button, input, textarea, select, .say, .pa, .tutor, .story, .pod, .verse, .passage, .mtext, .dlg, del, ins, mark, code, .crumbs, .eyebrow, h1, h2";
   function esMark(root) {
     if (!root || !root.querySelectorAll) return; esSets();
-    root.querySelectorAll(".ntbl td, .ntbl th, .pitbl td, .dectbl td, .lx p, .lx li, .fx-h, .callout:not(.fxd), p.rule, .notes li, .pits li, .grule p, .gblock > p, section > p, .lead2, .fx-tip p, .fx-ex p, .fx-note p, .gmist p, .decide li, .fxwrap p").forEach((el) => {
+    root.querySelectorAll(".note-body, .pitbl td, .dectbl td, .lx p, .lx li, .fx-h, .callout:not(.fxd), p.rule, .notes li, .pits li, .grule p, .gblock > p, section > p, .lead2, .fx-tip p, .fx-ex p, .fx-note p, .gmist p, .decide li, .fxwrap p").forEach((el) => {
       if (el.dataset.esm || el.closest(".tutor, .story, .pod, .verse, .passage, .mtext, .dlg, .crumbs, #runner, .pxcard, .sheet")) return;
       el.dataset.esm = "1";
       const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, { acceptNode: (n) => n.parentElement.closest(ES_SKIP) && n.parentElement.closest(ES_SKIP) !== el ? 2 : 1 });
@@ -2390,8 +2418,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (n.matches(".gnum")) { push("Rule " + n.textContent.trim() + ".", false); return; }
       if (/^(LI|P|H\d|DIV|TR|UL|TD)$/.test(n.tagName)) stop();
       let es = forceEs;
-      if (n.matches("td.es, td.exes, .exr > b, .es-sub, del, ins, .gw, .face, .es-w, strong.q, .ww > b")) es = true;
-      else if (n.matches("td.exen, td.gl")) es = false;
+      if (n.matches("td.es, td.exes, .exr > b, .es-sub, del, ins, .gw, .face, .es-w, strong.q, .ww > b, .pt-es")) es = true;
+      else if (n.matches("td.exen, td.gl, .pt-en")) es = false;
       else if (n.matches("b, strong, em, i, q, .sel-es")) { const t = n.textContent.trim(); es = t.length > 1 && langOf(t) === "es"; }
       else if (n.matches("td.en, .tr, .muted.small, .en")) es = false;
       n.childNodes.forEach((c) => walk(c, es));
@@ -5258,7 +5286,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611110353";
+  var BUILD = "202611110400";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
