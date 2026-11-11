@@ -31,7 +31,7 @@ function score(turn, reply, prev, fix, learnerEn) {
   if (/(^|[,¡]\s*)(chic[oa]|amig[oa]|cariño)\b(?!\s+(de|que|del))/i.test(body)) f.push("nickname");
   // a question machine: nothing said apart from a quick reaction and a question
   if (!/\d+ \/ \d+|Casi|Inténtalo|answer is|Corrections/.test(body)) {
-    const content = body.split(/(?<=[.!?…])\s+|\n+/).filter((x) => !/\?\s*$/.test(x) && words(x).length > 3 && !/Nice use|Perfect use|Good reflexive|Right choice|Right:|long, complete/.test(x));
+    const content = body.replace(/(💡|¿)/g, "\n$1").split(/(?<=[.!?…])\s+|\n+/).filter((x) => !/\?\s*$/.test(x) && words(x).length > 3 && !/Nice use|Perfect use|Good reflexive|Right choice|Right:|long, complete/.test(x));
     if (/\?/.test(body) && !content.length && !turn.en && !turn.rp && !/^(hola|buenos|buenas)\b/i.test(turn.u)) f.push("qonly");
   }
   if (/Corrections/.test(fix) && !turn.fix && !turn.err) f.push("falsefix:" + fix.replace(/\s+/g, " ").slice(0, 80));
