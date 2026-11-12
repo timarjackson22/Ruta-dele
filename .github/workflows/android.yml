@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
@@ -32,7 +32,18 @@ jobs:
           gradle --no-daemon --stacktrace assembleRelease 2>&1 | tee -a ../build.log
       - name: Collect APK
         run: cp android/app/build/outputs/apk/release/app-release.apk ruta-dele.apk
+      - name: Publish test build (not the main branch)
+        if: github.ref_name != 'main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-test
+          name: Ruta DELE for Android (test build)
+          prerelease: true
+          make_latest: false
+          files: ruta-dele.apk
+          body: Test build from ${{ github.ref_name }} (build ${{ github.run_number }}). Not the release.
       - name: Publish release
+        if: github.ref_name == 'main'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk
