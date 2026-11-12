@@ -6249,25 +6249,50 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   // one sentence reviewed by the AI: minimal correction, typed issues with reasons, and a more natural version
+  // JSON from a small model: parse it, or salvage the fields when it is malformed
+  function wJson(t) {
+    t = String(t || ""); const body = (t.match(/\{[\s\S]*\}/) || [""])[0];
+    try { const j = JSON.parse(body); if (j && typeof j === "object") return j; } catch (e) {}
+    const str = '"((?:[^"\\\\]|\\\\.)*)"', un = (x) => { try { return JSON.parse('"' + x + '"'); } catch (e) { return x; } };
+    const f = (k, src) => { const m = new RegExp('"' + k + '"\\s*:\\s*' + str).exec(src); return m ? un(m[1]) : ""; };
+    const issues = []; const re = /\{[^{}]*"wrong"[^{}]*\}/g; let m;
+    while ((m = re.exec(body))) { const o = m[0]; const w = f("wrong", o), rt = new RegExp('"right"\\s*:\\s*' + str + '\\s*[,}]').exec(o); if (w && rt) issues.push({ wrong: w, right: un(rt[1]), type: f("type", o), why: f("why", o) }); }
+    const correct = f("correct", body), natural = f("natural", body);
+    return correct || issues.length ? { correct, issues, natural } : null;
+  }
+  const W_PRON = /^(yo|tú|tu|él|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/i;
+  function wKeep(x, sn) {
+    const lt = (v) => String(v || "").toLowerCase().replace(/[^a-záéíóúüñ ]/g, " ").replace(/\s+/g, " ").trim();
+    const a = lt(x.from), b = lt(x.to);
+    if (a === b) return false; // only punctuation or spacing changed
+    if (/\(or\b|\bor\b.*\)|\//.test(x.to)) return false; // not a single answer
+    const A = a.split(" ").filter(Boolean), B = b.split(" ").filter(Boolean);
+    if (A.filter((w) => !B.includes(w)).every((w) => W_PRON.test(w)) && B.every((w) => A.includes(w))) return false; // a subject pronoun dropped: correct Spanish
+    if (x.type !== "register" && A.length > 8 && A.length >= (sn.match(/\S+/g) || []).length * 0.7) return false; // the whole sentence rewritten
+    if (/\b(is|are|sounds|was) (grammatically |perfectly |also |technically |completely )?(correct|acceptable|understandable|fine|ok)\b|\bwhile\b[^.]{0,60}\b(correct|understandable|acceptable)\b/i.test(x.why)) return false; // the model says it is not an error
+    if (x.type === "usage" && /\b(more (natural|common|concise|elegant|sophisticated|idiomatic|formal)|often (sounds|used|requires)|sounds better|slightly|could also)\b/i.test(x.why) && !/\b(wrong|incorrect|not used|false friend|does not mean|doesn't mean|too (informal|formal))\b/i.test(x.why)) return false; // a preference
+    return true;
+  }
   async function wSentence(T, sn, prev) {
     const strong = resolveTB() === "claude" || (TB === "native" && natWhich() === "best");
     if (!strong) { const r = await aiCorrect(sn); return { items: ((r && r.items) || []).map((x) => ({ from: x.from, to: x.to, why: x.why || "", type: "grammar" })), natural: "" }; }
-    const user = "Level: " + T.lvl.toUpperCase() + ". Text type: " + T.type + " (" + T.reg + " register).\n" + (prev ? "Previous sentence: «" + prev + "»\n" : "") + "Sentence to correct: «" + sn + "»\n\n" +
-      "Find every error in this sentence: grammar (agreement, verb forms, tenses, prepositions, articles), spelling and accents, usage (wrong or unnatural word choice, false friends, words a native speaker would not use here) and register (too formal or informal for this text). Do not count correct Spanish as an error.\n" +
+    const user = "Level: " + T.lvl.toUpperCase() + ". Text type: " + T.type + " (" + T.reg + " register). Task: " + T.en + "\n" + (prev ? "Previous sentence: «" + prev + "»\n" : "") + "Sentence to correct: «" + sn + "»\n\n" +
+      "Find every error in this sentence: grammar (agreement, verb forms, tenses, prepositions, articles), spelling and accents, usage (wrong word choice, false friends, words a native speaker would not use here) and register (too formal or informal for this text). Check the tenses against the time of the story (a past event needs past tenses).\nList ONLY real mistakes a DELE examiner would penalise. Correct Spanish is not a mistake: do not list stylistic preferences or synonyms, and do not remove subject pronouns (yo, nosotros). A better wording of a correct sentence goes only in \"natural\".\n" +
       "Reply ONLY with JSON: {\"correct\":\"the sentence with only the errors fixed\",\"issues\":[{\"wrong\":\"exact words from the sentence\",\"right\":\"replacement\",\"type\":\"grammar|spelling|usage|register\",\"why\":\"short explanation in English\"}],\"natural\":\"how a native speaker would say it at this level, or the same sentence if it is already natural\"}";
     let j = null;
-    try { const t = await aiText("You are a meticulous Spanish teacher correcting a DELE learner's writing. You reply only with JSON.", user); j = JSON.parse((String(t).match(/\{[\s\S]*\}/) || ["{}"])[0]); } catch (e) { j = null; }
+    try { const t = await aiText("You are a meticulous Spanish teacher correcting a DELE learner's writing. You reply only with JSON.", user); j = wJson(t); } catch (e) { j = null; }
     if (!j || typeof j !== "object") { const r = await aiCorrect(sn); return { items: ((r && r.items) || []).map((x) => ({ from: x.from, to: x.to, why: x.why || "", type: "grammar" })), natural: "" }; }
     const low = sn.toLowerCase(), plain = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     let items = (Array.isArray(j.issues) ? j.issues : []).filter((x) => x && typeof x.wrong === "string" && typeof x.right === "string" && x.wrong.trim() && x.wrong.trim().toLowerCase() !== x.right.trim().toLowerCase())
       .filter((x) => low.includes(x.wrong.trim().toLowerCase()) || plain(sn).includes(plain(x.wrong.trim()))) // the quoted words must be in the sentence
-      .map((x) => ({ from: x.wrong.trim(), to: x.right.trim(), why: String(x.why || "").trim(), type: /^(grammar|spelling|usage|register)$/.test(x.type) ? x.type : "grammar" }));
+      .map((x) => ({ from: x.wrong.trim(), to: x.right.trim(), why: String(x.why || "").trim(), type: /^(grammar|spelling|usage|register)$/.test(x.type) ? x.type : "grammar" })).filter((x) => wKeep(x, sn));
     // changes in the corrected sentence that the list did not mention
     const cor = String(j.correct || "").trim();
-    if (cor && cor !== sn) { try { const d = wordDiff(sn, cor); if (d.pairs.length <= Math.max(3, (sn.match(/\S+/g) || []).length / 2)) d.pairs.forEach((pr) => { if (pr.from && !items.some((x) => x.from.toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, "")))) items.push({ from: pr.from, to: pr.to, why: "", type: plain(pr.from).replace(/[^a-zñ]/g, "") === plain(pr.to).replace(/[^a-zñ]/g, "") ? "spelling" : "grammar" }); }); } catch (e) {} }
+    if (cor && cor !== sn) { try { const d = wordDiff(sn, cor); if (d.pairs.length <= Math.max(3, (sn.match(/\S+/g) || []).length / 2)) d.pairs.forEach((pr) => { const dx = { from: pr.from, to: pr.to, why: "" }; if (pr.from && pr.to && wKeep(dx, sn) && !(j.issues || []).some((y) => y && String(y.wrong || "").toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, ""))) && !items.some((x) => x.from.toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, "")))) items.push({ from: pr.from, to: pr.to, why: "", type: plain(pr.from).replace(/[^a-zñ]/g, "") === plain(pr.to).replace(/[^a-zñ]/g, "") ? "spelling" : "grammar" }); }); } catch (e) {} }
     let natural = String(j.natural || "").trim().replace(/^["«“]|["»”]$/g, "");
     const fixed = items.length ? applyFx(sn, items) : sn;
-    if (!natural || plain(natural).replace(/[^a-zñ ]/g, "").trim() === plain(fixed).replace(/[^a-zñ ]/g, "").trim() || (natural.match(/\S+/g) || []).length > (sn.match(/\S+/g) || []).length * 2 + 6) natural = "";
+    const pn = (x) => plain(x).replace(/[^a-zñ ]/g, "").replace(/\s+/g, " ").trim();
+    if (!natural || pn(natural) === pn(sn) || plain(natural).replace(/[^a-zñ ]/g, "").trim() === plain(fixed).replace(/[^a-zñ ]/g, "").trim() || (natural.match(/\S+/g) || []).length > (sn.match(/\S+/g) || []).length * 2 + 6) natural = "";
     return { items, natural };
   }
   async function wSubmit() {
@@ -6472,7 +6497,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611121753";
+  var BUILD = "202611121814";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
