@@ -1,0 +1,15 @@
+{
+ "model": "gemma4",
+ "scenarios": 32,
+ "turns": 107,
+ "clean": 98,
+ "score": 91.6,
+ "flags": {
+  "repeat": 1,
+  "missed-fix": 3,
+  "copy": 1,
+  "panama": 3,
+  "echo": 3
+ },
+ "medianSecs": 2
+}

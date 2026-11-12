@@ -1,0 +1,44 @@
+{"path":"/chat","out":"¡Trabajar mucho es importante! Me gusta tener tiempo para hacer cosas divertidas. ¿Qué tipo de trabajo haces?","s":1.858}
+{"path":"/gen","out":"Porque yo trabajo mucho","s":0.367}
+{"path":"/chat","out":"¡Panamá es una ciudad muy bonita! Tiene muchas cosas interesantes para ver. ¿Te gusta mucho vivir en la ciudad?","s":1.099}
+{"path":"/gen","out":"Mi trabajo es en la ciudad de Panamá.","s":0.533}
+{"path":"/chat","out":"¡Qué bien que estés estudiando para el examen! Es una meta muy importante. Yo aprendí que practicar todos los días hace que el idioma fluya más rápido. ¿Qué tipo de examen vas a tomar?","s":2.457}
+{"path":"/gen","out":"Estudio español para el examen","s":0.411}
+{"path":"/chat","out":"¡Qué bien que te levantes temprano! Eso te da mucho tiempo para hacer cosas antes de que empiece el día. Yo me levanto un poco más tarde, pero me gusta tener la mañana tranquila. ¿Qué haces después de levantarte?","s":2.512}
+{"path":"/gen","out":"Por la mañana me levanto a las seis.","s":0.523}
+{"path":"/chat","out":"¡Suena como un desayuno muy completo! El café y el pan son una combinación perfecta para empezar con energía. Yo a veces tomo un jugo, pero el café es mi favorito para concentrarme. ¿Su café es fuerte o es más suave?","s":1.767}
+{"path":"/gen","out":"Después me ducho y desayuno café con pan.","s":0.529}
+{"path":"/chat","out":"El metro es una forma muy eficiente de moverse en la ciudad, especialmente cuando hay mucho tráfico. Me gusta usarlo porque me permite leer o escuchar música mientras voy. ¿Con qué frecuencia vas al trabajo en metro?","s":1.464}
+{"path":"/gen","out":"Voy al trabajo en metro.","s":0.387}
+{"path":"/chat","out":"Terminar a las cinco es un buen horario para terminar el día de trabajo. Después de eso, es importante que encuentres tiempo para descansar o hacer algo que te guste. ¿Qué haces después de llegar a casa?","s":1.521}
+{"path":"/gen","out":"Termino a las cinco.","s":0.405}
+{"path":"/chat","out":"¡Totalmente de acuerdo! El turismo puede ser una maravilla para un país, pero si no se gestiona bien, inevitablemente trae consigo desafíos. Por ejemplo, si no hay una planificación adecuada, el impacto ambiental puede ser muy negativo. ¿Qué tipo de problemas crees que son los más importantes que enfrenta el turismo en Panamá ahora mismo?","s":2.982}
+{"path":"/gen","out":"Creo que el turismo es bueno para Panamá, pero también tiene problemas.","s":0.612}
+{"path":"/chat","out":"Esa es una realidad muy común; la presión económica puede hacer que los costos de vida aumenten rápidamente. A veces, la falta de regulación sobre los precios es lo que empeora la situación para los residentes. ¿Crees que existen mecanismos efectivos para equilibrar los beneficios económicos del turismo con la protección del poder adquisitivo de la población local?","s":2.388}
+{"path":"/gen","out":"Por ejemplo, los precios suben y la gente local no puede pagar.","s":0.613}
+{"path":"/chat","out":"Tienes toda la razón, la intervención gubernamental es clave para asegurar que el desarrollo sea sostenible y no solo beneficie a unos pocos. He leído que muchos países han implementado zonas de amortiguamiento para proteger áreas sensibles. ¿Qué medidas concretas crees que debería tomar el gobierno panameño para lograr ese control más efectivo?","s":2.078}
+{"path":"/gen","out":"El gobierno debería controlar más el desarrollo.","s":0.449}
+{"path":"/chat","out":"¡Claro que sí! Me encanta practicar con ustedes. Soy el doctor.\n\n¿Qué te pasa hoy?","s":1.401}
+{"path":"/gen","out":"Vamos a practicar en el médico. Tú eres el doctor.","s":0.568}
+{"path":"/chat","out":"¡Oh, qué mal! ¿Desde cuándo te duele la cabeza?","s":0.708}
+{"path":"/gen","out":"Me duele la cabeza","s":0.383}
+{"path":"/chat","out":"Entiendo. ¿Has tomado algún medicamento para el dolor?","s":0.554}
+{"path":"/gen","out":"Desde ayer","s":0.282}
+{"path":"/chat","out":"De acuerdo. Vamos a revisar tu descanso. ¿Has dormido bien anoche?","s":0.706}
+{"path":"/gen","out":"No, no tengo fiebre.","s":0.39}
+{"path":"/chat","out":"¡El agua es muy importante! Necesitamos agua para beber y para cocinar. ¿Te gusta tomar agua fría o caliente?","s":1.833}
+{"path":"/gen","out":"Sí, el agua.","s":0.391}
+{"path":"/chat","out":"De nada. El agua es esencial para nuestra salud. ¿Bebes agua todos los días?","s":0.842}
+{"path":"/gen","out":"Gracias, profe.","s":0.349}
+{"path":"/chat","out":"That's a great question! For the speaking test, I think it's important to practice describing your daily life and expressing your opinions on current events. You should also try to use different tenses, like the past and the future, to show your range. For example, you could talk about what you did last weekend.","s":3.007}
+{"path":"/chat","out":"¡Claro que sí! Practicar un monólogo es una excelente idea para mejorar tu fluidez y tu capacidad de usar diferentes estructuras. Yo creo que es importante tener temas preparados, pero también ser capaz de improvisar. ¿Sobre qué tema te gustaría que intentáramos hablar primero?","s":2.13}
+{"path":"/chat","out":"¡Panamá es un lugar fascinante! Me gusta mucho cómo combina la historia con la modernidad en esa ciudad. ¿Qué es lo que más te gusta de la arquitectura de Panamá?","s":1.557}
+{"path":"/gen","out":"Voy a hablar de mi ciudad. Panamá es una ciudad moderna con muchos edificios.","s":0.751}
+{"path":"/chat","out":"¡Qué bien! Tener una familia grande es muy bonito. Hay muchas personas para compartir. ¿Cuántas personas hay en tu familia?","s":1.852}
+{"path":"/gen","out":"Tengo una familia grande","s":0.396}
+{"path":"/chat","out":"¡Eso es genial! Tener hermanos y hermanas es divertido. Compartir cosas con ellos es muy importante. ¿Tus hermanos y hermanas viven cerca de ti?","s":1.257}
+{"path":"/gen","out":"Tengo tres hermanos y dos hermanas.","s":0.482}
+{"path":"/chat","out":"David es una ciudad interesante. Es bueno tener familiares cerca. ¿Qué hacen en David?","s":0.743}
+{"path":"/gen","out":"Mi hermano mayor vive en David.","s":0.423}
+{"path":"/chat","out":"¡Qué interesante! Los ingenieros son muy importantes para construir cosas. ¿Tu hermano trabaja en una oficina o en un lugar con máquinas?","s":1.042}
+{"path":"/gen","out":"Es ingeniero","s":0.274}

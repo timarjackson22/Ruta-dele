@@ -1,0 +1,40 @@
+{"path":"/chat","out":"¡Qué bien que comiste en un restaurante! Me gusta mucho probar comida nueva. ¿Qué tipo de comida te gustó más?","s":2.15}
+{"path":"/gen","out":"Ayer comí en un restaurante con mi amiga, la comida estuvo muy buena.","s":0.907}
+{"path":"/chat","out":"El arroz con pollo es delicioso. Es un plato muy típico en muchos lugares. ¿Te gusta cocinar comida?","s":1.018}
+{"path":"/gen","out":"Comí el arroz con pollo","s":0.456}
+{"path":"/chat","out":"¡Qué bueno que te gusta cocinar! Cocinar es una actividad muy divertida. ¿Qué otra comida te gustaría preparar?","s":1.094}
+{"path":"/gen","out":"Sí, me gusta mucho.","s":0.443}
+{"path":"/chat","out":"¡Tienes hambre! ¡Es hora de comer algo rico! ¿Qué te gusta comer más?","s":1.462}
+{"path":"/chat","out":"¡El arroz con pollo es delicioso! Es un plato muy popular en toda Latinoamérica. ¿Te gusta el arroz?","s":0.852}
+{"path":"/gen","out":"Quiero comer arroz con pollo","s":0.396}
+{"path":"/chat","out":"¡Qué emocionante! Boquete es un lugar precioso, con paisajes increíbles. Yo he oído que el clima allí es fantástico, especialmente si vas en temporada seca. ¿Ya sabes qué actividades planean hacer con tu familia?","s":2.261}
+{"path":"/gen","out":"Este fin de semana voy a ir a Boquete con mi familia.","s":0.595}
+{"path":"/chat","out":"¡Suena perfecto! El senderismo es una excelente manera de conectar con la naturaleza y disfrutar del aire fresco. Yo siempre recomiendo ir temprano para evitar el calor del mediodía. ¿Qué tipo de senderos les gustaría explorar?","s":1.559}
+{"path":"/gen","out":"Vamos a hacer senderismo y tomar café.","s":0.455}
+{"path":"/chat","out":"¡Qué aventura tan intensa! Subir a un volcán es una experiencia que deja una impresión muy fuerte. Es importante que todos estén listos y preparados para esa actividad. ¿Ya investigaron qué equipo necesitan para esa caminata?","s":1.73}
+{"path":"/gen","out":"Si hace buen tiempo, vamos a subir al volcán.","s":0.546}
+{"path":"/chat","out":"¡Eso es genial! Es normal sentirse un poco nervioso al intentar algo nuevo, pero la experiencia siempre vale la pena. Lo importante es disfrutar el momento y confiar en su equipo. ¿Qué es lo que más les emociona de intentar subir al volcán?","s":1.66}
+{"path":"/gen","out":"Nunca he subido antes.","s":0.381}
+{"path":"/chat","out":"¡Hola! Es un gusto saludarte. Los saludos son muy importantes para empezar una conversación. ¿Qué te gusta hacer en tu tiempo libre?","s":1.727}
+{"path":"/gen","out":"Buenos días, profe.","s":0.344}
+{"path":"/chat","out":"¡Qué bueno que te fue bien! Las experiencias son muy valiosas para aprender. ¿Qué fue lo mejor de esa experiencia?","s":0.978}
+{"path":"/gen","out":"Mi tía fue muy bien.","s":0.398}
+{"path":"/chat","out":"Trabajar mucho es importante para aprender cosas nuevas. ¡Eso te da mucha experiencia! ¿Qué tipo de trabajo haces?","s":0.884}
+{"path":"/gen","out":"Trabajé mucho","s":0.326}
+{"path":"/chat","out":"¡Claro que sí! Me encanta la idea de practicar. Yo seré el mesero.\n\n¡Hola! ¿Qué le pides hoy?","s":1.822}
+{"path":"/chat","out":"¡Un café! Perfecto. ¿Quiere algo más?","s":0.571}
+{"path":"/gen","out":"Quiero un café, por favor.","s":0.457}
+{"path":"/chat","out":"¡Una empanada! Muy bien. ¿Quiere agua o algo de beber?","s":0.746}
+{"path":"/gen","out":"Y una empanada.","s":0.387}
+{"path":"/chat","out":"Aquí tiene su cuenta. ¡Gracias por venir! ¿Quiere pagar con tarjeta o en efectivo?","s":0.806}
+{"path":"/gen","out":"La cuenta, por favor.","s":0.387}
+{"path":"/chat","out":"¡Ah, \"vaina\" es una palabra muy común en Latinoamérica! Significa muchas cosas, a veces se usa para referirse a cualquier cosa o situación. Por ejemplo, si algo es complicado, puedes decir que es una vaina difícil. ¿Puedes intentar usar \"vaina\" en una frase sobre algo que hiciste hoy?","s":3.226}
+{"path":"/gen","out":"¿Y qué significa vaina?","s":0.468}
+{"path":"/chat","out":"¡Me alegra que te guste! Decir que algo está chévere es una forma muy positiva de expresarlo. Es una palabra muy usada en Panamá y en otros lugares. ¿Qué es exactamente lo que te parece chévere de esa vaina?","s":2.038}
+{"path":"/gen","out":"Esa vaina está chévere.","s":0.563}
+{"path":"/chat","out":"¡Qué bien que le compraste un regalo a tu madre! Los regalos son una forma bonita de mostrarle que la quieres. ¿Qué tipo de regalo le compraste?","s":2.176}
+{"path":"/gen","out":"Le compré un regalo a mi madre y se lo di ayer.","s":0.666}
+{"path":"/chat","out":"¡Me alegro mucho! Dar un regalo es un momento especial. ¿Fue un regalo algo que ella quería mucho?","s":0.967}
+{"path":"/gen","out":"Sí, se lo di.","s":0.395}
+{"path":"/chat","out":"¡Un collar bonito es un detalle muy elegante! Los collares son accesorios que la gente suele valorar mucho. ¿De qué material era el collar?","s":1.18}
+{"path":"/gen","out":"Un collar bonito","s":0.303}
