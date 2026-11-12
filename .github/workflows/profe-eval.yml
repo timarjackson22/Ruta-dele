@@ -49,7 +49,7 @@ jobs:
         if: inputs.model == 'gemma4'
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
         if: inputs.model == 'gemma4'
         with:
@@ -70,6 +70,7 @@ jobs:
           python3 -m http.server 8766 --bind 127.0.0.1 >/dev/null 2>&1 &
           if [ "${{ inputs.model }}" = "gemma4" ]; then RAW_LOG=eval/out/raw-$SHARD.jsonl eval/lm/build/install/lm/bin/lm models/$FILE > server.log 2>&1 & else python3 eval/server.py models/$FILE eval/out/raw-$SHARD.jsonl > server.log 2>&1 & fi
           for i in $(seq 1 300); do grep -q "model loaded" server.log && break; sleep 2; done; cat server.log
+          grep -q "model loaded" server.log || { echo "the model server did not start"; exit 1; }
           cd eval && OUT=out node run.js
       - uses: actions/upload-artifact@v4
         if: always()
