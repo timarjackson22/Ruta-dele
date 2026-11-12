@@ -6,6 +6,9 @@ on:
       model:
         description: "smart (1.5B), fast (0.5B) or gemma4 (Gemma 4 E2B, LiteRT-LM)"
         default: smart
+      suite:
+        description: "chat (32 conversations) or writing (grader check)"
+        default: chat
 
 permissions:
   contents: write
@@ -71,7 +74,7 @@ jobs:
           if [ "${{ inputs.model }}" = "gemma4" ]; then RAW_LOG=eval/out/raw-$SHARD.jsonl eval/lm/build/install/lm/bin/lm models/$FILE > server.log 2>&1 & else python3 eval/server.py models/$FILE eval/out/raw-$SHARD.jsonl > server.log 2>&1 & fi
           for i in $(seq 1 300); do grep -q "model loaded" server.log && break; sleep 2; done; cat server.log
           grep -q "model loaded" server.log || { echo "the model server did not start"; exit 1; }
-          cd eval && OUT=out node run.js
+          if [ "${{ inputs.suite }}" = "writing" ]; then if [ "$SHARD" = "0" ]; then cd eval && OUT=out node writing.js; fi; else cd eval && OUT=out node run.js; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -90,13 +93,13 @@ jobs:
       - name: Report
         env:
           MODEL_NAME: ${{ inputs.model }}
-        run: node eval/report.js all && cat all/summary.json
+        run: if [ "${{ inputs.suite }}" = "writing" ]; then cat all/summary.json; else node eval/report.js all && cat all/summary.json; fi
       - name: Save results to the eval-results branch
         run: |
-          cd all && git init -q && git checkout -q -b eval-results-${{ github.ref_name }}-${{ inputs.model }}
+          cd all && git init -q && git checkout -q -b eval-results-${{ github.ref_name }}-${{ inputs.model }}${{ inputs.suite == 'writing' && '-writing' || '' }}
           git config user.name "profe-eval" && git config user.email "actions@users.noreply.github.com"
           git add report.md summary.json results-*.json raw-*.jsonl 2>/dev/null; git commit -qm "eval ${{ github.run_id }}"
-          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results-${{ github.ref_name }}-${{ inputs.model }}
+          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results-${{ github.ref_name }}-${{ inputs.model }}${{ inputs.suite == 'writing' && '-writing' || '' }}
       - uses: actions/upload-artifact@v4
         with:
           name: eval-report
