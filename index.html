@@ -6265,7 +6265,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const lt = (v) => String(v || "").toLowerCase().replace(/[^a-záéíóúüñ ]/g, " ").replace(/\s+/g, " ").trim();
     const a = lt(x.from), b = lt(x.to);
     if (a === b) return false; // only punctuation or spacing changed
-    if (/\(or\b|\bor\b.*\)|\//.test(x.to)) return false; // not a single answer
+    if (/\((or|o)\b|\bor\b.*\)/i.test(x.to) || (x.type !== "register" && /\//.test(x.to))) return false; // not a single answer
     const A = a.split(" ").filter(Boolean), B = b.split(" ").filter(Boolean);
     if (A.filter((w) => !B.includes(w)).every((w) => W_PRON.test(w)) && B.every((w) => A.includes(w))) return false; // a subject pronoun dropped: correct Spanish
     if (x.type !== "register" && A.length > 8 && A.length >= (sn.match(/\S+/g) || []).length * 0.7) return false; // the whole sentence rewritten
@@ -6288,7 +6288,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       .map((x) => ({ from: x.wrong.trim(), to: x.right.trim(), why: String(x.why || "").trim(), type: /^(grammar|spelling|usage|register)$/.test(x.type) ? x.type : "grammar" })).filter((x) => wKeep(x, sn));
     // changes in the corrected sentence that the list did not mention
     const cor = String(j.correct || "").trim();
-    if (cor && cor !== sn) { try { const d = wordDiff(sn, cor); if (d.pairs.length <= Math.max(3, (sn.match(/\S+/g) || []).length / 2)) d.pairs.forEach((pr) => { const dx = { from: pr.from, to: pr.to, why: "" }; if (pr.from && pr.to && wKeep(dx, sn) && !(j.issues || []).some((y) => y && String(y.wrong || "").toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, ""))) && !items.some((x) => x.from.toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, "")))) items.push({ from: pr.from, to: pr.to, why: "", type: plain(pr.from).replace(/[^a-zñ]/g, "") === plain(pr.to).replace(/[^a-zñ]/g, "") ? "spelling" : "grammar" }); }); } catch (e) {} }
+    if (cor && cor !== sn) { try { const d = wordDiff(sn, cor); if (d.pairs.length <= Math.max(3, (sn.match(/\S+/g) || []).length / 2)) d.pairs.forEach((pr) => { const dx = { from: pr.from, to: pr.to, why: "" }; if (pr.from && pr.to && wKeep(dx, sn) && !(j.issues || []).some((y) => y && String(y.wrong || "").toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, ""))) && !items.some((x) => { const xw = plain(x.from).match(/[a-zñ]+/g) || []; return (plain(pr.from).match(/[a-zñ]+/g) || []).some((w) => xw.includes(w)); })) items.push({ from: pr.from, to: pr.to, why: "", type: plain(pr.from).replace(/[^a-zñ]/g, "") === plain(pr.to).replace(/[^a-zñ]/g, "") ? "spelling" : "grammar" }); }); } catch (e) {} }
     let natural = String(j.natural || "").trim().replace(/^["«“]|["»”]$/g, "");
     const fixed = items.length ? applyFx(sn, items) : sn;
     const pn = (x) => plain(x).replace(/[^a-zñ ]/g, "").replace(/\s+/g, " ").trim();
@@ -6497,7 +6497,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611121814";
+  var BUILD = "202611121830";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
