@@ -3929,7 +3929,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const IN_CLAUDE = !!(window.claude && typeof window.claude.use === "function");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const CAN_MIC = !!SR && !IN_CLAUDE;
-  const HAS_GPU = !!navigator.gpu;
+  const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const HAS_GPU = !!navigator.gpu && !IS_IOS; // iOS browsers close the page when a 1.5 GB+ model loads
+  if (IS_IOS) { // remove any partial on-device AI download
+    try { caches.keys().then((ks) => ks.filter((k) => /webllm/i.test(k)).forEach((k) => caches.delete(k))).catch(() => {}); } catch (e) {}
+    try { if (indexedDB.databases) indexedDB.databases().then((ds) => ds.filter((d) => /webllm/i.test(d.name || "")).forEach((d) => indexedDB.deleteDatabase(d.name))).catch(() => {}); } catch (e) {}
+  }
   /* ---------- Android app: on-device AI through the app (LiteRT / MediaPipe), since its web view has no WebGPU ---------- */
   const HAS_NATIVE = !!window.AndroidLLM && !IN_CLAUDE;
   const NATIVE_MODELS = {
@@ -5448,7 +5453,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else {
       const msgs = tCur ? tCur.msgs : [];
       const intro = TB ? "¡Hola! Soy Profe. I can see what you have open (<b>" + esc(ctx.label) + "</b>). Ask me anything" + (CAN_MIC ? ", tap the mic to talk, or start a hands-free voice chat." : ", or pick an option below.") :
-        "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.";
+        (IS_IOS && !IN_CLAUDE ? "¡Hola! Soy Profe. On iPhone my free chat AI isn’t available (it’s too large for iOS), but <b>Practice</b> works fully, with voice: drills, quizzes and role-plays. Tap <b>Practice</b> above to start." : "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.");
       body = '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a">' + pAvatar() + '<div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
         '<div class="t-live" id="t-live" hidden></div>' +
         '<div class="tctl"><label class="small" for="t-lvl">Level</label><select id="t-lvl">' + [["", "Auto (" + (pageCtx().lvl || (S.last && S.last.l) || "a2").toUpperCase() + ")"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"], ["b2", "B2"], ["c1", "C1"], ["c2", "C2"], ["open", "Open (no limit)"]].map(([v, n]) => '<option value="' + v + '"' + ((TS.clvl || "") === v ? " selected" : "") + ">" + n + "</option>").join("") + '</select><span class="small" style="margin-left:auto">Voice speed</span><button class="btn small" data-act="t-rate" data-d="-1" aria-label="Slower">−</button><b class="small" id="t-rate">' + (TS.prate || 1).toFixed(1) + '×</b><button class="btn small" data-act="t-rate" data-d="1" aria-label="Faster">+</button></div>' +
@@ -5469,7 +5474,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       "<h3>Profe’s AI</h3>" +
       (IN_CLAUDE ? '<p class="small">You’re in the Claude version: Profe uses your Claude plan and saves chats to your Claude account.</p>' : "") +
       '<div class="prbox"><p><b>On this phone (offline, free, private)</b></p>' +
-      (IN_CLAUDE ? '<p class="small muted">Available in the phone app (installed from the Ruta DELE website), not inside Claude.</p>' : HAS_NATIVE ? nativeBox() : !HAS_GPU ? '<p class="small muted">This browser can’t run on-device AI (it needs WebGPU). On your Galaxy S24, open the app in Chrome.</p>' :
+      (IN_CLAUDE ? '<p class="small muted">Available in the phone app (installed from the Ruta DELE website), not inside Claude.</p>' : HAS_NATIVE ? nativeBox() : IS_IOS ? '<p class="small muted">The on-device AI isn’t available on iPhone or iPad: the models are too large for iOS and would make the app close. Profe’s <b>Practice</b> mode, voice drills, quizzes and the rest of the course work fully here. For free AI chat, use the Android app.</p>' : !HAS_GPU ? '<p class="small muted">This browser can’t run on-device AI (it needs WebGPU). On your Galaxy S24, open the app in Chrome.</p>' :
         GPU_STATE === "noadapter" ? GPU_HELP :
         loaded ? '<p class="small">Downloaded: <b>' + esc(mname) + "</b> model. It works offline.</p>" + '<div class="row"><button class="btn small" data-act="t-engine" data-v="local" aria-pressed="' + (TB === "local") + '">Use on-device AI</button><button class="btn small" data-act="t-dlmodel" data-v="' + (mname === "Light" ? "better" : "light") + '">Switch to ' + (mname === "Light" ? "Better" : "Light") + '</button><button class="btn small" data-act="t-delmodel">Remove from phone</button></div>' :
           '<p class="small">Download once on Wi-Fi. The AI then runs on your phone, with no account and no internet.</p><div class="row"><button class="btn small primary" data-act="t-dlmodel" data-v="light">Light · ' + MODELS.light.size + '</button><button class="btn small" data-act="t-dlmodel" data-v="better">Better · ' + MODELS.better.size + "</button></div>") +
@@ -6497,7 +6502,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611121830";
+  var BUILD = "202611122348";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
