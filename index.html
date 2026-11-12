@@ -4364,7 +4364,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (/\b(me llamo|mi nombre es)\b/.test(q)) return "¡Mucho gusto" + (TS.lname ? ", " + TS.lname : "") + "! Yo soy Profe, tu profesor de español. ¿De qué parte de Panamá eres?\n*Nice to meet you! I'm Profe, your Spanish teacher. Which part of Panama are you from?*";
     if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo)$/.test(q)) return "¡Genial! Entonces, cuéntame: ¿qué hiciste hoy? Dos o tres frases.\n*Great! Then tell me: what did you do today? Two or three sentences.*";
     if (/^(no s[eé]|no sé|ni idea|nada)\b/.test(q)) return "¡No pasa nada! Te propongo algo: cuéntame qué hiciste ayer, con dos o tres frases.\n*No problem! Here's an idea: tell me what you did yesterday, in two or three sentences.*";
-    const [es, en] = f ? [f[1], f[2]] : [["¡Interesante! Cuéntame un poco más, por favor.", "Interesting! Tell me a bit more, please."], ["¡Qué bien! ¿Y qué piensas de eso?", "Nice! And what do you think about that?"]][Math.floor(Math.random() * 2)];
+    let [es, en] = f ? [f[1], f[2]] : [["¡Interesante! Cuéntame un poco más, por favor.", "Interesting! Tell me a bit more, please."], ["¡Qué bien! ¿Y qué piensas de eso?", "Nice! And what do you think about that?"]][Math.floor(Math.random() * 2)];
+    // never the same fallback twice in a chat: a small challenge with a course word instead
+    const used = tCur ? (tCur.fbUsed = tCur.fbUsed || []) : [];
+    if (used.includes(es)) {
+      let tip = ""; try { tip = wordTip(lastU); } catch (e) {}
+      const m = /\*\*([^*]+)\*\* — ([^🇵]+)/.exec(tip);
+      if (m) return "¡Te propongo un reto! 💪 Usa **" + m[1] + "** *(" + m[2].trim() + ")* en una frase sobre lo que me contaste.\n*A challenge: use this word in a sentence about what you told me.*";
+      const alt = [["¡Vamos a practicar! Cuéntame lo mismo, pero en pasado: ¿qué hiciste ayer?", "Let's practise: tell me the same, but in the past: what did you do yesterday?"], ["¡Buen tema! Ahora dime una cosa que te gusta y una que no te gusta de eso.", "Good topic! Now tell me one thing you like and one you don't like about it."], ["¡Sigamos! Descríbeme tu día de hoy en tres frases.", "Let's go on! Describe your day today in three sentences."]].find(([x]) => !used.includes(x));
+      if (alt) [es, en] = alt;
+    }
+    used.push(es);
     return es + "\n*" + en + "*";
   }
   // drop a re-greeting and the "how can I help" filler; empty means the reply had nothing else
@@ -5075,7 +5085,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>");
     return h.split(/\n{2,}/).map((p) => /^\s*([-•]|\d+\.)\s/m.test(p) ? "<ul>" + p.split("\n").filter(Boolean).map((l) => "<li>" + l.replace(/^\s*([-•]|\d+\.)\s*/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
   }
-  const plainForSpeech = (s) => String(s).replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
+  const plainForSpeech = (s) => String(s).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
   /* ---------- corrections: what in the learner's Spanish is wrong or could be better ---------- */
   const FXP = { yo: 0, "tú": 1, tu: -1, "él": 2, ella: 2, usted: 2, nosotros: 3, nosotras: 3, vosotros: 4, vosotras: 4, ellos: 5, ellas: 5, ustedes: 5 };
   const PNAME = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
@@ -6149,7 +6159,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611111751";
+  var BUILD = "202611120517";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

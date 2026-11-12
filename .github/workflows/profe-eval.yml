@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       model:
-        description: "smart (1.5B) or fast (0.5B)"
+        description: "smart (1.5B), fast (0.5B) or gemma4 (Gemma 4 E2B, LiteRT-LM)"
         default: smart
 
 permissions:
@@ -31,7 +31,10 @@ jobs:
           node-version: "20"
       - name: Pick model
         run: |
-          if [ "${{ inputs.model }}" = "fast" ]; then
+          if [ "${{ inputs.model }}" = "gemma4" ]; then
+            echo "REPO=litert-community/gemma-4-E2B-it-litert-lm" >> $GITHUB_ENV; echo "FILE=gemma-4-E2B-it.litertlm" >> $GITHUB_ENV
+            echo "MODEL_NAME=gemma-4-E2B-it.litertlm" >> $GITHUB_ENV
+          elif [ "${{ inputs.model }}" = "fast" ]; then
             echo "REPO=Qwen/Qwen2.5-0.5B-Instruct-GGUF" >> $GITHUB_ENV; echo "FILE=qwen2.5-0.5b-instruct-q8_0.gguf" >> $GITHUB_ENV
             echo "MODEL_NAME=Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task" >> $GITHUB_ENV
           else
@@ -42,6 +45,18 @@ jobs:
         with:
           path: models
           key: gguf-${{ env.FILE }}
+      - uses: actions/setup-java@v5
+        if: inputs.model == 'gemma4'
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        if: inputs.model == 'gemma4'
+        with:
+          gradle-version: "8.11.1"
+      - name: Build the LiteRT-LM test server
+        if: inputs.model == 'gemma4'
+        run: cd eval/lm && gradle --no-daemon -q installDist
       - name: Install
         run: |
           pip install -q huggingface_hub
@@ -53,8 +68,8 @@ jobs:
         run: |
           mkdir -p eval/out
           python3 -m http.server 8766 --bind 127.0.0.1 >/dev/null 2>&1 &
-          python3 eval/server.py models/$FILE eval/out/raw-$SHARD.jsonl > server.log 2>&1 &
-          for i in $(seq 1 120); do grep -q "model loaded" server.log && break; sleep 2; done; cat server.log
+          if [ "${{ inputs.model }}" = "gemma4" ]; then RAW_LOG=eval/out/raw-$SHARD.jsonl eval/lm/build/install/lm/bin/lm models/$FILE > server.log 2>&1 & else python3 eval/server.py models/$FILE eval/out/raw-$SHARD.jsonl > server.log 2>&1 & fi
+          for i in $(seq 1 300); do grep -q "model loaded" server.log && break; sleep 2; done; cat server.log
           cd eval && OUT=out node run.js
       - uses: actions/upload-artifact@v4
         if: always()
@@ -77,10 +92,10 @@ jobs:
         run: node eval/report.js all && cat all/summary.json
       - name: Save results to the eval-results branch
         run: |
-          cd all && git init -q && git checkout -q -b eval-results-${{ github.ref_name }}
+          cd all && git init -q && git checkout -q -b eval-results-${{ github.ref_name }}-${{ inputs.model }}
           git config user.name "profe-eval" && git config user.email "actions@users.noreply.github.com"
           git add report.md summary.json results-*.json raw-*.jsonl 2>/dev/null; git commit -qm "eval ${{ github.run_id }}"
-          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results-${{ github.ref_name }}
+          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git eval-results-${{ github.ref_name }}-${{ inputs.model }}
       - uses: actions/upload-artifact@v4
         with:
           name: eval-report
