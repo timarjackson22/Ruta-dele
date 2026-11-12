@@ -826,13 +826,91 @@ body.gp-on .tutor-fab { display: none }
 .prrow { display: flex; gap: 6px; align-items: stretch }
 .prrow .prc { flex: 1; min-width: 0 }
 .prai { flex: none; align-self: center }
+
+/* ===== Apple-style navigation ===== */
+:root { --body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif; --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", system-ui, sans-serif; --tint: var(--cobalt) }
+body { letter-spacing: -.005em }
+h1, h2, h3 { letter-spacing: -.02em }
+.crumbs { display: none !important }
+.ui-page { display: flex; flex-direction: column; gap: 6px; max-width: 720px; margin: 0 auto; padding-bottom: 24px }
+.lt { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin: 4px 0 10px }
+.lt h1 { font-size: 2.1rem; font-weight: 800; line-height: 1.1 }
+.lt-eye { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 2px }
+.lt-sub { color: var(--muted); margin: 6px 0 0; font-size: 1rem; line-height: 1.4 }
+.lt-btn { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); color: var(--tint); flex: none; margin-bottom: 2px }
+.lt-btn svg { width: 22px; height: 22px }
+.ghead { font-family: var(--body); font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); margin: 18px 16px 6px }
+.ui-page .ghead { padding: 0 !important; display: block !important; border: 0 !important; background: none !important; min-height: 0 !important; box-shadow: none !important }
+.ui-page .ghead::before, .ui-page .ghead::after { content: none !important; display: none !important }
+.gfoot { font-size: .82rem; color: var(--muted); margin: 6px 16px 0; line-height: 1.4 }
+.ilist { background: var(--surface); border-radius: 12px; overflow: hidden }
+.ilist.pad { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px }
+.row2 { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 9px 14px 9px 14px; text-decoration: none; color: var(--ink); background: none; border: 0; font: inherit; text-align: left; cursor: pointer; position: relative }
+.row2 + .row2::before { content: ""; position: absolute; top: 0; left: 56px; right: 0; border-top: 1px solid var(--line); transform: scaleY(.6) }
+.row2:active { background: var(--surface-2) }
+.row2 .rt { flex: 1; min-width: 0; display: flex; flex-direction: column }
+.row2 .rt b { font-weight: 600; font-size: 1rem; line-height: 1.3 }
+.row2 .rt small { color: var(--muted); font-size: .84rem; line-height: 1.3; margin-top: 1px }
+.row2 .rv { color: var(--muted); font-size: .95rem; flex: none; font-variant-numeric: tabular-nums }
+.row2 .chev { width: 8px; height: 14px; color: var(--muted); opacity: .6; flex: none }
+.es-n { font-weight: 400; color: var(--muted); font-size: .88em; margin-left: 4px }
+.ic2 { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none }
+.ic2 svg { width: 18px; height: 18px }
+.lvb { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; font-weight: 800; font-size: .8rem; background: var(--surface-2); color: var(--ink) }
+.lvb.cur { background: var(--tint); color: var(--on-cobalt) }
+.badge2 { background: #e5484d; color: #fff; border-radius: 999px; padding: 1px 8px; font-size: .8rem; font-weight: 700 }
+.pbar { display: block; height: 4px; border-radius: 4px; background: var(--surface-2); margin-top: 6px; overflow: hidden; max-width: 220px }
+.pbar i { display: block; height: 100%; background: var(--good); border-radius: 4px }
+.hero2 { display: flex; flex-direction: column; gap: 4px; padding: 18px; border-radius: 16px; text-decoration: none; color: #fff; background: linear-gradient(135deg, #2557b8, #1b3f8c); box-shadow: 0 8px 24px rgba(20, 50, 120, .25) }
+.h2-eye { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .85 }
+.h2-t { font-size: 1.45rem; font-weight: 800; line-height: 1.2; letter-spacing: -.02em }
+.h2-s { opacity: .88; font-size: .95rem; line-height: 1.35 }
+.h2-bar { height: 5px; border-radius: 5px; background: rgba(255, 255, 255, .25); margin-top: 10px; overflow: hidden } .h2-bar i { display: block; height: 100%; background: #f5c14b; border-radius: 5px }
+.h2-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: .88rem; opacity: .95 }
+.h2-go { background: #fff; color: #1b3f8c; font-weight: 700; border-radius: 999px; padding: 7px 16px; font-size: .95rem; flex: none }
+.goal2 { display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: 12px; padding: 12px 14px; margin-top: 10px }
+.goal2 b { display: block; font-size: 1rem } .goal2 small { display: block; color: var(--muted); font-size: .84rem }
+.goal2 .ring { width: 58px; height: 58px; flex: none } .goal2 .week { margin-top: 6px }
+.seg2 { display: flex; flex-wrap: wrap; gap: 6px } .setl { margin: 4px 0 0; font-size: .85rem; color: var(--muted) }
+.nb-back, .nb-title { display: none }
+.top .lvls { display: none !important }
+@media (max-width: 820px) {
+  .top { background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); border-bottom: 1px solid transparent; transition: border-color .2s }
+  body.scrolled .top { border-bottom-color: var(--line) }
+  .top .wrap.nb { position: relative; min-height: 46px; padding-block: 4px; flex-wrap: nowrap }
+  .top .brand, .top .regbtn, .top .lvls, .top .secnav { display: none !important }
+  .nb-back { display: inline-flex; align-items: center; gap: 4px; color: var(--tint); text-decoration: none; font-size: 1.05rem; padding: 8px 6px 8px 0; position: relative; z-index: 1; max-width: 40% }
+  .nb-back[hidden] { display: none }
+  .nb-back svg { width: 11px; height: 19px; flex: none }
+  .nb-back span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .nb-title { display: block; position: absolute; left: 25%; right: 25%; top: 50%; transform: translateY(-50%); text-align: center; font-weight: 700; font-size: 1.02rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .15s; pointer-events: none }
+  body.ttl .nb-title { opacity: 1 }
+  body:not(.ttl) .top .wrap.nb:has(.nb-back[hidden]) { min-height: 8px; padding-block: 0 }
+  .tutor-fab { display: none !important }
+  .tabbar { grid-template-columns: repeat(5, 1fr) !important; background: color-mix(in srgb, var(--surface) 84%, transparent) !important; -webkit-backdrop-filter: saturate(180%) blur(18px); backdrop-filter: saturate(180%) blur(18px); padding-top: 5px !important }
+  .tabbar a, .tabbar button { display: flex; flex-direction: column; align-items: center; gap: 2px; text-decoration: none; color: var(--muted); font-size: .66rem; font-weight: 600; line-height: 1.1; padding: 2px 0; background: none; border: 0; font-family: inherit; cursor: pointer }
+  .tabbar svg { width: 25px !important; height: 25px !important }
+  .tabbar [aria-current="page"] { color: var(--tint) }
+  body.tutor-open .tutor { bottom: calc(58px + env(safe-area-inset-bottom, 0px)); padding-bottom: 0 }
+  body.tutor-open .tabbar { z-index: 31 }
+  body.kb.tutor-open .tutor { bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0px) }
+  body.tutor-open .tabbar [aria-current="page"] { color: var(--muted) }
+  body.tutor-open .tabbar [data-s="profe"] { color: var(--tint) }
+  .lhead { grid-template-columns: minmax(0, 1fr) !important } .lhead .badge { display: none }
+  #app h1 { font-size: 2rem; font-weight: 800 }
+  .tabs { border-bottom: 0; gap: 6px; padding: 2px 0 }
+  .tabs a { border: 0; border-radius: 999px; padding: 7px 14px; background: var(--surface); font-size: .92rem }
+  .tabs a[aria-current="page"] { background: var(--ink); color: var(--bg) }
+}
 </style>
 
 </head>
 <body>
-<header class="top"><div class="wrap">
+<header class="top"><div class="wrap nb">
+  <a class="nb-back" id="nb-back" href="#inicio" hidden><svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="nb-back-t">Back</span></a>
   <a class="brand" href="#inicio"><i class="tiles" aria-hidden="true"></i>Ruta DELE</a>
-  <nav class="secnav" aria-label="Sections"><a data-s="curso" href="#inicio">Course</a><a data-s="escuchar" href="#escuchar">Listen</a><a data-s="leer" href="#leer">Read</a><a data-s="escribir" href="#escritura">Write</a><a data-s="gramatica" href="#gramatica">Grammar</a><a data-s="verbos" href="#verbos">Verbs</a><a data-s="palabras" href="#palabras">7,000 words</a></nav>
+  <span class="nb-title" id="nb-title" aria-hidden="true"></span>
+  <nav class="secnav" aria-label="Sections"><a data-s="hoy" href="#inicio">Today</a><a data-s="curso" href="#curso">Course</a><a data-s="practicar" href="#practicar">Practice</a><a data-s="biblioteca" href="#biblioteca">Library</a></nav>
   <button class="regbtn" id="regbtn" data-act="region" type="button">LatAm</button>
   <nav class="lvls" id="lvls" aria-label="Levels"></nav>
 </div></header>
@@ -840,15 +918,7 @@ body.gp-on .tutor-fab { display: none }
 <div class="sheet" id="sheet" hidden></div>
 <button class="tutor-fab" id="tutor-fab" data-act="t-open" hidden aria-label="Open Profe, your AI tutor"><span aria-hidden="true">P</span>Profe</button>
 <aside class="tutor" id="tutor" hidden aria-label="Profe, your AI tutor"></aside>
-<nav class="tabbar" aria-label="Sections">
-  <a data-s="curso" href="#inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>Course</a>
-  <a data-s="escuchar" href="#escuchar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg>Listen</a>
-  <a data-s="leer" href="#leer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg>Read</a>
-  <a data-s="escribir" href="#escritura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Write</a>
-  <a data-s="gramatica" href="#gramatica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Grammar</a>
-  <a data-s="verbos" href="#verbos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>Verbs</a>
-  <a data-s="palabras" href="#palabras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>Words</a>
-</nav>
+<nav class="tabbar" aria-label="Sections"><a data-s="hoy" href="#inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Today</span></a><a data-s="curso" href="#curso"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg><span>Course</span></a><a data-s="practicar" href="#practicar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg><span>Practice</span></a><a data-s="biblioteca" href="#biblioteca"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h3v18H5zM10 3h3v18h-3z"/><path d="m15.5 4.2 2.9-.8 4 17.4-2.9.8z"/></svg><span>Library</span></a><button type="button" data-s="profe" data-act="t-open" aria-label="Open Profe, your AI tutor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 11h.01M12 11h.01M15.5 11h.01"/></svg><span>Profe</span></button></nav>
 
 <script>
 /* Spanish conjugation engine. conjugate(inf, code) -> full paradigm.
@@ -1924,27 +1994,97 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"); if (!t) return;
     const a = t.dataset.act;
-    if (a === "goal") { S.goal = +t.dataset.v; save(); home(); const d = document.querySelector(".dispset"); if (d) d.open = true; }
+    if (a === "goal") { S.goal = +t.dataset.v; save(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
     else if (a === "ui-fs") { UI.fs = +t.dataset.v; uiSave(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
     else if (a === "ui-theme") { UI.theme = t.dataset.v; uiSave(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
   });
+  const UIC = {listen:["#1f7aec",'<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/>'],read:["#f08a24",'<path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/>'],write:["#34a853",'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'],speak:["#8e5cd9",'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/>'],cards:["#e8a10a",'<rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/>'],mist:["#e5484d",'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'],mock:["#0e9f9a",'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>'],test:["#5b6cf0",'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],guides:["#2f6fde",'<path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 8h8M8 12h6"/>'],grammar:["#7a5af5",'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'],verbs:["#d6457a",'<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>'],words:["#1a9c6b",'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>'],res:["#6b7280",'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>'],gear:["#6b7280",'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'],app:["#34a853",'<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>'],globe:["#1f7aec",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>']};
+  const uiIc = (k) => '<span class="ic2" style="background:' + UIC[k][0] + '" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + UIC[k][1] + "</svg></span>";
+  const CHEV = '<svg class="chev" viewBox="0 0 8 14" aria-hidden="true"><path d="m1.5 1.5 5 5.5-5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // one row of an inset grouped list
+  function uiRow(o) {
+    const inner = (o.ic ? uiIc(o.ic) : o.lead || "") + '<span class="rt"><b>' + o.t + "</b>" + (o.sub ? "<small>" + o.sub + "</small>" : "") + "</span>" + (o.val != null ? '<span class="rv">' + o.val + "</span>" : "") + (o.noChev ? "" : CHEV);
+    return o.act ? '<button type="button" class="row2" data-act="' + o.act + '">' + inner + "</button>" : '<a class="row2" href="' + o.href + '"' + (o.ext ? ' target="_blank" rel="noopener"' : "") + ">" + inner + "</a>";
+  }
+  const uiGroup = (head, rows, foot) => (head ? '<h2 class="ghead">' + head + "</h2>" : "") + '<div class="ilist">' + rows.join("") + "</div>" + (foot ? '<p class="gfoot">' + foot + "</p>" : "");
+  const uiTitle = (t, sub, right, eyebrow) => '<div class="lt">' + '<div>' + (eyebrow ? '<p class="lt-eye">' + eyebrow + "</p>" : "") + "<h1>" + t + "</h1>" + (sub ? '<p class="lt-sub">' + sub + "</p>" : "") + "</div>" + (right || "") + "</div>";
+  function curLevel() { const last = S.last && LV[S.last.l] ? S.last.l : null; return last || (S.place && LV[S.place.lvl] ? S.place.lvl : "a1"); }
+  function dueCount() { try { let n = 0; COURSE.forEach((l) => { const c = counts(l.id); n += c.due + c.lrn; }); return n; } catch (e) { return 0; } }
+
   function home() {
-    const last = S.last && LV[S.last.l] ? S.last : null;
-    const route = COURSE.map((l) => { const p = levelPct(l.id); return '<li class="' + (p === 100 ? "full" : p > 0 ? "started" : "") + '"><a class="station" href="#' + l.id + '">' + l.name + '</a><span class="nm">' + (LVEN_C[l.id] || l.label) + ' <span class="muted small">(' + l.label + ")</span><small>" + l.units.length + " units · " + l.hours + " h</small></span><span class=\"pct\">" + p + "%</span></li>"; }).join("");
-    const cards = COURSE.map((l) => { const p = levelPct(l.id); return '<article class="lcard"><div class="band tiles"><span class="code">' + l.name + '</span></div><div class="body"><h3>' + esc(LVEN_C[l.id] || l.label) + ' <span class="muted small">(' + esc(l.label) + ")</span></h3><p>" + esc(l.desc) + '</p><p class="meta">' + l.units.length + " units · exam " + esc(l.exam.total) + " · " + esc(l.lang) + '</p><div class="bar" role="img" aria-label="' + p + '% complete"><i style="width:' + p + '%"></i></div><a class="btn ' + (p > 0 && p < 100 ? "primary " : "") + 'go" href="#' + l.id + '">' + (p === 0 ? "Start " + l.name : p === 100 ? "Review " + l.name : "Continue " + l.name) + "</a></div></article>"; }).join("");
-    app.innerHTML = '<div class="stack">' + todayPanel() +
-      '<div class="hero"><div><p class="eyebrow">Español · DELE A1 → C2</p><h1>Ruta DELE</h1><p class="lead">A full Spanish course for the Instituto Cervantes DELE exams. Every unit has vocabulary with audio, grammar, and exercises that check your answers. Each level ends with an exam guide and a mock test.</p>' +
-      '<div class="stats"><div><b>6</b><span>levels</span></div><div><b>' + nUnits + "</b><span>units</span></div><div><b>" + nWords + "</b><span>words and phrases</span></div><div><b>" + nEx + "</b><span>self-check exercises</span></div></div>" +
-      '<div class="row" style="margin-top:20px">' + (last ? '<a class="btn primary" href="#' + last.l + "-u" + (last.i + 1) + '">Continue: ' + LV[last.l].name + " · " + esc(LV[last.l].units[last.i].t) + "</a>" : '<a class="btn primary" href="#a1">Start with A1</a>') + "</div></div>" +
-      '<ol class="route" aria-label="Your progress by level">' + route + "</ol></div>" +
-      '<div class="features"><a class="feature" href="#escuchar"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/></svg></span><span><b>Listen <span class="muted small">(Escuchar)</span></b><span class="muted">' + LISTEN.filter((x) => x.cat !== "reading").length + " listening exercises from Latin America: stories, podcasts, news, history, culture, songs and poems. Tap or highlight any text for the English.</span></span></a>" +
-      '<a class="feature" href="#leer"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/></svg></span><span><b>Read <span class="muted small">(Leer)</span></b><span class="muted">' + LISTEN.filter((x) => x.cat === "reading").length + " DELE-style reading texts with comprehension questions, from short messages to essays.</span></span></a>" +
-      (/Android/i.test(navigator.userAgent) && !/RutaDELEApp/.test(navigator.userAgent) ? '<a class="feature" href="https://github.com/timarjackson22/Ruta-dele/releases/download/apk/ruta-dele.apk"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg></span><span><b>Android app</b><span class="muted">Download the APK. Listen mode keeps playing with the screen off, and the microphone works in Practice.</span></span></a>' : "") +
-      '<a class="feature" href="#gramatica"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span><span><b>Grammar <span class="muted small">(Gramática)</span></b><span class="muted">Every part of speech, with words ranked by use: 1,360 nouns, the top 150 adjectives, adverbs, pronouns, prepositions, conjunctions, interjections and more, plus reflexive verbs.</span></span></a>' +
-      '<a class="feature" href="#palabras"><span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><b>The 7,000 most-used words <span class="muted small">(Las 7.000 palabras)</span></b><span class="muted">The most-used Spanish words, ranked by frequency, with meanings, continuous audio and quizzes. You know ' + Object.keys(S.w || {}).length + " so far.</span></span></a></div>" +
-      '<section class="block"><div class="shead"><h2>How each unit works</h2></div><ol class="steps"><li><b>Listen</b><span>Tap the speaker to hear every word.</span></li><li><b>Learn</b><span>Grammar tables with the key rules.</span></li><li><b>Practise</b><span>Type your answers and check them.</span></li><li><b>Review</b><span>Flashcards for the whole level.</span></li><li><b>Test</b><span>Exam guide and a timed-style mock.</span></li></ol></section>' +
-      '<section class="block"><div class="shead"><h2>Levels</h2><span class="muted">Progress is saved in this browser</span></div><div class="levels">' + cards + "</div></section>" +
-      '<section class="block"><div class="shead"><h2>Use it like an app</h2></div><div class="callout"><p><b>iPhone:</b> open this page in Safari, tap the Share button, then <b>Add to Home Screen</b>.</p><p style="margin-top:6px"><b>Android:</b> open it in Chrome, tap the ⋮ menu, then <b>Add to Home screen</b>.</p><p style="margin-top:6px" class="muted">The icon opens Ruta DELE full screen. After the first visit most of it works offline. Progress is saved separately on each device.</p></div></section></div>';
+    const last = S.last && LV[S.last.l] ? S.last : null, st = streak(), due = dueCount(), nm = (S.mist || []).length, cl = curLevel(), L = LV[cl];
+    const date = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    let hero;
+    if (last) {
+      const LL = LV[last.l], u = LL.units[last.i], p = levelPct(LL.id);
+      hero = '<a class="hero2" href="#' + LL.id + "-u" + (last.i + 1) + '"><span class="h2-eye">Continue · ' + LL.name + " " + esc(LVEN_C[LL.id] || LL.label) + '</span><span class="h2-t">' + esc(u.t) + '</span><span class="h2-s">' + esc(u.s || "") + '</span><span class="h2-bar"><i style="width:' + p + '%"></i></span><span class="h2-foot"><span>Unit ' + (last.i + 1) + " of " + LL.units.length + " · " + p + '% of level</span><span class="h2-go">Resume</span></span></a>';
+    } else if (S.place && LV[S.place.lvl]) {
+      const LL = LV[S.place.lvl];
+      hero = '<a class="hero2" href="#' + LL.id + '"><span class="h2-eye">Your level</span><span class="h2-t">Start ' + LL.name + " · " + esc(LVEN_C[LL.id] || LL.label) + '</span><span class="h2-s">' + esc(LL.desc) + '</span><span class="h2-foot"><span>' + LL.units.length + ' units</span><span class="h2-go">Start</span></span></a>';
+    } else {
+      hero = '<a class="hero2" href="#nivel"><span class="h2-eye">Welcome</span><span class="h2-t">Find your level</span><span class="h2-s">A 3-minute test shows where to begin, from A1 to C2.</span><span class="h2-foot"><span>Or <u data-href="#a1">start with A1</u></span><span class="h2-go">Take the test</span></span></a>';
+    }
+    const goal = '<div class="goal2">' + goalRing() + '<div><b>' + (st ? st + "-day streak 🔥" : "Start a streak today") + '</b><small>Daily goal: ' + (S.goal || 20) + " points</small>" + week() + "</div></div>";
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Today", "", '<a class="lt-btn" href="#ajustes" aria-label="Settings">' + UIC.gear[1].replace(/^/, '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">') + "</svg></a>", date) +
+      hero + goal +
+      uiGroup("Keep going", [
+        uiRow({ ic: "cards", t: "Flashcards", href: "#repaso", val: due ? '<span class="badge2">' + due + "</span>" : "", sub: due ? "Reviews due now" : "No reviews due" }),
+        uiRow({ ic: "mist", t: "My mistakes", href: "#errores", val: nm ? '<span class="badge2">' + nm + "</span>" : "", sub: nm ? "Fix them to remember" : "None saved yet" }),
+        uiRow({ ic: "speak", t: "Talk with Profe", act: "t-open", sub: "Conversation and voice practice" }),
+        uiRow({ ic: "write", t: "Writing task", href: "#escritura", sub: "DELE tasks for " + L.name + ", graded by Profe" }),
+        uiRow({ ic: "listen", t: "Listen", href: "#escuchar", sub: "Stories, podcasts and news" }),
+      ]) +
+      uiGroup("Your levels", COURSE.map((l) => { const p = levelPct(l.id); return uiRow({ lead: '<span class="lvb' + (l.id === cl ? " cur" : "") + '">' + l.name + "</span>", t: esc(LVEN_C[l.id] || l.label), href: "#" + l.id, sub: '<span class="pbar"><i style="width:' + p + '%"></i></span>', val: p + "%" }); }).slice(0, 6)) +
+      "</div>";
+    const u = app.querySelector("u[data-href]"); if (u) u.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); location.hash = u.dataset.href; });
+  }
+
+  function courseHub() {
+    const cl = curLevel();
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Course", "Six levels for the DELE exams, A1 to C2. Explanations in English.") +
+      (S.place ? "" : uiGroup("", [uiRow({ ic: "test", t: "Find your level", href: "#nivel", sub: "A 3-minute placement test" })])) +
+      uiGroup("Levels", COURSE.map((l) => { const p = levelPct(l.id); return uiRow({ lead: '<span class="lvb' + (l.id === cl ? " cur" : "") + '">' + l.name + "</span>", t: esc(LVEN_C[l.id] || l.label) + ' <span class="es-n">' + esc(l.label) + "</span>", href: "#" + l.id, sub: l.units.length + " units · " + l.hours + ' h<span class="pbar"><i style="width:' + p + '%"></i></span>', val: p + "%" }); }), "Every unit has vocabulary with audio, grammar and exercises that check your answers. Each level ends with an exam guide and a timed mock test.") +
+      (S.place ? uiGroup("", [uiRow({ ic: "test", t: "Retake the placement test", href: "#nivel" })]) : "") + "</div>";
+  }
+
+  function practiceHub() {
+    const cl = curLevel(), due = dueCount(), nm = (S.mist || []).length;
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Practice", "Build each DELE skill: listening, reading, writing and speaking.") +
+      uiGroup("Skills", [
+        uiRow({ ic: "listen", t: "Listen <span class=\"es-n\">Escuchar</span>", href: "#escuchar", sub: "Stories, podcasts and news with transcripts" }),
+        uiRow({ ic: "read", t: "Read <span class=\"es-n\">Leer</span>", href: "#leer", sub: "Texts with tap-to-translate and questions" }),
+        uiRow({ ic: "write", t: "Write <span class=\"es-n\">Escribir</span>", href: "#escritura", sub: "DELE writing tasks, practice or timed exam" }),
+        uiRow({ ic: "speak", t: "Speak <span class=\"es-n\">Hablar</span>", act: "t-open", sub: "Talk with Profe, drills and role-plays" }),
+      ]) +
+      uiGroup("Review", [
+        uiRow({ ic: "cards", t: "Flashcards", href: "#repaso", val: due ? '<span class="badge2">' + due + "</span>" : "", sub: due ? "Reviews due now" : "Spaced repetition for every level" }),
+        uiRow({ ic: "mist", t: "My mistakes", href: "#errores", val: nm ? '<span class="badge2">' + nm + "</span>" : "", sub: "Questions you got wrong, to try again" }),
+        uiRow({ ic: "mock", t: "Mock exam · " + LV[cl].name, href: "#" + cl + "-mock", sub: "Timed practice test in the DELE format" }),
+      ]) + "</div>";
+  }
+
+  function libraryHub() {
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Library", "Look things up: rules, conjugations and vocabulary.") +
+      uiGroup("", [
+        uiRow({ ic: "guides", t: "Grammar guides", href: "#guias", sub: GUIDES.length + " topics explained step by step" }),
+        uiRow({ ic: "grammar", t: "Grammar <span class=\"es-n\">Gramática</span>", href: "#gramatica", sub: "Every part of speech, with the most-used words" }),
+        uiRow({ ic: "verbs", t: "Verbs <span class=\"es-n\">Verbos</span>", href: "#verbos", sub: "Full conjugations with audio" }),
+        uiRow({ ic: "words", t: "Words <span class=\"es-n\">Palabras</span>", href: "#palabras", sub: "The 7,000 most-used words" }),
+        uiRow({ ic: "res", t: "Resources", href: "#recursos", sub: "Official DELE information and free extras" }),
+      ]) + "</div>";
+  }
+
+  function settingsView() {
+    const seg = (act, cur, opts) => '<div class="seg2">' + opts.map(([v, n]) => '<button class="btn small" data-act="' + act + '" data-v="' + v + '" aria-pressed="' + (cur == v) + '">' + n + "</button>").join("") + "</div>";
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent), andr = /Android/i.test(navigator.userAgent), inApp = /RutaDELEApp/.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    const app2 = inApp || standalone ? [] : ios ? [uiRow({ ic: "app", t: "Add to Home Screen", sub: "In Safari: ⋯ → Share → Add to Home Screen. Ruta DELE then opens full screen, like an app.", href: "#ajustes", noChev: true })] : andr ? [uiRow({ ic: "app", t: "Get the Android app", sub: "Adds Profe’s on-device AI (free, works offline)", href: "https://github.com/timarjackson22/Ruta-dele/releases/download/apk/ruta-dele.apk", ext: true })] : [];
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Settings") +
+      '<h2 class="ghead">Daily goal</h2><div class="ilist pad">' + seg("goal", S.goal || 20, GOALS.map(([v, n]) => [v, n + " · " + v])) + "</div>" +
+      '<h2 class="ghead">Display</h2><div class="ilist pad"><p class="setl">Text size</p>' + seg("ui-fs", UI.fs || 1, [[0.9, "A−"], [1, "A"], [1.12, "A+"], [1.25, "A++"]]) + '<p class="setl">Appearance</p>' + seg("ui-theme", UI.theme || "auto", [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]]) + "</div>" +
+      uiGroup("Spanish", [uiRow({ ic: "globe", t: "Accent and words", act: "region", val: S.region === "es" ? "Spain" : "Latin America", sub: "Voices and vocabulary used in the course" })]) +
+      uiGroup("Level", [uiRow({ ic: "test", t: "Placement test", href: "#nivel", sub: S.place ? "Your result: " + String(S.place.lvl).toUpperCase() : "Find where to begin" })]) +
+      (app2.length ? uiGroup("App", app2) : "") +
+      '<p class="gfoot">Ruta DELE · a full Spanish course for the Instituto Cervantes DELE exams: ' + nUnits + " units, " + nWords.toLocaleString("en") + " words and phrases, " + nEx.toLocaleString("en") + " self-check exercises. Progress is saved on this device.</p></div>";
   }
 
   const LVEN = { a1: "Beginner", a2: "Elementary", b1: "Intermediate", b2: "Upper intermediate", c1: "Advanced", c2: "Mastery" };
@@ -2923,8 +3063,49 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   function setSec(sec) {
     document.body.dataset.sec = sec;
-    document.querySelectorAll(".secnav a, .tabbar a").forEach((a) => a.setAttribute("aria-current", a.dataset.s === sec ? "page" : "false"));
+    const tab = uiTab(); document.body.dataset.tab = tab;
+    document.querySelectorAll(".secnav [data-s], .tabbar [data-s]").forEach((a) => a.setAttribute("aria-current", a.dataset.s === tab ? "page" : "false"));
+    setTimeout(uiNav, 0);
   }
+  const LVRE = /^(a1|a2|b1|b2|c1|c2|esc)(-|$)/;
+  function uiTab() {
+    const h = location.hash.replace(/^#/, "");
+    if (!h || h === "inicio" || h === "ajustes") return "hoy";
+    if (h === "curso" || h === "nivel" || LVRE.test(h)) return "curso";
+    if (/^(practicar|escuchar|leer|leer-add|escritura|repaso|errores)$/.test(h) || /^(escritura|repaso|my)-/.test(h) || LI[h]) return "practicar";
+    return "biblioteca";
+  }
+  function uiParent(h) {
+    let m = h.match(/^(a1|a2|b1|b2|c1|c2|esc)-u\d+$/); if (m) return ["#" + m[1], m[1] === "esc" ? "Level" : m[1].toUpperCase()];
+    if (LVRE.test(h) || h === "nivel") return ["#curso", "Course"];
+    if (/^escritura-/.test(h)) return ["#escritura", "Write"];
+    if (/^repaso-/.test(h)) return ["#repaso", "Flashcards"];
+    if (h === "leer-add") return ["#leer", "Read"];
+    if (LI[h]) return isReading(LI[h]) ? ["#leer", "Read"] : ["#escuchar", "Listen"];
+    if (/^my-/.test(h)) return ["#leer", "Read"];
+    if (/^(escuchar|leer|escritura|repaso|errores)$/.test(h)) return ["#practicar", "Practice"];
+    if (h === "verbos-reflexivos" || /^verbo-/.test(h)) return ["#verbos", "Verbs"];
+    if (/^g-/.test(h)) return ["#gramatica", "Grammar"];
+    if (/^guia-/.test(h)) return ["#guias", "Guides"];
+    if (/^(gramatica|verbos|palabras|guias|recursos)$/.test(h)) return ["#biblioteca", "Library"];
+    if (h === "ajustes") return ["#inicio", "Today"];
+    return null;
+  }
+  function uiNav() {
+    const h = location.hash.replace(/^#/, ""), b = document.getElementById("nb-back"), t = document.getElementById("nb-title"); if (!b || !t) return;
+    const par = uiParent(h);
+    b.hidden = !par; if (par) { b.setAttribute("href", par[0]); document.getElementById("nb-back-t").textContent = par[1]; b.setAttribute("aria-label", "Back to " + par[1]); }
+    const h1 = document.querySelector("#app h1"); t.textContent = h1 ? h1.textContent.trim() : "";
+    uiScroll();
+  }
+  function uiScroll() {
+    const h1 = document.querySelector("#app h1"), top = document.querySelector("header.top");
+    document.body.classList.toggle("scrolled", window.scrollY > 4);
+    document.body.classList.toggle("ttl", !!h1 && h1.getBoundingClientRect().bottom < (top ? top.getBoundingClientRect().bottom : 50) + 4);
+  }
+  // a tab tapped while Profe is open closes Profe
+  document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest(".tabbar a"); if (a && document.body.classList.contains("tutor-open")) { const c = document.querySelector('#tutor [data-act="t-close"]'); if (c) c.click(); } }, true);
+  let uiRaf = 0; window.addEventListener("scroll", () => { if (!uiRaf) uiRaf = requestAnimationFrame(() => { uiRaf = 0; uiScroll(); }); }, { passive: true });
 
   /* ---------- voices: Latin American Spanish first, plus English for translations ---------- */
   let V2 = [null, null], VEN = null;
@@ -6402,7 +6583,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (/^g-[a-z]+$/.test(h)) { setSec("gramatica"); navChips(null); gPage(h.slice(2)); }
     else if (/^verbo-\d+$/.test(h)) { setSec("verbos"); navChips(null); verbDetail(parseInt(h.slice(6), 10) - 1); }
     else if (h === "palabras") { setSec("palabras"); navChips(null); WV.quiz = null; wordsView(); }
-    else if (!m) { setSec("curso"); navChips(null); home(); }
+    else if (h === "curso") { setSec("curso"); navChips(null); courseHub(); }
+    else if (h === "practicar") { setSec("practicar"); navChips(null); practiceHub(); }
+    else if (h === "biblioteca") { setSec("biblioteca"); navChips(null); libraryHub(); }
+    else if (h === "ajustes") { setSec("hoy"); navChips(null); settingsView(); }
+    else if (!m) { setSec("hoy"); navChips(null); home(); }
     else {
       setSec("curso");
       const L = LV[m[1]]; navChips(L.id);
@@ -6502,7 +6687,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611122348";
+  var BUILD = "202611122359";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
