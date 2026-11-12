@@ -28,6 +28,8 @@ function score(turn, reply, prev, fix, learnerEn) {
   // copying: the prompt's example lines, or the learner's own sentence handed back as Profe's
   if (/playa venao|rubén blades|a mí también me encanta el mar|una edad estupenda|¡a mí también!/i.test(body)) f.push("copy");
   else { const L = new Set((turn.u.toLowerCase().match(/[a-záéíóúñ]{3,}/g) || [])); const echo = body.split(/(?<=[.!?…])\s+|\n+/).some((x) => { if (/\?\s*$/.test(x)) return false; const W0 = x.toLowerCase().match(/[a-záéíóúñ]{3,}/g) || []; const sh = W0.filter((w) => L.has(w)).length; return L.size >= 3 && sh >= 3 && sh >= L.size * 0.7; }); if (echo && !turn.en) f.push("echo"); }
+  // Panama only after the learner has brought it up
+  if (/panam/i.test(body) && !/panam|david|col[oó]n|boquete|chiriqu|balboa/i.test((turn.hist || []).join(" ") + " " + turn.u)) f.push("panama");
   if (/(^|[,¡]\s*)(chic[oa]|amig[oa]|cariño)\b(?!\s+(de|que|del))/i.test(body)) f.push("nickname");
   // a question machine: nothing said apart from a quick reaction and a question
   if (!/\d+ \/ \d+|Casi|Inténtalo|answer is|Corrections/.test(body)) {
@@ -74,7 +76,7 @@ function score(turn, reply, prev, fix, learnerEn) {
     await p.goto("http://127.0.0.1:8766/#" + sc.lvl); await p.waitForTimeout(1500);
     await p.click("#tutor-fab"); await p.waitForTimeout(500);
     const conv = []; let prev = "";
-    for (const [k, turn] of sc.turns.entries()) { turn.k = k;
+    for (const [k, turn] of sc.turns.entries()) { turn.k = k; turn.hist = sc.turns.slice(0, k).map((x) => x.u);
       const nBefore = await p.evaluate(() => document.querySelectorAll("#tutor .tm.a").length);
       const t0 = Date.now();
       await p.evaluate((q) => { const t = document.querySelector("#tutor textarea"); t.value = q; const f = document.querySelector("#tutor form"); if (f) f.requestSubmit(); else document.querySelector("#tutor button[type=submit]").click(); }, turn.u);
