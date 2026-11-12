@@ -1,5 +1,7 @@
 name: iOS check
-on: workflow_dispatch
+on:
+  push:
+    branches: [ios-check]
 jobs:
   webkit:
     runs-on: ubuntu-latest
