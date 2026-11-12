@@ -7,5 +7,5 @@ dependencies {
     implementation("com.google.ai.edge.litertlm:litertlm-jvm:latest.release")
     implementation("org.json:json:20240303")
 }
-kotlin { jvmToolchain(17) }
+kotlin { jvmToolchain(21) }
 application { mainClass.set("MainKt") }
