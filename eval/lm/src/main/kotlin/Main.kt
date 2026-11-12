@@ -45,10 +45,8 @@ fun main(args: Array<String>) {
                         history.add(Message.user(user)); history.add(Message.model(out))
                     }
                     "/gen" -> {
-                        // one conversation at a time: pause the chat, answer, then restore the chat with its history
-                        chat?.close(); chat = null
+                        // a separate short conversation; the chat stays open (the engine runs sessions one after another)
                         conv(null, body.optDouble("temp", 0.2)).use { c -> out = c.sendMessage(Message.user(body.getString("prompt"))).toString() }
-                        if (chatKey.isNotEmpty()) chat = conv(chatSys, chatTemp, history.toList())
                     }
                     "/reset" -> { chat?.close(); chat = null; chatKey = ""; history.clear() }
                 }

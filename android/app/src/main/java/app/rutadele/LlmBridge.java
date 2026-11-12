@@ -260,12 +260,9 @@ public class LlmBridge {
     void lmGenerate(String id, String prompt, int maxTokens, float temperature) {
         try {
             ensureLoaded();
-            // one conversation at a time: pause the chat, answer, then restore the chat with its history
-            try { if (lmChat != null) lmChat.close(); } catch (Throwable ignored) { }
-            lmChat = null;
+            // a separate short conversation; the chat stays open (the engine runs sessions one after another)
             Conversation c = lmConv(null, new ArrayList<>(), temperature);
             try { lmSend(c, prompt, id, maxTokens); } finally { try { c.close(); } catch (Throwable ignored) { } }
-            if (!lmKey.isEmpty()) lmChat = lmConv(lmSys, new ArrayList<>(lmHist), lmTemp);
             ev("done", id, "");
         } catch (Throwable e) {
             String m = String.valueOf(e.getMessage());
