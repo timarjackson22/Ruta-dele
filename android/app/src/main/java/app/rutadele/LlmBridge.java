@@ -197,6 +197,15 @@ public class LlmBridge {
     final List<Message> lmHist = new ArrayList<>();
     int lmChars = 0;
 
+    // the engine's native layer receives Java text in "modified UTF-8": characters outside the basic plane
+    // (emoji such as 💡 🇵🇦 😊) arrive as broken surrogates and crash the tokenizer, so they are removed
+    static String bmp(String t) {
+        if (t == null) return "";
+        StringBuilder b = new StringBuilder(t.length());
+        t.codePoints().forEach(cp -> { if (cp <= 0xFFFF && cp != 0xFE0F && !(cp >= 0xD800 && cp <= 0xDFFF)) b.appendCodePoint(cp); });
+        return b.toString();
+    }
+
     boolean isLm() { File f = modelFile(); return f != null && f.getName().endsWith(".litertlm"); }
 
     void lmLoad(File f) throws Exception {
@@ -228,7 +237,7 @@ public class LlmBridge {
 
     Conversation lmConv(String system, List<Message> initial, float temp) {
         return lm.createConversation(new ConversationConfig(
-                system == null || system.isEmpty() ? null : Contents.Companion.of(system),
+                system == null || system.isEmpty() ? null : Contents.Companion.of(bmp(system)),
                 initial, new ArrayList<>(),
                 new SamplerConfig(40, 0.9, (double) temp, (int) (System.currentTimeMillis() & 0x7fffffff))));
     }
@@ -240,7 +249,7 @@ public class LlmBridge {
         final CountDownLatch latch = new CountDownLatch(1);
         final Throwable[] err = new Throwable[1];
         lmCur = c;
-        c.sendMessageAsync(Message.Companion.user(text), new MessageCallback() {
+        c.sendMessageAsync(Message.Companion.user(bmp(text)), new MessageCallback() {
             @Override public void onMessage(Message m) {
                 String part = m.toString();
                 if (part == null || part.isEmpty()) return;
@@ -281,7 +290,7 @@ public class LlmBridge {
                 lmChat = lmConv(system, new ArrayList<>(), temperature);
             }
             String out = lmSend(lmChat, user, id, maxTokens);
-            lmHist.add(Message.Companion.user(user)); lmHist.add(Message.Companion.model(out));
+            lmHist.add(Message.Companion.user(bmp(user))); lmHist.add(Message.Companion.model(bmp(out)));
             lmChars += user.length() + out.length();
             ev("done", id, fresh ? "fresh" : "");
         } catch (Throwable e) {

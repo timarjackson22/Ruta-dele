@@ -14,9 +14,12 @@ var chatTemp = 0.35
 val history = mutableListOf<Message>()
 val log = File(System.getenv("RAW_LOG") ?: "raw.jsonl")
 
+// same as the phone: no characters outside the basic plane reach the engine (they crash its tokenizer via JNI)
+fun bmp(t: String): String = buildString { t.codePoints().forEach { cp -> if (cp <= 0xFFFF && cp != 0xFE0F && cp !in 0xD800..0xDFFF) appendCodePoint(cp) } }
+
 fun conv(sys: String?, temp: Double, initial: List<Message> = listOf()): Conversation =
     engine.createConversation(ConversationConfig(
-        systemInstruction = sys?.let { Contents.of(it) },
+        systemInstruction = sys?.let { Contents.of(bmp(it)) },
         initialMessages = initial,
         samplerConfig = SamplerConfig(topK = 40, topP = 0.9, temperature = temp, seed = seed),
         maxOutputToken = 260,
@@ -41,12 +44,12 @@ fun main(args: Array<String>) {
                             chatKey = key; chatSys = body.getString("sys"); chatTemp = body.optDouble("temp", 0.35)
                             chat = conv(chatSys, chatTemp)
                         }
-                        out = chat!!.sendMessage(Message.user(user)).toString()
-                        history.add(Message.user(user)); history.add(Message.model(out))
+                        out = chat!!.sendMessage(Message.user(bmp(user))).toString()
+                        history.add(Message.user(bmp(user))); history.add(Message.model(bmp(out)))
                     }
                     "/gen" -> {
                         // a separate short conversation; the chat stays open (the engine runs sessions one after another)
-                        conv(null, body.optDouble("temp", 0.2)).use { c -> out = c.sendMessage(Message.user(body.getString("prompt"))).toString() }
+                        conv(null, body.optDouble("temp", 0.2)).use { c -> out = c.sendMessage(Message.user(bmp(body.getString("prompt")))).toString() }
                     }
                     "/reset" -> { chat?.close(); chat = null; chatKey = ""; history.clear() }
                 }
