@@ -4698,7 +4698,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let pre = CO && CO.prefix ? CO.prefix + "\n\n" : "";
     try { if (tCur) { const rr = roleOf(lastU); if (rr) tCur.role = rr; } } catch (e) {}
     if (!pre && !(tCur && tCur.role) && lastU.length < 300 && !looksEnglish(lastU)) { let pr = ""; try { pr = praiseFor(lastU); } catch (e) {} if (pr) pre = pr + "\n\n"; }
-    const r = await ask0(turns, ctx, (t) => onText(/^\*?(Thinking|Loading|Starting)/.test(t) ? t : pre + t), signal, true);
+    const r = await ask0(turns, ctx, (t) => onText(/^\*?(Thinking|Loading|Starting|Profe is writing)/.test(t) ? t : pre + t), signal, true);
     return pre + r;
   }
   async function ask0(turns, ctx, onText, signal, skipEx) {
@@ -4736,15 +4736,16 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         const sys = rules(small, true) + "\n\nYou are now talking with the learner. Answer their message below.";
         const prevA0 = turns.filter((t) => t.role === "assistant").slice(-1)[0];
         const user = pageNote(lastU) + "Learner: " + lastU + "\n" + steerNote(lastU, prevA0 && cleanLocal(prevA0.content)) + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
-        out = await natChat(key, sys, user, 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+        out = await natChat(key, sys, user, 220, 0.35, () => onText("*Profe is writing…*"), signal, wait);
         // the small model sometimes repeats itself or answers with filler: tell it to move on, once
         const prevA = turns.filter((t) => t.role === "assistant").slice(-1)[0], nth = turns.filter((t) => t.role === "assistant").length;
         const weak = (o) => !tidyReply(cleanLocal(o), nth) || (prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));
         if (weak(out) && !(signal && signal.aborted)) {
           NAT.repeats = (NAT.repeats || 0) + 1;
-          out = await natChat(key, sys, "(That reply did not answer the learner. They said: «" + lastU.slice(0, 160) + "». Reply to exactly that: one short sentence about what they said, then one new question about it. No greeting, no «¿en qué puedo ayudarte?».)", 220, 0.6, (t) => { const ct = tidyReply(cleanLocal(t), nth); if (ct) onText(ct); }, signal, wait);
+          out = await natChat(key, sys, "(That reply did not answer the learner. They said: «" + lastU.slice(0, 160) + "». Reply to exactly that: one short sentence about what they said, then one new question about it. No greeting, no «¿en qué puedo ayudarte?».)", 220, 0.6, () => onText("*Profe is writing…*"), signal, wait);
           if (weak(out)) { const off = prevA && sents(prevA.content).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || followUp(lastU); }
         }
+        { const t0 = String(out).trim(); if (t0 && !/[.!?…»”")*]\s*$/.test(t0)) { const k = Math.max(t0.lastIndexOf(". "), t0.lastIndexOf("! "), t0.lastIndexOf("? "), t0.lastIndexOf("… ")); if (k > 20) out = t0.slice(0, k + 1); } }
         out = tidyReply(dropMeToo(cleanLocal(out), lastU), nth) || tidyReply(cleanLocal(out), nth) || out;
         try {
           const say = sents(out).filter((y) => !/\?\s*$/.test(y)).join(" ").split(/\s+/).filter(Boolean).length;
@@ -4753,7 +4754,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         if (!/\?/.test(out) && out.split(/\s+/).length <= 5 && !(tCur && tCur.role) && !looksEnglish(lastU) && !/^(adi[oó]s|chao|hasta luego|bye|gracias,? (adi[oó]s|chao))/i.test(xnorm(lastU))) out = out.replace(/\s*$/, "") + " " + followUp(lastU);
       } else {
         const lite = hist.map((t) => (t.role === "assistant" ? { role: "assistant", content: t.content.slice(-140) } : t));
-        out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 220, 0.35, (t) => { const ct = cleanLocal(t); if (ct) onText(ct); }, signal, wait);
+        out = await natGenerate(natPrompt(rules(small, true) + (f ? "\n\n" + f.slice(0, 500) : ""), lite, 1000), 220, 0.35, () => onText("*Profe is writing…*"), signal, wait);
       }
       return cleanLocal(out) || "…";
     }
@@ -4917,7 +4918,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     tBusy = true; tCtl = new AbortController(); tRender();
     const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => autoAgain()) : null;
     EXPERT_LAST = "";
-    try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; if (out && out === EXPERT_LAST) live.x = 1; }
+    try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting|Profe is writing)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; if (out && out === EXPERT_LAST) live.x = 1; }
     catch (e) {
       delete live.pending;
       if (e && e.code === "cancelled") live.c = e.text || live.c || "(stopped)";
@@ -6159,7 +6160,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611120517";
+  var BUILD = "202611120554";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
