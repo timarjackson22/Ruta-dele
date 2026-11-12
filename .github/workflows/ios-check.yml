@@ -4,13 +4,13 @@ on:
     branches: [ios-check]
 jobs:
   webkit:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
-      - run: npm i playwright@1.49.1 && npx playwright install --with-deps webkit
+      - run: npm i playwright@1.55.0 && npx playwright install webkit
       - run: (python3 -m http.server 8766 >/dev/null 2>&1 &) && sleep 2 && mkdir -p eval/out && cd eval && node ios.js 2>&1 | tee out/ios.txt
       - uses: actions/upload-artifact@v4
         if: always()
