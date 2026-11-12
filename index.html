@@ -59,6 +59,14 @@ img { max-width: 100% }
 .wbetter { border: 1px solid var(--line, #d8dee8); border-radius: 10px; padding: 10px 12px; line-height: 1.55; margin: 6px 0 }
 .wv .ok { color: #2e8b57 } .wv .no { color: #b9541a }
 @media (max-width: 600px) { .wcrit { grid-template-columns: 1fr } }
+.wcorr > li.wsok .wsline { color: var(--muted, #5b6472) }
+.wsline { margin: 2px 0 }
+.wiss { list-style: none; padding: 0; margin: 4px 0 }
+.wiss li { margin: 3px 0 }
+.wtag { display: inline-block; font-size: .72em; font-weight: 700; padding: 1px 6px; border-radius: 6px; margin-right: 4px; vertical-align: 1px }
+.wt-g { background: rgba(192, 57, 43, .12); color: #a63a2c } .wt-s { background: rgba(142, 68, 173, .12); color: #7d3c98 }
+.wt-u { background: rgba(211, 140, 18, .15); color: #9a6200 } .wt-r { background: rgba(41, 128, 185, .13); color: #1f6391 } .wt-n { background: rgba(46, 139, 87, .13); color: #23704a }
+.wnat { margin: 3px 0 }
 </style>
 <title>Ruta DELE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -6239,6 +6247,54 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (!left && WR.phase === "write") { wStop(); coachToast("⏱️ Time is up. Your text has been submitted."); wSubmit(); } };
     wStop(); step(); WR.tm = setInterval(step, 1000);
   }
+
+  // one sentence reviewed by the AI: minimal correction, typed issues with reasons, and a more natural version
+  // JSON from a small model: parse it, or salvage the fields when it is malformed
+  function wJson(t) {
+    t = String(t || ""); const body = (t.match(/\{[\s\S]*\}/) || [""])[0];
+    try { const j = JSON.parse(body); if (j && typeof j === "object") return j; } catch (e) {}
+    const str = '"((?:[^"\\\\]|\\\\.)*)"', un = (x) => { try { return JSON.parse('"' + x + '"'); } catch (e) { return x; } };
+    const f = (k, src) => { const m = new RegExp('"' + k + '"\\s*:\\s*' + str).exec(src); return m ? un(m[1]) : ""; };
+    const issues = []; const re = /\{[^{}]*"wrong"[^{}]*\}/g; let m;
+    while ((m = re.exec(body))) { const o = m[0]; const w = f("wrong", o), rt = new RegExp('"right"\\s*:\\s*' + str + '\\s*[,}]').exec(o); if (w && rt) issues.push({ wrong: w, right: un(rt[1]), type: f("type", o), why: f("why", o) }); }
+    const correct = f("correct", body), natural = f("natural", body);
+    return correct || issues.length ? { correct, issues, natural } : null;
+  }
+  const W_PRON = /^(yo|tú|tu|él|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/i;
+  function wKeep(x, sn) {
+    const lt = (v) => String(v || "").toLowerCase().replace(/[^a-záéíóúüñ ]/g, " ").replace(/\s+/g, " ").trim();
+    const a = lt(x.from), b = lt(x.to);
+    if (a === b) return false; // only punctuation or spacing changed
+    if (/\((or|o)\b|\bor\b.*\)/i.test(x.to) || (x.type !== "register" && /\//.test(x.to))) return false; // not a single answer
+    const A = a.split(" ").filter(Boolean), B = b.split(" ").filter(Boolean);
+    if (A.filter((w) => !B.includes(w)).every((w) => W_PRON.test(w)) && B.every((w) => A.includes(w))) return false; // a subject pronoun dropped: correct Spanish
+    if (x.type !== "register" && A.length > 8 && A.length >= (sn.match(/\S+/g) || []).length * 0.7) return false; // the whole sentence rewritten
+    if (/\b(is|are|sounds|was) (grammatically |perfectly |also |technically |completely )?(correct|acceptable|understandable|fine|ok)\b|\bwhile\b[^.]{0,60}\b(correct|understandable|acceptable)\b/i.test(x.why)) return false; // the model says it is not an error
+    if (x.type === "usage" && /\b(more (natural|common|concise|elegant|sophisticated|idiomatic|formal)|often (sounds|used|requires)|sounds better|slightly|could also)\b/i.test(x.why) && !/\b(wrong|incorrect|not used|false friend|does not mean|doesn't mean|too (informal|formal))\b/i.test(x.why)) return false; // a preference
+    return true;
+  }
+  async function wSentence(T, sn, prev) {
+    const strong = resolveTB() === "claude" || (TB === "native" && natWhich() === "best");
+    if (!strong) { const r = await aiCorrect(sn); return { items: ((r && r.items) || []).map((x) => ({ from: x.from, to: x.to, why: x.why || "", type: "grammar" })), natural: "" }; }
+    const user = "Level: " + T.lvl.toUpperCase() + ". Text type: " + T.type + " (" + T.reg + " register). Task: " + T.en + "\n" + (prev ? "Previous sentence: «" + prev + "»\n" : "") + "Sentence to correct: «" + sn + "»\n\n" +
+      "Find every error in this sentence: grammar (agreement, verb forms, tenses, prepositions, articles), spelling and accents, usage (wrong word choice, false friends, words a native speaker would not use here) and register (too formal or informal for this text). Check the tenses against the time of the story (a past event needs past tenses).\nList ONLY real mistakes a DELE examiner would penalise. Correct Spanish is not a mistake: do not list stylistic preferences or synonyms, and do not remove subject pronouns (yo, nosotros). A better wording of a correct sentence goes only in \"natural\".\n" +
+      "Reply ONLY with JSON: {\"correct\":\"the sentence with only the errors fixed\",\"issues\":[{\"wrong\":\"exact words from the sentence\",\"right\":\"replacement\",\"type\":\"grammar|spelling|usage|register\",\"why\":\"short explanation in English\"}],\"natural\":\"how a native speaker would say it at this level, or the same sentence if it is already natural\"}";
+    let j = null;
+    try { const t = await aiText("You are a meticulous Spanish teacher correcting a DELE learner's writing. You reply only with JSON.", user); j = wJson(t); } catch (e) { j = null; }
+    if (!j || typeof j !== "object") { const r = await aiCorrect(sn); return { items: ((r && r.items) || []).map((x) => ({ from: x.from, to: x.to, why: x.why || "", type: "grammar" })), natural: "" }; }
+    const low = sn.toLowerCase(), plain = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+    let items = (Array.isArray(j.issues) ? j.issues : []).filter((x) => x && typeof x.wrong === "string" && typeof x.right === "string" && x.wrong.trim() && x.wrong.trim().toLowerCase() !== x.right.trim().toLowerCase())
+      .filter((x) => low.includes(x.wrong.trim().toLowerCase()) || plain(sn).includes(plain(x.wrong.trim()))) // the quoted words must be in the sentence
+      .map((x) => ({ from: x.wrong.trim(), to: x.right.trim(), why: String(x.why || "").trim(), type: /^(grammar|spelling|usage|register)$/.test(x.type) ? x.type : "grammar" })).filter((x) => wKeep(x, sn));
+    // changes in the corrected sentence that the list did not mention
+    const cor = String(j.correct || "").trim();
+    if (cor && cor !== sn) { try { const d = wordDiff(sn, cor); if (d.pairs.length <= Math.max(3, (sn.match(/\S+/g) || []).length / 2)) d.pairs.forEach((pr) => { const dx = { from: pr.from, to: pr.to, why: "" }; if (pr.from && pr.to && wKeep(dx, sn) && !(j.issues || []).some((y) => y && String(y.wrong || "").toLowerCase().includes(String(pr.from).toLowerCase().replace(/[.,;:!?]/g, ""))) && !items.some((x) => { const xw = plain(x.from).match(/[a-zñ]+/g) || []; return (plain(pr.from).match(/[a-zñ]+/g) || []).some((w) => xw.includes(w)); })) items.push({ from: pr.from, to: pr.to, why: "", type: plain(pr.from).replace(/[^a-zñ]/g, "") === plain(pr.to).replace(/[^a-zñ]/g, "") ? "spelling" : "grammar" }); }); } catch (e) {} }
+    let natural = String(j.natural || "").trim().replace(/^["«“]|["»”]$/g, "");
+    const fixed = items.length ? applyFx(sn, items) : sn;
+    const pn = (x) => plain(x).replace(/[^a-zñ ]/g, "").replace(/\s+/g, " ").trim();
+    if (!natural || pn(natural) === pn(sn) || plain(natural).replace(/[^a-zñ ]/g, "").trim() === plain(fixed).replace(/[^a-zñ ]/g, "").trim() || (natural.match(/\S+/g) || []).length > (sn.match(/\S+/g) || []).length * 2 + 6) natural = "";
+    return { items, natural };
+  }
   async function wSubmit() {
     wStop();
     const T = WTASKS.find((t) => t.id === WR.id), text = (WR.text || "").trim();
@@ -6248,13 +6304,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { if (!VI) await loadIndex(); } catch (e) {}
     const A = wAnalyze(T, text);
     const tb = resolveTB(), sents = wsents(text), items = [];
-    A.rule.forEach((f) => items.push({ si: f.si, from: f.from, to: f.to, why: f.why }));
-    let ai = null, better = "";
+    A.rule.forEach((f) => items.push({ si: f.si, from: f.from, to: f.to, why: f.why, type: "grammar" }));
+    let ai = null, better = ""; const naturals = {};
     if (tb) {
-      // 1) every sentence corrected
+      // 1) every sentence reviewed: grammar, spelling, usage, register, and a more natural version
       for (let i = 0; i < sents.length; i++) {
         prog("Checking sentence " + (i + 1) + " of " + sents.length + "…", 8 + Math.round((i / Math.max(1, sents.length)) * 55));
-        try { const r = await aiCorrect(sents[i]); if (r && r.items) r.items.forEach((x) => { const xf = String(x.from || "").toLowerCase(), xt = String(x.to || "").toLowerCase(); if (!items.some((y) => y.si === i && (y.from.toLowerCase() === xf || xf.includes(y.from.toLowerCase()) || y.to.toLowerCase() === xt))) items.push({ si: i, from: x.from, to: x.to, why: x.why || "" }); }); } catch (e) {}
+        try {
+          const r = await wSentence(T, sents[i], sents[i - 1] || "");
+          r.items.forEach((x) => { const xf = String(x.from || "").toLowerCase(), xt = String(x.to || "").toLowerCase(); const same = items.find((y) => y.si === i && (y.from.toLowerCase() === xf || xf.includes(y.from.toLowerCase()) || y.to.toLowerCase() === xt)); if (same) { if (!same.why && x.why) same.why = x.why; } else items.push({ si: i, from: x.from, to: x.to, why: x.why || "", type: x.type || "grammar" }); });
+          if (r.natural) naturals[i] = r.natural;
+        } catch (e) {}
       }
       // 2) the examiner's judgement on the criteria
       prog("Grading with the DELE criteria…", 70);
@@ -6269,10 +6329,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (ai && Array.isArray(ai.points) && ai.points.length === A.pts.length) A.pts = A.pts.map((x, i) => x || ai.points[i] === true);
     // leaving out a subject pronoun is style, not an error; empty edits are dropped
     for (let k = items.length - 1; k >= 0; k--) { const f = items[k]; if (!String(f.to || "").trim() && /^(yo|t[uú]|[eé]l|ella|nosotros|nosotras|ellos|ellas|usted|ustedes)$/i.test(String(f.from || "").trim())) items.splice(k, 1); else if (!String(f.from || "").trim() && !String(f.to || "").trim()) items.splice(k, 1); }
-    const det = wDetScores(T, A, items.length);
+    const det = wDetScores(T, A, items.reduce((n, f) => n + (f.type === "usage" || f.type === "register" ? 0.5 : 1), 0));
     const sc = {}; ["ade", "coh", "cor", "alc"].forEach((k) => { sc[k] = ai && k !== "cor" ? clamp3((det[k] + +ai[k]) / 2) : k === "cor" && ai ? clamp3((det.cor * 2 + +ai.cor) / 3) : det[k]; });
     const total = Math.round(((sc.ade + sc.coh + sc.cor + sc.alc) / 12) * 25);
-    const rep = { total, sc, A, items, sents, better: better.replace(/\[[^\]]{2,60}\]/g, "…"), ai, tips: wTips(T, A), mode: WR.mode, used: WR.end ? Math.round((Date.now() - (WR.end - T.mins * 60000)) / 60000) : 0, aiOn: !!tb };
+    const rep = { total, sc, A, items, sents, naturals, better: better.replace(/\[[^\]]{2,60}\]/g, "…"), ai, tips: wTips(T, A), mode: WR.mode, used: WR.end ? Math.round((Date.now() - (WR.end - T.mins * 60000)) / 60000) : 0, aiOn: !!tb };
     WR.rep = rep; WR.phase = "report";
     S.wa[T.id] = (S.wa[T.id] || []).concat([{ d: Date.now(), sc: total, mode: WR.mode, crit: sc }]).slice(-20); save();
     try { actAdd(Math.round(total / 2) + 4); } catch (e) {}
@@ -6281,14 +6341,24 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function wReportHTML(T, R) {
     const pass = R.total >= 15, bars = WCRIT.map(([k, en, es, d]) => { const v = R.sc[k]; return '<div class="wcr"><div class="wcrh"><b>' + en + '</b> <span class="muted">(' + es + ")</span><span class=\"wsc\">" + v + "/3</span></div><div class=\"wbarb\"><i style=\"width:" + (v / 3) * 100 + "%\" class=\"" + (v >= 2 ? "ok" : "no") + "\"></i></div><p class=\"small\">" + esc(wWhy(k, v, T, R)) + "</p></div>"; }).join("");
     const byS = {}; R.items.forEach((f) => (byS[f.si] = byS[f.si] || []).push(f));
-    const corr = Object.keys(byS).map((i) => { const sn = R.sents[i], fx = byS[i], fixed = applyFx(sn, fx); return '<li><p class="small"><span class="muted">You wrote:</span> ' + esc(sn) + '</p><p><span class="muted small">Better:</span> <b>' + esc(fixed) + '</b> <button class="say" data-act="say" data-t="' + esc(fixed) + '" aria-label="Listen">' + ICON + "</button></p><ul class=\"small\">" + fx.map((f) => "<li>" + (f.from ? "<del>" + esc(f.from) + "</del> → " : "add ") + (f.to ? "<ins>" + esc(f.to) + "</ins>" : "<i>remove</i>") + (f.why ? " · " + esc(f.why) : "") + "</li>").join("") + "</ul></li>"; }).join("");
+    const TYPE = { grammar: ["Grammar", "wt-g"], spelling: ["Spelling", "wt-s"], usage: ["Usage", "wt-u"], register: ["Register", "wt-r"] };
+    const nat = R.naturals || {};
+    const corr = R.sents.map((sn, i) => {
+      const fx = byS[i] || [], fixed = fx.length ? applyFx(sn, fx) : sn, nv = nat[i];
+      const diff = fx.length ? wordDiff(sn, fixed).ops.map(([o, w]) => (o === "=" ? esc(w) : o === "-" ? "<del>" + esc(w) + "</del>" : "<ins>" + esc(w) + "</ins>")).join(" ") : "";
+      return '<li class="' + (fx.length ? "wsx" : "wsok") + '">' + (fx.length
+        ? '<p class="wsline">' + diff + '</p><p class="small"><span class="muted">Corrected:</span> <b>' + esc(fixed) + '</b> <button class="say" data-act="say" data-t="' + esc(fixed) + '" aria-label="Listen">' + ICON + "</button></p><ul class=\"wiss\">" + fx.map((f) => { const ty = TYPE[f.type] || TYPE.grammar; return '<li><span class="wtag ' + ty[1] + '">' + ty[0] + "</span> " + (f.from ? "<del>" + esc(f.from) + "</del> → " : "add ") + (f.to ? "<ins>" + esc(f.to) + "</ins>" : "<i>remove</i>") + (f.why ? ' <span class="small">' + esc(f.why) + "</span>" : "") + "</li>"; }).join("") + "</ul>"
+        : '<p class="wsline">✓ ' + esc(sn) + "</p>") +
+        (nv ? '<p class="small wnat"><span class="wtag wt-n">More natural</span> ' + esc(nv) + ' <button class="say" data-act="say" data-t="' + esc(nv) + '" aria-label="Listen">' + ICON + "</button></p>" : "") + "</li>";
+    }).join("");
+    const nErr = R.items.length, counts = Object.entries(R.items.reduce((m, f) => { m[f.type || "grammar"] = (m[f.type || "grammar"] || 0) + 1; return m; }, {})).map(([k, v]) => v + " " + (TYPE[k] ? TYPE[k][0].toLowerCase() : k)).join(" · ");
     const tips = R.tips.concat((R.ai && Array.isArray(R.ai.improve) ? R.ai.improve : []).filter((x) => typeof x === "string" && x.length > 8).slice(0, 3));
     return '<div class="wscore ' + (pass ? "ok" : "no") + '"><span class="big">' + R.total + '<small>/25</small></span><div><b>' + (pass ? "✅ Pass level for this task" : "Not yet at pass level (15/25)") + '</b><p class="small">' + (R.mode === "exam" ? "⏱️ Exam mode" : "✍️ Practice mode") + " · " + R.A.wc + " words" + (R.aiOn ? "" : " · <i>Graded without the AI: turn on Profe's AI for sentence-by-sentence corrections and a model answer.</i>") + "</p>" + (R.ai && R.ai.strengths ? '<p class="small">👏 ' + esc(R.ai.strengths) + "</p>" : "") + "</div></div>" +
       '<h2>Criteria <span class="es-sub">(Criterios DELE)</span></h2>' + bars +
       '<h2>Task checklist</h2><ul class="wcheck">' + T.points.map((p, i) => '<li class="' + (R.A.pts[i] ? "ok" : "no") + '">' + (R.A.pts[i] ? "✓" : "✗") + " " + esc(p.en) + ' <span class="es-line">(' + esc(p.es) + ")</span></li>").join("") +
       '<li class="' + (R.A.wc >= T.words[0] && R.A.wc <= T.words[1] * 1.1 ? "ok" : "no") + '">' + (R.A.wc >= T.words[0] && R.A.wc <= T.words[1] * 1.1 ? "✓" : "✗") + " Length: " + R.A.wc + " words (" + T.words[0] + "–" + T.words[1] + ")</li>" +
       (T.reg !== "neutral" ? '<li class="' + (R.A.regOk ? "ok" : "no") + '">' + (R.A.regOk ? "✓" : "✗") + " " + T.reg.charAt(0).toUpperCase() + T.reg.slice(1) + " register</li>" : "") + "</ul>" +
-      '<h2>Corrections <span class="es-sub">(' + R.items.length + ")</span></h2>" + (corr ? '<ol class="wcorr">' + corr + "</ol>" : '<p class="muted">' + (R.aiOn ? "No errors found. ¡Muy bien!" : "Only the rule-based checks ran (no errors found by them).") + "</p>") +
+      '<h2>Sentence by sentence <span class="es-sub">(Corrección frase a frase)</span></h2><p class="small muted">' + (nErr ? nErr + " correction" + (nErr > 1 ? "s" : "") + " (" + counts + ") in " + R.sents.length + " sentences." : "No errors found in " + R.sents.length + " sentences. ¡Muy bien!") + (R.aiOn ? "" : " Only the rule-based checks ran: turn on Profe's AI for a full review.") + "</p>" + '<ol class="wcorr">' + corr + "</ol>" +
       '<h2>How to improve <span class="es-sub">(Cómo mejorar)</span></h2>' + (tips.length ? '<ul class="wtips">' + tips.map((t) => "<li>" + md(t).replace(/^<p>|<\/p>$/g, "") + "</li>").join("") + "</ul>" : '<p class="muted">Great work: keep it up at this level.</p>') +
       (R.better ? '<h2>An improved version of your text <span class="es-sub">(Versión mejorada)</span></h2><div class="wbetter">' + esc(R.better).replace(/\n/g, "<br>") + '</div><button class="btn small" data-act="say" data-t="' + esc(R.better) + '">🔊 Listen</button>' : "") +
       '<details class="wmine"><summary>Your text</summary><div class="wbetter">' + esc(WR.text).replace(/\n/g, "<br>") + "</div></details>" +
@@ -6427,7 +6497,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611121712";
+  var BUILD = "202611121830";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
