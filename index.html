@@ -522,6 +522,8 @@ strong.q { color: inherit; font-style: normal; font-weight: 600 }
 @media (max-width: 820px) { .aw-back { bottom: calc(200px + env(safe-area-inset-bottom, 0px)) } }
 .aw-dim { position: fixed; inset: 0; z-index: 100; background: rgba(0, 0, 0, .6); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 40px; transition: background 1.2s }
 .aw-dim p { color: rgba(255, 255, 255, .55); font-size: .9rem; margin: 0 }
+.aw-dim.s1 { background: rgba(0, 0, 0, .3) }
+.aw-dim.s2 { background: rgba(0, 0, 0, .65) }
 .aw-dim.dark { background: #000 }
 .aw-dim.waking { background: transparent !important; transition: background .3s }
 .aw-dim.waking p { opacity: 0 }
@@ -2746,13 +2748,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let ov = document.getElementById("aw-dim");
     if (!n) { if (ov) { ov.classList.add("waking"); ov.id = ""; setTimeout(() => ov.remove(), 450); } if (NATIVE_TTS()) try { AndroidTTS.setBrightness(-1); } catch (e) {} return; }
     if (!ov) { ov = document.createElement("div"); ov.id = "aw-dim"; ov.className = "aw-dim"; ov.innerHTML = '<p>Still reading aloud · tap to wake</p>'; document.body.appendChild(ov); }
-    ov.classList.toggle("dark", n === 2);
-    if (NATIVE_TTS()) try { AndroidTTS.setBrightness(n === 2 ? 0.01 : 0.12); } catch (e) {}
+    ov.classList.toggle("s1", n === 1); ov.classList.toggle("s2", n === 2); ov.classList.toggle("dark", n === 3);
+    if (NATIVE_TTS()) try { AndroidTTS.setBrightness(n === 3 ? 0.01 : n === 2 ? 0.08 : 0.3); } catch (e) {}
   }
   function awTick() {
     const act = awActive();
     if (act !== AW.on) { AW.on = act; awLock(act); if (!act) { awStage(0); FOL.free = false; try { PL.follow = true; } catch (e) {} } else AW.last = Date.now(); }
-    if (AW.on) { const idle = Date.now() - AW.last; awStage(idle > 60000 ? 2 : idle > 30000 ? 1 : 0); }
+    if (AW.on) { const idle = Date.now() - AW.last; awStage(idle > 390000 ? 3 : idle > 330000 ? 2 : idle > 270000 ? 1 : 0); }
     awBack();
   }
   setInterval(awTick, 1000);
@@ -4804,6 +4806,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     } catch (e) {}
     return [...out];
   }
+  // how long a pause means "finished": learners pause to think, especially mid-sentence and on a second try
+  const UNFINISHED = /\b(y|e|o|u|ni|pero|porque|que|qu[eé]|de|del|a|al|en|con|sin|por|para|el|la|los|las|un|una|unos|unas|mi|mis|tu|tus|su|sus|muy|m[aá]s|como|cuando|si|es|son|est[aá]|estoy|soy|tengo|quiero|voy|me|te|se|le|lo|nos|the|and|to|a|of)$/i;
+  const FILLER = /\b(eh+|em+|mm+|este|pues|bueno|o sea|um+|uh+|ah+)$/i;
+  function endWait(text) {
+    const t = String(text || "").trim().toLowerCase().replace(/[.,!?¿¡…]+$/, ""), n = t ? t.split(/\s+/).length : 0;
+    let ms = TS.waitMs || 3000;
+    if ((tCur && tCur.retry) || (PR && PR.fb && !PR.fb.ok) || (PR && PR.tries)) ms += 1500; // a second try: thinking time
+    if (n > 0 && n < 3) ms += 1000;                       // only a word or two so far
+    if (UNFINISHED.test(t) || FILLER.test(t)) ms += 2500; // the sentence clearly goes on
+    return Math.min(ms, 9000);
+  }
   function listen(onFinal, opts) {
     opts = opts || {};
     if (!CAN_MIC) return;
@@ -4811,7 +4824,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); } catch (e) {}
     if (rec) try { rec.abort(); } catch (e) {}
     // keep the recognizer open (continuous) and decide ourselves when the learner has finished: after a pause of TS.waitMs
-    const manual = !!opts.continuous, waitMs = TS.waitMs || 2000;
+    const manual = !!opts.continuous, waitMs = TS.waitMs || 3000;
     rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
     let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => {
       if (rec !== me || !listening) return;
@@ -4828,7 +4841,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (nf > prevN) prevI = "";
       else if (prevI && interim && interim.split(" ").length < prevI.split(" ").length && interim.split(" ")[0].toLowerCase() !== prevI.split(" ")[0].toLowerCase()) kept += (kept ? " " : "") + prevI;
       prevN = nf; if (interim) prevI = interim;
-      final = (kept + " " + fin).trim(); liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(waitMs); };
+      final = (kept + " " + fin).trim(); liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(endWait(liveText)); };
     rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
     rec.onend = () => { if (done || rec !== me) return; done = true; clearTimeout(quiet); listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
     try { if (window.AndroidSTT && window.AndroidSTT.setBias) window.AndroidSTT.setBias(JSON.stringify(biasWords())); } catch (e) {}
@@ -4897,9 +4910,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     next();
   }
-  function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = liveText || (listening ? "Listening… speak now. Pause when you’re done, or tap the mic." : ""); } }
+  function paintLive() { const el = document.getElementById("t-live"); if (el) { el.hidden = !(listening || liveText); el.textContent = listening ? (liveText ? liveText + "  ·  tap ✓ when you’re done" : "Listening… take your time. Tap ✓ when you’re done.") : liveText; } }
   function uiVoice() {
-    document.querySelectorAll("[data-act=t-mic],[data-act=pr-mic]").forEach((b) => { b.classList.toggle("on", listening); b.setAttribute("aria-label", listening ? "Stop listening" : "Speak"); });
+    document.querySelectorAll("[data-act=t-mic],[data-act=pr-mic]").forEach((b) => { b.classList.toggle("on", listening); b.setAttribute("aria-label", listening ? "Done: send what I said" : "Speak"); b.innerHTML = listening ? '<span style="font-size:1.4em;font-weight:700">✓</span>' : MIC; });
     const vb = document.getElementById("t-voice"); if (vb) { vb.setAttribute("aria-pressed", voiceMode); vb.textContent = voiceMode ? "End voice chat" : "Voice chat"; }
   }
 
@@ -5345,7 +5358,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<p class="small" style="margin-top:8px">Colour</p><div class="row pvrow">' + PV_COLORS.map(([c, n]) => '<button class="pvc" data-act="pv-col" data-v="' + c + '" aria-pressed="' + ((TS.pcol || "#1F4FA3") === c) + '" aria-label="' + n + '" style="background:' + c + '"></button>').join("") + "</div>" +
       '<p class="small" style="margin-top:10px">Spanish voice</p><select id="pv-es">' + opt(es, TS.pvEs) + "</select>" +
       '<p class="small" style="margin-top:8px">English voice (for explanations)</p><select id="pv-en">' + opt(en, TS.pvEn) + "</select>" +
-      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2000, "2 s"], [2500, "2.5 s"], [3500, "3.5 s"], [5000, "5 s"], [7000, "7 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 2000) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
+      '<div class="row" style="margin-top:8px"><label class="small" for="pv-wait">Wait after I stop talking</label><select id="pv-wait">' + [[1500, "1.5 s (quick)"], [2000, "2 s"], [2500, "2.5 s"], [3000, "3 s (default)"], [3500, "3.5 s"], [5000, "5 s"], [7000, "7 s (take my time)"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.waitMs || 3000) == r ? " selected" : "") + ">" + n + "</option>").join("") + "</select></div>" +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-fix"' + (TS.noFix ? "" : " checked") + '> Correct my Spanish (marks wrong words under each message)</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-name">Your name (Profe uses it)</label><input id="pv-name" value="' + esc(TS.lname || "") + '" placeholder="e.g. Timar" style="max-width:10em"></div>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-enline"' + (TS.noEnLine ? "" : " checked") + '> Show English under Profe’s replies (never read aloud)</label>' +
@@ -6179,7 +6192,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611121242";
+  var BUILD = "202611121547";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
