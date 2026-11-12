@@ -3887,7 +3887,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     fast: { url: "https://huggingface.co/litert-community/Qwen2.5-0.5B-Instruct/resolve/main/Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task", name: "Qwen2.5-0.5B-Instruct_multi-prefill-seq_q8_ekv1280.task", size: "550 MB", label: "Fast", desc: "about 3× quicker, simpler Spanish" },
     smart: { url: "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct/resolve/main/Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", name: "Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", size: "1.6 GB", label: "Smart", desc: "better answers, slower" },
   };
-  const natWhich = (st) => (/0\.5B/.test((st || NAT.st).model || "") ? "fast" : "smart");
+  // Gemma 4 runs on the newer engine (LiteRT-LM), only in app versions that have it
+  const CAN_LM = HAS_NATIVE && typeof window.AndroidLLM.canLm === "function";
+  if (CAN_LM) NATIVE_MODELS.best = { url: "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/main/gemma-4-E2B-it.litertlm", name: "gemma-4-E2B-it.litertlm", size: "2.6 GB", label: "Best", desc: "Gemma 4: the sharpest conversation and Spanish, quick on recent phones" };
+  const natWhich = (st) => { const m = (st || NAT.st).model || ""; return /gemma/i.test(m) ? "best" : /0\.5B/.test(m) ? "fast" : "smart"; };
   const NATIVE_MODEL = { url: "https://huggingface.co/litert-community/Qwen2.5-1.5B-Instruct/resolve/main/Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", name: "Qwen2.5-1.5B-Instruct_multi-prefill-seq_q8_ekv4096.task", size: "1.6 GB" };
   const NAT = { st: {}, cbs: {}, seq: 0, dl: "", dlerr: "" };
   function natStatus() { try { NAT.st = JSON.parse(window.AndroidLLM.status() || "{}"); } catch (e) { NAT.st = {}; } return NAT.st; }
@@ -3952,15 +3955,15 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function nativeBox() {
     const st = natStatus();
     if (st.state === "downloading") { const g = +st.got || 0, t = +st.total || 0; return '<p class="small">Downloading the AI model.</p><div class="dlp"><div class="bar"><i id="n-bar" style="width:' + (t ? Math.round((g / t) * 100) : 0) + '%"></i></div><p class="small muted" id="n-prog">Downloading… ' + gb(g) + (t ? " of " + gb(t) : "") + '. Keep the app open; it resumes if interrupted.</p></div><button class="btn small" data-act="t-ncancel">Pause download</button>'; }
-    const REC = (navigator.deviceMemory || 8) >= 6 ? "smart" : "fast";
+    const REC = CAN_LM && (navigator.deviceMemory || 8) >= 8 ? "best" : (navigator.deviceMemory || 8) >= 6 ? "smart" : "fast";
     const pick = (cur) => Object.entries(NATIVE_MODELS).map(([k, m]) => '<button class="btn small' + (cur ? "" : k === REC ? " primary" : "") + '" data-act="t-ndl" data-m="' + k + '"' + (cur === k ? " disabled" : "") + ">" + (cur === k ? "✓ " : "") + m.label + " · " + m.size + (k === REC && cur !== k ? " · recommended" : "") + "</button>").join("");
     if (/^(ready|loading|loaded)$/.test(st.state)) {
       const w = natWhich(st), m = NATIVE_MODELS[w];
-      return '<p class="small">On your phone: <b>' + m.label + "</b> (Qwen 2.5 · " + (w === "fast" ? "0.5B" : "1.5B") + ", " + gb(+st.size || 0) + "), " + m.desc + ". Works offline.</p>" +
-        '<div class="row"><button class="btn small" data-act="t-engine" data-v="native" aria-pressed="' + (TB === "native") + '">Use on-device AI</button><button class="btn small" data-act="t-ntest">Test the AI</button><button class="btn small" data-act="t-check">Run the Profe check</button></div>' + (w === "fast" && REC === "smart" ? '<p class="small"><b>Tip:</b> your phone can run <b>Smart</b>, which gives clearly sharper answers. Switch below.</p>' : "") + '<div id="p-check" class="small"></div>' +
+      return '<p class="small">On your phone: <b>' + m.label + "</b> (" + (w === "best" ? "Gemma 4 · E2B" : "Qwen 2.5 · " + (w === "fast" ? "0.5B" : "1.5B")) + (st.backend ? " · " + st.backend : "") + ", " + gb(+st.size || 0) + "), " + m.desc + ". Works offline.</p>" +
+        '<div class="row"><button class="btn small" data-act="t-engine" data-v="native" aria-pressed="' + (TB === "native") + '">Use on-device AI</button><button class="btn small" data-act="t-ntest">Test the AI</button><button class="btn small" data-act="t-check">Run the Profe check</button></div>' + (w !== REC && REC !== "fast" ? '<p class="small"><b>Tip:</b> your phone can run <b>' + NATIVE_MODELS[REC].label + "</b>, which gives clearly sharper answers. Switch below.</p>" : "") + '<div id="p-check" class="small"></div>' +
         '<p class="small" style="margin-top:8px">Switch model (downloads once, replaces the current one):</p><div class="row">' + pick(w) + '</div><div class="row" style="margin-top:6px"><button class="btn small" data-act="t-ndel">Remove from phone</button></div><p class="small muted" id="n-test">' + esc(NAT.test || (NAT.lastErr ? "Last error: " + NAT.lastErr : "")) + "</p>";
     }
-    return '<p class="small">Download once on Wi-Fi. The AI then runs inside this app on your phone, with no account and no internet.</p><ul class="small"><li><b>Fast</b> (550 MB): ' + NATIVE_MODELS.fast.desc + ".</li><li><b>Smart</b> (1.6 GB): " + NATIVE_MODELS.smart.desc + ".</li></ul>" + (NAT.dlerr || st.error ? '<p class="small terr">Last try: ' + esc(NAT.dlerr || st.error) + "</p>" : "") + '<div class="row">' + pick("") + "</div>";
+    return '<p class="small">Download once on Wi-Fi. The AI then runs inside this app on your phone, with no account and no internet.</p><ul class="small"><li><b>Fast</b> (550 MB): ' + NATIVE_MODELS.fast.desc + ".</li><li><b>Smart</b> (1.6 GB): " + NATIVE_MODELS.smart.desc + ".</li>" + (NATIVE_MODELS.best ? "<li><b>Best</b> (2.6 GB): " + NATIVE_MODELS.best.desc + ".</li>" : "") + "</ul>" + (NAT.dlerr || st.error ? '<p class="small terr">Last try: ' + esc(NAT.dlerr || st.error) + "</p>" : "") + '<div class="row">' + pick("") + "</div>";
   }
 
   document.addEventListener("click", (e) => {
@@ -6160,7 +6163,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611120554";
+  var BUILD = "202611120610";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
