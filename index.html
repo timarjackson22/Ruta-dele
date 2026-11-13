@@ -1357,6 +1357,25 @@ table.vocab td.es { cursor: pointer } table.vocab td.es::after { content: "+"; d
 .cue-add { background: color-mix(in srgb, var(--bg, #fff) 26%, transparent) }
 
 #litem h1.playing { background: var(--saffron-soft); box-shadow: 0 0 0 4px var(--saffron-soft); border-radius: 6px }
+
+/* skip */
+.pxskip { margin-left: auto } .pxfb.skip { background: var(--surface-2) }
+/* titles that are read aloud */
+h1.ltitle .sent { border-radius: 6px } h1.ltitle .w { cursor: pointer }
+/* word pages */
+.wpage .senses li { margin: 4px 0 } .wpage mark { background: var(--saffron-soft); color: inherit; border-radius: 3px; padding: 0 2px }
+.wphr { margin: 0; padding-left: 18px } .wphr li { margin: 4px 0 }
+a.wlink { color: inherit; text-decoration: none } a.wlink b { border-bottom: 1px dashed color-mix(in srgb, var(--cobalt) 55%, transparent) }
+a.chipl { text-decoration: none; cursor: pointer; color: var(--cobalt); border-color: color-mix(in srgb, var(--cobalt) 35%, var(--line)) }
+a.chipl::after { content: " ›"; opacity: .6 }
+.rgscale { border: 1px solid var(--line); border-radius: 16px; padding: 10px 14px; background: color-mix(in srgb, var(--surface) 85%, transparent); display: flex; flex-direction: column; gap: 6px }
+.rg-top { display: flex; justify-content: space-between; align-items: center; font-size: .82rem; color: var(--muted); gap: 8px } .rg-l { color: var(--ink); font-size: .95rem }
+.rg-bar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px } .rg-bar i { height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 10%, transparent) }
+.rg-bar i:nth-child(1).on, .rg-bar i:nth-child(2).on { background: #d4473a } .rg-bar i:nth-child(3).on { background: var(--good, #2a9d6b) } .rg-bar i:nth-child(4).on, .rg-bar i:nth-child(5).on { background: var(--cobalt) }
+.rgscale p { margin: 0 }
+.rgpill { display: inline-block; font-size: .78rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted) }
+.rgpill.v0, .rgpill.v1 { background: color-mix(in srgb, #d4473a 14%, transparent); color: #b23b30 } .rgpill.v3, .rgpill.v4 { background: color-mix(in srgb, var(--cobalt) 14%, transparent); color: var(--cobalt) }
+.rgcard { margin: 6px 0 0; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap }
 </style>
 
 </head>
@@ -2740,7 +2759,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     R.innerHTML = '<div class="pxcard">' + bar + '<div class="pxhead"><span>Question <b>' + (PX.i + 1) + "</b> of " + n + '</span><span><span class="ok">✓ ' + ok + '</span> · <span class="no">✗ ' + (done - ok) + "</span></span></div>" +
       '<p class="pxtype">' + PXT[it.t][0] + ' <span class="es">(' + PXT[it.t][1] + ")</span>" + (it.t === "x" && PX.instr ? ' · <span class="muted">' + esc(PX.instr) + "</span>" : "") + "</p>" +
       '<p class="pxq' + (it.t === "fix" ? " wrongs" : "") + '">' + blanks(it.q) + "</p>" + input + fb +
-      '<div class="row pxbtns">' + (answered ? '<button class="btn primary" data-act="px-next">' + (PX.i + 1 < n ? "Next question →" : "See results") + "</button>" : (it.t === "mc" ? "" : '<button class="btn primary" data-act="px-submit">Submit</button>') + '<button class="btn" data-act="px-dunno">Show answer</button>') +
+      '<div class="row pxbtns">' + (answered ? '<button class="btn primary" data-act="px-next">' + (PX.i + 1 < n ? "Next question →" : "See results") + "</button>" : (it.t === "mc" ? "" : '<button class="btn primary" data-act="px-submit">Submit</button>') + '<button class="btn" data-act="px-dunno">Show answer</button><button class="btn small pxskip" data-act="px-skip">Skip ›</button>') +
       (PX.i > 0 ? '<button class="btn small" data-act="px-prev">‹ Back</button>' : "") + "</div></div>";
     const inp = document.getElementById("px-in");
     if (inp && !answered) { inp.addEventListener("input", () => (PX.draft = inp.value)); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); pxSubmit(inp.value); } }); if (focus !== false) inp.focus({ preventScroll: true }); }
@@ -3891,6 +3910,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     app.innerHTML = '<div class="stack">' + head + '<div class="fc-wrap">' + cnt + (body || "") + sets + (card ? '' : '<div class="srpad"></div>') + '<p class="muted small' + (card ? "" : " srhide") + '" style="text-align:center">Rate honestly: <b>Again</b> if you forgot, <b>Hard</b> if it took effort, <b>Good</b> if you knew it, <b>Easy</b> if it was instant. The app brings each word back just before you would forget it.</p>' + opts + "</div></div>";
     const inp = document.getElementById("sr-in"); if (inp) { inp.focus(); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { SV.typed = inp.value; SV.shown = true; studyView(id, inLevel); } }); }
     SV.inLevel = inLevel;
+    try { const fc = document.querySelector(".srcard"); if (fc && SV.card && !fc.querySelector(".rgpill")) { const pl = regPill(SV.card.es); const host = fc.querySelector(".face"); if (pl && host) host.insertAdjacentHTML("afterend", '<p class="rgcard">' + pl + (SV.shown ? ' <a class="small" href="#palabra-' + encodeURIComponent(String(SV.card.es).replace(/^(el|la|los|las)\s+/i, "").replace(/\s*\(.*?\)/g, "").split(/[,;/]/)[0].trim()) + '">Word page ›</a>' : "") + "</p>"); } } catch (e) {}
     if (/^u-/.test(id) || id === "mine") dkBar(id);
     const cd = document.querySelector(".srcard");
     if (cd && window.__flipIn) { cd.classList.add("fl-in"); window.__flipIn = 0; window.__nextIn = 0; }
@@ -4077,7 +4097,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const PREV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"/><path d="M3.5 4v4.5H8"/></svg>';
   const NEXT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4v4.5H16"/></svg>';
   function plUI() {
-    document.querySelectorAll("#ltext [data-pi]").forEach((el) => el.classList.toggle("playing", PL.playing && +el.dataset.pi === PL.i));
+    const onT = PL.cur && PL.cur === PL.tu;
+    document.querySelectorAll("#ltext [data-pi]").forEach((el) => el.classList.toggle("playing", PL.playing && !onT && +el.dataset.pi === PL.i));
     const b = document.getElementById("pl-play");
     if (b) { b.innerHTML = PL.playing ? PAUSE : PLAY; b.setAttribute("aria-label", PL.playing ? "Pause" : "Play"); }
     const c = document.getElementById("pl-pos"); if (c) c.textContent = (PL.i + 1) + " / " + PL.items.length;
@@ -4252,7 +4273,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function cueAlign(sent) {
     if (sent._cue) return sent._cue;
     cphBuild();
-    const ws = [...sent.querySelectorAll(".w")], toks = ws.map((w) => cNorm(w.textContent)), k = +sent.dataset.pi, it = PL.items[k] || {};
+    const ws = [...sent.querySelectorAll(".w")], toks = ws.map((w) => cNorm(w.textContent)), k = sent.dataset.pi, it = PL.items[k] || {};
     const enW = cEnWords(it.en), used = new Set(), hasEn = enW.length > 2, G = new Array(ws.length).fill(null);
     // the paragraph around it, for words this sentence's English doesn't show
     const box = sent.closest(".para, .pline, .stanza, .vl") || sent.parentElement;
@@ -4333,7 +4354,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // follow the speech: word boundaries from the voice when it sends them, otherwise timed from the length of each word
   function cueTrack(u, k) {
     cueNeedEn([k, k + 1, k + 2]);
-    const sent = document.querySelector('#ltext .sent[data-pi="' + k + '"]'), it = PL.items[k]; if (!sent || !it) return;
+    const sent = document.querySelector('#litem .sent[data-pi="' + k + '"]'), it = PL.items[k]; if (!sent || !it) return;
     const ws = [...sent.querySelectorAll(".w")], txt = it.text; let pos = 0;
     const offs = ws.map((w) => { const j = txt.indexOf(w.textContent, pos); if (j >= 0) pos = j + w.textContent.length; return j < 0 ? pos : j; });
     let bnd = false, i = -1, tm = 0, started = false, t0 = 0;
@@ -4397,7 +4418,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       PL.tDone = true; const h = document.querySelector("#litem h1"); if (h) h.classList.add("playing");
       const tu = utter(String(CUR.t).replace(/\s*\(\d+\/\d+\)$/, "").replace(/…$/, "") + ".", "es", PL.rate, V2[0]);
       tu.onend = tu.onerror = () => { const h2 = document.querySelector("#litem h1"); if (h2) h2.classList.remove("playing"); if (PL.cur === tu && PL.playing) plSpeak(); };
-      PL.cur = tu; try { speechSynthesis.speak(tu); } catch (e) {} plUI(); return;
+      PL.items.t = { text: tu.text, en: "" }; PL.tu = tu;
+      PL.cur = tu; try { cueTrack(tu, "t"); } catch (e) {} try { if (h) followTo(h); } catch (e) {} try { speechSynthesis.speak(tu); } catch (e) {} plUI(); return;
     }
     const it = PL.items[PL.i]; if (!it) { plStop(); return; }
     const u = utter(it.text, "es", PL.rate, it.voice, it.pitch);
@@ -4525,7 +4547,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const dict = reading ? [] : dictationSents();
     const meta = [CATS[x.cat][1], x.sub ? SUBS[x.sub] : "", x.genre || "", lv.name, x.country || "", "≈ " + minutes(x) + " min"].filter(Boolean).join(" · ");
     app.innerHTML = '<div class="stack' + (hidden ? " hide-text" : "") + '" id="litem"><p class="crumbs"><a href="#' + (reading ? "leer" : "escuchar") + '">' + (reading ? "Leer" : "Escuchar") + '</a><span aria-hidden="true">›</span><span>' + esc(CATS[x.cat][1]) + " · " + lv.name + "</span></p>" +
-      '<div><p class="eyebrow">' + esc(meta) + "</p><h1>" + esc(x.t) + '</h1><p class="muted" style="font-size:1.1rem;margin-top:6px">' + esc(x.s) + (x.author ? " · " + esc(x.author) + (x.year ? " (" + esc(x.year) + ")" : "") : "") + "</p></div>" +
+      '<div><p class="eyebrow">' + esc(meta) + "</p><h1 class=\"ltitle\"><span class=\"sent\" data-pi=\"t\">" + wrapWords(x.t) + '</span></h1><p class="muted" style="font-size:1.1rem;margin-top:6px">' + esc(x.s) + (x.author ? " · " + esc(x.author) + (x.year ? " (" + esc(x.year) + ")" : "") : "") + "</p></div>" +
       (x.note ? '<p class="callout">' + esc(x.note) + (x.cat === "song" ? " The app reads the lyrics aloud. Turn on the rhythm for a simple " + esc(x.genre || "") + " percussion loop underneath." : "") + "</p>" : "") +
       (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap “Show text” to read along.</p>' : "") +
       '<p class="muted small">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips follow the voice word by word" : "") + "</p>" +
@@ -4571,7 +4593,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     openSheet('<div class="row" style="justify-content:space-between"><span class="sw">' + esc(word) + '</span><button class="btn small" data-act="l-close">Close</button></div>' +
       (lines.length ? lines.join("") : '<p class="muted">No dictionary entry for this form.</p>') +
       (it && it.en ? '<p class="sent-en"><span class="eyebrow">Sentence</span><br>' + esc(it.en) + "</p>" : it && CUR && CUR.cat === "mine" ? '<p class="sent-en"><button class="btn small" data-act="my-trk" data-k="' + k + '">Translate this sentence</button></p>' : "") +
-      '<div class="row">' + sayBtn(word) + '<button class="btn small" data-act="sr-add" data-es="' + esc(word.toLowerCase()) + '" data-en="' + esc((lines[0] || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·").trim().slice(0, 80) || gl) + '">+ Flashcards</button><button class="btn small" data-act="l-sent" data-k="' + k + '">Play sentence</button><button class="btn small" data-act="l-from" data-k="' + k + '">Play from here</button></div>');
+      '<div class="row">' + sayBtn(word) + '<button class="btn small" data-act="sr-add" data-es="' + esc(word.toLowerCase()) + '" data-en="' + esc((lines[0] || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·").trim().slice(0, 80) || gl) + '">+ Flashcards</button><a class="btn small" href="#palabra-' + encodeURIComponent(word.toLowerCase()) + '">Word page ›</a><button class="btn small" data-act="l-sent" data-k="' + k + '">Play sentence</button><button class="btn small" data-act="l-from" data-k="' + k + '">Play from here</button></div>');
   }
   let selT = null, selShown = "", selLast = "", SELKS = [];
   document.addEventListener("selectionchange", () => { clearTimeout(selT); selT = setTimeout(onSel, 400); });
@@ -4690,7 +4712,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     WV.idx = idx; if (WP.on) wpStop(); WP.q = [];
     el.innerHTML = (q ? '<p class="muted">' + idx.length + (idx.length === 200 ? "+" : "") + " matches across all 7,000 words</p>" : "") +
       '<div class="tbl"><table class="words' + (WV.hideEn ? " blur-en" : "") + '"><thead><tr><th>#</th><th>English</th><th></th><th>Spanish</th><th>Known</th></tr></thead><tbody>' +
-      idx.map((i) => { const e = W[i]; return '<tr data-wi="' + i + '"><td class="rk">' + (i < WN ? i + 1 : '<span class="core" title="Core word, added by type">core</span>') + '</td><td class="gl"><span data-act="reveal">' + esc(e[2]) + '</span></td><td class="sp">' + sayBtn(e[0].split(",")[0]) + '</td><td class="ww"><b>' + esc(e[0]) + '</b> <span class="tag">' + e[1] + "</span>" + (e[3] ? '<small class="forms">' + (WFX[i] ? WFX[i].map(([f, fe]) => esc(fe.replace(/\s*\([^)]*[:+=][^)]*\)/g, "")) + ": <b>" + esc(f) + "</b>").join(" · ") + (e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).length ? " · " + esc(e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).join(", ")) : "") : esc(e[3])) + "</small>" : "") + '</td><td><button class="kn" data-act="w-known" data-i="' + i + '" aria-pressed="' + !!S.w[i] + '" aria-label="Mark ' + esc(e[0]) + ' as known">✓</button></td></tr>'; }).join("") +
+      idx.map((i) => { const e = W[i]; return '<tr data-wi="' + i + '"><td class="rk">' + (i < WN ? i + 1 : '<span class="core" title="Core word, added by type">core</span>') + '</td><td class="gl"><span data-act="reveal">' + esc(e[2]) + '</span></td><td class="sp">' + sayBtn(e[0].split(",")[0]) + '</td><td class="ww"><a class="wlink" href="#palabra-' + encodeURIComponent(e[0].split(",")[0].trim()) + '"><b>' + esc(e[0]) + '</b></a> <span class="tag">' + e[1] + "</span>" + (e[3] ? '<small class="forms">' + (WFX[i] ? WFX[i].map(([f, fe]) => esc(fe.replace(/\s*\([^)]*[:+=][^)]*\)/g, "")) + ": <b>" + esc(f) + "</b>").join(" · ") + (e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).length ? " · " + esc(e[3].split(", ").filter((f) => !WFX[i].some((x) => x[0] === f)).join(", ")) : "") : esc(e[3])) + "</small>" : "") + '</td><td><button class="kn" data-act="w-known" data-i="' + i + '" aria-pressed="' + !!S.w[i] + '" aria-label="Mark ' + esc(e[0]) + ' as known">✓</button></td></tr>'; }).join("") +
       "</tbody></table></div>" + (idx.length ? "" : '<p class="muted">No words match. Try another spelling or clear the filters.</p>');
   }
   function startQuiz() {
@@ -4723,7 +4745,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (act === "l-cf") { CF = t.dataset.v; listenHub(); }
     else if (act === "l-rf") { RF = t.dataset.v; readHub(); }
     else if (act === "l-play") { PL.playing ? plStop() : plPlay(false); }
-    else if (act === "l-prev") plJump(PL.i - 1);
+    else if (act === "l-prev") { // from the first sentence (or the title), back to the title
+      if (PL.i === 0 || (PL.cur && PL.cur === PL.tu)) { PL.tDone = false; PL.i = 0; const h = document.querySelector("#litem h1"); if (h) followTo(h); if (PL.playing) { PL.cur = null; try { speechSynthesis.cancel(); } catch (x) {} plSpeak(); } else plUI(); }
+      else plJump(PL.i - 1); }
     else if (act === "l-next") plJump(PL.i + 1);
     else if (act === "l-text") { const box = document.getElementById("litem"); const on = box.classList.toggle("hide-text"); t.textContent = on ? "Show text" : "Hide text"; t.setAttribute("aria-pressed", on); const n = document.getElementById("hidden-note"); if (n && !on) n.hidden = true; }
     else if (act === "l-en") { const box = document.getElementById("litem"); const on = box.classList.toggle("show-en"); t.setAttribute("aria-pressed", on); }
@@ -5021,6 +5045,112 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return out;
   }
   const regHi = (t) => esc(t).replace(/(LatAm:|Spain:)/g, (m) => '<b class="' + ((m === "Spain:") === (S.region === "es") ? "here" : "") + '">' + m + "</b>");
+  /* ===== a page for every word: #palabra-<word> ===== */
+  // Spain ↔ Latin America: -2 Spain only, -1 mostly Spain, 0 everywhere, 1 mostly Latin America, 2 Latin America only
+  const REG_RAW = "coche|-1|In Latin America: carro (auto in the Southern Cone)~ordenador|-2|In Latin America: computadora~móvil|-1|In Latin America: celular~zumo|-2|In Latin America: jugo~piso|-1|“Flat” is mostly Spain (Latin America: apartamento, departamento); “floor, storey” is used everywhere~" +
+    "gafas|-1|In Latin America: lentes, anteojos~conducir|-1|In Latin America: manejar~vale|-2|“OK” is Spain; in Latin America: está bien, dale, ok~guay|-2|In Latin America: chévere, bacán, padre~tío|-1|As “guy, mate” it's Spain; “uncle” is used everywhere~coger|-1|Everyday “to take, catch” in Spain; vulgar in much of Latin America: use tomar or agarrar~" +
+    "vosotros|-2|Only in Spain; Latin America uses ustedes for everyone~vosotras|-2|Only in Spain; Latin America uses ustedes~os|-2|Goes with vosotros: Spain only~patata|-2|In Latin America: papa~melocotón|-2|In Latin America: durazno~judías|-2|In Latin America: frijoles, porotos~gamba|-2|In Latin America: camarón~bocadillo|-1|A baguette sandwich in Spain; in Latin America: sándwich~" +
+    "billete|-1|For tickets, Spain; Latin America: boleto, pasaje (billete = banknote everywhere)~aparcar|-1|In Latin America: estacionar, parquear~enfadado|-1|In Latin America: enojado~enfadarse|-1|In Latin America: enojarse~bolígrafo|-1|In Latin America: pluma, lapicero~chaqueta|-1|In Latin America also: chamarra, campera~jersey|-2|In Latin America: suéter~frigorífico|-2|In Latin America: refrigerador, heladera~" +
+    "grifo|-2|In Latin America: llave, canilla, pluma~venga|-1|As “come on, OK” it's very Spanish~majo|-2|In Latin America: simpático, buena onda~mola|-2|Spain slang; Latin America: está chévere, está padre~currar|-2|Spain slang for trabajar~americana|-2|In Latin America: saco~piscina|-1|In Mexico: alberca; Argentina and Uruguay: pileta~cacahuete|-2|In Latin America: maní, cacahuate~flipar|-2|Spain slang~ordenar|0|“To order, tidy” everywhere~" +
+    "carro|1|In Spain: coche~computadora|1|In Spain: ordenador~celular|1|In Spain: móvil~jugo|2|In Spain: zumo~apartamento|1|Spain prefers piso~departamento|1|“Flat” in Mexico and the Southern Cone; in Spain: piso~lentes|1|In Spain: gafas~anteojos|1|In Spain: gafas~manejar|1|“To drive” in Latin America; in Spain: conducir~" +
+    "chévere|2|Caribbean, Colombia, Venezuela and Panama; in Spain: guay~bacán|2|Chile, Peru, Colombia; in Spain: guay~papa|2|“Potato” in Latin America; in Spain: patata~durazno|2|In Spain: melocotón~frijoles|1|In Spain: judías~frijol|1|In Spain: judía~camarón|1|In Spain: gamba~boleto|1|In Spain: billete~pasaje|1|Ticket for a trip in Latin America~parquear|2|In Spain: aparcar~estacionar|1|In Spain: aparcar~enojado|1|In Spain: enfadado~enojarse|1|In Spain: enfadarse~" +
+    "lapicero|2|In Spain: bolígrafo~chamarra|2|Mexico; in Spain: chaqueta~campera|2|Argentina, Uruguay; in Spain: chaqueta~suéter|1|In Spain: jersey~saco|1|“Jacket” in Latin America; in Spain: americana~alberca|2|Mexico; in Spain: piscina~pileta|2|Argentina, Uruguay; in Spain: piscina~maní|1|In Spain: cacahuete~cacahuate|2|Mexico; in Spain: cacahuete~elote|2|Mexico and Central America; in Spain: mazorca~choclo|2|South America; in Spain: mazorca~palta|2|Southern Cone and Peru; elsewhere: aguacate~" +
+    "banano|1|Colombia, Central America; in Spain: plátano~vos|2|Argentina, Uruguay, Central America and parts of Colombia; not used in Spain~platicar|2|“To chat” in Mexico and Central America; in Spain: charlar~ahorita|2|Latin America~plata|1|“Money” in Latin America; “silver” everywhere~laburo|2|Argentina, Uruguay~chamba|2|Mexico, Peru, Venezuela~guagua|2|“Bus” in the Caribbean; “baby” in the Andes~rentar|1|In Spain: alquilar~agarrar|1|Used everywhere, but in Latin America it replaces coger~" +
+    "recámara|2|“Bedroom” in Mexico~cuadra|2|“City block” in Latin America; in Spain: manzana~mesero|1|In Spain: camarero~camarero|-1|In Latin America: mesero, mozo~mozo|1|“Waiter” in the Southern Cone and Peru~plomero|1|In Spain: fontanero~fontanero|-2|In Latin America: plomero~cobija|1|In Spain: manta~manta|-1|In Latin America: cobija, frazada~acá|1|Much more common in Latin America; Spain prefers aquí~nomás|2|Latin America~" +
+    "pibe|2|Argentina, Uruguay~chamo|2|Venezuela~mae|2|Costa Rica~pana|2|“Buddy” in Panama, Venezuela and Ecuador~chiva|2|A colourful bus in Panama and Colombia; “goat” everywhere~vaina|2|“Thing, stuff” in Panama, Venezuela and Colombia~tranque|2|“Traffic jam” in Panama~pelao|2|“Kid” in Panama and Colombia~ustedes|0|Everywhere; in Spain only formal (informal: vosotros)~computador|2|Colombia, Chile~" +
+    "alquilar|0|Everywhere; Latin America also rentar~charlar|-1|In Mexico and Central America: platicar~aquí|0|Everywhere; Latin America also acá~ordenador portátil|-2|In Latin America: laptop~portátil|-1|“Laptop” in Spain; Latin America: laptop~zapatillas|0|“Trainers” in Spain, “slippers” in some places~nevera|0|Spain, Colombia, Venezuela; elsewhere refrigerador~autobús|0|Everywhere; also bus, camión (Mexico), guagua (Caribbean), colectivo (Argentina)~vale la pena|0|Everywhere";
+  let REG = null;
+  function regBuild() {
+    if (REG) return REG; REG = {};
+    const strip = (x) => String(x).toLowerCase().replace(/^(el|la|los|las|un|una)\s+/, "").replace(/[()]/g, "").trim();
+    // the course's own pairs: "el celular (Esp. el móvil)"
+    const walk = (o, k) => { if (Array.isArray(o)) { if (k === "w") o.forEach((p) => { if (!Array.isArray(p) || typeof p[0] !== "string") return; const m = /^(.*?)\s*\(Esp\.\s*([^)]+)\)/.exec(p[0]); if (!m) return; const la = strip(m[1]), sp = strip(m[2]); if (la && !REG[la]) REG[la] = [1, "In Spain: " + sp, sp]; if (sp && !REG[sp]) REG[sp] = [-1, "In Latin America: " + la, la]; }); else o.forEach((x) => walk(x, k)); } else if (o && typeof o === "object") Object.keys(o).forEach((kk) => walk(o[kk], kk)); };
+    try { walk(COURSE, ""); } catch (e) {} try { walk(VOCAB, ""); } catch (e) {}
+    REG_RAW.split("~").forEach((x) => { const [w, v, n] = x.split("|"); const alt = (/: ([a-záéíóúñ ]+)/i.exec(n) || [])[1] || ""; REG[w] = [+v, n, alt.split(/,| \(/)[0].trim()]; });
+    return REG;
+  }
+  // the label, for pages and cards
+  function regInfo(w) {
+    regBuild(); const k = String(w || "").toLowerCase().replace(/^(el|la|los|las|un|una)\s+/, "").replace(/\s*\(.*?\)/g, "").split(/[,;/]/)[0].trim();
+    const r = REG[k]; const common = W.some((e) => e[0].split(", ")[0] === k);
+    if (r) return { v: r[0], note: r[1], alt: r[2], known: true };
+    return { v: 0, note: common ? "Used across the Spanish-speaking world" : "No regional difference known", known: common };
+  }
+  const REG_L = { "-2": "Spain only", "-1": "Mostly Spain", "0": "Everywhere", "1": "Mostly Latin America", "2": "Latin America only" };
+  function regScale(w) {
+    const R = regInfo(w);
+    return '<div class="rgscale" role="img" aria-label="' + esc(REG_L[R.v] + ". " + R.note) + '"><div class="rg-top"><span>🇪🇸 Spain</span><b class="rg-l">' + REG_L[R.v] + '</b><span>Latin America 🌎</span></div>' +
+      '<div class="rg-bar">' + [-2, -1, 0, 1, 2].map((v) => '<i class="' + (v === R.v ? "on" : "") + '"></i>').join("") + '</div><p class="muted small">' + esc(R.note) + (R.alt ? ' · <a href="#palabra-' + encodeURIComponent(R.alt) + '">' + esc(R.alt) + " ›</a>" : "") + "</p></div>";
+  }
+  function regPill(w) {
+    const R = regInfo(w); if (!R.known) return "";
+    return '<span class="rgpill v' + (R.v + 2) + '" title="' + esc(R.note) + '">' + (R.v < 0 ? "🇪🇸 " : R.v > 0 ? "🌎 " : "🌍 ") + REG_L[R.v] + "</span>";
+  }
+  // opposites
+  const ANT_RAW = "bueno:malo|grande:pequeño|alto:bajo|largo:corto|nuevo:viejo|joven:viejo|rico:pobre|caro:barato|fácil:difícil|rápido:lento|caliente:frío|feliz:triste|contento:triste|abierto:cerrado|lleno:vacío|limpio:sucio|claro:oscuro|fuerte:débil|gordo:delgado|ancho:estrecho|cerca:lejos|" +
+    "temprano:tarde|antes:después|arriba:abajo|dentro:fuera|delante:detrás|siempre:nunca|todo:nada|alguien:nadie|algo:nada|mucho:poco|más:menos|mejor:peor|mayor:menor|primero:último|bien:mal|sí:no|verdadero:falso|cierto:falso|posible:imposible|seguro:peligroso|" +
+    "simpático:antipático|amable:grosero|tranquilo:nervioso|blando:duro|dulce:amargo|seco:mojado|ligero:pesado|vivo:muerto|despierto:dormido|sano:enfermo|alegre:triste|fuerte:flojo|correcto:incorrecto|igual:diferente|público:privado|interior:exterior|" +
+    "entrar:salir|subir:bajar|abrir:cerrar|empezar:terminar|comenzar:acabar|llegar:salir|ir:venir|dar:recibir|comprar:vender|ganar:perder|encontrar:perder|recordar:olvidar|amar:odiar|aceptar:rechazar|aprobar:suspender|encender:apagar|meter:sacar|" +
+    "poner:quitar|reír:llorar|vivir:morir|nacer:morir|sentarse:levantarse|dormir:despertar|ayudar:molestar|construir:destruir|aumentar:disminuir|subir:caer|preguntar:responder|enseñar:aprender|empujar:tirar|permitir:prohibir|" +
+    "día:noche|mañana:noche|principio:fin|verdad:mentira|guerra:paz|amor:odio|vida:muerte|frío:calor|luz:oscuridad|entrada:salida|pregunta:respuesta|éxito:fracaso|ventaja:desventaja|norte:sur|este:oeste|derecha:izquierda|hombre:mujer|ciudad:campo|cielo:tierra|" +
+    "invierno:verano|ida:vuelta|alegría:tristeza|riqueza:pobreza|calma:prisa|silencio:ruido|orden:desorden|aquí:allí|ahora:luego|hoy:ayer|juntos:separados|solo:acompañado|activo:pasivo|positivo:negativo|interesante:aburrido|divertido:aburrido|famoso:desconocido|" +
+    "moderno:antiguo|lleno:vacío|ordenado:desordenado|tímido:atrevido|generoso:tacaño|trabajador:perezoso|optimista:pesimista|responsable:irresponsable|paciente:impaciente|educado:maleducado|honesto:deshonesto|útil:inútil|normal:raro|común:raro|natural:artificial";
+  let ANT = null;
+  function antOf(w) { if (!ANT) { ANT = {}; ANT_RAW.split("|").forEach((p) => { const [a, b] = p.split(":"); (ANT[a] = ANT[a] || []).push(b); (ANT[b] = ANT[b] || []).push(a); }); } return [...new Set(ANT[w] || [])]; }
+  // words with the same meaning in the 7,000-word list
+  function simOf(w, pos) {
+    const me = W.find((e) => e[0].split(", ")[0] === w); if (!me) return [];
+    const key = (g) => String(g).split(/[;,]/)[0].trim().toLowerCase();
+    const k = key(me[2]); if (!k || k.length < 3 || /^(time|thing|way|part|place|kind|end|case|point|side|turn|order|level|set|form|piece|line|state|matter|be|have|do|make|get|go|take|put|give|so|then|well|like|as|that|this|there|here)$/.test(k)) return []; // too general to be a synonym
+    return W.filter((e) => e !== me && e[1] === me[1] && key(e[2]) === k).slice(0, 6).map((e) => e[0].split(", ")[0]);
+  }
+  const wLink = (w) => '<a class="chipl" href="#palabra-' + encodeURIComponent(w) + '">' + esc(w) + "</a>";
+  const GPOS = { noun: "sustantivos", adj: "adjetivos", adv: "adverbios", prep: "preposiciones", conj: "conjunciones", pron: "pronombres", det: "determinantes", art: "articulos", num: "numerales", intj: "interjecciones" };
+  function wordPage(raw) {
+    let w = String(raw || "").trim(); const lw = w.toLowerCase();
+    app.innerHTML = '<div class="stack"><p class="muted">Loading ' + esc(w) + "…</p></div>";
+    const tg = TG[lw], lem = tg && tg[0] ? tg[0].toLowerCase() : "";
+    Promise.all([loadLex().catch(() => null), loadIndex().catch(() => null)]).then(() => {
+      // verbs and verb forms: the full verb page
+      const vb = (x) => (VI ? VI.findIndex((r) => r[0] === x) : -1);
+      for (const c of [lw, lem, lw.replace(/se$/, "")]) { const j = c ? vb(c) : -1; if (j >= 0 && (c === lw || (tg && tg[1] === "verb"))) { location.replace("#verbo-" + (j + 1)); return; } }
+      const head = LEX && LEX.LEM.has(lw) ? lw : lem && LEX && LEX.LEM.has(lem) && !(LEX.LEM.has(lw)) ? lem : lw;
+      const ents = LEX ? LEX.L.map((e, i) => [e, i]).filter(([e]) => e[0].split(", ").includes(head)) : [];
+      const wrow = W.findIndex((e) => e[0].split(", ")[0] === head);
+      const pos = (ents[0] && ents[0][0][1]) || (wrow >= 0 ? W[wrow][1] : (tg && tg[1]) || "");
+      const gid = GPOS[POSGRP(pos)];
+      (gid ? gLoad(gid).catch(() => null) : Promise.resolve()).then(() => wordRender(head, w, ents, wrow, pos, gid));
+    });
+  }
+  function wordRender(head, asked, ents, wrow, pos, gid) {
+    const gi = gid && GD[gid] ? GD[gid].items.find((x) => x.w === head || (x.w || "").split(/[ ,/]/)[0] === head) : null;
+    const forms = wrow >= 0 && W[wrow][3] ? W[wrow][3].split(", ").filter((f) => f && f !== head) : [];
+    const re = new RegExp("(^|[^\\p{L}])(" + [head].concat(forms).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?=[^\\p{L}]|$)", "iu");
+    const exs = []; try { for (const x of LISTEN) { for (const p of x.paras) for (const s of p.s) { if (s[1] && re.test(s[0]) && s[0].length < 170) exs.push([s[0], s[1], x.id, x.t]); if (exs.length >= 4) break; } if (exs.length >= 4) break; } } catch (e) {}
+    const hl = (t) => esc(t).replace(new RegExp("(^|[^\\p{L}])(" + [head].concat(forms).map((x) => esc(x).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")(?=[^\\p{L}]|$)", "giu"), "$1<mark>$2</mark>");
+    const phr = []; try { cphBuild(); const seen = new Set(); Object.values(CPH).forEach((L) => L.forEach((ph) => { const t = ph.pt.map((x) => (x === "*" ? "…" : x === "R" ? "se" : x === "D" ? "le" : x.replace(/^[VS]:/, ""))).join(" "); if (ph.pt.length > 1 && ph.pt.some((x) => x.replace(/^[VS]:/, "") === head) && !seen.has(t)) { seen.add(t); phr.push([t, ph.en]); } })); } catch (e) {}
+    const syn = simOf(head, pos), ant = antOf(head);
+    const senses = ents.length ? ents.map(([e, i]) => '<li><span class="tag">' + esc(e[1]) + "</span> " + esc(e[2]) + (i >= LEX.nf ? ' <span class="pill new">less common</span>' : "") + "</li>").join("") : wrow >= 0 ? "<li>" + esc(W[wrow][2]) + "</li>" : '<li class="muted">No dictionary entry for this word.</li>';
+    const g = gi && gi.g ? { m: "masculine", f: "feminine", mf: "masculine or feminine" }[gi.g] || "" : "";
+    app.innerHTML = '<div class="stack wpage"><p class="crumbs"><a href="#palabras">Words</a><span aria-hidden="true">›</span><span>' + esc(head) + "</span></p>" +
+      '<div class="vhead"><div><p class="eyebrow">' + esc([pos && (POSN[POSGRP(pos)] || pos).replace(/s$/, ""), g, wrow >= 0 && wrow < WN ? "#" + (wrow + 1) + " most used" : "", gi && gi.lvl].filter(Boolean).join(" · ")) + "</p>" +
+        '<div class="row"><h1>' + esc((gi && gi.g === "f" ? "la " : gi && gi.g === "m" ? "el " : "") + head) + "</h1>" + sayBtn(head) + "</div>" +
+        '<p class="pron"><span class="ipa">' + esc(ipa(head)) + '</span> · <span class="resp">' + esc(respell(head)) + "</span></p>" +
+        (asked.toLowerCase() !== head ? '<p class="muted small">You looked up <b>' + esc(asked) + "</b>, a form of this word.</p>" : "") + "</div></div>" +
+      regScale(head) +
+      '<section class="block"><div class="shead"><h2>Significados</h2></div><ol class="senses">' + senses + "</ol>" +
+        (gi && gi.pl && gi.pl !== "—" ? '<p class="small"><b>Plural:</b> ' + esc(gi.pl) + "</p>" : "") + (forms.length ? '<p class="small"><b>Forms:</b> ' + forms.map(esc).join(", ") + "</p>" : "") +
+        (gi && gi.use ? '<p class="callout"><b>How to use it.</b> ' + esc(gi.use) + "</p>" : "") + (gi && gi.latam ? '<p class="callout regnote"><b>Panama &amp; Latin America.</b> ' + esc(gi.latam) + "</p>" : "") +
+        (syn.length ? '<p><span class="eyebrow">Sinónimos · similar meaning</span><br>' + syn.map(wLink).join(" ") + "</p>" : "") +
+        (ant.length ? '<p><span class="eyebrow">Antónimos · opposites</span><br>' + ant.map(wLink).join(" ") + "</p>" : "") + "</section>" +
+      (gi && gi.ex || exs.length ? '<section class="block"><div class="shead"><h2>Ejemplos</h2></div><div class="exs">' +
+        (gi && gi.ex ? '<div class="exr">' + sayBtn(gi.ex) + "<p><b>" + hl(gi.ex) + "</b>" + (gi.exEn ? "<br>" + esc(gi.exEn) : "") + "</p></div>" : "") +
+        exs.map((e) => '<div class="exr">' + sayBtn(e[0]) + "<p><b>" + hl(e[0]) + "</b><br>" + esc(e[1]) + ' <a class="small" href="#' + e[2] + '">' + esc(e[3]) + " ›</a></p></div>").join("") + "</div></section>" : "") +
+      (phr.length ? '<section class="block"><div class="shead"><h2>Expresiones</h2></div><ul class="wphr">' + phr.slice(0, 8).map((p) => "<li><b>" + esc(p[0]) + "</b> · " + esc(p[1]) + "</li>").join("") + "</ul></section>" : "") +
+      '<div class="row"><button class="btn primary" data-act="sr-add" data-es="' + esc(head) + '" data-en="' + esc(cueOne((ents[0] && ents[0][0][2]) || (wrow >= 0 ? W[wrow][2] : ""))) + '">+ Add to a deck</button>' +
+        '<button class="btn" data-act="t-ask" data-p="' + esc("Teach me how to use «" + head + "» in Spanish: what it means, when to use it, 3 short examples at my level, any difference between Spain and Latin America, then ask me to write my own sentence with it and correct it.") + '">Practise with Profe</button></div></div>';
+    scrollTo(0, 0);
+  }
   function verbDetail(i) {
     app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbs</a></p><p class="muted">Loading…</p></div>';
     loadIndex().then(() => loadDetail(i).then((d) => renderVerb(i, d))).catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#verbos">Verbs</a></p><p class="callout">This verb couldn’t load. Check your internet connection and try again; after the first load it works offline.</p></div>'; });
@@ -5033,7 +5163,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const R = CONJ.conjugate(base, expr ? "" : code), P = CONJ.regularPure(base), Raw = CONJ.regularPure(base, true);
     const isEs = S.region === "es";
     const senses = d.s.map((s) => { const q = s[1] ? s[1].split(/,\s*/).map((x) => '<span class="tag' + ((/Latin America|Mexico|Argentina|Rioplatense|Caribbean|Central America|Colombia|Venezuela|Chile|Peru|Cuba|Panama/.test(x) && !isEs) || (/Spain/.test(x) && isEs) ? " here" : "") + '">' + esc(x) + "</span>").join(" ") : ""; return "<li>" + esc(s[0]) + (q ? " " + q : "") + (s[2] ? '<small class="gram">' + esc(s[2]) + "</small>" : "") + "</li>"; }).join("");
-    const link = (w) => { const j = VI.findIndex((x) => x[0] === w); return j >= 0 ? '<a class="chipl" href="#verbo-' + (j + 1) + '">' + esc(w) + "</a>" : '<span class="chipl">' + esc(w) + "</span>"; };
+    const link = (w) => { const j = VI.findIndex((x) => x[0] === w); return j >= 0 ? '<a class="chipl" href="#verbo-' + (j + 1) + '">' + esc(w) + "</a>" : '<a class="chipl" href="#palabra-' + encodeURIComponent(w) + '">' + esc(w) + "</a>"; };
     const pats = patternList(base, expr ? "" : code, R, P, Raw, f);
     const prev = i > 0 ? '<a class="btn" href="#verbo-' + i + '">‹ ' + esc(VI[i - 1][0]) + "</a>" : "";
     const next = i < VI.length - 1 ? '<a class="btn" href="#verbo-' + (i + 2) + '">' + esc(VI[i + 1][0]) + " ›</a>" : "";
@@ -5188,7 +5318,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (it.use ? "<p>" + esc(it.use) + "</p>" : "") +
       (it.ex ? '<p class="gexl">' + sayBtn(it.ex) + "<span><b>" + esc(it.ex) + "</b>" + (it.exEn ? '<br><span class="muted">' + esc(it.exEn) + "</span>" : "") + "</span></p>" : "") +
       (it.latam ? '<p class="small glat' + (isEs ? "" : " here") + '"><b>Panama &amp; Latin America:</b> ' + esc(it.latam) + "</p>" : "") +
-      '<div class="row"><button class="btn small" data-act="t-ask" data-p="' + esc("Teach me how to use «" + it.w + "» (" + (it.en || "") + ") in Spanish: give me 3 short new examples at my level, then ask me to make my own sentence with it and correct it.") + '">Practise with Profe</button></div></div>';
+      '<div class="row"><a class="btn small primary" href="#palabra-' + encodeURIComponent(String(it.w).split(/[ ,/]/)[0]) + '">Word page ›</a><button class="btn small" data-act="t-ask" data-p="' + esc("Teach me how to use «" + it.w + "» (" + (it.en || "") + ") in Spanish: give me 3 short new examples at my level, then ask me to make my own sentence with it and correct it.") + '">Practise with Profe</button></div></div>';
   }
   function gReflexConj(it) {
     const base = it.base.trim().split(/\s+/)[0];
@@ -7885,6 +8015,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (h === "gramatica") { setSec("gramatica"); navChips(null); gHub(); }
     else if (/^g-[a-z]+$/.test(h)) { setSec("gramatica"); navChips(null); gPage(h.slice(2)); }
     else if (/^verbo-\d+$/.test(h)) { setSec("verbos"); navChips(null); verbDetail(parseInt(h.slice(6), 10) - 1); }
+    else if (/^palabra-/.test(h)) { setSec("palabras"); navChips(null); let w = h.slice(8); try { w = decodeURIComponent(w); } catch (e) {} wordPage(w); }
     else if (h === "palabras") { setSec("palabras"); navChips(null); WV.quiz = null; wordsView(); }
     else if (h === "curso") { setSec("curso"); navChips(null); courseHub(); }
     else if (h === "practicar") { setSec("practicar"); navChips(null); practiceHub(); }
@@ -7930,6 +8061,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (act === "px-submit" && PX) { const i = document.getElementById("px-in"); pxSubmit(i ? i.value : ""); }
     else if (act === "px-pick" && PX) pxSubmit(null, +t.dataset.o);
     else if (act === "px-dunno" && PX) pxSubmit("", -1);
+    else if (act === "px-skip" && PX) { // skipped: saved to My mistakes, where it stays until you get it right
+      const k = PX.order[PX.i], it = PX.items[k];
+      try { if (PX.key !== "errores" && PX.key !== "nivel") mistakeAdd(it, PX.key); } catch (x) {}
+      PX.res[k] = { ok: false, skip: true, cls: "skip", val: "", pick: -1, html: '<p class="xfb">Skipped. ' + (PX.key === "errores" ? "It stays on your list until you get it right." : "Saved to <a href=\"#errores\">My mistakes</a>; it stays there until you get it right.") + "</p>" };
+      pxSave(); if (PX.i + 1 < PX.order.length) { PX.i++; PX.phase = PX.res[PX.order[PX.i]] ? "fb" : "q"; pxRender(); } else pxFinish();
+    }
     else if (act === "px-next" && PX) { if (PX.i + 1 < PX.order.length) { PX.i++; PX.phase = PX.res[PX.order[PX.i]] ? "fb" : "q"; pxSave(); pxRender(); } else pxFinish(); }
     else if (act === "px-prev" && PX) { PX.i = Math.max(0, PX.i - 1); PX.phase = PX.res[PX.order[PX.i]] ? "fb" : "q"; pxRender(); }
     else if (act === "px-review") { const el = document.getElementById(t.dataset.to); if (el) { el.scrollIntoView({ behavior: "smooth", block: el.matches(".gblock, section, .grule") ? "start" : "center" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1800); let b = document.getElementById("px-back"); if (!b) { b = document.createElement("button"); b.id = "px-back"; b.className = "btn primary pxback"; b.dataset.act = "px-back"; b.textContent = "Back to the question ↓"; document.body.appendChild(b); } b.hidden = false; } }
@@ -7990,7 +8127,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131432";
+  var BUILD = "202611131525";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
