@@ -1299,10 +1299,10 @@ body.no-tabs .pxret { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) }
 body.no-tabs .pxback { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important }
 body.tutor-open .pxret { display: none }
 
-.tret { position: fixed; left: 14px; bottom: 26vh; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 700; font-size: .92rem;
+.tret { position: fixed; left: 12px; bottom: 26vh; z-index: 40; width: 62px; height: 62px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; padding: 0; border-radius: 18px; cursor: pointer; font: inherit; font-weight: 750; font-size: .78rem; line-height: 1;
   background: color-mix(in srgb, var(--cobalt) 38%, transparent); color: #fff; border: 1px solid rgba(255, 255, 255, .45); text-shadow: 0 1px 3px rgba(0, 0, 0, .45); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); animation: pcIn .35s cubic-bezier(.2, .8, .3, 1.2) }
 .tret:active { transform: scale(.95) }
-.tret svg { width: 22px; height: 22px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)) }
+.tret svg { width: 26px; height: 26px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)) }
 .lite .tret { background: color-mix(in srgb, var(--cobalt) 45%, transparent) }
 </style>
 
@@ -5487,7 +5487,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (nn) out.push(noteMd(nn));
       if (b.ex[0]) out.push("*Example:* " + b.ex[0]);
     }
-    return out.join("\n");
+    return out.map((ln) => { const singles = (ln.replace(/\*\*/g, "").match(/\*/g) || []).length; return singles % 2 ? ln.replace(/(^|[^*])\*(?!\*)/g, "$1") : ln; }).join("\n");
   }
   function explainMistakes() {
     const all = pageItems(), P = all.filter((x) => x.r);
@@ -6434,7 +6434,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     TB = resolveTB();
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
-    const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 19c0-6-4-10-10-10H4M8.5 4.5 4 9l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + "</button>" : "";
+    const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret" aria-label="' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 19c0-6-4-10-10-10H4M8.5 4.5 4 9l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + "<span>" + (R.kind === "q" ? "Q" + R.n : "Lesson") + "</span></button>" : "";
     const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
@@ -7496,7 +7496,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130544";
+  var BUILD = "202611130550";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
