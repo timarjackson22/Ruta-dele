@@ -1317,6 +1317,8 @@ body.tutor-open .pxret { display: none }
 .cue-en { display: block; font-style: italic; font-weight: 600; letter-spacing: .005em }
 .cue-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
 .cue-top + .cue-en { margin-top: 5px; padding-top: 5px; border-top: 1px solid color-mix(in srgb, var(--bg, #fff) 22%, transparent); font-weight: 500; opacity: .92 }
+.cue-one { font-weight: 600; font-size: 1rem; white-space: nowrap } .cue:has(> .cue-one) { padding: 6px 12px }
+.cue-b.sm { width: 22px; height: 22px; margin-left: 2px } .cue-b.sm svg { width: 13px; height: 13px } .cue-top:has(.cue-b.sm) { gap: 6px; flex-wrap: nowrap }
 .cue-w { font-size: 1.02rem } .cue-g { opacity: .9 }
 .cue-b { flex: none; width: 28px; height: 28px; margin-left: auto; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer; padding: 0; color: inherit; background: color-mix(in srgb, var(--bg, #fff) 16%, transparent) }
 .cue-b + .cue-b { margin-left: 0 } .cue-b svg { width: 16px; height: 16px }
@@ -4004,8 +4006,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     document.querySelectorAll("#ltext .w.spk").forEach((x) => x !== el && x.classList.remove("spk"));
     if (!el) return; el.classList.add("spk");
     if (CUE.w) return; // a tapped word stays until you tap elsewhere
-    const word = el.textContent, key = word.toLowerCase(), g = cueGloss(word, el);
-    cueShow('<div class="cue-top"><b class="cue-w">' + esc(word) + "</b>" + (g ? '<span class="cue-g">' + esc(g) + "</span>" : "") + "</div>", el);
+    const g = cueOne(cueGloss(el.textContent, el));
+    if (!g) { cueHide(); return; } // a name: nothing to translate
+    cueShow('<b class="cue-one">' + esc(g) + "</b>", el);
+  }
+  // just one English word or short phrase: the first meaning, without "to"
+  function cueOne(g) {
+    g = String(g || "").split(/[,/]| or /)[0].replace(/[?¿!¡…]/g, "").replace(/^\s*to\s+(?=\S)/i, "").trim();
+    return g;
   }
   // follow the speech: word boundaries from the voice when it sends them, otherwise timed from the length of each word
   function cueTrack(u, k) {
@@ -4027,13 +4035,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     setTimeout(go, 700); // some voices never send "start"
   }
   function cueWord(t) {
-    const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, it = PL.items[k], g = cueGloss(word, t);
+    const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, g = cueOne(cueGloss(word, t));
+    if (!g) { lookup(word, k); return; } // no short meaning: the full entry
     CUE.w = t; CUE.k = k;
     document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); t.classList.add("cue-on");
-    cueShow('<div class="cue-top"><b class="cue-w">' + esc(word) + "</b>" + (g ? '<span class="cue-g">' + esc(g) + "</span>" : "") +
-      '<button class="cue-b" data-act="cue-say" aria-label="Hear ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>' +
-      '<button class="cue-b" data-act="cue-more" aria-label="More about ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>' +
-      (it && it.en ? '<i class="cue-en">“' + esc(it.en) + "”</i>" : ""), t);
+    cueShow('<div class="cue-top"><b class="cue-one">' + esc(g) + "</b>" +
+      '<button class="cue-b sm" data-act="cue-more" aria-label="More about ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>', t);
   }
   function cueDrop() { if (!CUE.w) return; CUE.w.classList.remove("cue-on"); CUE.w = null; CUE.k = -1; const sp = document.querySelector("#ltext .w.spk"); if (sp && PL.playing && cueOn()) cueSpk(sp); else cueSync(); }
   document.addEventListener("click", (e) => {
@@ -7622,7 +7629,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131258";
+  var BUILD = "202611131322";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
