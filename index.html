@@ -1271,8 +1271,8 @@ body.study .srm-ic { width: 34px; height: 34px; border-radius: 10px; font-size: 
 .rv-t { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25 }
 .rv-t small { font-size: .74rem; color: var(--muted); font-weight: 500 }
 .rv-t b { font-size: .95rem; font-weight: 600; overflow-wrap: anywhere }
-.rv-go { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: .8rem; font-weight: 600; color: var(--cobalt) }
-.rv-go svg { width: 7px; height: 12px }
+.rv-go { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 10%, transparent) }
+.rv-go svg { width: 20px; height: 20px }
 .pxfb .rvlist { background: color-mix(in srgb, var(--surface) 92%, transparent) }
 /* Profe button: a small circle on lesson pages, so it never covers buttons */
 @media (max-width: 820px) {
@@ -2707,7 +2707,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   new MutationObserver(() => { if (pgrQ) return; pgrQ = true; requestAnimationFrame(() => { pgrQ = false; if (document.querySelector("#app .unav a.btn:not(.pgr)")) uiPager(); }); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
   function rvRow(attrs, icon, kind, title, where, tag) {
     tag = tag || "button";
-    return "<" + tag + ' class="rvrow" ' + attrs + (tag === "button" ? ' type="button"' : "") + '><span class="rv-ic" aria-hidden="true">' + icon + '</span><span class="rv-t"><small>' + esc(kind) + "</small><b>" + esc(title) + '</b></span><span class="rv-go">' + where + ' <svg viewBox="0 0 8 14" aria-hidden="true"><path d="m1.5 1.5 5 5.5-5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></' + tag + ">";
+    return "<" + tag + ' class="rvrow" ' + attrs + (tag === "button" ? ' type="button"' : "") + '><span class="rv-ic" aria-hidden="true">' + icon + '</span><span class="rv-t"><small>' + esc(kind) + "</small><b>" + esc(title) + '</b></span><span class="rv-go' + (where === "Jump" ? " up" : "") + '" title="' + (where === "Jump" ? "Go up to it in this lesson" : where === "Chat" ? "Ask Profe" : "Open") + '">' + (where === "Jump"
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h6a7 7 0 0 0 7-7V4.5M12.5 9 17 4.5 21.5 9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>') + "</span></" + tag + ">";
   }
   function reviewLinks(it) {
     const nz = (x) => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
@@ -7405,7 +7407,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130502";
+  var BUILD = "202611130508";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
