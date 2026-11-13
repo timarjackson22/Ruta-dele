@@ -1196,6 +1196,8 @@ body.study .srmore { width: 100%; max-width: 620px; justify-self: center }
 .s30what { width: 100%; max-width: 620px; justify-self: center; margin: 4px 0 0; font-weight: 700; text-align: center }
 .srmore-b.hi { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset }
 @media (prefers-reduced-motion: reduce) { .s30medal { animation: none } }
+
+.srnext { margin: 14px 0 0; font-weight: 700; color: var(--ink) }
 </style>
 
 </head>
@@ -3468,7 +3470,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!card && SV.mode === "s30") body = s30Done(id);
     else if (!card) {
       const st = srStats();
-      body = '<div class="fc" style="cursor:default"><div><p class="face">' + (SV.mode === "s30" ? "¡Set completo!" : "¡Listo por hoy!") + '</p><p class="muted" style="margin-top:8px">' + (SV.mode === "s30" ? "🎉 " + (SV.n30 || 0) + " cards done. Pick another set of 30 below, or tap Stop." : SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done. Want to keep going?") + "</p></div></div>" + srMoreHTML(id);
+      body = '<div class="fc" style="cursor:default"><div><p class="face">' + (SV.mode === "s30" ? "¡Set completo!" : "¡Listo por hoy!") + '</p><p class="muted" style="margin-top:8px">' + (SV.mode === "s30" ? "🎉 " + (SV.n30 || 0) + " cards done. Pick another set of 30 below, or tap Stop." : SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done.") + '</p><p class="srnext">Choose an option below to keep going <span aria-hidden="true">👇</span></p></div></div>' + srMoreHTML(id);
     } else {
       const front = card.rev ? card.en : card.es, back = card.rev ? card.es : card.en;
       const k = SRD.c[card.id], tag = SV.mode === "cram" ? '<span class="srtag r">Practice · no schedule change</span>' : !k ? '<span class="srtag n">New</span>' : k.s === 2 ? '<span class="srtag r">' + (SV.mode === "ahead" && k.d > today() ? "Review ahead" : "Review") + "</span>" : '<span class="srtag l">Learning</span>';
@@ -7223,7 +7225,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130337";
+  var BUILD = "202611130349";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
