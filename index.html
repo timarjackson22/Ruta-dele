@@ -3006,7 +3006,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   window.addEventListener("hashchange", () => { if (PC) { try { PC.rec && PC.rec.abort(); } catch (e) {} clearTimeout(PC.tm); PC = null; } });
 
   /* ---------- checking ---------- */
-  const norm = (s) => String(s).toLowerCase().normalize("NFC").replace(/[¿?¡!.,;:«»"“”()…]/g, " ").replace(/\s+/g, " ").trim();
+  const norm = (s) => String(s).toLowerCase().normalize("NFC").replace(/[’‘`´]/g, "'").replace(/[¿?¡!.,;:«»"“”()…\-–—‒―]/g, " ").replace(/\s+/g, " ").trim();
   const strip = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
   function check(L, i, reveal) {
     const u = L.units[i]; let score = 0;
@@ -7496,7 +7496,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130542";
+  var BUILD = "202611130544";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
