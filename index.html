@@ -1070,14 +1070,21 @@ main, #app { background: transparent }
 }
 
 /* ===== liquid touch ===== */
-.lq-jelly { animation: lqJelly .7s cubic-bezier(.3, .7, .4, 1) !important; transform-origin: 50% 60% }
-@keyframes lqJelly { 0% { scale: 1 1 } 15% { scale: 1.22 .78 } 32% { scale: .84 1.18 } 50% { scale: 1.1 .92 } 68% { scale: .96 1.04 } 84% { scale: 1.02 .99 } 100% { scale: 1 1 } }
+.lq-jelly { animation: lqJelly .9s cubic-bezier(.3, .7, .4, 1) !important; transform-origin: 50% 65% }
+@keyframes lqJelly { 0% { scale: 1 1; rotate: 0deg } 12% { scale: 1.38 .68; rotate: -9deg } 27% { scale: .76 1.3; rotate: 7deg } 42% { scale: 1.18 .86; rotate: -4deg } 57% { scale: .92 1.09; rotate: 2deg } 72% { scale: 1.05 .96; rotate: -1deg } 86% { scale: .99 1.01 } 100% { scale: 1 1; rotate: 0deg } }
+.lq-press { animation: lqPress .65s cubic-bezier(.3, 1.5, .5, 1) }
+@keyframes lqPress { 0% { scale: 1 } 18% { scale: .93 .95 } 45% { scale: 1.035 1.02 } 70% { scale: .99 } 100% { scale: 1 } }
+.tabbar a.lq-press { animation: none }
 .lq-rip { position: absolute; z-index: 0; pointer-events: none; border-radius: 42% 58% 55% 45% / 50% 42% 58% 50%; background: radial-gradient(circle, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .32) 45%, rgba(255, 255, 255, 0) 70%); animation: lqRip .75s cubic-bezier(.2, .8, .3, 1) forwards }
 .row2 .lq-rip, .ulist > li > a .lq-rip, .reg .lq-rip, .tabs a .lq-rip, .lp .lq-rip, .nb-back .lq-rip, .lt-btn .lq-rip { background: radial-gradient(circle, color-mix(in srgb, var(--cobalt) 30%, transparent) 0%, color-mix(in srgb, var(--cobalt) 12%, transparent) 45%, transparent 70%) }
 .lq-rip.tab { background: radial-gradient(circle, color-mix(in srgb, var(--tc) 45%, transparent) 0%, color-mix(in srgb, var(--tc) 15%, transparent) 50%, transparent 72%) }
-@keyframes lqRip { 0% { transform: scale(.1) rotate(0deg); opacity: 1 } 60% { opacity: .8 } 100% { transform: scale(1) rotate(60deg); opacity: 0; border-radius: 55% 45% 42% 58% / 45% 58% 42% 55% } }
+@keyframes lqRip { 0% { transform: scale(.1) rotate(0deg); opacity: 1; border-radius: 42% 58% 55% 45% / 50% 42% 58% 50% } 40% { border-radius: 58% 42% 45% 55% / 42% 58% 50% 50% } 60% { opacity: .85 } 100% { transform: scale(1) rotate(90deg); opacity: 0; border-radius: 55% 45% 42% 58% / 45% 58% 42% 55% } }
+.lq-rip.ring { background: none !important; border: 2.5px solid rgba(255, 255, 255, .7); animation: lqRing .9s .08s cubic-bezier(.2, .8, .3, 1) both }
+.row2 .lq-rip.ring, .ulist > li > a .lq-rip.ring, .reg .lq-rip.ring, .tabs a .lq-rip.ring, .lp .lq-rip.ring, .nb-back .lq-rip.ring, .lt-btn .lq-rip.ring { border-color: color-mix(in srgb, var(--cobalt) 45%, transparent) }
+.lq-rip.tab.ring { border-color: color-mix(in srgb, var(--tc) 60%, transparent) }
+@keyframes lqRing { 0% { transform: scale(.15) rotate(0deg); opacity: 0 } 15% { opacity: 1 } 100% { transform: scale(1.1) rotate(-70deg); opacity: 0 } }
 .lq-drop { position: absolute; z-index: 2; width: 6px; height: 6px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: var(--tc, var(--cobalt)); pointer-events: none; animation: lqDrop .6s cubic-bezier(.2, .7, .4, 1) forwards }
-@keyframes lqDrop { 0% { transform: translate(0, 0) scale(.4); opacity: 0 } 20% { opacity: 1 } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0 } }
+@keyframes lqDrop { 0% { transform: translate(0, 0) scale(.4); opacity: 0 } 15% { opacity: 1; transform: translate(calc(var(--dx) * .3), calc(var(--dy) * .3)) scale(1.2) } 60% { transform: translate(calc(var(--dx) * .85), calc(var(--dy) * .85)) scale(1) } 100% { transform: translate(var(--dx), calc(var(--dy) + 14px)) scale(.3); opacity: 0 } }
 .kcard > :not(.lq-rip), .stile > :not(.lq-rip), .hero2 > :not(.lq-rip), .row2 > :not(.lq-rip) { position: relative; z-index: 1 }
 .kcard > .kc-ic, .stile > .kc-ic { position: absolute } .kcard > .kc-badge { position: absolute }
 
@@ -3367,17 +3374,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const host = e.target.closest && e.target.closest(LQ_HOST); if (!host) return;
     const ic = host.matches(".wod-say") ? host : host.querySelector(LQ_ICON);
-    if (ic) { ic.classList.remove("lq-jelly"); void ic.getBoundingClientRect(); ic.classList.add("lq-jelly"); setTimeout(() => ic.classList.remove("lq-jelly"), 750); }
+    if (ic) { ic.classList.remove("lq-jelly"); void ic.getBoundingClientRect(); ic.classList.add("lq-jelly"); setTimeout(() => ic.classList.remove("lq-jelly"), 950); }
+    host.classList.remove("lq-press"); void host.offsetWidth; host.classList.add("lq-press"); setTimeout(() => host.classList.remove("lq-press"), 700);
     const r = host.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     const tab = host.matches(".tabbar a");
     const rp = document.createElement("span"); rp.className = "lq-rip" + (tab ? " tab" : ""); rp.setAttribute("aria-hidden", "true");
-    const size = tab ? 64 : Math.max(r.width, r.height) * 1.4;
+    const size = tab ? 84 : Math.max(r.width, r.height) * 1.6;
     rp.style.cssText = "width:" + size + "px;height:" + size + "px;left:" + ((tab ? r.width / 2 : x) - size / 2) + "px;top:" + ((tab ? 18 : y) - size / 2) + "px";
     if (getComputedStyle(host).position === "static") host.style.position = "relative";
-    host.appendChild(rp); setTimeout(() => rp.remove(), 800);
+    host.appendChild(rp); setTimeout(() => rp.remove(), 1000);
+    const rp2 = rp.cloneNode(); rp2.className += " ring"; host.appendChild(rp2); setTimeout(() => rp2.remove(), 1100);
     if (tab) {
-      for (let k = 0; k < 5; k++) { const d = document.createElement("i"); d.className = "lq-drop"; d.setAttribute("aria-hidden", "true"); const a = (-160 + k * 35) * Math.PI / 180, dist = 18 + Math.random() * 10;
-        d.style.cssText = "left:" + (r.width / 2 - 3) + "px;top:15px;--dx:" + (Math.cos(a) * dist).toFixed(1) + "px;--dy:" + (Math.sin(a) * dist).toFixed(1) + "px;animation-delay:" + (k * 18) + "ms"; host.appendChild(d); setTimeout(() => d.remove(), 800); }
+      for (let k = 0; k < 9; k++) { const d = document.createElement("i"); d.className = "lq-drop"; d.setAttribute("aria-hidden", "true"); const a = (-170 + k * 20 + (Math.random() * 10 - 5)) * Math.PI / 180, dist = 22 + Math.random() * 18, sz = 4 + Math.random() * 5;
+        d.style.cssText = "width:" + sz.toFixed(1) + "px;height:" + sz.toFixed(1) + "px;left:" + (r.width / 2 - sz / 2) + "px;top:15px;--dx:" + (Math.cos(a) * dist).toFixed(1) + "px;--dy:" + (Math.sin(a) * dist).toFixed(1) + "px;animation-delay:" + (k * 12) + "ms"; host.appendChild(d); setTimeout(() => d.remove(), 1000); }
       try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
     }
   }
@@ -6964,7 +6973,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130056";
+  var BUILD = "202611130102";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
