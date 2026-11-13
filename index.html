@@ -3382,11 +3382,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     { const one = String(t).trim().replace(/[.,;:!?]+$/, "").toLowerCase();
       if (/^(a|be|ce|de|e|efe|ge|hache|i|jota|ka|ele|eme|ene|eñe|o|pe|cu|erre|ese|te|u|uve|uve doble|doble uve|equis|ye|i griega|zeta|be larga|ve corta)$/.test(one) && one.length > 1) return [[String(t).trim(), true]];
       if (/^[a-záéíóúüñ]+$/.test(one) && one.length >= 3 && L.es.has(one) && !L.en.has(one) && !L.common.has(one)) return [[String(t).trim(), true]]; if (/^[a-záéíóúüñ]+$/.test(one) && typeof TG !== "undefined" && TG[one] && /verb|pron|det|art|prep|conj/.test(TG[one][1]) && !/^(a|i|no|me|he|has|van|era|sea|once|son)$/.test(one)) return [[String(t).trim(), true]]; }
-    const isEs = (w) => { const x = w.toLowerCase().split("/")[0].replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/i.test(w)) return true; if (RA_FN.test(x)) return true; const ps0 = ((typeof TG !== "undefined" && TG[x] && TG[x][1]) || "") + " " + (L.pos[x] || ""); if (ps0.trim() && !L.common.has(x)) { const ps = ps0; if (/verb|pron|det|art|prep|conj/.test(ps)) return true; if (/adj|noun/.test(ps) && x.length >= 4 && /(o|a|os|as|ción|ciones|dad|dades|mente|ero|era|eros|eras|ito|ita)$/.test(x) && !L.en.has(x)) return true; if (/adj|noun/.test(ps) && /(ano|ana|anos|anas|eño|eña|ense|és|esa)$/.test(x)) return true; }  if (L.en.has(x)) return false; const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (x.length >= 3 && (L.es.has(x) || L.esN.has(n) || (/s$/.test(n) && (L.esN.has(n.slice(0, -1)) || (/es$/.test(n) && L.esN.has(n.slice(0, -2))))))) return true; return false; };
+    const isEs = (w) => { const x = w.toLowerCase().split("/")[0].replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/i.test(w)) return true; if (RA_FN.test(x)) return true; const ps0 = ((typeof TG !== "undefined" && TG[x] && TG[x][1]) || "") + " " + (L.pos[x] || ""); if (ps0.trim() && !L.common.has(x)) { const ps = ps0; if (/verb|pron|det|art|prep|conj/.test(ps)) return true; if (/adj|noun/.test(ps) && x.length >= 4 && /(o|a|os|as|ción|ciones|dad|dades|mente|ero|era|eros|eras|ito|ita)$/.test(x) && !/^(also|into|onto|unto|idea|ideas|area|areas|data|pizza|piano|radio|photo|photos|video|videos|zero|hello|extra|drama|media|china|comma|camera|agenda|formula|banana|tomato|potato|auto|logo|solo|memo|info|taco|tacos|casino|cargo|piazza|sofa|soda|tuna|vodka|opera|cola|gala|mama|papa|lava|diva|visa|yoga|alpha|beta|delta|gamma|aroma|dogma|panorama|sauna|santa|plaza|patio|studio|ratio|portfolio|veto|ego|echo|hero|halo|disco|kilo|metro|macho|bravo|duo|trio|tempo|ditto|lotto|motto|ghetto|mango|tango|torpedo|tornado|volcano|mosquito|avocado|burrito|nacho|nachos|siesta|fiesta|tortilla|salsa|mesa|stucco|cameo|demo|gusto|libido|manifesto|placebo|tobacco|commando|crescendo|embargo|innuendo|ago|also|euro|euros|polo|pro|promo|hippo|rhino|limbo|bingo|jumbo|lingo|flamingo|stiletto|staccato|rodeo|lasso|loco|pinto|poncho|pronto|quota|stamina|trivia|vista|villa|vanilla|umbrella|militia|replica|saga|stanza|tiara|toga|tundra|gorilla|guerrilla|panda|puma|llama|alpaca|cobra|koala|zebra|hyena|piranha|anaconda|boa|chihuahua|gringo|nada)$/.test(x)) return true; if (/adj|noun/.test(ps) && /(ano|ana|anos|anas|eño|eña|ense|és|esa)$/.test(x)) return true; }  if (L.en.has(x)) return false; const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (x.length >= 3 && (L.es.has(x) || L.esN.has(n) || (/s$/.test(n) && (L.esN.has(n.slice(0, -1)) || (/es$/.test(n) && L.esN.has(n.slice(0, -2))))))) return true; return false; };
     let cur = "", curEs = false;
     parts.forEach((w) => {
       if (/^\s+$/.test(w) || !w) { cur += w; return; }
-      const e = isEs(w), lang = e === null ? curEs : e;
+      let e = isEs(w); const xw = w.toLowerCase().replace(/[^a-záéíóúüñ]/g, "");
+      if (e === false && curEs && xw.length >= 3 && L.es.has(xw) && !L.common.has(xw)) e = true; // a word that is also English, right after Spanish (el favor, por favor) stays Spanish
+      const lang = e === null ? curEs : e;
       if (cur.trim() && lang !== curEs) { out.push([cur.trim(), curEs]); cur = ""; }
       curEs = lang; cur += w;
     });
@@ -6152,7 +6154,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>");
     return h.split(/\n{2,}/).map((p) => /^\s*([-•]|\d+\.)\s/m.test(p) ? "<ul>" + p.split("\n").filter(Boolean).map((l) => "<li>" + l.replace(/^\s*([-•]|\d+\.)\s*/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
   }
-  const plainForSpeech = (s) => String(s).replace(/↳/g, " ").replace(/_{2,}/g, " blank ").replace(/…{2,}|\.{4,}/g, " blank ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
+  const plainForSpeech = (s) => String(s).replace(/↳/g, " ").replace(/\s*(→|⇒|->|·|•|\||=|—|–)\s*/g, ", ").replace(/(,\s*){2,}/g, ", ").replace(/_{2,}/g, " blank ").replace(/…{2,}|\.{4,}/g, " blank ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
   /* ---------- corrections: what in the learner's Spanish is wrong or could be better ---------- */
   const FXP = { yo: 0, "tú": 1, tu: -1, "él": 2, ella: 2, usted: 2, nosotros: 3, nosotras: 3, vosotros: 4, vosotras: 4, ellos: 5, ellas: 5, ustedes: 5 };
   const PNAME = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
@@ -7496,7 +7498,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130550";
+  var BUILD = "202611130552";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
