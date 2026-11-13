@@ -872,6 +872,56 @@ h1, h2, h3 { letter-spacing: -.02em }
 .goal2 b { display: block; font-size: 1rem } .goal2 small { display: block; color: var(--muted); font-size: .84rem }
 .goal2 .ring { width: 58px; height: 58px; flex: none } .goal2 .week { margin-top: 6px }
 .seg2 { display: flex; flex-wrap: wrap; gap: 6px } .setl { margin: 4px 0 0; font-size: .85rem; color: var(--muted) }
+/* --- colour and life --- */
+.lt-eye { color: var(--saffron) }
+.hero2 { position: relative; overflow: hidden; background: linear-gradient(135deg, #2f6be0 0%, #1d47a8 55%, #172f78 100%); transition: transform .15s }
+.hero2::before { content: ""; position: absolute; right: -40px; top: -40px; width: 190px; height: 190px; border-radius: 50%; opacity: .22;
+  background-image: radial-gradient(circle at 50% 50%, #ffc94a 0 13%, transparent 14%), radial-gradient(circle at 0 0, #fff 0 24%, transparent 25%), radial-gradient(circle at 100% 0, #fff 0 24%, transparent 25%), radial-gradient(circle at 0 100%, #fff 0 24%, transparent 25%), radial-gradient(circle at 100% 100%, #fff 0 24%, transparent 25%); background-size: 30px 30px }
+.hero2 > * { position: relative }
+.hero2:active, .kcard:active, .stile:active, .lp:active { transform: scale(.97) }
+.goal3 { display: flex; align-items: center; gap: 16px; background: var(--surface); border-radius: 16px; padding: 14px 16px; margin-top: 10px }
+.fring { position: relative; width: 76px; height: 76px; flex: none }
+.fring svg { width: 100%; height: 100%; transform: rotate(-90deg) }
+.fring circle { fill: none; stroke-width: 9 } .fr-bg { stroke: color-mix(in srgb, #ff3d6e 16%, transparent) } .fr-fg { stroke: url(#fg); stroke-linecap: round; animation: ringIn .9s ease-out }
+@keyframes ringIn { from { stroke-dasharray: 0 999 } }
+.fring span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.fring span b { display: block; font-size: 1.3rem; color: var(--ink); font-weight: 800 }
+.g3-t { min-width: 0 } .g3-t b { display: block; font-size: 1.05rem } .g3-t small { display: block; color: var(--muted); font-size: .86rem; margin-top: 1px } .g3-t .week { margin-top: 8px }
+.flame { display: inline-block; animation: flick 1.6s ease-in-out infinite } @keyframes flick { 50% { transform: scale(1.12) rotate(-4deg) } }
+.kscroll { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 2px 16px 6px; scrollbar-width: none }
+.kscroll::-webkit-scrollbar { display: none }
+.kcard, .stile { position: relative; flex: none; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; width: 150px; min-height: 150px; padding: 14px; border-radius: 18px; border: 0; color: #fff; text-decoration: none; text-align: left; font: inherit; cursor: pointer; background: linear-gradient(150deg, var(--c1), var(--c2)); box-shadow: 0 6px 16px color-mix(in srgb, var(--c2) 30%, transparent); transition: transform .15s; overflow: hidden }
+.kcard::after, .stile::after { content: ""; position: absolute; right: -26px; bottom: -26px; width: 90px; height: 90px; border-radius: 50%; background: rgba(255, 255, 255, .13) }
+.kc-ic { position: absolute; left: 14px; top: 14px; width: 40px; height: 40px; border-radius: 12px; background: rgba(255, 255, 255, .22); display: grid; place-items: center }
+.kc-ic svg { width: 24px; height: 24px }
+.kcard b, .stile b { font-size: 1.08rem; line-height: 1.2 } .kcard small, .stile small { font-size: .82rem; opacity: .92; line-height: 1.25 }
+.kc-badge { position: absolute; right: 12px; top: 12px; background: #fff; color: var(--c2); font-weight: 800; font-size: .85rem; border-radius: 999px; padding: 2px 9px }
+.sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 6px }
+.sgrid .stile { width: auto; min-height: 120px }
+.wod { position: relative; overflow: hidden; margin-top: 18px; border-radius: 18px; padding: 16px 18px; background: linear-gradient(135deg, #fff4dc, #ffe2b8); color: #4a2e00 }
+:root[data-theme="dark"] .wod { background: linear-gradient(135deg, #3a2a10, #2a1d0a); color: #ffe7b8 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .wod { background: linear-gradient(135deg, #3a2a10, #2a1d0a); color: #ffe7b8 } }
+.wod::before { content: ""; position: absolute; right: -30px; top: -30px; width: 140px; height: 140px; border-radius: 50%; opacity: .3;
+  background-image: radial-gradient(circle at 50% 50%, #1f4fa3 0 13%, transparent 14%), radial-gradient(circle at 0 0, #e0a01a 0 24%, transparent 25%), radial-gradient(circle at 100% 0, #e0a01a 0 24%, transparent 25%), radial-gradient(circle at 0 100%, #e0a01a 0 24%, transparent 25%), radial-gradient(circle at 100% 100%, #e0a01a 0 24%, transparent 25%); background-size: 28px 28px }
+.wod > * { position: relative }
+.wod-eye { margin: 0; font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .75 }
+.wod-es { margin: 4px 0 0; font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; position: relative }
+.wod-en { margin: 0; opacity: .85 }
+.wod-say { margin-top: 10px; border: 0; border-radius: 999px; padding: 6px 14px; font: inherit; font-weight: 700; font-size: .9rem; background: #e0a01a; color: #fff; cursor: pointer }
+.lpath { display: flex; align-items: center; background: var(--surface); border-radius: 16px; padding: 14px 8px; overflow-x: auto; scrollbar-width: none }
+.lp { flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: var(--ink); transition: transform .15s }
+.lp-ring { position: relative; width: 40px; height: 40px; display: grid; place-items: center }
+.lp-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg) }
+.lp-ring circle { fill: none; stroke-width: 5 } .lp-bg { stroke: color-mix(in srgb, var(--lc) 18%, transparent) } .lp-fg { stroke: var(--lc); stroke-linecap: round }
+.lp-ring b { font-size: .82rem; font-weight: 800; color: var(--lc) }
+.lp.cur .lp-ring { background: var(--lc); border-radius: 50%; box-shadow: 0 0 0 4px color-mix(in srgb, var(--lc) 25%, transparent); animation: pulse 2.2s ease-in-out infinite } .lp.cur .lp-ring b { color: #fff }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--lc) 10%, transparent) } }
+.lp small { font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums }
+.lp-line { flex: 1; min-width: 3px; height: 3px; border-radius: 3px; background: var(--surface-2); margin: 0 2px 18px }
+.lvb2 { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; flex: none; font-weight: 800; font-size: .82rem; color: #fff; background: var(--lc) }
+.pbar[style] i { background: var(--lc) }
+.here { font-size: .72rem; font-weight: 700; color: #fff; background: var(--saffron); border-radius: 999px; padding: 1px 8px; margin-left: 4px; vertical-align: 2px }
+@media (prefers-reduced-motion: reduce) { .flame, .lp.cur .lp-ring, .fr-fg { animation: none } }
 .nb-back, .nb-title { display: none }
 .top .lvls { display: none !important }
 @media (max-width: 820px) {
@@ -2008,6 +2058,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   const uiGroup = (head, rows, foot) => (head ? '<h2 class="ghead">' + head + "</h2>" : "") + '<div class="ilist">' + rows.join("") + "</div>" + (foot ? '<p class="gfoot">' + foot + "</p>" : "");
   const uiTitle = (t, sub, right, eyebrow) => '<div class="lt">' + '<div>' + (eyebrow ? '<p class="lt-eye">' + eyebrow + "</p>" : "") + "<h1>" + t + "</h1>" + (sub ? '<p class="lt-sub">' + sub + "</p>" : "") + "</div>" + (right || "") + "</div>";
+  const LVC = { a1: "#22a06b", a2: "#0e9f9a", b1: "#1f7aec", b2: "#5b5bd6", c1: "#8e4ec6", c2: "#d6457a", esc: "#6b7280" };
   function curLevel() { const last = S.last && LV[S.last.l] ? S.last.l : null; return last || (S.place && LV[S.place.lvl] ? S.place.lvl : "a1"); }
   function dueCount() { try { let n = 0; COURSE.forEach((l) => { const c = counts(l.id); n += c.due + c.lrn; }); return n; } catch (e) { return 0; } }
 
@@ -2024,38 +2075,50 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     } else {
       hero = '<a class="hero2" href="#nivel"><span class="h2-eye">Welcome</span><span class="h2-t">Find your level</span><span class="h2-s">A 3-minute test shows where to begin, from A1 to C2.</span><span class="h2-foot"><span>Or <u data-href="#a1">start with A1</u></span><span class="h2-go">Take the test</span></span></a>';
     }
-    const goal = '<div class="goal2">' + goalRing() + '<div><b>' + (st ? st + "-day streak 🔥" : "Start a streak today") + '</b><small>Daily goal: ' + (S.goal || 20) + " points</small>" + week() + "</div></div>";
-    app.innerHTML = '<div class="ui-page">' + uiTitle("Today", "", '<a class="lt-btn" href="#ajustes" aria-label="Settings">' + UIC.gear[1].replace(/^/, '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">') + "</svg></a>", date) +
+    // daily goal, Fitness-style
+    const g = S.goal || 20, v = (S.act || {})[dayKey()] || 0, pct = Math.min(1, v / g), C = 2 * Math.PI * 30;
+    const ring = '<div class="fring" role="img" aria-label="Today ' + v + " of " + g + ' points"><svg viewBox="0 0 76 76"><defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb02e"/><stop offset="1" stop-color="#ff3d6e"/></linearGradient></defs><circle cx="38" cy="38" r="30" class="fr-bg"/><circle cx="38" cy="38" r="30" class="fr-fg" stroke-dasharray="' + (C * pct).toFixed(1) + " " + C.toFixed(1) + '"/></svg><span><b>' + v + "</b>of " + g + "</span></div>";
+    const msg = v >= g ? "¡Meta cumplida! Goal reached 🎉" : v ? (g - v) + " points to go today" : "Do one exercise to start";
+    const goal = '<div class="goal3">' + ring + '<div class="g3-t"><b>' + (st ? '<span class="flame">🔥</span> ' + st + "-day streak" : "Start a streak today") + "</b><small>" + msg + "</small>" + week() + "</div></div>";
+    // word of the day from the learner's level
+    let wod = "";
+    try {
+      const pool = []; L.units.forEach((u) => (u.v || []).forEach((gr) => (gr.w || []).forEach((w) => { if (w[0] && w[0].length >= 4 && w[0].length < 32 && !/[\/…\d]/.test(w[0]) && /[a-záéíóúñ]{3}/i.test(w[0])) pool.push(w); })));
+      if (pool.length) { const d = Math.floor(Date.now() / 864e5), w = pool[(d * 7919) % pool.length];
+        wod = '<div class="wod"><p class="wod-eye">Palabra del día · Word of the day</p><p class="wod-es" lang="es">' + esc(w[0]) + '</p><p class="wod-en">' + esc(w[1]) + '</p><button class="wod-say" data-act="say" data-t="' + esc(w[0]) + '" aria-label="Listen">🔊 Escuchar</button></div>'; }
+    } catch (e) {}
+    const card = (o) => '<' + (o.act ? 'button type="button" data-act="' + o.act + '"' : 'a href="' + o.href + '"') + ' class="kcard" style="--c1:' + o.c[0] + ";--c2:" + o.c[1] + '">' + (o.badge ? '<span class="kc-badge">' + o.badge + "</span>" : "") + '<span class="kc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + UIC[o.ic][1] + '</svg></span><b>' + o.t + "</b><small>" + o.sub + "</small></" + (o.act ? "button" : "a") + ">";
+    const cards = [
+      card({ ic: "cards", t: "Flashcards", href: "#repaso", sub: due ? due + " ready to review" : "All caught up ✓", badge: due || "", c: ["#ffb02e", "#f07b16"] }),
+      card({ ic: "speak", t: "Talk with Profe", act: "t-open", sub: "Chat or voice practice", c: ["#9b6bff", "#6a3fd8"] }),
+      nm ? card({ ic: "mist", t: "My mistakes", href: "#errores", sub: nm + " to fix", badge: nm, c: ["#ff6b6b", "#d93b4c"] }) : "",
+      card({ ic: "write", t: "Write", href: "#escritura", sub: "DELE tasks for " + L.name, c: ["#3ccf8e", "#1a9c6b"] }),
+      card({ ic: "listen", t: "Listen", href: "#escuchar", sub: "Stories and podcasts", c: ["#3fa0ff", "#1f63e0"] }),
+      card({ ic: "read", t: "Read", href: "#leer", sub: "Texts with tap-to-translate", c: ["#ff9f6b", "#e0592e"] }),
+    ].join("");
+    const path = '<div class="lpath">' + COURSE.map((l) => { const p = levelPct(l.id), Cc = 2 * Math.PI * 22; return '<a class="lp' + (l.id === cl ? " cur" : "") + (p === 100 ? " done" : "") + '" href="#' + l.id + '" style="--lc:' + LVC[l.id] + '"><span class="lp-ring"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" class="lp-bg"/><circle cx="26" cy="26" r="22" class="lp-fg" stroke-dasharray="' + (Cc * p / 100).toFixed(1) + " " + Cc.toFixed(1) + '"/></svg><b>' + l.name + "</b></span><small>" + (p === 100 ? "✓" : p + "%") + "</small></a>"; }).join('<i class="lp-line" aria-hidden="true"></i>') + "</div>";
+    const hr = new Date().getHours(), greet = hr < 12 ? "¡Buenos días!" : hr < 19 ? "¡Buenas tardes!" : "¡Buenas noches!";
+    app.innerHTML = '<div class="ui-page today3">' + uiTitle(greet, "", '<a class="lt-btn" href="#ajustes" aria-label="Settings">' + UIC.gear[1].replace(/^/, '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">') + "</svg></a>", date) +
       hero + goal +
-      uiGroup("Keep going", [
-        uiRow({ ic: "cards", t: "Flashcards", href: "#repaso", val: due ? '<span class="badge2">' + due + "</span>" : "", sub: due ? "Reviews due now" : "No reviews due" }),
-        uiRow({ ic: "mist", t: "My mistakes", href: "#errores", val: nm ? '<span class="badge2">' + nm + "</span>" : "", sub: nm ? "Fix them to remember" : "None saved yet" }),
-        uiRow({ ic: "speak", t: "Talk with Profe", act: "t-open", sub: "Conversation and voice practice" }),
-        uiRow({ ic: "write", t: "Writing task", href: "#escritura", sub: "DELE tasks for " + L.name + ", graded by Profe" }),
-        uiRow({ ic: "listen", t: "Listen", href: "#escuchar", sub: "Stories, podcasts and news" }),
-      ]) +
-      uiGroup("Your levels", COURSE.map((l) => { const p = levelPct(l.id); return uiRow({ lead: '<span class="lvb' + (l.id === cl ? " cur" : "") + '">' + l.name + "</span>", t: esc(LVEN_C[l.id] || l.label), href: "#" + l.id, sub: '<span class="pbar"><i style="width:' + p + '%"></i></span>', val: p + "%" }); }).slice(0, 6)) +
+      '<h2 class="ghead">Keep going</h2><div class="kscroll">' + cards + "</div>" +
+      wod +
+      '<h2 class="ghead">Your journey · A1 → C2</h2>' + path +
       "</div>";
     const u = app.querySelector("u[data-href]"); if (u) u.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); location.hash = u.dataset.href; });
   }
 
   function courseHub() {
     const cl = curLevel();
-    app.innerHTML = '<div class="ui-page">' + uiTitle("Course", "Six levels for the DELE exams, A1 to C2. Explanations in English.") +
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Course", "Six levels for the DELE exams, A1 to C2. Explanations in English.", "", "Tu ruta") +
       (S.place ? "" : uiGroup("", [uiRow({ ic: "test", t: "Find your level", href: "#nivel", sub: "A 3-minute placement test" })])) +
-      uiGroup("Levels", COURSE.map((l) => { const p = levelPct(l.id); return uiRow({ lead: '<span class="lvb' + (l.id === cl ? " cur" : "") + '">' + l.name + "</span>", t: esc(LVEN_C[l.id] || l.label) + ' <span class="es-n">' + esc(l.label) + "</span>", href: "#" + l.id, sub: l.units.length + " units · " + l.hours + ' h<span class="pbar"><i style="width:' + p + '%"></i></span>', val: p + "%" }); }), "Every unit has vocabulary with audio, grammar and exercises that check your answers. Each level ends with an exam guide and a timed mock test.") +
+      uiGroup("Levels", COURSE.map((l) => { const p = levelPct(l.id); return uiRow({ lead: '<span class="lvb2" style="--lc:' + LVC[l.id] + '">' + l.name + "</span>", t: esc(LVEN_C[l.id] || l.label) + ' <span class="es-n">' + esc(l.label) + "</span>" + (l.id === cl ? ' <span class="here">You’re here</span>' : ""), href: "#" + l.id, sub: l.units.length + " units · " + l.hours + ' h<span class="pbar" style="--lc:' + LVC[l.id] + '"><i style="width:' + p + '%"></i></span>', val: p + "%" }); }), "Every unit has vocabulary with audio, grammar and exercises that check your answers. Each level ends with an exam guide and a timed mock test.") +
       (S.place ? uiGroup("", [uiRow({ ic: "test", t: "Retake the placement test", href: "#nivel" })]) : "") + "</div>";
   }
 
   function practiceHub() {
     const cl = curLevel(), due = dueCount(), nm = (S.mist || []).length;
-    app.innerHTML = '<div class="ui-page">' + uiTitle("Practice", "Build each DELE skill: listening, reading, writing and speaking.") +
-      uiGroup("Skills", [
-        uiRow({ ic: "listen", t: "Listen <span class=\"es-n\">Escuchar</span>", href: "#escuchar", sub: "Stories, podcasts and news with transcripts" }),
-        uiRow({ ic: "read", t: "Read <span class=\"es-n\">Leer</span>", href: "#leer", sub: "Texts with tap-to-translate and questions" }),
-        uiRow({ ic: "write", t: "Write <span class=\"es-n\">Escribir</span>", href: "#escritura", sub: "DELE writing tasks, practice or timed exam" }),
-        uiRow({ ic: "speak", t: "Speak <span class=\"es-n\">Hablar</span>", act: "t-open", sub: "Talk with Profe, drills and role-plays" }),
-      ]) +
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Practice", "The four DELE skills. Pick one and go.", "", "¡A practicar!") +
+      '<div class="sgrid">' + [["listen", "Listen", "Escuchar", "#escuchar", "", "#3fa0ff", "#1f63e0"], ["read", "Read", "Leer", "#leer", "", "#ff9f6b", "#e0592e"], ["write", "Write", "Escribir", "#escritura", "", "#3ccf8e", "#1a9c6b"], ["speak", "Speak", "Hablar", "", "t-open", "#9b6bff", "#6a3fd8"]].map(([ic, t, es, h, act, c1, c2]) => '<' + (act ? 'button type="button" data-act="' + act + '"' : 'a href="' + h + '"') + ' class="stile" style="--c1:' + c1 + ";--c2:" + c2 + '"><span class="kc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + UIC[ic][1] + "</svg></span><b>" + t + "</b><small>" + es + "</small></" + (act ? "button" : "a") + ">").join("") + "</div>" +
       uiGroup("Review", [
         uiRow({ ic: "cards", t: "Flashcards", href: "#repaso", val: due ? '<span class="badge2">' + due + "</span>" : "", sub: due ? "Reviews due now" : "Spaced repetition for every level" }),
         uiRow({ ic: "mist", t: "My mistakes", href: "#errores", val: nm ? '<span class="badge2">' + nm + "</span>" : "", sub: "Questions you got wrong, to try again" }),
@@ -2064,12 +2127,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
 
   function libraryHub() {
-    app.innerHTML = '<div class="ui-page">' + uiTitle("Library", "Look things up: rules, conjugations and vocabulary.") +
+    app.innerHTML = '<div class="ui-page">' + uiTitle("Library", "Rules, conjugations and words, whenever you need them.", "", "La biblioteca") +
+      '<div class="sgrid">' + [["guides", "Guides", GUIDES.length + " topics", "#guias", "#4f8cff", "#2f5fd0"], ["grammar", "Grammar", "Gramática", "#gramatica", "#a07bff", "#6d4be0"], ["verbs", "Verbs", "Verbos", "#verbos", "#ff6fa0", "#d6457a"], ["words", "Words", "7,000 palabras", "#palabras", "#3ccf8e", "#1a9c6b"]].map(([ic, t, es, h, c1, c2]) => '<a href="' + h + '" class="stile" style="--c1:' + c1 + ";--c2:" + c2 + '"><span class="kc-ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + UIC[ic][1] + "</svg></span><b>" + t + "</b><small>" + es + "</small></a>").join("") + "</div>" +
       uiGroup("", [
-        uiRow({ ic: "guides", t: "Grammar guides", href: "#guias", sub: GUIDES.length + " topics explained step by step" }),
-        uiRow({ ic: "grammar", t: "Grammar <span class=\"es-n\">Gramática</span>", href: "#gramatica", sub: "Every part of speech, with the most-used words" }),
-        uiRow({ ic: "verbs", t: "Verbs <span class=\"es-n\">Verbos</span>", href: "#verbos", sub: "Full conjugations with audio" }),
-        uiRow({ ic: "words", t: "Words <span class=\"es-n\">Palabras</span>", href: "#palabras", sub: "The 7,000 most-used words" }),
         uiRow({ ic: "res", t: "Resources", href: "#recursos", sub: "Official DELE information and free extras" }),
       ]) + "</div>";
   }
@@ -6687,7 +6747,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611122359";
+  var BUILD = "202611130012";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
