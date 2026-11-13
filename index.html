@@ -952,6 +952,34 @@ h1, h2, h3 { letter-spacing: -.02em }
   .tabs a { border: 0; border-radius: 999px; padding: 7px 14px; background: var(--surface); font-size: .92rem }
   .tabs a[aria-current="page"] { background: var(--ink); color: var(--bg) }
 }
+
+/* ===== colour themes ===== */
+:root[data-pal="negro"][data-pal] { --bg: #000000; --surface: #141416; --surface-2: #222226; --ink: #f2f2f7; --muted: #98989f; --line: #2e2e33; --cobalt: #4f9dff; --on-cobalt: #000000; --saffron: #ffb340; --tile-c: #000000; color-scheme: dark; --h1: #2f6be0; --h2: #14307a }
+:root[data-pal="oceano"][data-pal] { --bg: #eaf4fb; --surface: #ffffff; --surface-2: #d6e9f5; --ink: #0b2a3d; --muted: #4f6b7d; --line: #c5dceb; --cobalt: #0a7bc2; --on-cobalt: #ffffff; --saffron: #e8960a; --tile-c: #eaf4fb; color-scheme: light; --h1: #1a8fd6; --h2: #0a5a92 }
+:root[data-pal="caribe"][data-pal] { --bg: #062a30; --surface: #0b3a42; --surface-2: #124a53; --ink: #e3f6f5; --muted: #93c2c0; --line: #1c5a63; --cobalt: #3fd1c4; --on-cobalt: #04252a; --saffron: #ffc857; --tile-c: #062a30; color-scheme: dark; --h1: #12a39a; --h2: #0a5c63 }
+:root[data-pal="selva"][data-pal] { --bg: #0e1f17; --surface: #153024; --surface-2: #1d3f30; --ink: #e6f3ea; --muted: #9dbca9; --line: #285240; --cobalt: #5fd38d; --on-cobalt: #0b1d13; --saffron: #f5c451; --tile-c: #0e1f17; color-scheme: dark; --h1: #2e9e5f; --h2: #14553a }
+:root[data-pal="arena"][data-pal] { --bg: #f6efe4; --surface: #fffaf2; --surface-2: #ece1cf; --ink: #3a2b1a; --muted: #7a6650; --line: #e0d2bb; --cobalt: #c0602a; --on-cobalt: #ffffff; --saffron: #d99a1e; --tile-c: #f6efe4; color-scheme: light; --h1: #d0743a; --h2: #8f3f17 }
+:root[data-pal="papel"][data-pal] { --bg: #f4ecd8; --surface: #fbf6ea; --surface-2: #e9dfc6; --ink: #3b3226; --muted: #756a58; --line: #ddd1b5; --cobalt: #8a5a2b; --on-cobalt: #ffffff; --saffron: #c98a1a; --tile-c: #f4ecd8; color-scheme: light; --h1: #9a6a38; --h2: #5c3a17 }
+:root[data-pal="lavanda"][data-pal] { --bg: #f2effb; --surface: #ffffff; --surface-2: #e4dff6; --ink: #241c3d; --muted: #675e85; --line: #d8d1ef; --cobalt: #6e4fd8; --on-cobalt: #ffffff; --saffron: #e0a01a; --tile-c: #f2effb; color-scheme: light; --h1: #7c5ce0; --h2: #4a2fa8 }
+:root[data-pal="rosa"][data-pal] { --bg: #fdf0f3; --surface: #ffffff; --surface-2: #f8dfe6; --ink: #3d1a24; --muted: #855c68; --line: #f0cfd8; --cobalt: #d6457a; --on-cobalt: #ffffff; --saffron: #e0a01a; --tile-c: #fdf0f3; color-scheme: light; --h1: #e0568a; --h2: #a3285a }
+:root[data-pal="atardecer"][data-pal] { --bg: #fff1e8; --surface: #ffffff; --surface-2: #ffe0cc; --ink: #3d1f12; --muted: #8a5e4a; --line: #f5d2bd; --cobalt: #e2572b; --on-cobalt: #ffffff; --saffron: #e0a01a; --tile-c: #fff1e8; color-scheme: light; --h1: #f06a3a; --h2: #b23a14 }
+:root[data-pal="uva"][data-pal] { --bg: #1a1230; --surface: #251a42; --surface-2: #312455; --ink: #efe9ff; --muted: #b3a6d6; --line: #3d2f68; --cobalt: #b18cff; --on-cobalt: #1a1230; --saffron: #ffc857; --tile-c: #1a1230; color-scheme: dark; --h1: #8a5cf0; --h2: #4a2a9e }
+:root[data-pal="cafe"][data-pal] { --bg: #1e1611; --surface: #2a1f18; --surface-2: #362820; --ink: #f3e9df; --muted: #c2ac98; --line: #46342a; --cobalt: #e8a86a; --on-cobalt: #1e1611; --saffron: #f0ba45; --tile-c: #1e1611; color-scheme: dark; --h1: #b0703c; --h2: #6a3d1c }
+.hero2 { background: linear-gradient(135deg, var(--h1, #2f6be0) 0%, color-mix(in srgb, var(--h1, #2f6be0) 50%, var(--h2, #172f78)) 55%, var(--h2, #172f78) 100%) }
+.h2-go { color: var(--h2, #1b3f8c) }
+.pals { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 8px 20px 10px; scrollbar-width: none }
+.pals::-webkit-scrollbar { display: none }
+.pal { flex: none; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; padding: 0; font: inherit; color: var(--ink); cursor: pointer }
+.pal-sw { width: 78px; height: 100px; border-radius: 16px; background: var(--pb); padding: 10px 8px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); border: 1px solid rgba(127, 127, 127, .25); transition: transform .15s; position: relative; overflow: hidden }
+.pal-sw i { display: block; border-radius: 6px; background: var(--ps); height: 26px; position: relative }
+.pal-sw i::after { content: ""; position: absolute; left: 6px; top: 8px; width: 60%; height: 4px; border-radius: 3px; background: var(--pi); opacity: .5; box-shadow: 0 7px 0 var(--pi) }
+.pal-sw u { display: block; height: 10px; width: 70%; border-radius: 5px; background: var(--pt) }
+.pal-sw em { position: absolute; right: 8px; bottom: 8px; width: 14px; height: 14px; border-radius: 50%; background: var(--pa) }
+.pal-sw.split { background: linear-gradient(135deg, #f2f4f8 50%, #0d1322 50%) }
+.pal small { font-size: .8rem; font-weight: 600 }
+.pal[aria-pressed="true"] .pal-sw { box-shadow: 0 0 0 3px var(--bg), 0 0 0 5.5px var(--cobalt); transform: scale(1.03) }
+.pal[aria-pressed="true"] small { color: var(--cobalt) }
+.pal:active .pal-sw { transform: scale(.95) }
 </style>
 
 </head>
@@ -2015,9 +2043,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   // ---- display settings ----
   const UI = (() => { try { return JSON.parse(localStorage.getItem("ruta-ui") || "{}"); } catch (e) { return {}; } })();
+  const PALS = {negro:{n:"Negro",m:"dark",bg:"#000000",su:"#141416",ink:"#f2f2f7",ti:"#4f9dff",sa:"#ffb340"},oceano:{n:"Océano",m:"light",bg:"#eaf4fb",su:"#ffffff",ink:"#0b2a3d",ti:"#0a7bc2",sa:"#e8960a"},caribe:{n:"Caribe",m:"dark",bg:"#062a30",su:"#0b3a42",ink:"#e3f6f5",ti:"#3fd1c4",sa:"#ffc857"},selva:{n:"Selva",m:"dark",bg:"#0e1f17",su:"#153024",ink:"#e6f3ea",ti:"#5fd38d",sa:"#f5c451"},arena:{n:"Arena",m:"light",bg:"#f6efe4",su:"#fffaf2",ink:"#3a2b1a",ti:"#c0602a",sa:"#d99a1e"},papel:{n:"Papel",m:"light",bg:"#f4ecd8",su:"#fbf6ea",ink:"#3b3226",ti:"#8a5a2b",sa:"#c98a1a"},lavanda:{n:"Lavanda",m:"light",bg:"#f2effb",su:"#ffffff",ink:"#241c3d",ti:"#6e4fd8",sa:"#e0a01a"},rosa:{n:"Rosa",m:"light",bg:"#fdf0f3",su:"#ffffff",ink:"#3d1a24",ti:"#d6457a",sa:"#e0a01a"},atardecer:{n:"Atardecer",m:"light",bg:"#fff1e8",su:"#ffffff",ink:"#3d1f12",ti:"#e2572b",sa:"#e0a01a"},uva:{n:"Uva",m:"dark",bg:"#1a1230",su:"#251a42",ink:"#efe9ff",ti:"#b18cff",sa:"#ffc857"},cafe:{n:"Café",m:"dark",bg:"#1e1611",su:"#2a1f18",ink:"#f3e9df",ti:"#e8a86a",sa:"#f0ba45"}};
   function uiApply() {
-    document.documentElement.style.setProperty("--fs", UI.fs || 1);
-    if (UI.theme === "dark" || UI.theme === "light") document.documentElement.dataset.theme = UI.theme; else document.documentElement.removeAttribute("data-theme");
+    const R = document.documentElement, P = UI.pal && PALS[UI.pal];
+    R.style.setProperty("--fs", UI.fs || 1);
+    if (P) { R.dataset.pal = UI.pal; R.dataset.theme = P.m; }
+    else { R.removeAttribute("data-pal"); if (UI.theme === "dark" || UI.theme === "light") R.dataset.theme = UI.theme; else R.removeAttribute("data-theme"); }
+    const mc = document.querySelector('meta[name="theme-color"]'); if (mc) mc.setAttribute("content", P ? P.su : "#1F4FA3");
   }
   uiApply();
   const uiSave = () => { try { localStorage.setItem("ruta-ui", JSON.stringify(UI)); } catch (e) {} uiApply(); };
@@ -2046,7 +2078,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const a = t.dataset.act;
     if (a === "goal") { S.goal = +t.dataset.v; save(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
     else if (a === "ui-fs") { UI.fs = +t.dataset.v; uiSave(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
-    else if (a === "ui-theme") { UI.theme = t.dataset.v; uiSave(); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
+    else if (a === "ui-theme") { UI.theme = t.dataset.v; UI.pal = ""; uiSave(); document.querySelectorAll('.pal').forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === "")); t.parentElement.querySelectorAll(".btn").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
   });
   const UIC = {listen:["#1f7aec",'<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-6h3zM3 19a2 2 0 0 0 2 2h1v-6H3z"/>'],read:["#f08a24",'<path d="M2 4h7a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H2z"/><path d="M22 4h-7a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h8z"/>'],write:["#34a853",'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'],speak:["#8e5cd9",'<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3"/>'],cards:["#e8a10a",'<rect x="3" y="7" width="14" height="13" rx="2"/><path d="M7 4h12a2 2 0 0 1 2 2v11"/>'],mist:["#e5484d",'<path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>'],mock:["#0e9f9a",'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>'],test:["#5b6cf0",'<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/>'],guides:["#2f6fde",'<path d="M4 4h12a4 4 0 0 1 4 4v12H8a4 4 0 0 1-4-4z"/><path d="M8 8h8M8 12h6"/>'],grammar:["#7a5af5",'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'],verbs:["#d6457a",'<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>'],words:["#1a9c6b",'<path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/>'],res:["#6b7280",'<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>'],gear:["#6b7280",'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>'],app:["#34a853",'<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>'],globe:["#1f7aec",'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>']};
   const uiIc = (k) => '<span class="ic2" style="background:' + UIC[k][0] + '" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + UIC[k][1] + "</svg></span>";
@@ -2139,6 +2171,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent), andr = /Android/i.test(navigator.userAgent), inApp = /RutaDELEApp/.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     const app2 = inApp || standalone ? [] : ios ? [uiRow({ ic: "app", t: "Add to Home Screen", sub: "In Safari: ⋯ → Share → Add to Home Screen. Ruta DELE then opens full screen, like an app.", href: "#ajustes", noChev: true })] : andr ? [uiRow({ ic: "app", t: "Get the Android app", sub: "Adds Profe’s on-device AI (free, works offline)", href: "https://github.com/timarjackson22/Ruta-dele/releases/download/apk/ruta-dele.apk", ext: true })] : [];
     app.innerHTML = '<div class="ui-page">' + uiTitle("Settings") +
+      '<h2 class="ghead">Theme</h2><div class="pals" role="group" aria-label="Colour theme">' + [["", "Classic"]].concat(Object.keys(PALS).map((k) => [k, PALS[k].n])).map(([k, n]) => { const P = PALS[k]; return '<button type="button" class="pal" data-act="ui-pal" data-v="' + k + '" aria-pressed="' + ((UI.pal || "") === k) + '"><span class="pal-sw' + (P ? "" : " split") + '"' + (P ? ' style="--pb:' + P.bg + ";--ps:" + P.su + ";--pi:" + P.ink + ";--pt:" + P.ti + ";--pa:" + P.sa + '"' : "") + ">" + (P ? "<i></i><u></u><em></em>" : "") + "</span><small>" + n + "</small></button>"; }).join("") + "</div>" +
+      '<p class="gfoot" style="margin-top:0">Swipe for more. Classic follows the Appearance setting below.</p>' +
       '<h2 class="ghead">Daily goal</h2><div class="ilist pad">' + seg("goal", S.goal || 20, GOALS.map(([v, n]) => [v, n + " · " + v])) + "</div>" +
       '<h2 class="ghead">Display</h2><div class="ilist pad"><p class="setl">Text size</p>' + seg("ui-fs", UI.fs || 1, [[0.9, "A−"], [1, "A"], [1.12, "A+"], [1.25, "A++"]]) + '<p class="setl">Appearance</p>' + seg("ui-theme", UI.theme || "auto", [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]]) + "</div>" +
       uiGroup("Spanish", [uiRow({ ic: "globe", t: "Accent and words", act: "region", val: S.region === "es" ? "Spain" : "Latin America", sub: "Voices and vocabulary used in the course" })]) +
@@ -3163,6 +3197,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     document.body.classList.toggle("scrolled", window.scrollY > 4);
     document.body.classList.toggle("ttl", !!h1 && h1.getBoundingClientRect().bottom < (top ? top.getBoundingClientRect().bottom : 50) + 4);
   }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="ui-pal"]'); if (!t) return; UI.pal = t.dataset.v; uiSave(); document.querySelectorAll(".pal").forEach((b) => b.setAttribute("aria-pressed", b === t)); });
   // a tab tapped while Profe is open closes Profe
   document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest(".tabbar a"); if (a && document.body.classList.contains("tutor-open")) { const c = document.querySelector('#tutor [data-act="t-close"]'); if (c) c.click(); } }, true);
   let uiRaf = 0; window.addEventListener("scroll", () => { if (!uiRaf) uiRaf = requestAnimationFrame(() => { uiRaf = 0; uiScroll(); }); }, { passive: true });
@@ -6747,7 +6782,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130017";
+  var BUILD = "202611130025";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
