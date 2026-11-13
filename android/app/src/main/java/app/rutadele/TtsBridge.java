@@ -52,6 +52,10 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
             @Override public void onDone(String id) { event(id, "end"); }
             @Override public void onError(String id) { event(id, "error"); }
             @Override public void onError(String id, int code) { event(id, "error"); }
+            // each word as the engine starts it: lets the app keep the highlight and translation exactly with the voice
+            @Override public void onRangeStart(String id, int start, int end, int frame) {
+                if (id != null && id.startsWith("u:")) js("window.__atts && __atts.ev('word','" + id.substring(2).replaceAll("[^0-9]", "") + "'," + start + ")");
+            }
         });
         ready = true;
         js("window.__atts && __atts.voices()");

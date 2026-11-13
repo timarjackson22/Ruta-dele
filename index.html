@@ -1355,6 +1355,8 @@ body.tutor-open .pxret { display: none }
 #dksel { position: fixed; z-index: 92; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--cobalt); color: var(--on-cobalt); font: inherit; font-weight: 650; font-size: .9rem; box-shadow: 0 8px 22px rgba(0, 0, 0, .25); cursor: pointer }
 table.vocab td.es { cursor: pointer } table.vocab td.es::after { content: "+"; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; font-size: .8rem; font-weight: 700; line-height: 1; color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 12%, transparent); vertical-align: 1px }
 .cue-add { background: color-mix(in srgb, var(--bg, #fff) 26%, transparent) }
+
+#litem h1.playing { background: var(--saffron-soft); box-shadow: 0 0 0 4px var(--saffron-soft); border-radius: 6px }
 </style>
 
 </head>
@@ -4150,7 +4152,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const CUE_DWELL = 750;
   // just one English word or short phrase: the first meaning, without "to"
   function cueOne(g) {
-    g = String(g || "").split(/[,/|;]| or /)[0].replace(/[?¿!¡…]/g, "").replace(/^\s*to\s+(?=\S)/i, "").trim();
+    g = String(g || "").split(/[,/|;]| or /)[0].replace(/[?¿!¡…]/g, "").replace(/^\s*to\s+(?=\S)/i, "").replace(/\s+(something|someone|somebody|sth|sb|oneself)\b.*$/i, "").trim();
     return g;
   }
   // ---- phrases and meaning in context ----
@@ -4173,6 +4175,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     "en punto=o'clock|y media=half past|y cuarto=quarter past|menos cuarto=quarter to|el año pasado=last year|la semana pasada=last week|el año que viene=next year|la próxima semana=next week|vale la pena=it's worth it|" +
     "de verdad=really|en serio=seriously|es decir=that is|o sea=I mean|a partir de=from|en cambio=on the other hand|por lo tanto=therefore|por lo menos=at least|al menos=at least|más o menos=more or less|" +
     "D encantar=love|D gustar=like|D doler=hurt|D interesar=interested|D parecer=seem|D faltar=need|D importar=matter|D quedar=have left|D apetecer=feel like|el * pasado=last *|la * pasada=last *|el * que viene=next *|el próximo *=next *|la próxima *=next *|soler=used to|estrella de mar=starfish|" +
+    "estados unidos=United States|naciones unidas=United Nations|reino unido=United Kingdom|canal de panamá=Panama Canal|ciudad de panamá=Panama City|unión europea=European Union|" +
     "echo de menos=I miss|me levanto=I get up|me acuesto=I go to bed|me ducho=I have a shower|a casa=home|ir al cine=go to the cinema|ver la tele=watch TV|escuchar música=listen to music|a la una=at one|a las=at";
   const CIRR = {}; "have:has,had,having,hasn't,haven't,hadn't|be:is,are,was,were,am,been,being,'s,'m,'re,isn't,aren't,wasn't,weren't|go:goes,went,gone,going|do:does,did,done,don't,doesn't,didn't|can:can't,cannot,could,couldn't|get:got,gets,getting|make:made|take:took,taken|come:came|say:said|see:saw,seen|know:knew,known|think:thought|feel:felt|give:gave,given|find:found|leave:left|meet:met|buy:bought|eat:ate,eaten|drink:drank|write:wrote,written|speak:spoke|tell:told|sleep:slept|wake:woke|begin:began,begun|bring:brought|teach:taught|become:became|run:ran|sit:sat|stand:stood|lose:lost|pay:paid|send:sent|spend:spent|build:built|choose:chose|fall:fell|forget:forgot|hear:heard|hold:held|keep:kept|learn:learnt,learned|mean:meant|sell:sold|sing:sang|swim:swam|understand:understood|win:won|wear:wore|fly:flew|drive:drove|ride:rode|break:broke|catch:caught|grow:grew|throw:threw|lie:lay|live:lives,lived,living|study:studies,studied|try:tries,tried|cry:cried|carry:carried".split("|").forEach((x) => { const [a, b] = x.split(":"); CIRR[a] = new Set(b.split(",")); });
   const CWEAK = new Set(["have", "get", "take", "make", "go", "do", "be", "give", "put", "keep", "come"]); // "have" alone is not "have breakfast"
@@ -4233,7 +4236,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return best;
   }
   function cEnWords(en) { return (String(en || "").match(/[A-Za-zÀ-ÿ'’-]+/g) || []).map((w) => ({ w: w.replace(/’/g, "'"), l: w.toLowerCase().replace(/’/g, "'") })); }
-  function cSpan(enW, ev) { let t = enW.slice(ev.a, ev.b + 1).map((x) => x.w).join(" "); if (!/^I\b|^I'/.test(t) && !/^[A-Z]{2}/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1); return t; }
+  function cSpan(enW, ev) { let t = enW.slice(ev.a, ev.b + 1).map((x) => x.w).join(" "); if (ev.a === 0 && !/^I\b|^I'/.test(t) && !/^[A-Z]{2}/.test(t)) t = t.charAt(0).toLowerCase() + t.slice(1); return t; } // keep capitals inside the sentence (United States)
   function cCands(word, el) {
     const lw = word.toLowerCase(), out = [];
     if (lw in CFN && !CFN[lw]) return out; // se: no English of its own
@@ -4295,6 +4298,23 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       // not in this sentence's English: look in the rest of the paragraph
       if (paraW.length) for (const c of cands) { const ev = cEvid(c, paraW, new Set(), false); if (ev && ev.full && ev.b === ev.a) return paraW[ev.a].l; }
       return cands.length ? cueOne(cands[0]) : cueOne(cueGloss(word, el));
+    }
+    // names and acronyms (Sabrina Bacal, Ueno Bank, ONU): one bubble that says them exactly as written
+    const lexHas = (w) => { try { return typeof LEX !== "undefined" && LEX && LEX.F.has(w); } catch (e) { return false; } };
+    const isName = (i) => { const w = ws[i].textContent; if (!/^[A-ZÁÉÍÓÚÑ]/.test(w)) return false; if (/^[A-ZÁÉÍÓÚÑ]{2,}$/.test(w)) return true;
+      if (cueCtx(ws[i]).start === false) return true; return !(TG[toks[i]] || toks[i] in CFN || lexHas(toks[i])); };
+    const gap = (a, b) => { let mid = ""; for (let n = a.nextSibling; n && n !== b; n = n.nextSibling) mid += n.textContent; return mid; };
+    const single = (i) => G[i] && G[i].en === null && G[i].a === G[i].b;
+    for (let i = 0; i < ws.length; i++) {
+      const lead = single(i) && !isName(i) && /^[A-ZÁÉÍÓÚÑ]/.test(ws[i].textContent) && !(toks[i] in CFN) && i + 1 < ws.length && single(i + 1) && isName(i + 1) && /^\s*$/.test(gap(ws[i], ws[i + 1])); // "Sistema Penitenciario" at the start of a line
+      if (!single(i) || (!isName(i) && !lead)) continue;
+      let j = i; while (j + 1 < ws.length && single(j + 1) && isName(j + 1) && /^\s*$/.test(gap(ws[j], ws[j + 1]))) j++;
+      const name = ws.slice(i, j + 1).map((x) => x.textContent).join(" ");
+      let en = name;
+      if (i === j && !/^[A-ZÁÉÍÓÚÑ]{2,}$/.test(name) && hasEn) { // a capitalised ordinary word (Guerra): translate it only if the English shows it
+        for (const c of cCands(name, ws[i])) { const ev = cEvid(c, enW, used, false); if (ev && ev.full && ev.b === ev.a) { used.add(ev.a); en = enW[ev.a].w; break; } }
+      }
+      const g = { a: i, b: j, en }; for (let z = i; z <= j; z++) G[z] = g; i = j;
     }
     G.forEach((g, i) => { if (g && g.en === null && g.a === i) g.en = cOneWord(i); });
     sent._cue = { G, ws };
@@ -4373,6 +4393,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }, true);
   addEventListener("resize", () => { if (CUE.w) cueWord(CUE.w); else cueSync(); });
   function plSpeak() {
+    if (PL.i === 0 && !PL.single && !PL.tDone && CUR && CUR.t && canSpeak) { // the title first
+      PL.tDone = true; const h = document.querySelector("#litem h1"); if (h) h.classList.add("playing");
+      const tu = utter(String(CUR.t).replace(/\s*\(\d+\/\d+\)$/, "").replace(/…$/, "") + ".", "es", PL.rate, V2[0]);
+      tu.onend = tu.onerror = () => { const h2 = document.querySelector("#litem h1"); if (h2) h2.classList.remove("playing"); if (PL.cur === tu && PL.playing) plSpeak(); };
+      PL.cur = tu; try { speechSynthesis.speak(tu); } catch (e) {} plUI(); return;
+    }
     const it = PL.items[PL.i]; if (!it) { plStop(); return; }
     const u = utter(it.text, "es", PL.rate, it.voice, it.pitch);
     u.onend = () => {
@@ -4380,7 +4406,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (PL.single) { PL.playing = false; PL.single = false; plUI(); return; }
       PL.i++;
       if (PL.i < PL.items.length) plSpeak();
-      else { PL.playing = false; PL.i = 0; const st = S.l[PL.id] || {}; st.heard = true; S.l[PL.id] = st; save(); plUI(); }
+      else { PL.playing = false; PL.i = 0; PL.tDone = false; const st = S.l[PL.id] || {}; st.heard = true; S.l[PL.id] = st; save(); plUI(); }
     };
     PL.cur = u; cueTrack(u, PL.i);
     try { speechSynthesis.speak(u); } catch (e) {}
@@ -4490,7 +4516,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (song ? '<button class="btn small" id="rh-btn" data-act="l-rhythm" data-label="Rhythm: ' + esc(x.genre || "salsa") + '" aria-pressed="false">Rhythm: ' + esc(x.genre || "salsa") + "</button>" : "") + "</div>";
   }
   function listenItem(x) {
-    CUR = x; PL.id = x.id; PL.i = 0; PL.playing = false; CUE.w = null;
+    CUR = x; PL.id = x.id; PL.i = 0; PL.playing = false; PL.tDone = false; CUE.w = null;
     const lv = LV[x.lvl], reading = isReading(x);
     const body = renderText(x);
     const pool = x.cat === "mine" ? MY : LISTEN.filter((y) => (reading ? y.cat === "reading" : y.cat !== "reading")).sort(byLvl);
@@ -7163,6 +7189,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const JUNK = /^(lee también|lea también|leer más|te puede interesar|le puede interesar|también te puede interesar|más noticias|noticias relacionadas|relacionad[oa]s?|contenido (patrocinado|relacionado)|publicidad|anuncio|suscr[ií]bete|suscripción|newsletter|bolet[ií]n|regístrate|inicia sesión|iniciar sesión|compartir|comparte|síguenos|sigue(nos)? en|únete|whatsapp|telegram|facebook|twitter|instagram|tiktok|youtube|linkedin|cookies?|aceptar|política de (privacidad|cookies)|aviso legal|términos|todos los derechos|derechos reservados|copyright|©|foto:|fotos?:|imagen:|ilustración:|video:|vídeo:|fuente:|crédito|archivo|getty|efe|afp|reuters|ap photo|europa press|cortesía|escucha (la|esta)|escuchar (la|esta|artículo)|tiempo de lectura|minutos? de lectura|actualizado|publicado|por:? redacción|redacción|etiquetas|temas:|tags:|menú|buscar|inicio|portada|ver más|ver también|cargar más|haz clic|clic aquí|click aquí|descarga|descargar la app|mira también|en vivo|última hora|lo más leído|lo más visto|tendencias|comentarios|deja (un|tu) comentario)\b/i;
   function junkBlock(b) {
     const t = b.trim(), w = toks(t).length;
+    if (/^redacci[oó]n\b/i.test(t) && w < 9) return true; // "Redacción de La Prensa"
+    if (/^(hace|publicado hace|actualizado hace)\s+(\d+|un|una|unos|unas)\s+(segundos?|minutos?|horas?|d[ií]as?|semanas?|mes(es)?)\b/i.test(t) && w < 7) return true;
+    if (/^(actualizado|publicado|escuchar (este |la )?(art[ií]culo|noticia)|compartir|guardar|comentarios?|ver m[aá]s|foto:|fotos?:|cr[eé]ditos?:|fuente:|tiempo de lectura)\b/i.test(t) && w < 10) return true;
     if (JUNK.test(t) && w < 25) return true;
     if (/^(\d{1,2}[\/.-]\d{1,2}[\/.-]\d{2,4}|\d{1,2} de [a-záéíóú]+ de \d{4}|(lunes|martes|miércoles|jueves|viernes|sábado|domingo),?)/i.test(t) && w < 14) return true; // dates and bylines
     if (/^(por|by)\s+[A-ZÁÉÍÓÚÑ][\w.]+(\s+[A-ZÁÉÍÓÚÑ][\w.]+){0,3}\s*([|·,\-–]|$)/.test(t) && w < 12) return true;
@@ -7185,8 +7214,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return out.length >= 2 ? { title: (art.title || "").trim(), blocks: out } : null;
   }
   let CLEAN_SEEN = new Set();
+  // "La PrensaHace 37 minutosLas periodistas…": pieces of a page that lost the space between them
+  function glueSplit(b) { return String(b).split(/(?<=[a-záéíóúñ]{3}|[a-záéíóúñ][.!?:])(?=[A-ZÁÉÍÓÚÑ][a-záéíóúñ])/).map((x) => x.trim()).filter(Boolean); }
   function cleanBlocks(blocks) {
     CLEAN_SEEN = new Set();
+    blocks = blocks.flatMap((b) => glueSplit(b));
     return blocks.map((b) => b.replace(/­/g, "").replace(/[ \t ]+/g, " ").trim()).filter((b) => { if (toks(b).length < 2 || junkBlock(b)) return false; const k = b.toLowerCase(); if (CLEAN_SEEN.has(k)) return false; CLEAN_SEEN.add(k); return true; });
   }
   function textBlocks(t) {
@@ -7481,8 +7513,21 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="row"><button class="btn small" data-act="my-clean">Clean up text</button><span class="muted small">Remove ads, captions or other bits that aren’t part of the article.</span></div>' +
       '<details class="small"><summary>Rename or delete</summary><div class="row"><input id="my-rename" value="' + esc(x.t) + '" aria-label="Title"><button class="btn small" data-act="my-rename">Save title</button><button class="btn small" data-act="my-del">Delete this text</button></div></details></section>';
   }
+  function myReclean(x) {
+    if (x.clean2) return false; x.clean2 = 1;
+    let changed = false; const out = [];
+    x.paras.forEach((p) => {
+      const t = p.s.map((y) => y[0]).join(" "), parts = glueSplit(t).filter((b) => toks(b).length >= 2 && !junkBlock(b));
+      if (parts.length === 1 && parts[0] === t.trim()) { out.push(p); return; }
+      changed = true; parts.forEach((b) => { const ss = splitSents(b); if (ss.length) out.push({ s: ss.map((y) => [y, ""]) }); });
+    });
+    if (changed && out.length) { x.paras = out; const sents = out.flatMap((p) => p.s.map((y) => y[0])); x.words = sents.flatMap(toks).length; if (x.s) x.s = x.s.replace(/[\d,.]+ words$/, x.words.toLocaleString() + " words"); }
+    try { myPut(x); } catch (e) {}
+    return changed;
+  }
   function afterItem(x) {
     if (x.cat !== "mine") return;
+    if (myReclean(x)) { listenItem(x); return; }
     const lt = document.getElementById("ltext"); if (!lt) return;
     lt.insertAdjacentHTML("beforebegin", myTools(x));
     // English under each paragraph, like the built-in readings: translate automatically when a fast translator is available
@@ -7945,7 +7990,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131417";
+  var BUILD = "202611131432";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;

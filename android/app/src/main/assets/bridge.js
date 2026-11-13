@@ -42,7 +42,7 @@
     function U(text) { this.text = text || ""; this.lang = ""; this.rate = 1; this.pitch = 1; this.volume = 1; this.voice = null; this.onstart = this.onend = this.onerror = this.onboundary = this.onpause = this.onresume = this.onmark = null; }
     U.prototype.addEventListener = function (t, f) { this["on" + t] = f; };
     window.__atts = {
-      ev: function (type, id) { var u = cbs[id]; if (!u) return; if (type === "start") { try { if (u.onstart) u.onstart({ utterance: u }); } catch (e) {} return; } fin(id, type); },
+      ev: function (type, id, ci) { var u = cbs[id]; if (!u) return; if (type === "word") { try { if (u.onboundary) u.onboundary({ name: "word", charIndex: ci, utterance: u }); } catch (e) {} return; } if (type === "start") { try { if (u.onstart) u.onstart({ utterance: u }); } catch (e) {} return; } fin(id, type); },
       voices: function () { load(); }
     };
     try { Object.defineProperty(window, "speechSynthesis", { value: S, configurable: true, writable: true }); } catch (e) { window.speechSynthesis = S; }
