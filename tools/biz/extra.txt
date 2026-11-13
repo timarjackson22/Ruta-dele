@@ -1,0 +1,605 @@
+# office and supplies
+la oficina|office
+la grapadora|stapler
+las grapas|staples
+el clip|paper clip
+la carpeta|folder
+el archivador|filing cabinet; binder
+el sobre|envelope
+el bolígrafo|pen
+el lápiz|pencil
+el resaltador|highlighter
+la libreta|notebook
+el bloc de notas|notepad
+el pósit|sticky note
+la cinta adhesiva|adhesive tape
+las tijeras|scissors
+la calculadora|calculator
+la fotocopiadora|photocopier
+el escáner|scanner
+la trituradora|shredder
+el proyector|projector
+la pizarra|whiteboard
+el rotafolio|flip chart
+la silla de oficina|office chair
+el cubículo|cubicle
+la sala de reuniones|meeting room
+la recepción|reception
+el vestíbulo|lobby
+el ascensor|lift; elevator
+la cafetería|cafeteria; canteen
+el baño|toilet; restroom
+el estacionamiento|car park (LatAm)
+la credencial|ID badge (LatAm)
+el gafete|name badge (Mexico)
+la tarjeta de presentación|business card
+el sello de la empresa|company stamp
+el membrete|letterhead
+la papelería|stationery
+el material de oficina|office supplies
+el tóner|toner
+el cartucho|cartridge
+el folio|sheet of paper (A4)
+la hoja|sheet; page
+el formulario|form
+el expediente|file; record
+el archivo|file; archive
+el registro|record; register
+la base de datos|database
+la hoja de cálculo|spreadsheet
+el documento de texto|text document
+la contraseña|password
+el usuario|username; user
+la red|network
+el servidor|server
+la nube|the cloud
+el correo electrónico|email
+la bandeja de entrada|inbox
+el correo no deseado|spam
+el asunto|subject (of an email)
+el destinatario|recipient
+el remitente|sender
+el enlace|link
+descargar|to download
+subir un archivo|to upload a file
+guardar|to save
+imprimir|to print
+escanear|to scan
+fotocopiar|to photocopy
+archivar|to file
+grapar|to staple
+el portátil|laptop
+la laptop|laptop (LatAm)
+la pantalla|screen
+el teclado|keyboard
+el ratón|mouse (Spain)
+el mouse|mouse (LatAm)
+el cargador|charger
+el enchufe|plug; socket
+el soporte técnico|tech support
+el departamento de sistemas|IT department (LatAm)
+la intranet|intranet
+la videoconferencia|videoconference
+compartir pantalla|to share the screen
+silenciar el micrófono|to mute the microphone
+# administration and paperwork
+el trámite|procedure; paperwork
+tramitar|to process; handle (paperwork)
+la solicitud|application; request
+solicitar|to apply for; request
+el requisito|requirement
+el certificado|certificate
+la constancia|certificate; proof
+el comprobante|receipt; voucher; proof
+el justificante|proof; supporting document
+la fotocopia|photocopy
+la copia certificada|certified copy
+la firma electrónica|electronic signature
+el sello|stamp; seal
+el plazo de entrega|deadline for submission
+la cita previa|prior appointment
+la ventanilla|counter; window
+la fila|queue; line (LatAm)
+el turno|turn; shift
+el número de referencia|reference number
+el expediente personal|personnel file
+el registro mercantil|companies register
+la escritura de constitución|articles of incorporation
+el aviso de operación|business licence (Panama)
+la patente comercial|trading licence
+la licencia comercial|business licence
+el permiso de trabajo|work permit
+la residencia|residence permit
+el notario|notary
+la notaría|notary's office
+autenticar|to authenticate
+legalizar|to legalise
+apostillar|to apostille
+# money and payments
+el efectivo|cash
+el dinero en efectivo|cash
+el billete|banknote; ticket
+la moneda|coin; currency
+el cambio|change (money)
+el vuelto|change (LatAm)
+la propina|tip
+el monto|amount (LatAm)
+la cantidad|amount; quantity
+el total|total
+el subtotal|subtotal
+el recargo|surcharge
+el reembolso|refund
+reembolsar|to refund
+la devolución|return; refund
+el pago a plazos|payment in instalments
+el pago al contado|cash payment; payment in full
+el pago inicial|down payment
+la mensualidad|monthly payment
+la cuota mensual|monthly instalment
+la tarjeta prepagada|prepaid card
+la billetera digital|digital wallet
+el pago móvil|mobile payment
+Yappy|Yappy (Panama's mobile payment app)
+el código QR|QR code
+la pasarela de pago|payment gateway
+el datáfono|card machine (Spain)
+el punto de venta|point of sale
+el pago sin contacto|contactless payment
+la caja registradora|cash register
+el cajero|cashier
+cobrar|to charge; to get paid
+pagar en efectivo|to pay in cash
+pagar con tarjeta|to pay by card
+deber|to owe
+adeudar|to owe
+saldar una deuda|to pay off a debt
+estar endeudado|to be in debt
+el gasto fijo|fixed expense
+el gasto variable|variable expense
+los gastos de envío|shipping costs
+los gastos de representación|entertainment expenses
+el viático|per diem; travel allowance (LatAm)
+la caja chica|petty cash
+# banking extras
+la sucursal bancaria|bank branch
+la banca móvil|mobile banking
+la clave|PIN; password
+el PIN|PIN
+el número de cuenta|account number
+el IBAN|IBAN
+el código SWIFT|SWIFT code
+la transferencia internacional|international transfer
+la transferencia bancaria|bank transfer
+el giro|money order; draft
+la remesa|remittance
+el depósito a plazo fijo|fixed-term deposit
+el certificado de depósito|certificate of deposit
+abrir una cuenta|to open an account
+cerrar una cuenta|to close an account
+congelar una cuenta|to freeze an account
+el sobregiro autorizado|authorised overdraft
+el préstamo personal|personal loan
+el préstamo de auto|car loan (LatAm)
+el préstamo estudiantil|student loan
+el fiador|guarantor
+la tasa fija|fixed rate
+la tasa variable|variable rate
+la tasa anual|annual rate
+el interés compuesto|compound interest
+el interés simple|simple interest
+la letra|bill of exchange; instalment
+el pagaré|promissory note
+la carta de crédito|letter of credit
+el fideicomiso|trust
+el fiduciario|trustee
+la banca offshore|offshore banking
+el centro financiero|financial centre
+la entidad financiera|financial institution
+la cooperativa|cooperative; credit union
+la casa de empeño|pawnshop
+el buró de crédito|credit bureau (LatAm)
+el puntaje de crédito|credit score (LatAm)
+# accounting extras
+el/la contador/a|accountant (LatAm)
+el/la contable|accountant (Spain)
+el libro mayor|general ledger
+el libro diario|journal
+el asiento contable|journal entry
+el debe|debit side
+el haber|credit side
+el débito|debit
+el cargo|charge; debit
+el abono|credit; payment
+la conciliación bancaria|bank reconciliation
+el balance de comprobación|trial balance
+el activo corriente|current assets
+el activo fijo|fixed assets
+el pasivo corriente|current liabilities
+el pasivo a largo plazo|long-term liabilities
+el capital social|share capital
+las reservas|reserves
+las utilidades retenidas|retained earnings (LatAm)
+el costo de ventas|cost of sales
+la utilidad bruta|gross profit (LatAm)
+la utilidad operativa|operating profit (LatAm)
+los gastos operativos|operating expenses
+los gastos administrativos|administrative expenses
+la provisión|provision
+la amortización acumulada|accumulated depreciation
+el devengo|accrual
+el ejercicio fiscal|fiscal year
+el cierre del ejercicio|year-end close
+el informe anual|annual report
+la memoria anual|annual report
+el informe trimestral|quarterly report
+el presupuesto anual|annual budget
+el control de costos|cost control
+el centro de costos|cost centre
+la partida|item; line item
+la desviación presupuestaria|budget variance
+el auditor externo|external auditor
+la auditoría interna|internal audit
+la contabilidad de costos|cost accounting
+el software contable|accounting software
+# human resources extras
+el/la empleado/a|employee
+el/la empleador/a|employer
+el/la trabajador/a|worker
+el/la colaborador/a|colleague; team member (LatAm)
+el/la compañero/a de trabajo|co-worker
+el/la jefe/a|boss
+el/la supervisor/a|supervisor
+el/la coordinador/a|coordinator
+el/la pasante|intern (LatAm)
+la pasantía|internship (LatAm)
+las prácticas|internship (Spain)
+el/la becario/a|intern; grant holder
+el/la practicante|trainee
+la oferta de empleo|job offer; job ad
+la bolsa de trabajo|job board
+el/la candidato/a|candidate
+el proceso de selección|recruitment process
+el perfil del puesto|job profile
+la descripción del puesto|job description
+la carta de presentación|cover letter
+las referencias|references
+la experiencia laboral|work experience
+la formación|training; education
+las competencias|skills; competencies
+las habilidades blandas|soft skills
+el salario base|base salary
+el salario bruto|gross salary
+el salario neto|net salary
+el aumento de sueldo|pay rise
+el bono de productividad|productivity bonus
+las horas extras|overtime
+el turno de noche|night shift
+el horario flexible|flexible hours
+la jornada completa|full-time
+la media jornada|part-time
+el contrato por obra|fixed-project contract
+el finiquito|final settlement
+la liquidación|severance pay; settlement
+la indemnización|compensation; severance
+el preaviso|notice period
+el despido injustificado|unfair dismissal
+la baja por enfermedad|sick leave
+la licencia de maternidad|maternity leave (LatAm)
+la licencia de paternidad|paternity leave (LatAm)
+el seguro social|social security
+la Caja de Seguro Social|Panama's social security fund (CSS)
+la cotización a la seguridad social|social security contribution
+el clima laboral|work environment
+el trabajo en equipo|teamwork
+la cultura organizacional|organisational culture
+el código de conducta|code of conduct
+el acoso laboral|workplace harassment
+la conciliación laboral|work-life balance
+el bienestar laboral|employee wellbeing
+la rotación de personal|staff turnover
+la retención de talento|talent retention
+el plan de carrera|career plan
+el mentor|mentor
+la incorporación|onboarding; joining
+# sales, marketing and customers
+el/la cliente potencial|prospect; lead
+el contacto|contact; lead
+la prospección|prospecting
+la llamada en frío|cold call
+la visita comercial|sales visit
+el/la representante de ventas|sales representative
+el/la ejecutivo/a de cuentas|account executive
+la meta de ventas|sales target
+la comisión por ventas|sales commission
+el precio de venta|selling price
+el precio al por mayor|wholesale price
+el precio al por menor|retail price
+el margen de beneficio|profit margin
+la lista de precios|price list
+el catálogo|catalogue
+la muestra|sample
+la demostración|demonstration; demo
+la garantía extendida|extended warranty
+el servicio al cliente|customer service
+la atención al cliente|customer care
+la reclamación|complaint (Spain)
+el reclamo|complaint (LatAm)
+la queja|complaint
+la encuesta de satisfacción|satisfaction survey
+la experiencia del cliente|customer experience
+la lealtad|loyalty
+el programa de fidelización|loyalty programme
+la venta cruzada|cross-selling
+la segmentación|segmentation
+el posicionamiento|positioning
+la imagen de marca|brand image
+el logotipo|logo
+el eslogan|slogan
+el anuncio|advertisement
+el comercial|TV advert (LatAm)
+la valla publicitaria|billboard
+el marketing digital|digital marketing
+el comercio electrónico|e-commerce
+la tienda en línea|online shop
+el sitio web|website
+la página de destino|landing page
+el posicionamiento en buscadores|SEO
+el/la influencer|influencer
+el contenido|content
+la tasa de conversión|conversion rate
+el retorno de la inversión publicitaria|return on ad spend
+el lanzamiento|launch
+la feria comercial|trade fair
+el patrocinio|sponsorship
+el patrocinador|sponsor
+# real estate and insurance
+los bienes raíces|real estate (LatAm)
+el inmueble|property; building
+la propiedad|property
+el terreno|plot of land
+el local comercial|commercial premises
+la oficina en alquiler|office for rent
+el contrato de arrendamiento|lease agreement
+el arrendador|landlord; lessor
+el arrendatario|tenant; lessee
+el canon de arrendamiento|rent (lease)
+el depósito de garantía|security deposit
+el avalúo|appraisal (LatAm)
+la tasación|valuation (Spain)
+la plusvalía inmobiliaria|property capital gain
+el corredor de bienes raíces|real-estate broker (LatAm)
+la inmobiliaria|estate agency
+la promotora|property developer
+la escritura pública|title deed
+el registro de la propiedad|land registry
+la hipoteca fija|fixed-rate mortgage
+el seguro|insurance
+la aseguradora|insurance company
+la póliza|policy
+la prima|premium
+el/la asegurado/a|policyholder
+el/la beneficiario/a|beneficiary
+la cobertura|cover; coverage
+el siniestro|claim; insured event
+el reclamo al seguro|insurance claim (LatAm)
+el deducible|deductible (LatAm)
+el seguro de vida|life insurance
+el seguro médico|health insurance
+el seguro de auto|car insurance (LatAm)
+el seguro contra todo riesgo|comprehensive insurance
+el corredor de seguros|insurance broker
+el reaseguro|reinsurance
+# technology and start-ups
+la empresa emergente|start-up
+la startup|start-up
+el/la fundador/a|founder
+la ronda de financiación|funding round
+el capital semilla|seed capital
+el inversor ángel|angel investor
+la incubadora|incubator
+la aceleradora|accelerator
+la valoración previa|pre-money valuation
+la escalabilidad|scalability
+escalar|to scale
+el producto mínimo viable|minimum viable product
+la plataforma|platform
+la aplicación|app; application
+el software|software
+el hardware|hardware
+el programa|program
+la actualización|update
+la ciberseguridad|cybersecurity
+la protección de datos|data protection
+la inteligencia artificial|artificial intelligence
+la transformación digital|digital transformation
+la automatización|automation
+el algoritmo|algorithm
+la analítica de datos|data analytics
+el panel de control|dashboard
+la suscripción|subscription
+la licencia de software|software licence
+el código abierto|open source
+el proveedor de servicios|service provider
+la tercerización|outsourcing (LatAm)
+la subcontratación|subcontracting; outsourcing
+# logistics and production
+la producción|production
+la planta|plant; factory
+la línea de producción|production line
+la materia prima|raw material
+el producto terminado|finished product
+el control de calidad|quality control
+la capacidad de producción|production capacity
+el lote|batch; lot
+el pedido mínimo|minimum order
+el stock de seguridad|safety stock
+la rotación de inventario|inventory turnover
+el centro de distribución|distribution centre
+el transporte terrestre|road transport
+el transporte marítimo|sea freight
+el transporte aéreo|air freight
+el camión|lorry; truck
+la paleta|pallet (LatAm)
+el palé|pallet (Spain)
+el embalaje|packaging
+el etiquetado|labelling
+el código de barras|barcode
+el seguimiento del envío|shipment tracking
+el número de seguimiento|tracking number
+el agente de aduanas|customs broker
+la declaración de aduana|customs declaration
+el certificado de origen|certificate of origin
+los Incoterms|Incoterms
+franco a bordo (FOB)|free on board (FOB)
+el costo, seguro y flete (CIF)|cost, insurance and freight (CIF)
+el operador logístico|logistics provider
+la última milla|last mile
+el hub logístico|logistics hub
+el Canal de Panamá|Panama Canal
+la esclusa|lock (canal)
+el peaje|toll
+la naviera|shipping line
+# economy and markets extras
+la oferta|supply; offer
+la demanda|demand
+el consumo|consumption
+el ahorro|savings
+el gasto público|public spending
+la deuda externa|foreign debt
+el déficit comercial|trade deficit
+el tratado de libre comercio|free trade agreement
+el bloque comercial|trading bloc
+la globalización|globalisation
+el proteccionismo|protectionism
+la competencia desleal|unfair competition
+el monopolio|monopoly
+el oligopolio|oligopoly
+la privatización|privatisation
+la nacionalización|nationalisation
+el subsidio|subsidy
+la subvención|grant; subsidy
+el estímulo económico|economic stimulus
+la desaceleración|slowdown
+el repunte|upturn; rebound
+la crisis financiera|financial crisis
+la burbuja|bubble
+el índice de precios al consumidor|consumer price index
+la canasta básica|basic basket of goods (LatAm)
+el costo de vida|cost of living
+el salario real|real wage
+la tasa de desempleo|unemployment rate
+la población activa|labour force
+la economía informal|informal economy
+el sector público|public sector
+el sector privado|private sector
+el sector servicios|service sector
+el turismo|tourism
+la logística|logistics
+la banca internacional|international banking
+el mercado emergente|emerging market
+la materia prima cotizada|commodity
+las materias primas|commodities; raw materials
+el petróleo|oil
+el oro|gold
+la criptomoneda|cryptocurrency
+la cadena de bloques|blockchain
+# legal and corporate
+la persona jurídica|legal entity
+la persona natural|individual (legal)
+la sociedad de responsabilidad limitada|limited liability company
+la fundación de interés privado|private interest foundation (Panama)
+el pacto social|articles of association (Panama)
+el agente residente|registered agent (Panama)
+el/la director/a de la sociedad|company director
+el/la dignatario/a|officer (of a Panama company)
+la junta de accionistas|shareholders' meeting
+el acta de la junta|minutes of the meeting
+el poder general|general power of attorney
+la marca registrada|registered trademark
+la propiedad intelectual|intellectual property
+el derecho de autor|copyright
+el litigio|litigation
+el arbitraje|arbitration
+la demanda|lawsuit; claim
+demandar|to sue
+el incumplimiento de contrato|breach of contract
+la cláusula penal|penalty clause
+la cláusula de rescisión|termination clause
+el gobierno corporativo|corporate governance
+la responsabilidad social empresarial|corporate social responsibility
+la sostenibilidad|sustainability
+# meetings, emails and phrases
+el punto del orden del día|agenda item
+los asuntos varios|any other business
+la lluvia de ideas|brainstorming
+el resumen ejecutivo|executive summary
+la minuta|minutes (LatAm)
+la conclusión|conclusion
+el siguiente paso|next step
+la tarea pendiente|pending task
+el responsable|person in charge
+la retroalimentación|feedback
+el visto bueno|approval; go-ahead
+dar el visto bueno|to give the go-ahead
+estar de acuerdo|to agree
+discrepar|to disagree
+proponer|to propose
+plantear|to raise (an issue)
+abordar un tema|to address a topic
+priorizar|to prioritise
+agilizar|to speed up
+optimizar|to optimise
+implementar|to implement
+ejecutar|to execute
+evaluar|to evaluate
+medir|to measure
+alcanzar los objetivos|to reach the targets
+superar las expectativas|to exceed expectations
+cumplir el presupuesto|to stay within budget
+reducir costos|to cut costs
+aumentar las ventas|to increase sales
+captar clientes|to win customers
+fidelizar clientes|to retain customers
+cerrar una venta|to close a sale
+hacer un pedido|to place an order
+enviar una cotización|to send a quote
+Le confirmo la reunión.|I confirm the meeting.
+¿Le viene bien el martes?|Does Tuesday suit you?
+Disculpe la demora.|Sorry for the delay.
+Quedo atento/a a sus comentarios.|I look forward to your comments.
+Le reenvío el correo.|I'm forwarding you the email.
+Le comparto el documento.|I'm sharing the document with you. (LatAm)
+según lo acordado|as agreed
+a la brevedad|as soon as possible
+en tiempo y forma|on time and as required
+por medio de la presente|hereby
+sin otro particular|with nothing further to add (formal closing)
+# numbers and quantities
+el porcentaje|percentage
+por ciento|per cent
+la cifra|figure; number
+el promedio|average
+la media|average; mean
+la mitad|half
+el doble|double
+el triple|triple
+la docena|dozen
+el millón|million
+el millar|thousand
+mil millones|billion
+el billón|trillion (10¹²)
+la tasa de crecimiento|growth rate
+el aumento|increase
+la disminución|decrease
+la caída|fall; drop
+el alza|rise
+la baja|fall; decline
+duplicarse|to double
+triplicarse|to triple
+reducirse a la mitad|to halve
+alcanzar un máximo|to reach a peak
+tocar fondo|to hit bottom
+un incremento del 5 %|a 5% increase
+aproximadamente|approximately
+como mínimo|at least
+como máximo|at most

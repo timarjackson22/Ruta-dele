@@ -1,0 +1,42 @@
+el estado financiero auditado|audited financial statement
+la carta de compromiso|engagement letter
+la carta de oferta|offer letter
+el acuerdo de accionistas|shareholders' agreement
+el contrato de compraventa|sale and purchase agreement
+el contrato de servicios|service agreement
+el contrato laboral|employment contract
+el acuerdo de nivel de servicio|service-level agreement
+la orden de pago|payment order
+el aviso de vencimiento|due-date notice
+la nota de crédito|credit note
+la nota de débito|debit note
+la factura electrónica|electronic invoice
+el recibo de caja|cash receipt
+el libro de actas|minute book
+el registro de accionistas|share register
+el aumento de capital|capital increase
+la reducción de capital|capital reduction
+la escisión|demerger; spin-off
+la absorción|absorption (merger)
+la empresa familiar|family business
+la empresa pública|state-owned company
+la empresa privada|private company
+la empresa cotizada|listed company
+el grupo empresarial|business group
+la cámara de comercio|chamber of commerce
+el gremio empresarial|business association
+la asociación bancaria|bankers' association
+la feria de negocios|business fair
+la misión comercial|trade mission
+la ronda de negocios|business matchmaking event
+el acuerdo comercial|trade agreement
+la apertura de mercados|market opening
+el mercado interno|domestic market
+el mercado externo|foreign market
+el mercado laboral|labour market
+la oferta laboral|job offer
+la demanda laboral|labour demand
+la brecha salarial|pay gap
+el salario mínimo legal|statutory minimum wage
+el aguinaldo|Christmas bonus (LatAm)
+las vacaciones anuales|annual leave
