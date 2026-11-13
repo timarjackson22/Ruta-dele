@@ -1068,6 +1068,18 @@ main, #app { background: transparent }
   #liquid-bg i, #app.lq-in > *, .kscroll > *, .sgrid > *, .tb-ind.wob { animation: none !important }
   .tb-ind { transition: none }
 }
+
+/* ===== liquid touch ===== */
+.lq-jelly { animation: lqJelly .7s cubic-bezier(.3, .7, .4, 1) !important; transform-origin: 50% 60% }
+@keyframes lqJelly { 0% { scale: 1 1 } 15% { scale: 1.22 .78 } 32% { scale: .84 1.18 } 50% { scale: 1.1 .92 } 68% { scale: .96 1.04 } 84% { scale: 1.02 .99 } 100% { scale: 1 1 } }
+.lq-rip { position: absolute; z-index: 0; pointer-events: none; border-radius: 42% 58% 55% 45% / 50% 42% 58% 50%; background: radial-gradient(circle, rgba(255, 255, 255, .75) 0%, rgba(255, 255, 255, .32) 45%, rgba(255, 255, 255, 0) 70%); animation: lqRip .75s cubic-bezier(.2, .8, .3, 1) forwards }
+.row2 .lq-rip, .ulist > li > a .lq-rip, .reg .lq-rip, .tabs a .lq-rip, .lp .lq-rip, .nb-back .lq-rip, .lt-btn .lq-rip { background: radial-gradient(circle, color-mix(in srgb, var(--cobalt) 30%, transparent) 0%, color-mix(in srgb, var(--cobalt) 12%, transparent) 45%, transparent 70%) }
+.lq-rip.tab { background: radial-gradient(circle, color-mix(in srgb, var(--tc) 45%, transparent) 0%, color-mix(in srgb, var(--tc) 15%, transparent) 50%, transparent 72%) }
+@keyframes lqRip { 0% { transform: scale(.1) rotate(0deg); opacity: 1 } 60% { opacity: .8 } 100% { transform: scale(1) rotate(60deg); opacity: 0; border-radius: 55% 45% 42% 58% / 45% 58% 42% 55% } }
+.lq-drop { position: absolute; z-index: 2; width: 6px; height: 6px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: var(--tc, var(--cobalt)); pointer-events: none; animation: lqDrop .6s cubic-bezier(.2, .7, .4, 1) forwards }
+@keyframes lqDrop { 0% { transform: translate(0, 0) scale(.4); opacity: 0 } 20% { opacity: 1 } 100% { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0 } }
+.kcard > :not(.lq-rip), .stile > :not(.lq-rip), .hero2 > :not(.lq-rip), .row2 > :not(.lq-rip) { position: relative; z-index: 1 }
+.kcard > .kc-ic, .stile > .kc-ic { position: absolute } .kcard > .kc-badge { position: absolute }
 </style>
 
 </head>
@@ -3294,6 +3306,29 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="ui-pal"]'); if (!t) return; UI.pal = t.dataset.v; uiSave(); document.querySelectorAll(".pal").forEach((b) => b.setAttribute("aria-pressed", b === t)); });
   // a tab tapped while Profe is open closes Profe
   document.addEventListener("click", (e) => { const a = e.target.closest && e.target.closest(".tabbar a"); if (a && document.body.classList.contains("tutor-open")) { const c = document.querySelector('#tutor [data-act="t-close"]'); if (c) c.click(); } }, true);
+
+  // ---- liquid touch: jelly icons, a ripple from the finger, droplets on the tab bar ----
+  const LQ_HOST = ".tabbar a, .kcard, .stile, .row2, .lt-btn, .reg, .pal, .lp, .tutor-fab, .hero2, .wod-say, .ulist > li > a, .tabs a, .nb-back";
+  const LQ_ICON = ".kc-ic, .ic2, .lvb2, .lvb, .reg-f, .pal-sw, .lp-ring, .n, svg, span[aria-hidden]";
+  function lqTouch(e) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const host = e.target.closest && e.target.closest(LQ_HOST); if (!host) return;
+    const ic = host.matches(".wod-say") ? host : host.querySelector(LQ_ICON);
+    if (ic) { ic.classList.remove("lq-jelly"); void ic.getBoundingClientRect(); ic.classList.add("lq-jelly"); setTimeout(() => ic.classList.remove("lq-jelly"), 750); }
+    const r = host.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    const tab = host.matches(".tabbar a");
+    const rp = document.createElement("span"); rp.className = "lq-rip" + (tab ? " tab" : ""); rp.setAttribute("aria-hidden", "true");
+    const size = tab ? 64 : Math.max(r.width, r.height) * 1.4;
+    rp.style.cssText = "width:" + size + "px;height:" + size + "px;left:" + ((tab ? r.width / 2 : x) - size / 2) + "px;top:" + ((tab ? 18 : y) - size / 2) + "px";
+    if (getComputedStyle(host).position === "static") host.style.position = "relative";
+    host.appendChild(rp); setTimeout(() => rp.remove(), 800);
+    if (tab) {
+      for (let k = 0; k < 5; k++) { const d = document.createElement("i"); d.className = "lq-drop"; d.setAttribute("aria-hidden", "true"); const a = (-160 + k * 35) * Math.PI / 180, dist = 18 + Math.random() * 10;
+        d.style.cssText = "left:" + (r.width / 2 - 3) + "px;top:15px;--dx:" + (Math.cos(a) * dist).toFixed(1) + "px;--dy:" + (Math.sin(a) * dist).toFixed(1) + "px;animation-delay:" + (k * 18) + "ms"; host.appendChild(d); setTimeout(() => d.remove(), 800); }
+      try { if (navigator.vibrate) navigator.vibrate(6); } catch (err) {}
+    }
+  }
+  document.addEventListener("pointerdown", lqTouch, { passive: true });
   let uiRaf = 0; window.addEventListener("scroll", () => { if (!uiRaf) uiRaf = requestAnimationFrame(() => { uiRaf = 0; uiScroll(); }); }, { passive: true });
 
   /* ---------- voices: Latin American Spanish first, plus English for translations ---------- */
@@ -6876,7 +6911,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130042";
+  var BUILD = "202611130047";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
