@@ -3242,16 +3242,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { Object.values(VOCAB).forEach((lv) => lv.forEach((th) => (th.w || []).forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[1]).forEach((x) => en.add(x)); }))); } catch (e) {}
     try { COURSE.forEach((l) => l.units.forEach((u) => (u.v || []).forEach((g) => (g.w || []).forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[1]).forEach((x) => en.add(x)); })))); } catch (e) {}
     "a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english but".split(" ").forEach((x) => en.add(x));
-    "de en y la el los las un una unos unas que con por para del al mi tu su es son muy soy estoy eres está se lo le nos".split(" ").forEach((x) => es.add(x));
+    "de en y la el los las un una unos unas que con por para del al mi tu su es son muy soy estoy eres está se lo le nos ya vamos".split(" ").forEach((x) => es.add(x));
     // a word in both lists (a Spanish word quoted in an English gloss, or a loanword) counts as Spanish, unless it's everyday English
     const COMMON = new Set("a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english red pan son come dime".split(" "));
     const en2 = new Set(COMMON); en.forEach((x) => { if (!es.has(x)) en2.add(x); });
-    RA_LEX = { es, en: en2 }; return RA_LEX;
+    const esN = new Set(); es.forEach((x) => { const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (!en2.has(n)) esN.add(n); });
+    RA_LEX = { es, en: en2, esN }; return RA_LEX;
   }
   // an English run with Spanish words in it: give the Spanish words to the Spanish voice
   function raSplitEs(t) {
     const L = raLex(), out = [], parts = String(t).split(/(\s+)/);
-    const isEs = (w) => { const x = w.toLowerCase().replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/.test(w)) return true; if (L.en.has(x)) return false; return L.es.has(x) && x.length >= 3 ? true : false; };
+    const isEs = (w) => { const x = w.toLowerCase().replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/i.test(w)) return true; if (L.en.has(x)) return false; const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (x.length >= 3 && (L.es.has(x) || L.esN.has(n) || (/s$/.test(n) && (L.esN.has(n.slice(0, -1)) || (/es$/.test(n) && L.esN.has(n.slice(0, -2))))))) return true; return false; };
     let cur = "", curEs = false;
     parts.forEach((w) => {
       if (/^\s+$/.test(w) || !w) { cur += w; return; }
@@ -3261,6 +3262,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     });
     if (cur.trim()) out.push([cur.trim(), curEs]);
     // a lone short Spanish-looking word in a long English sentence stays English (avoids voice ping-pong on loanwords)
+    // articles and little words right before Spanish words go with them (el acuerdo, de acuerdo, la casa)
+    const FW = /^(el|la|los|las|un|una|unos|unas|de|del|al|en|y|mi|tu|su|se|me|te|lo|le|a|por|para|con|que|no|muy|es|ya)$/i, FW2 = /^(el|la|los|las|un|una|de|del|al|en|y|se|me|te|lo|le|es|ya|que)$/i;
+    for (let i = 0; i < out.length - 1; i++) { if (out[i][1] || !out[i + 1][1]) continue; const ws = out[i][0].split(/\s+/); let mv = []; while (ws.length > 1 && FW.test(ws[ws.length - 1].replace(/[^a-záéíóúñ]/gi, ""))) mv.unshift(ws.pop()); if (ws.length === 1 && FW.test(ws[0].replace(/[^a-záéíóúñ]/gi, "")) && (i === 0 || /[.:;!?]$/.test(out[i - 1][0]))) { mv.unshift(ws.pop()); } if (mv.length) { out[i][0] = ws.join(" "); out[i + 1][0] = mv.join(" ") + " " + out[i + 1][0]; } }
+    // and little words right after Spanish words (¿Qué hora es? · hora de…) stay with them
+    for (let i = 1; i < out.length; i++) { if (out[i][1] || !out[i - 1][1]) continue; const ws = out[i][0].split(/\s+/); const mv = []; while (ws.length && FW2.test(ws[0].replace(/[^a-záéíóúñ]/gi, "")) && (ws.length === 1 || /[?!.,…]$/.test(ws[0]) || FW2.test((ws[1] || "").replace(/[^a-záéíóúñ]/gi, "")) || (i + 1 < out.length && ws.length === 1))) mv.push(ws.shift()); if (mv.length) { out[i - 1][0] += " " + mv.join(" "); out[i][0] = ws.join(" "); } }
+    for (let i = out.length - 1; i >= 0; i--) if (!out[i][0].trim()) out.splice(i, 1);
     // a word or two that is also Spanish (de, en, y, la) between Spanish words belongs with them
     for (let i = 1; i < out.length - 1; i++) { const x = out[i], ws = x[0].toLowerCase().match(/[a-záéíóúüñ]+/g) || []; if (!x[1] && out[i - 1][1] && out[i + 1][1] && ws.length && ws.length <= 2 && ws.every((w) => L.es.has(w))) x[1] = true; }
     return out.map((x, i) => (x[1] && !/[áéíóúñ¿¡ü]/.test(x[0]) && x[0].split(/\s+/).length === 1 && x[0].replace(/[^a-z]/gi, "").length <= 2 && !(out[i - 1] && out[i - 1][1]) && !(out[i + 1] && out[i + 1][1]) ? [x[0], false] : x)).reduce((a, x) => { const l = a[a.length - 1]; if (l && l[1] === x[1]) l[0] += " " + x[0]; else a.push(x); return a; }, []);
@@ -5729,10 +5736,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // what Profe says aloud: Spanish only (unless "Read English aloud" is on); italic text is treated as English
   function forVoice(full) {
     let t = String(full || "");
-    if (!TS.speakEn) t = t.replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g, "$1").replace(/\(([^()]*)\)/g, (m, x) => (isSpanish(x) ? m : ""));
+    if (TS.speakEn === false) t = t.replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g, "$1").replace(/\(([^()]*)\)/g, (m, x) => (isSpanish(x) ? m : ""));
     return t;
   }
-  const speakSeg = (es) => es || !!TS.speakEn;
+  const speakSeg = (es) => es || TS.speakEn !== false;
+  // a sentence, split so Spanish words inside English go to the Spanish voice
+  function tagParts(x) { const es = isSpanish(x); if (TS.speakEn === false || typeof window.__raSplit !== "function") return [[x, es]];
+    const sp = window.__raSplit(x); if (sp.length === 1 && !sp[0][1] && es && /[¿¡ñáéíóú]/i.test(x) && !/\b(the|and|is|you|to|of|means|with|or|word|when|it|this)\b/i.test(x)) return [[x, true]]; return sp; }
   // speaks finished sentences as soon as they appear, so voice replies start before the whole answer is written
   function streamSpeaker(onAllDone) {
     const gen = ++SPK_GEN, q = []; let said = 0, playing = false, ended = false, called = false, any = false;
@@ -5748,7 +5758,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     const push = (txt) => {
       const parts = (txt.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
-      parts.forEach((x) => { const es = isSpanish(x); if (!speakSeg(es) && !push.all) return; any = true; const last = q[q.length - 1]; if (last && last.es === es) last.t += " " + x; else q.push({ es, t: x }); });
+      parts.flatMap(tagParts).forEach(([x, es]) => { if (!speakSeg(es) && !push.all) return; any = true; const last = q[q.length - 1]; if (last && last.es === es) last.t += " " + x; else q.push({ es, t: x }); });
       if (!playing) play();
     };
     return {
@@ -5772,7 +5782,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!parts.length) { if (onDone) onDone(); return; }
     // join neighbouring sentences in the same language, then play the pieces one after another
     // (the Android voice replaces whatever is playing, so queuing them would keep only the last sentence)
-    const segs = []; parts.forEach((p) => { const es = isSpanish(p); if (!speakSeg(es)) return; if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); });
+    const segs = []; parts.flatMap(tagParts).forEach(([p, es]) => { if (!speakSeg(es)) return; if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); });
     if (!segs.length) { const all = plainForSpeech(String(text || "")).replace(/\n+/g, ". "); (all.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean).forEach((p) => { const es = isSpanish(p); if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); }); }
     if (!segs.length) { if (onDone) onDone(); return; }
     let fired = false, k = 0, gen = ++SPK_GEN; const finish = () => { if (fired) return; fired = true; clearTimeout(guard); if (onDone) onDone(); };
@@ -5992,7 +6002,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>");
     return h.split(/\n{2,}/).map((p) => /^\s*([-•]|\d+\.)\s/m.test(p) ? "<ul>" + p.split("\n").filter(Boolean).map((l) => "<li>" + l.replace(/^\s*([-•]|\d+\.)\s*/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
   }
-  const plainForSpeech = (s) => String(s).replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
+  const plainForSpeech = (s) => String(s).replace(/_{2,}/g, " blank ").replace(/…{2,}|\.{4,}/g, " blank ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
   /* ---------- corrections: what in the learner's Spanish is wrong or could be better ---------- */
   const FXP = { yo: 0, "tú": 1, tu: -1, "él": 2, ella: 2, usted: 2, nosotros: 3, nosotras: 3, vosotros: 4, vosotras: 4, ellos: 5, ellas: 5, ustedes: 5 };
   const PNAME = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
@@ -6241,7 +6251,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-name">Your name (Profe uses it)</label><input id="pv-name" value="' + esc(TS.lname || "") + '" placeholder="e.g. Timar" style="max-width:10em"></div>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-enline"' + (TS.noEnLine ? "" : " checked") + '> Show English under Profe’s replies (never read aloud)</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-auto"' + (TS.autoRead !== false ? " checked" : "") + '> Read every reply aloud</label>' +
-      '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
+      '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn !== false ? " checked" : "") + '> Read English explanations aloud too (English and Spanish voices take turns)</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.6, "0.6× (very slow)"], [0.7, "0.7×"], [0.8, "0.8× (slow)"], [0.9, "0.9×"], [1, "1.0× (normal)"], [1.1, "1.1×"], [1.2, "1.2×"], [1.3, "1.3×"], [1.4, "1.4×"], [1.5, "1.5× (fast)"], [1.6, "1.6×"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
       (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
   }
@@ -7334,7 +7344,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130431";
+  var BUILD = "202611130449";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
