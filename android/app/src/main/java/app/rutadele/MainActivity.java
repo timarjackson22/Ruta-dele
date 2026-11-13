@@ -55,7 +55,11 @@ public class MainActivity extends Activity {
         s.setDatabaseEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
-        s.setUserAgentString(s.getUserAgentString() + " RutaDELEApp/1");
+        // Android's font-size setting would enlarge only the text (not spacing or icons) and break the layout's proportions.
+        // Keep the web view at 100% and pass the setting to the app, which scales the whole layout evenly.
+        float fs = getResources().getConfiguration().fontScale;
+        s.setTextZoom(100);
+        s.setUserAgentString(s.getUserAgentString() + " RutaDELEApp/1 RDFont/" + String.format(java.util.Locale.US, "%.2f", fs));
         web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
 
         tts = new TtsBridge(this, web);
@@ -79,6 +83,13 @@ public class MainActivity extends Activity {
                 Uri u = req.getUrl();
                 if (HOST.equals(u.getHost())) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
+                return true;
+            }
+
+            @Override
+            public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail detail) {
+                // the page's renderer crashed or was killed: start again instead of showing a blank screen
+                try { recreate(); } catch (Exception ignored) { }
                 return true;
             }
 

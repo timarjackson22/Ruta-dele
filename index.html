@@ -1243,6 +1243,21 @@ body.study .srm-ic { width: 34px; height: 34px; border-radius: 10px; font-size: 
 .srmore-b:active { transform: scale(.985) }
 .srhide { display: none }
 .srpad { height: 90px }
+
+/* ===== exercise screens: proportionate sizes ===== */
+.pxcard { gap: 10px; padding: 16px 16px 14px; border-radius: 18px }
+.pxhead { font-size: .85rem }
+.pxtype { font-size: .86rem; font-weight: 650; line-height: 1.4 }
+.pxtype .muted { font-weight: 500 } .pxtype .es { font-weight: 400; font-size: .9em }
+.pxq { font-size: 1.15rem; line-height: 1.45; font-weight: 500 }
+.pxq b, .pxq strong { font-weight: 650 }
+.pxin { font-size: 1rem; padding: 10px 12px; border-radius: 12px }
+.pxopts .opt { font-size: .98rem; padding: 10px 14px }
+.pxfb { font-size: .95rem } .pxfb .fxline { font-size: 1rem }
+.pxbig { font-size: 1.35rem }
+.pxcard .btn { font-size: .92rem; padding: 7px 14px }
+.btn { font-size: .95rem }
+.btn.small, .small.btn { font-size: .85rem }
 </style>
 
 </head>
@@ -2330,7 +2345,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const PALS = {negro:{n:"Negro",m:"dark",bg:"#000000",su:"#141416",ink:"#f2f2f7",ti:"#4f9dff",sa:"#ffb340"},oceano:{n:"Océano",m:"light",bg:"#eaf4fb",su:"#ffffff",ink:"#0b2a3d",ti:"#0a7bc2",sa:"#e8960a"},caribe:{n:"Caribe",m:"dark",bg:"#062a30",su:"#0b3a42",ink:"#e3f6f5",ti:"#3fd1c4",sa:"#ffc857"},selva:{n:"Selva",m:"dark",bg:"#0e1f17",su:"#153024",ink:"#e6f3ea",ti:"#5fd38d",sa:"#f5c451"},arena:{n:"Arena",m:"light",bg:"#f6efe4",su:"#fffaf2",ink:"#3a2b1a",ti:"#c0602a",sa:"#d99a1e"},papel:{n:"Papel",m:"light",bg:"#f4ecd8",su:"#fbf6ea",ink:"#3b3226",ti:"#8a5a2b",sa:"#c98a1a"},lavanda:{n:"Lavanda",m:"light",bg:"#f2effb",su:"#ffffff",ink:"#241c3d",ti:"#6e4fd8",sa:"#e0a01a"},rosa:{n:"Rosa",m:"light",bg:"#fdf0f3",su:"#ffffff",ink:"#3d1a24",ti:"#d6457a",sa:"#e0a01a"},atardecer:{n:"Atardecer",m:"light",bg:"#fff1e8",su:"#ffffff",ink:"#3d1f12",ti:"#e2572b",sa:"#e0a01a"},uva:{n:"Uva",m:"dark",bg:"#1a1230",su:"#251a42",ink:"#efe9ff",ti:"#b18cff",sa:"#ffc857"},cafe:{n:"Café",m:"dark",bg:"#1e1611",su:"#2a1f18",ink:"#f3e9df",ti:"#e8a86a",sa:"#f0ba45"}};
   function uiApply() {
     const R = document.documentElement, P = UI.pal && PALS[UI.pal];
-    R.style.setProperty("--fs", UI.fs || 1);
+    // the phone's font-size setting (Android app), softened, scales the whole layout together
+    const sysF = (() => { const m = /RDFont\/([\d.]+)/.exec(navigator.userAgent); const f = m ? +m[1] : 1; return Math.max(0.92, Math.min(1.18, 1 + (f - 1) * 0.5)); })();
+    R.style.setProperty("--fs", ((UI.fs || 1) * sysF).toFixed(3));
     if (P) { R.dataset.pal = UI.pal; R.dataset.theme = P.m; }
     else { R.removeAttribute("data-pal"); if (UI.theme === "dark" || UI.theme === "light") R.dataset.theme = UI.theme; else R.removeAttribute("data-theme"); }
     const mc = document.querySelector('meta[name="theme-color"]'); if (mc) mc.setAttribute("content", P ? P.su : "#1F4FA3");
@@ -7284,7 +7301,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130404";
+  var BUILD = "202611130428";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
