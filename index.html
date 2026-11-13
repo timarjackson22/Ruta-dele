@@ -1329,6 +1329,32 @@ body.tutor-open .pxret { display: none }
 .cue-sw[aria-pressed="true"] { background: var(--cobalt); color: var(--on-cobalt); border-color: transparent }
 .lite .cue { background: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none }
 @media (prefers-reduced-motion: reduce) { .cue { transition: none } }
+
+/* ===== your own decks ===== */
+.dkrow { display: flex; align-items: center; gap: 12px } .dkrow > span:last-child { display: flex; flex-direction: column }
+.dkic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: var(--surface-2); flex: none }
+.dknew, .dkadd, .dkp-new { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.dknew input, .dkadd input, .dkp-new input, .dkp-f input { flex: 1 1 140px; min-width: 0; font: inherit; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink) }
+.dkbar-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap } .dkbar-n { font-size: 1.1rem }
+.dkbar-top .btn:first-of-type { margin-left: auto }
+.dkdel { color: var(--bad, #c0392b) }
+.dkwords summary { cursor: pointer; font-weight: 600 } .dkwords ul { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; max-height: 50vh; overflow: auto }
+.dkwords li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--surface-2) }
+.dkx { border: 0; background: none; color: var(--muted); font-size: 1.3rem; line-height: 1; width: 32px; height: 32px; border-radius: 50%; cursor: pointer }
+#dkpick { position: fixed; inset: auto 0 0 0; z-index: 90; display: flex; justify-content: center; padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateY(110%); transition: transform .25s cubic-bezier(.2, .9, .3, 1.05) }
+#dkpick.on { transform: none }
+.dkp-in { width: min(100%, 520px); background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 -10px 40px rgba(0, 0, 0, .22); padding: 14px; display: flex; flex-direction: column; gap: 10px; max-height: 70vh; overflow: auto }
+.dkp-h { display: flex; align-items: center; justify-content: space-between } .dkp-h b { font-size: 1.05rem }
+.dkp-f { display: flex; gap: 8px; flex-wrap: wrap } .dkp-f input:first-child { font-weight: 650 }
+.dkp-l { display: flex; flex-direction: column; gap: 6px }
+.dkp-d { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 14px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface-2) 70%, transparent); color: var(--ink); font: inherit; text-align: left; cursor: pointer }
+.dkp-d .dkp-n { flex: 1; font-weight: 600 } .dkp-d .dkp-c { color: var(--muted); font-size: .85rem }
+.dkp-d.has { opacity: .55 } .dkp-d:active { transform: scale(.98) }
+#dktoast { position: fixed; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 95; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: .92rem; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); transition: opacity .2s, transform .25s; max-width: calc(100vw - 30px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+#dktoast.on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto } #dktoast a { color: inherit; font-weight: 700; margin-left: 4px }
+#dksel { position: fixed; z-index: 92; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 999px; padding: 8px 14px; background: var(--cobalt); color: var(--on-cobalt); font: inherit; font-weight: 650; font-size: .9rem; box-shadow: 0 8px 22px rgba(0, 0, 0, .25); cursor: pointer }
+table.vocab td.es { cursor: pointer } table.vocab td.es::after { content: "+"; display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 6px; border-radius: 50%; font-size: .8rem; font-weight: 700; line-height: 1; color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 12%, transparent); vertical-align: 1px }
+.cue-add { background: color-mix(in srgb, var(--bg, #fff) 26%, transparent) }
 </style>
 
 </head>
@@ -3066,6 +3092,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const SRS_KEY = "ruta-dele-srs-v1";
   let SRD = { c: {}, log: [], mine: [], opt: { newPerDay: 15, rev: false, type: false, maxRev: 300 }, days: {} };
   try { const r = localStorage.getItem(SRS_KEY); if (r) { const o = JSON.parse(r); SRD = Object.assign(SRD, o); SRD.opt = Object.assign({ newPerDay: 15, rev: false, type: false, maxRev: 300 }, o.opt || {}); } } catch (e) {}
+  if (!Array.isArray(SRD.decks)) SRD.decks = [];
   const srSave = () => { try { if (SRD.log.length > 4000) SRD.log = SRD.log.slice(-4000); localStorage.setItem(SRS_KEY, JSON.stringify(SRD)); } catch (e) {} };
   const MIN = 60e3, DAY = 864e5;
   const today = () => Math.floor((Date.now() - 4 * 36e5 - new Date().getTimezoneOffset() * MIN) / DAY);
@@ -3079,13 +3106,113 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (LV[id]) { const L = LV[id]; L.units.forEach((u, ui) => u.v.forEach((g) => g.w.forEach((w) => push(w[0], w[1], "Unidad " + (ui + 1))))); (L.themes || []).forEach((t) => t.w.forEach((w) => push(w[0], w[1], t.t))); }
     else if (id === "w2500") W.forEach((e, i) => push(e[0], e[2], "#" + (i + 1) + " most used"));
     else if (id === "mine") SRD.mine.forEach((m) => push(m.es, m.en, m.src || "Added by you"));
+    else if (/^u-/.test(id)) { const D = SRD.decks.find((d) => d.id === id); if (D) D.w.forEach((m) => push(m.es, m.en, m.src || D.name)); }
     else { const d = VPRO.find((x) => x.id === id); if (d) d.themes.forEach((t) => t.w.forEach((w) => push(w[0], w[1], t.t))); }
-    if (id !== "mine") DECKS[id] = out;
+    if (id !== "mine" && !/^u-/.test(id)) DECKS[id] = out;
     return out;
   }
-  const deckName = (id) => (id === "esc" ? "My school (Mi escuela)" : LV[id] ? "Level " + LV[id].name + " (Nivel " + LV[id].name + ")" : id === "w2500" ? "7,000 most-used words (7.000 palabras)" : id === "mine" ? "My words (Mis palabras)" : ((d) => (d ? d.en + " (" + d.t + ")" : id))(VPRO.find((x) => x.id === id)));
+  const deckName = (id) => { if (/^u-/.test(id)) { const D = SRD.decks.find((d) => d.id === id); return D ? D.name : "My deck"; } return deckName0(id); };
+  const deckName0 = (id) => (id === "esc" ? "My school (Mi escuela)" : LV[id] ? "Level " + LV[id].name + " (Nivel " + LV[id].name + ")" : id === "w2500" ? "7,000 most-used words (7.000 palabras)" : id === "mine" ? "My words (Mis palabras)" : ((d) => (d ? d.en + " (" + d.t + ")" : id))(VPRO.find((x) => x.id === id)));
+
+  /* ===== your own decks ===== */
+  const DK_IC = ["📘", "🌮", "✈️", "💼", "🏠", "🎵", "⚽", "🩺", "🛒", "💬", "⭐", "🧠"];
+  const dkFind = (id) => SRD.decks.find((d) => d.id === id);
+  const dkWords = (id) => (id === "mine" ? SRD.mine : (dkFind(id) || { w: [] }).w);
+  function dkNew(name) {
+    name = String(name || "").trim().slice(0, 40) || "My deck " + (SRD.decks.length + 1);
+    const D = { id: "u-" + Date.now().toString(36), name, ic: DK_IC[SRD.decks.length % DK_IC.length], w: [], t: Date.now() };
+    SRD.decks.push(D); srSave(); return D;
+  }
+  function dkAdd(id, es, en, src) {
+    es = String(es || "").trim(); en = String(en || "").trim(); if (!es) return false;
+    const W = dkWords(id); if (W.some((m) => ckey(m.es) === ckey(es))) return false;
+    W.push({ es, en, src: src || "" }); srSave(); return true;
+  }
+  function dkToast(msg) {
+    let t = document.getElementById("dktoast"); if (!t) { t = document.createElement("div"); t.id = "dktoast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.innerHTML = msg; t.classList.remove("on"); void t.offsetWidth; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2600);
+  }
+  function dkHomeHTML() {
+    const list = [["mine", "⭐", "My words"]].concat(SRD.decks.map((d) => [d.id, d.ic || "📘", d.name]));
+    return '<section class="block dkhome"><div class="shead"><h2>My decks</h2><button class="btn small primary" data-act="dk-new">+ New deck</button></div>' +
+      '<div class="dknew" id="dknew" hidden><input id="dkname" maxlength="40" placeholder="Deck name, e.g. Food, Travel, Work" aria-label="Deck name" autocomplete="off"><button class="btn small primary" data-act="dk-create">Create</button><button class="btn small" data-act="dk-cancel">Cancel</button></div>' +
+      '<ul class="srdecks">' + list.map(([id, ic, n]) => { const W = dkWords(id), c = counts(id);
+        return '<li class="srdeck"><a href="#repaso-' + id + '"><div class="dkrow"><span class="dkic" aria-hidden="true">' + ic + '</span><span><b>' + esc(n) + '</b><span class="muted small">' + (W.length ? W.length + (W.length === 1 ? " word" : " words") : "Empty: tap any word, then +") + "</span></span></div>" +
+          (W.length ? '<span class="srnums"><span class="cn">' + c.nw + '</span><span class="cl">' + c.lrn + '</span><span class="cd">' + c.due + "</span></span>" : "") + "</a></li>"; }).join("") + "</ul>" +
+      '<p class="muted small">Add words from anywhere: tap a word in Reading or Listening and press <b>+</b>, tap the Spanish in any word list, or highlight any text.</p></section>';
+  }
+  function dkBar(id) {
+    const st = document.querySelector("#app .stack"); if (!st || document.getElementById("dkbar")) return;
+    const W = dkWords(id), mine = id === "mine", D = dkFind(id);
+    const bar = document.createElement("section"); bar.className = "block dkbar"; bar.id = "dkbar";
+    bar.innerHTML = '<div class="dkbar-top"><span class="dkic" aria-hidden="true">' + (mine ? "⭐" : (D && D.ic) || "📘") + '</span><b class="dkbar-n">' + esc(mine ? "My words" : deckName(id)) + '</b><span class="muted small">' + W.length + (W.length === 1 ? " word" : " words") + "</span>" +
+      (mine ? "" : '<button class="btn small" data-act="dk-ren" data-id="' + id + '">Rename</button><button class="btn small dkdel" data-act="dk-del" data-id="' + id + '">Delete</button>') + "</div>" +
+      (mine ? "" : '<div class="dknew" id="dkren" hidden><input id="dkrename" maxlength="40" value="' + esc(deckName(id)) + '" aria-label="New name" autocomplete="off"><button class="btn small primary" data-act="dk-ren-ok" data-id="' + id + '">Save</button></div>') +
+      '<div class="dkadd"><input id="dkes" placeholder="Spanish" aria-label="Spanish word" autocomplete="off" autocapitalize="off"><input id="dken" placeholder="English" aria-label="English meaning" autocomplete="off"><button class="btn small primary" data-act="dk-addrow" data-id="' + id + '">Add</button></div>' +
+      (W.length ? '<details class="dkwords"><summary>Words in this deck</summary><ul>' + W.map((m, k) => '<li><span><b>' + esc(m.es) + "</b> " + esc(m.en || "") + '</span><button class="dkx" data-act="dk-rm" data-id="' + id + '" data-k="' + k + '" aria-label="Remove ' + esc(m.es) + '">×</button></li>').join("") + "</ul></details>" : '<p class="muted small" style="margin:0">No words yet. Type one above, or tap any word in Reading or Listening and press <b>+</b>.</p>');
+    const after = st.querySelector(".lhead, h1"); const host = after ? after.closest(".stack > *") : null;
+    if (host && host.nextSibling) st.insertBefore(bar, host.nextSibling); else st.prepend(bar);
+  }
+  // the picker: which deck should this word go into?
+  let DKP = null;
+  function dkPick(es, en, src) {
+    es = String(es || "").replace(/\s+/g, " ").trim(); if (!es) return;
+    DKP = { es, en: String(en || "").trim(), src: src || (typeof CUR !== "undefined" && CUR ? CUR.t : "") };
+    let pk = document.getElementById("dkpick"); if (!pk) { pk = document.createElement("div"); pk.id = "dkpick"; pk.setAttribute("role", "dialog"); pk.setAttribute("aria-label", "Add to a deck"); document.body.appendChild(pk); }
+    const last = UI.lastDeck && (UI.lastDeck === "mine" || dkFind(UI.lastDeck)) ? UI.lastDeck : "";
+    const list = [["mine", "⭐", "My words"]].concat(SRD.decks.map((d) => [d.id, d.ic || "📘", d.name]));
+    if (last) list.sort((a, b) => (b[0] === last) - (a[0] === last));
+    pk.innerHTML = '<div class="dkp-in"><div class="dkp-h"><b>Add to a deck</b><button class="dkx" data-act="dk-close" aria-label="Close">×</button></div>' +
+      '<div class="dkp-f"><input id="dkp-es" value="' + esc(DKP.es) + '" aria-label="Spanish"><input id="dkp-en" value="' + esc(DKP.en) + '" placeholder="English meaning" aria-label="English"></div>' +
+      '<div class="dkp-l">' + list.map(([id, ic, n]) => { const has = dkWords(id).some((m) => ckey(m.es) === ckey(DKP.es));
+        return '<button class="dkp-d' + (has ? " has" : "") + '" data-act="dk-put" data-id="' + id + '"' + (has ? ' aria-disabled="true"' : "") + '><span aria-hidden="true">' + ic + '</span><span class="dkp-n">' + esc(n) + '</span><span class="dkp-c">' + (has ? "✓ added" : dkWords(id).length) + "</span></button>"; }).join("") + "</div>" +
+      '<div class="dkp-new"><input id="dkp-name" maxlength="40" placeholder="New deck name" aria-label="New deck name" autocomplete="off"><button class="btn small primary" data-act="dk-put-new">+ New deck</button></div></div>';
+    pk.hidden = false; requestAnimationFrame(() => pk.classList.add("on"));
+  }
+  function dkClose() { const pk = document.getElementById("dkpick"); if (pk) { pk.classList.remove("on"); setTimeout(() => (pk.hidden = true), 200); } DKP = null; }
+  function dkPut(id) {
+    if (!DKP) return; const es = (document.getElementById("dkp-es") || {}).value || DKP.es, en = (document.getElementById("dkp-en") || {}).value || DKP.en;
+    const ok = dkAdd(id, es, en, DKP.src); UI.lastDeck = id; uiSave(); dkClose();
+    dkToast(ok ? "✓ <b>" + esc(es) + "</b> added to " + esc(id === "mine" ? "My words" : deckName(id)) + ' · <a href="#repaso-' + id + '">Open</a>' : "Already in " + esc(id === "mine" ? "My words" : deckName(id)));
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act;
+    // the old "+ Flashcards" button anywhere: pick a deck instead
+    if (a === "sr-add") { e.stopImmediatePropagation(); e.preventDefault(); dkPick(t.dataset.es, t.dataset.en); const sh = document.getElementById("sheet"); if (sh) sh.hidden = true; return; }
+    if (a === "dk-close") { dkClose(); return; }
+    if (a === "dk-put") { dkPut(t.dataset.id); return; }
+    if (a === "dk-put-new") { const n = document.getElementById("dkp-name"); const D = dkNew(n && n.value); dkPut(D.id); return; }
+    if (a === "dk-new") { const f = document.getElementById("dknew"); if (f) { f.hidden = false; const i = document.getElementById("dkname"); if (i) i.focus(); } return; }
+    if (a === "dk-cancel") { const f = document.getElementById("dknew"); if (f) f.hidden = true; return; }
+    if (a === "dk-create") { const D = dkNew((document.getElementById("dkname") || {}).value); dkToast("Deck <b>" + esc(D.name) + "</b> created"); location.hash = "#repaso-" + D.id; return; }
+    if (a === "dk-ren") { const f = document.getElementById("dkren"); if (f) { f.hidden = !f.hidden; const i = document.getElementById("dkrename"); if (i && !f.hidden) i.focus(); } return; }
+    if (a === "dk-ren-ok") { const D = dkFind(t.dataset.id), v = ((document.getElementById("dkrename") || {}).value || "").trim(); if (D && v) { D.name = v.slice(0, 40); srSave(); } const b = document.getElementById("dkbar"); if (b) b.remove(); studyView(t.dataset.id, false); return; }
+    if (a === "dk-del") { if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Tap again to delete"; setTimeout(() => { if (t.isConnected) { t.dataset.sure = ""; t.textContent = "Delete"; } }, 3000); return; }
+      const id = t.dataset.id, D = dkFind(id); if (D) { SRD.decks.splice(SRD.decks.indexOf(D), 1); Object.keys(SRD.c).forEach((k) => { if (k.startsWith(id + "|")) delete SRD.c[k]; }); srSave(); dkToast("Deck <b>" + esc(D.name) + "</b> deleted"); } location.hash = "#repaso"; return; }
+    if (a === "dk-rm") { const W = dkWords(t.dataset.id), m = W[+t.dataset.k]; if (m) { W.splice(+t.dataset.k, 1); srSave(); } const b = document.getElementById("dkbar"); if (b) b.remove(); dkBar(t.dataset.id); const d = document.querySelector("#dkbar details"); if (d) d.open = true; return; }
+    if (a === "dk-addrow") { const es = (document.getElementById("dkes") || {}).value, en = (document.getElementById("dken") || {}).value; if (es && es.trim()) { const ok = dkAdd(t.dataset.id, es, en, "Added by you"); dkToast(ok ? "✓ <b>" + esc(es.trim()) + "</b> added" : "Already in this deck"); const b = document.getElementById("dkbar"); if (b) b.remove(); studyView(t.dataset.id, false); } return; }
+    // any word list: tap the Spanish to add it
+    const td = e.target.closest && e.target.closest("table.vocab td.es");
+    if (td && !e.target.closest("button,a,input")) { const tr = td.closest("tr"), en = tr && tr.querySelector("td.en"); dkPick(td.textContent, en ? en.textContent : ""); return; }
+    if (DKP && !e.target.closest("#dkpick") && !e.target.closest("#dksel")) dkClose();
+  }, true);
+  addEventListener("keydown", (e) => { if (e.key === "Escape" && DKP) dkClose(); if (e.key === "Enter" && e.target && e.target.id === "dkname") { const b = document.querySelector('[data-act="dk-create"]'); if (b) b.click(); } if (e.key === "Enter" && e.target && e.target.id === "dkp-name") { const b = document.querySelector('[data-act="dk-put-new"]'); if (b) b.click(); } });
+  // highlight any text in the app: a small "+ Add to deck" chip
+  let dkSelT = 0;
+  document.addEventListener("selectionchange", () => { clearTimeout(dkSelT); dkSelT = setTimeout(dkSel, 450); });
+  function dkSel() {
+    let chip = document.getElementById("dksel");
+    const sel = window.getSelection(), txt = sel && !sel.isCollapsed ? sel.toString().replace(/\s+/g, " ").trim() : "";
+    const ok = txt && txt.length <= 60 && txt.split(" ").length <= 6 && /[a-záéíóúñ]/i.test(txt) && sel.rangeCount && !(sel.anchorNode && sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest("input,textarea,#dkpick"));
+    if (!ok) { if (chip) chip.hidden = true; return; }
+    if (!chip) { chip = document.createElement("button"); chip.id = "dksel"; chip.type = "button"; chip.innerHTML = '<span aria-hidden="true">＋</span> Add to deck'; document.body.appendChild(chip);
+      chip.addEventListener("click", (e) => { e.stopPropagation(); const s = chip.dataset.t; chip.hidden = true; let en = ""; try { if (!/\s/.test(s)) en = cueOne(cueGloss(s)); } catch (x) {} dkPick(s.replace(/^[¿¡"«“(]+|[.,;:!?"»”)]+$/g, ""), en); try { window.getSelection().removeAllRanges(); } catch (x) {} }); }
+    const r = sel.getRangeAt(0).getBoundingClientRect();
+    chip.dataset.t = txt; chip.hidden = false;
+    chip.style.top = Math.min(innerHeight - 140, r.bottom + 12) + "px"; chip.style.left = Math.max(10, Math.min(innerWidth - 160, r.left + r.width / 2 - 70)) + "px";
+  }
   const HIDDEN = { esc: true, recursos: true }; // hidden for now: set to false to show them again
-  const allDeckIds = () => (LV.esc && !HIDDEN.esc ? ["esc"] : []).concat(COURSE.map((l) => l.id), ["w2500"], VPRO.map((d) => d.id), ["mine"]);
+  const allDeckIds = () => (LV.esc && !HIDDEN.esc ? ["esc"] : []).concat(COURSE.map((l) => l.id), ["w2500"], VPRO.map((d) => d.id), ["mine"], SRD.decks.map((d) => d.id));
   // the cards of a deck in both directions when "Both directions" is on
   function deckItems(id) { const c = deckCards(id); return SRD.opt.rev ? c.flatMap((x) => [x, Object.assign({}, x, { id: x.id + "|r", rev: true })]) : c; }
   function counts(id) {
@@ -3762,6 +3889,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     app.innerHTML = '<div class="stack">' + head + '<div class="fc-wrap">' + cnt + (body || "") + sets + (card ? '' : '<div class="srpad"></div>') + '<p class="muted small' + (card ? "" : " srhide") + '" style="text-align:center">Rate honestly: <b>Again</b> if you forgot, <b>Hard</b> if it took effort, <b>Good</b> if you knew it, <b>Easy</b> if it was instant. The app brings each word back just before you would forget it.</p>' + opts + "</div></div>";
     const inp = document.getElementById("sr-in"); if (inp) { inp.focus(); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { SV.typed = inp.value; SV.shown = true; studyView(id, inLevel); } }); }
     SV.inLevel = inLevel;
+    if (/^u-/.test(id) || id === "mine") dkBar(id);
     const cd = document.querySelector(".srcard");
     if (cd && window.__flipIn) { cd.classList.add("fl-in"); window.__flipIn = 0; window.__nextIn = 0; }
     else if (cd && window.__nextIn) { cd.classList.add("nx-in"); window.__nextIn = 0; }
@@ -3788,11 +3916,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function srHome() {
     const st = srStats();
-    const rows = allDeckIds().map((id) => { const c = counts(id); if (!c.total) return id === "mine" ? '<li class="srdeck"><div><b>My words (Mis palabras)</b><span class="muted small">Tap a word in any reading, then “Add to flashcards”.</span></div></li>' : ""; return '<li class="srdeck"><a href="#repaso-' + id + '"><div><b>' + esc(deckName(id)) + '</b><span class="muted small">' + c.seen + " of " + c.total + ' started</span></div><span class="srnums"><span class="cn">' + c.nw + '</span><span class="cl">' + c.lrn + '</span><span class="cd">' + c.due + "</span></span></a></li>"; }).join("");
+    const rows = allDeckIds().filter((id) => id !== "mine" && !/^u-/.test(id)).map((id) => { const c = counts(id); if (!c.total) return id === "mine" ? '<li class="srdeck"><div><b>My words (Mis palabras)</b><span class="muted small">Tap a word in any reading, then “Add to flashcards”.</span></div></li>' : ""; return '<li class="srdeck"><a href="#repaso-' + id + '"><div><b>' + esc(deckName(id)) + '</b><span class="muted small">' + c.seen + " of " + c.total + ' started</span></div><span class="srnums"><span class="cn">' + c.nw + '</span><span class="cl">' + c.lrn + '</span><span class="cd">' + c.due + "</span></span></a></li>"; }).join("");
     const max = Math.max(1, ...st.fc);
     app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><span>Flashcard review</span></p><div><p class="eyebrow">Flashcards · spaced repetition</p><h1>Flashcard review</h1><p class="es-sub">Repaso</p><p class="lead2">Spaced repetition, the Anki method: each day you review the words that are about to fade, so they move into long-term memory.</p></div>' +
       '<div class="srstats"><div><b>' + st.done + "</b><span>cards today</span></div><div><b>" + st.streak + '</b><span>day streak</span></div><div><b>' + (st.ret == null ? "–" : st.ret + "%") + '</b><span>recall (30 days)</span></div><div><b>' + st.mature + '</b><span>mastered (21+ days)</span></div><div><b>' + st.young + "</b><span>young</span></div></div>" +
-      '<section class="block"><div class="shead"><h2>Decks</h2><span class="muted small"><span class="cn">new</span> · <span class="cl">learning</span> · <span class="cd">review</span></span></div><ul class="srdecks">' + rows + "</ul></section>" +
+      dkHomeHTML() + '<section class="block"><div class="shead"><h2>Decks</h2><span class="muted small"><span class="cn">new</span> · <span class="cl">learning</span> · <span class="cd">review</span></span></div><ul class="srdecks">' + rows + "</ul></section>" +
       '<section class="block"><div class="shead"><h2>Next 7 days</h2></div><div class="srfc">' + st.fc.map((n, k) => '<div><i style="height:' + Math.round((n / max) * 60) + 'px"></i><b>' + n + "</b><span>" + (k === 0 ? "tmrw" : "+" + (k + 1)) + "</span></div>").join("") + "</div></section></div>";
   }
 
@@ -3960,7 +4088,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // the little words, with the meaning they have inside a sentence
   const CFN = { y: "and", e: "and", o: "or", u: "or", pero: "but", sino: "but rather", que: "that, which", de: "of, from", del: "of the", a: "to, at", al: "to the", en: "in, on, at", con: "with", sin: "without", por: "for, by, through", para: "for, to", el: "the", la: "the", los: "the", las: "the", un: "a, an", una: "a, an", unos: "some", unas: "some",
     lo: "it, him", le: "(to) him, her, you", les: "(to) them", me: "me, myself", te: "you, yourself", se: "himself, herself, itself", nos: "us, ourselves", os: "you all", mi: "my", mis: "my", tu: "your", tus: "your", su: "his, her, their, your", sus: "his, her, their, your",
-    yo: "I", tú: "you", él: "he", ella: "she", usted: "you (formal)", nosotros: "we", ellos: "they", no: "not, no", sí: "yes", si: "if", muy: "very", más: "more", también: "also, too", ya: "already, now", es: "is", son: "are", está: "is", hay: "there is, there are", como: "like, as", cuando: "when", porque: "because", donde: "where", este: "this", esta: "this", esto: "this", ese: "that", esa: "that", eso: "that", primer: "first", primera: "first", tercer: "third", gran: "great", buen: "good", mal: "bad", algún: "some", ningún: "no", ni: "nor", durante: "during, for", tan: "so", sobre: "about, on", entre: "between, among", hacia: "towards", según: "according to", aunque: "although", mientras: "while", luego: "then, later", siempre: "always", nunca: "never", algo: "something", nada: "nothing", todo: "everything, all", mucho: "a lot, much", poco: "little", señor: "Mr, sir, man", señora: "Mrs, lady, woman", se: "" };
+    yo: "I", tú: "you", él: "he", ella: "she", usted: "you (formal)", nosotros: "we", ellos: "they", no: "not, no", sí: "yes", si: "if", muy: "very", más: "more", también: "also, too", ya: "already, now", es: "is", son: "are", está: "is", hay: "there is, there are", como: "like, as", cuando: "when", porque: "because", donde: "where", este: "this", esta: "this", esto: "this", ese: "that", esa: "that", eso: "that", primer: "first", primera: "first", tercer: "third", gran: "great", buen: "good", mal: "bad", algún: "some", ningún: "no", ni: "nor", durante: "during, for", tan: "so", sobre: "about, on", entre: "between, among", hacia: "towards", según: "according to", aunque: "although", mientras: "while", luego: "then, later", siempre: "always", nunca: "never", algo: "something", nada: "nothing", todo: "everything, all", mucho: "a lot, much", poco: "little", muchos: "many", muchas: "many", pocos: "few", pocas: "few", señor: "Mr, sir, man", señora: "Mrs, lady, woman", se: "" };
   // a capital letter in the middle of a sentence is a name (Cuenca, Paola): no dictionary meaning
   function cueCtx(el) {
     if (!el || !el.closest) return {};
@@ -4110,7 +4238,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const lw = word.toLowerCase(), out = [];
     if (lw in CFN && !CFN[lw]) return out; // se: no English of its own
     if (CFN[lw]) return CFN[lw].split(/,\s*/); // the little words: only their own meanings
-    try { wordLines(word).forEach((l) => { const g = l.replace(/<span class="pill[^>]*>.*?<\/span>/g, "").replace(/<span class="tag">.*?<\/span>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·"); g.replace(/\([^)]*\)/g, " ").split(/[;,|]/).forEach((x) => { x = x.replace(/\(.*?\)/g, "").trim().replace(/^[a-záéíóúñ]+:\s*/i, "").replace(/^(an? )?(apocopic |inflection |plural |feminine |masculine )?form of .*$/i, "").trim(); if (x && !/^letter\b/i.test(x) && out.indexOf(x) < 0) out.push(x); }); }); } catch (e) {}
+    const POS = (out.pos = {});
+    const put = (x, ps) => { x = x.replace(/\(.*?\)/g, "").trim().replace(/^[a-záéíóúñ]+:\s*/i, "").replace(/^(an? )?(apocopic |inflection |plural |feminine |masculine )?form of .*$/i, "").trim(); if (x && !/^(the )?letter\s*[:(]|^name of the letter|^the letter [a-zñ]$/i.test(x) && out.indexOf(x) < 0) { out.push(x); POS[x] = ps || ""; } };
+    try { wordLines(word).forEach((l) => { const tg = (l.match(/<span class="tag">(.*?)<\/span>/) || [])[1] || ""; const g = l.replace(/<span class="pill[^>]*>.*?<\/span>/g, "").replace(/<span class="tag">.*?<\/span>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·"); g.replace(/\([^)]*\)/g, " ").split(/[;,|]/).forEach((x) => put(x, tg)); }); } catch (e) {}
+    // every sense in the big dictionary too: the word as its own headword (cobre = copper) and as a form of another (cobre ← cobrar)
+    try { if (typeof LEX !== "undefined" && LEX) { const ks = [LEX.LEM.get(lw), LEX.F.get(lw), lexIdx(lw)].filter((k, i, a) => k != null && k >= 0 && a.indexOf(k) === i); ks.forEach((k) => { const e = LEX.L[k]; String(e[2]).replace(/\([^)]*\)/g, " ").split(/[;,|]/).forEach((x) => put(x, e[1])); }); } } catch (e) {}
     return out;
   }
   // the groups of one sentence: [{a, b, en}] by word index
@@ -4119,6 +4251,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     cphBuild();
     const ws = [...sent.querySelectorAll(".w")], toks = ws.map((w) => cNorm(w.textContent)), k = +sent.dataset.pi, it = PL.items[k] || {};
     const enW = cEnWords(it.en), used = new Set(), hasEn = enW.length > 2, G = new Array(ws.length).fill(null);
+    // the paragraph around it, for words this sentence's English doesn't show
+    const box = sent.closest(".para, .pline, .stanza, .vl") || sent.parentElement;
+    const paraW = cEnWords([...(box ? box.querySelectorAll(".sent") : [])].filter((x) => x !== sent).map((x) => (PL.items[+x.dataset.pi] || {}).en || "").join(" "));
+    if (typeof LEX !== "undefined" && !LEX && typeof loadLex === "function") loadLex().then(() => document.querySelectorAll("#ltext .sent").forEach((x) => (x._cue = null))).catch(() => {});
     for (let i = 0; i < ws.length; i++) {
       const keys = [toks[i], "V:" + cLem(toks[i]), "*"]; if (/^(me|te|se|nos|os)$/.test(toks[i])) keys.push("R"); if (/^(me|te|le|nos|os|les)$/.test(toks[i])) keys.push("D");
       if (/^(me|te|se|nos|os)$/.test(toks[i]) && i + 1 < toks.length) keys.push("V:" + cLem(toks[i + 1]));
@@ -4136,7 +4272,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         const verb = /^V:|^[RD]$/.test(ph.pt[0]) || /^(me|te|le|nos|les)$/.test(ph.pt[0]);
         const ev = hasEn && !/\*/.test(ph.en) ? cEvid(ph.en, enW, used, verb) : null;
         if (!ev && hasEn && (!ph.sure || loose || ph.pt[0] === "D" || /^V:/.test(ph.pt[0]) && !/^(echar|tener|hacer|dar|darse|quedar)$/.test(ph.pt[0].slice(2)))) continue; // only trust it if the English agrees
-        let en = ev && ev.full ? cSpan(enW, ev) : ev ? cueOne(ph.en) : ph.en; // only part of it in the sentence: the dictionary wording
+        let en = ev && ev.full ? cSpan(enW, ev) : cueOne(ph.en); // only part of it in the sentence: the dictionary wording
         if (slot >= 0) { const sg = cOneWord(slot); en = ph.en.replace("*", sg || ws[slot].textContent); }
         got = { n: ph.pt.length, en, ev };
       }
@@ -4148,10 +4284,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (/^[A-ZÁÉÍÓÚÑ]/.test(word) && cx.start === false) return "";
       if (toks[i] === "mañana" && /^(la|esta|cada|por|una|toda)$/.test(cx.prev)) return "morning";
       let cands = cCands(word, el); if (!cands.length && !(toks[i] in CFN)) cands = String(cueGloss(word, el) || "").split(/[;,|]/).map((x) => x.trim()).filter(Boolean);
-      const pos = (TG[toks[i]] || [])[1];
+      let pos = (TG[toks[i]] || [])[1];
+      // grammar: after an article, "de" or a possessive it's a noun or adjective; after a subject or "no", a verb
+      const nounCtx = /^(el|la|los|las|un|una|unos|unas|de|del|al|mi|mis|tu|tus|su|sus|este|esta|estos|estas|ese|esa|esos|esas|nuestro|nuestra|cada|otro|otra|mucho|mucha|muchos|muchas|poco|poca|varios|varias|sin|con|en|por|para)$/.test(cx.prev);
+      const verbCtx = /^(yo|tú|él|ella|usted|nosotros|ellos|ellas|ustedes|no|se|me|te|lo|le|les|nos|que|ya|también|nunca|siempre)$/.test(cx.prev);
+      const isV = (c) => /verb/.test(cands.pos && cands.pos[c] || "") || /^to /.test(c);
+      if (nounCtx || verbCtx) { const want = (c) => (nounCtx ? !isV(c) : isV(c)); cands = cands.filter(want).concat(cands.filter((c) => !want(c))); if (nounCtx && cands.length && !isV(cands[0])) pos = "noun"; }
       if (hasEn) { const a0 = toks[i].normalize("NFD").replace(/[\u0300-\u036f]/g, ""); for (let z = 0; z < enW.length; z++) { if (used.has(z)) continue; const e = enW[z].l; if ((a0.length >= 5 && e.slice(0, 5) === a0.slice(0, 5)) || (a0.length >= 4 && e === a0)) { used.add(z); return /^[A-ZÁÉÍÓÚÑ]/.test(word) && e === toks[i] ? "" : enW[z].w; } } }
       if (hasEn) for (const c of cands) { const ev = cEvid(c, enW, used, pos === "verb"); if (ev) { for (let z = ev.a; z <= ev.b; z++) used.add(z); return ev.full ? cSpan(enW, ev) : cueOne(c); } }
-      return cueOne(cueGloss(word, el));
+      // not in this sentence's English: look in the rest of the paragraph
+      if (paraW.length) for (const c of cands) { const ev = cEvid(c, paraW, new Set(), false); if (ev && ev.full && ev.b === ev.a) return paraW[ev.a].l; }
+      return cands.length ? cueOne(cands[0]) : cueOne(cueGloss(word, el));
     }
     G.forEach((g, i) => { if (g && g.en === null && g.a === i) g.en = cOneWord(i); });
     sent._cue = { G, ws };
@@ -4164,10 +4307,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const i = A.ws.indexOf(el), g = A.G[i]; if (!g) return { els: [el], en: "" };
     return { els: A.ws.slice(g.a, g.b + 1), en: g.en || "" };
   }
+  window.__cueDbg = { cCands: (w) => cCands(w), en: (t) => cEnWords(t) };
   // how much slower (>1) or faster (<1) this phone's voice is than the estimate; remembered between visits
   function cueF(v) { if (v != null) { CUE.f = Math.max(0.6, Math.min(2, v)); try { localStorage.setItem("ruta-cuef", String(CUE.f)); } catch (e) {} } if (!CUE.f) { let x = 1; try { x = +localStorage.getItem("ruta-cuef") || 1; } catch (e) {} CUE.f = x; } return CUE.f; }
   // follow the speech: word boundaries from the voice when it sends them, otherwise timed from the length of each word
   function cueTrack(u, k) {
+    cueNeedEn([k, k + 1, k + 2]);
     const sent = document.querySelector('#ltext .sent[data-pi="' + k + '"]'), it = PL.items[k]; if (!sent || !it) return;
     const ws = [...sent.querySelectorAll(".w")], txt = it.text; let pos = 0;
     const offs = ws.map((w) => { const j = txt.indexOf(w.textContent, pos); if (j >= 0) pos = j + w.textContent.length; return j < 0 ? pos : j; });
@@ -4190,18 +4335,33 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const prevS = u.onstart; u.onstart = (ev) => { if (prevS) try { prevS(ev); } catch (e) {} setTimeout(go, 60); };
     setTimeout(go, 700); // some voices never send "start"
   }
+  // your own texts: get the sentence's English quietly (phone translator or free service) so the cues can use it
+  const CUE_TR = {};
+  function cueNeedEn(ks, then) {
+    try {
+      if (!CUR || CUR.cat !== "mine" || typeof myTranslate !== "function" || typeof trEngine !== "function" || !trEngine()) return false;
+      ks = ks.filter((k) => PL.items[k] && !PL.items[k].en && !CUE_TR[CUR.id + k]); if (!ks.length) return false;
+      ks.forEach((k) => (CUE_TR[CUR.id + k] = 1));
+      myTranslate(CUR, ks, true).then(() => { ks.forEach((k) => { const sn = document.querySelector('#ltext .sent[data-pi="' + k + '"]'); if (sn) sn._cue = null; }); if (then) then(); }).catch(() => {});
+      return true;
+    } catch (e) { return false; }
+  }
   function cueWord(t) {
+    { const s1 = t.closest("[data-pi]"); if (s1) cueNeedEn([+s1.dataset.pi, +s1.dataset.pi + 1], () => { if (CUE.w === t) cueWord(t); }); }
     const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, F = cueFor(t), g = F.en;
     if (!g) { lookup(word, k); return; } // no short meaning: the full entry
     CUE.w = t; CUE.k = k;
     document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); F.els.forEach((x) => x.classList.add("cue-on"));
+    CUE.es = F.els.map((x) => x.textContent).join(" "); CUE.en = g;
     cueShow('<div class="cue-top"><b class="cue-one">' + esc(g) + "</b>" +
+      '<button class="cue-b sm cue-add" data-act="cue-add" aria-label="Add ' + esc(CUE.es) + ' to a deck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
       '<button class="cue-b sm" data-act="cue-more" aria-label="More about ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>', F.els);
   }
   function cueDrop() { if (!CUE.w) return; document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); CUE.w = null; CUE.k = -1; const sp = document.querySelector("#ltext .w.spk"); if (sp && PL.playing && cueOn()) cueSpk(sp); else cueSync(); }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act;
     if (a === "l-cue") { UI.cues = !cueOn(); uiSave(); t.setAttribute("aria-pressed", cueOn()); if (!cueOn()) cueDrop(); cueSync(); e.stopImmediatePropagation(); return; }
+    if (a === "cue-add" && CUE.w) { e.stopImmediatePropagation(); const es0 = CUE.es || CUE.w.textContent, en0 = CUE.en || ""; const first = CUE.w; const isName = /^[A-ZÁÉÍÓÚÑ]/.test(es0) && first.closest(".sent") && !cueCtx(first).start; cueDrop(); cueHide(); dkPick(isName ? es0 : es0.charAt(0).toLowerCase() + es0.slice(1), en0); return; }
     if (a === "cue-say" && CUE.w) { sayText(CUE.w.textContent); e.stopImmediatePropagation(); return; }
     if (a === "cue-more" && CUE.w) { const w = CUE.w.textContent, k = CUE.k; cueDrop(); cueHide(); lookup(w, k); e.stopImmediatePropagation(); return; }
     if (a === "l-word" && cueOn() && document.getElementById("ltext")) {
@@ -7669,7 +7829,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (/^guia-/.test(h)) { setSec("curso"); navChips(null); guideView(h.slice(5)); }
     else if (h === "esc" && LV.esc) { setSec("curso"); navChips(null); schoolHome(); }
     else if (h === "recursos") { setSec("curso"); navChips(null); resourcesView(); }
-    else if (/^repaso-/.test(h)) { setSec("curso"); navChips(null); const d = h.slice(7); if (d === "mine" || d === "w2500" || LV[d] || VPRO.some((x) => x.id === d)) studyView(d, false); else srHome(); }
+    else if (/^repaso-/.test(h)) { setSec("curso"); navChips(null); const d = h.slice(7); if (d === "mine" || (/^u-/.test(d) && SRD.decks.some((x) => x.id === d)) || d === "w2500" || LV[d] || VPRO.some((x) => x.id === d)) studyView(d, false); else srHome(); }
     else if (/^my-/.test(h) && !LI[h] && !DOCS_LOADED) { setSec("leer"); navChips(null); app.innerHTML = '<p class="muted">Loading…</p>'; docsReady.then(route); return; }
     else if (LI[h]) { setSec(isReading(LI[h]) ? "leer" : "escuchar"); navChips(null); listenItem(LI[h]); }
     else if (h === "leer") { setSec("leer"); navChips(null); readHub(); }
@@ -7785,7 +7945,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131347";
+  var BUILD = "202611131403";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
