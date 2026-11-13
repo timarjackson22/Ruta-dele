@@ -1169,14 +1169,22 @@ body.study .srmore { width: 100%; max-width: 620px; justify-self: center }
 @keyframes pcIn { from { transform: translateY(10px) scale(.97); opacity: .3 } }
 .pcbox.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)) }
 .pcbox.no { border-color: #e0a01a; background: color-mix(in srgb, #e0a01a 12%, var(--surface)) }
-.pcmic { grid-row: span 2; width: 58px; height: 58px; border-radius: 50%; border: 0; font-size: 1.6rem; background: var(--cobalt); color: var(--on-cobalt); cursor: pointer; box-shadow: 0 6px 16px color-mix(in srgb, var(--cobalt) 35%, transparent) }
-.pcmic.on { animation: pcPulse 1.1s ease-in-out infinite; background: #e5484d }
-@keyframes pcPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(229, 72, 77, .45) } 50% { box-shadow: 0 0 0 14px rgba(229, 72, 77, 0) } }
-.pcbox.ok .pcmic { background: var(--good) }
-.pctxt b { display: block; font-size: 1.1rem; line-height: 1.25 } .pctxt small { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px }
+.pcmic { grid-row: span 2; position: relative; width: 52px; height: 52px; border-radius: 50%; border: 0; display: grid; place-items: center; color: #fff; cursor: pointer;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--cobalt) 80%, #fff), var(--cobalt)); box-shadow: 0 4px 12px color-mix(in srgb, var(--cobalt) 30%, transparent), inset 0 1px 0 rgba(255, 255, 255, .35) }
+.pcmic svg { width: 24px; height: 24px }
+.pcmic.on::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--cobalt) 45%, transparent); animation: pcRing 1.6s ease-out infinite }
+@keyframes pcRing { from { transform: scale(.9); opacity: 1 } to { transform: scale(1.35); opacity: 0 } }
+.pcwave { display: flex; align-items: center; gap: 3px; height: 22px }
+.pcwave i { width: 3px; height: 100%; border-radius: 3px; background: #fff; animation: pcBar 1s ease-in-out infinite; transform-origin: center }
+.pcwave i:nth-child(1) { animation-delay: -.4s } .pcwave i:nth-child(2) { animation-delay: -.2s } .pcwave i:nth-child(3) { animation-delay: 0s } .pcwave i:nth-child(4) { animation-delay: -.3s } .pcwave i:nth-child(5) { animation-delay: -.1s }
+@keyframes pcBar { 0%, 100% { transform: scaleY(.25) } 50% { transform: scaleY(1) } }
+.pcbox.ok .pcmic { background: linear-gradient(160deg, #3ccf8e, #1a9c6b); box-shadow: 0 4px 12px rgba(26, 156, 107, .3) }
+.pcbox.no .pcmic { background: linear-gradient(160deg, #f5b942, #d98e0b); box-shadow: 0 4px 12px rgba(217, 142, 11, .3) }
+.pchear { display: inline-flex; align-items: center; gap: 6px } .pchear svg { width: 16px; height: 16px }
+.pctxt b { display: block; font-size: 1.05rem; font-weight: 650; line-height: 1.25 } .pctxt small { display: block; color: var(--muted); font-size: .85rem; margin-top: 2px }
 .pcact { grid-column: 2; display: flex; gap: 8px; flex-wrap: wrap }
 .srb.picked { box-shadow: 0 0 0 3px color-mix(in srgb, var(--cobalt) 40%, transparent) }
-@media (prefers-reduced-motion: reduce) { .pcmic.on, .pcbox { animation: none } }
+@media (prefers-reduced-motion: reduce) { .pcmic.on::before, .pcwave i, .pcbox { animation: none } }
 @media (max-width: 370px) { .nb-title { display: none !important } }
 </style>
 
@@ -2745,9 +2753,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const bt = document.querySelector(".srbtns"); if (!bt || !PC) return;
     bt.style.display = "none";
     let w = document.getElementById("pcpanel"); if (!w) { w = document.createElement("div"); w.id = "pcpanel"; w.className = "srbtns pcmode"; bt.after(w); }
-    w.innerHTML = '<div class="pcbox ' + state + '"><button type="button" class="pcmic' + (state === "listen" ? " on" : "") + '" data-act="pc-mic" aria-label="' + (state === "listen" ? "Listening" : "Say it again") + '">🎤</button>' +
+    const SVGI = (d) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + "</svg>";
+    const MIC = SVGI('<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/>'), OK = SVGI('<path d="m5 12.5 4.5 4.5L19 7.5"/>'), WAVE = '<span class="pcwave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>';
+    w.innerHTML = '<div class="pcbox ' + state + '"><button type="button" class="pcmic' + (state === "listen" ? " on" : "") + '" data-act="pc-mic" aria-label="' + (state === "listen" ? "Listening" : "Say it again") + '">' + (state === "listen" ? WAVE : state === "ok" ? OK : MIC) + "</button>" +
       '<div class="pctxt"><b>' + msg + "</b>" + (sub ? "<small>" + sub + "</small>" : "") + "</div>" +
-      '<div class="pcact"><button type="button" class="btn small" data-act="pc-hear">🔊 Hear it</button><button type="button" class="btn small" data-act="pc-skip">' + (state === "ok" ? "Next ›" : "Skip ›") + "</button></div></div>";
+      '<div class="pcact"><button type="button" class="btn small pchear" data-act="pc-hear">' + SVGI('<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>') + 'Hear it</button><button type="button" class="btn small" data-act="pc-skip">' + (state === "ok" ? "Next ›" : "Skip ›") + "</button></div></div>";
   }
   function pcDone() { if (!PC) return; const b = PC.btn; try { PC.rec && PC.rec.abort(); } catch (e) {} clearTimeout(PC.tm); PC = null; b.dataset.pc = "1"; b.click(); }
   function pcListen() {
@@ -2755,7 +2765,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { speechSynthesis.cancel(); } catch (e) {}
     const r = new PC_SR(); PC.rec = r; r.lang = S.region === "es" ? "es-ES" : "es-US"; r.interimResults = false; r.continuous = false; r.maxAlternatives = 5;
     let got = false;
-    pcPanel("listen", "Say it: «" + esc(PC.word) + "»", "Listening…");
+    pcPanel("listen", "Say «" + esc(PC.word) + "»", "Listening…");
     r.onresult = (e) => {
       if (!PC || PC.rec !== r) return;
       const res = e.results[e.results.length - 1]; if (res && res.isFinal === false) return;
@@ -2768,14 +2778,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         speak(ok[0]); PC.tm = setTimeout(pcDone, 1700);
       } else {
         const no = sc >= 0.55 ? ["Casi… ¡inténtalo otra vez!", "Almost! Try again."] : pcPick(PC_NO);
-        pcPanel("no", no[0], (heard ? "I heard «" + esc(heard) + "». " : "") + (PC.tries >= 3 ? "Keep practising this one; tap Next when you’re ready." : "Listen, then tap 🎤 and say it again."));
+        pcPanel("no", no[0], (heard ? "I heard «" + esc(heard) + "». " : "") + (PC.tries >= 3 ? "Keep practising this one; tap Next when you’re ready." : "Listen, then tap the mic and say it again."));
         if (PC.tries >= 3) { const sk = document.querySelector('[data-act="pc-skip"]'); if (sk) sk.textContent = "Next ›"; }
         speak(no[0] + " " + PC.word);
       }
     };
-    r.onerror = (e) => { if (!PC || PC.rec !== r) return; got = true; const er = e && e.error; pcPanel("no", er === "not-allowed" || er === "service-not-allowed" ? "The microphone is blocked" : "I didn’t catch that", er === "not-allowed" || er === "service-not-allowed" ? "Allow the microphone for Ruta DELE, or turn this check off in Deck settings." : "Tap 🎤 and say «" + esc(PC.word) + "»."); };
-    r.onend = () => { if (!PC || PC.rec !== r || got) return; pcPanel("no", "I didn’t hear anything", "Tap 🎤 and say «" + esc(PC.word) + "»."); };
-    try { r.start(); } catch (e) { pcPanel("no", "The microphone couldn’t start", "Tap 🎤 to try again, or Skip."); }
+    r.onerror = (e) => { if (!PC || PC.rec !== r) return; got = true; const er = e && e.error; pcPanel("no", er === "not-allowed" || er === "service-not-allowed" ? "The microphone is blocked" : "I didn’t catch that", er === "not-allowed" || er === "service-not-allowed" ? "Allow the microphone for Ruta DELE, or turn this check off in Deck settings." : "Tap the mic and say «" + esc(PC.word) + "»."); };
+    r.onend = () => { if (!PC || PC.rec !== r || got) return; pcPanel("no", "I didn’t hear anything", "Tap the mic and say «" + esc(PC.word) + "»."); };
+    try { r.start(); } catch (e) { pcPanel("no", "The microphone couldn’t start", "Tap the mic to try again, or Skip."); }
   }
   function pcStart(btn) {
     const card = SV && SV.card; if (!card) return false;
@@ -7184,7 +7194,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130242";
+  var BUILD = "202611130252";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
