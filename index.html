@@ -3234,13 +3234,46 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const esEnd = ws.filter((w) => /(os|as|o|a|ar|er|ir|ado|ido)$/.test(w) && w.length > 2).length;
     return ws.length && esEnd / ws.length > 0.5 ? "es" : "en";
   }
+  // words the course teaches (Spanish) and words its English uses
+  let RA_LEX = null;
+  function raLex() {
+    if (RA_LEX) return RA_LEX;
+    const es = new Set(), en = new Set(), tok = (t) => String(t || "").toLowerCase().match(/[a-záéíóúüñ]+/g) || [];
+    try { Object.values(VOCAB).forEach((lv) => lv.forEach((th) => (th.w || []).forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[1]).forEach((x) => en.add(x)); }))); } catch (e) {}
+    try { COURSE.forEach((l) => l.units.forEach((u) => (u.v || []).forEach((g) => (g.w || []).forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[1]).forEach((x) => en.add(x)); })))); } catch (e) {}
+    "a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english but".split(" ").forEach((x) => en.add(x));
+    "de en y la el los las un una unos unas que con por para del al mi tu su es son muy soy estoy eres está se lo le nos".split(" ").forEach((x) => es.add(x));
+    // a word in both lists (a Spanish word quoted in an English gloss, or a loanword) counts as Spanish, unless it's everyday English
+    const COMMON = new Set("a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english red pan son come dime".split(" "));
+    const en2 = new Set(COMMON); en.forEach((x) => { if (!es.has(x)) en2.add(x); });
+    RA_LEX = { es, en: en2 }; return RA_LEX;
+  }
+  // an English run with Spanish words in it: give the Spanish words to the Spanish voice
+  function raSplitEs(t) {
+    const L = raLex(), out = [], parts = String(t).split(/(\s+)/);
+    const isEs = (w) => { const x = w.toLowerCase().replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/.test(w)) return true; if (L.en.has(x)) return false; return L.es.has(x) && x.length >= 3 ? true : false; };
+    let cur = "", curEs = false;
+    parts.forEach((w) => {
+      if (/^\s+$/.test(w) || !w) { cur += w; return; }
+      const e = isEs(w), lang = e === null ? curEs : e;
+      if (cur.trim() && lang !== curEs) { out.push([cur.trim(), curEs]); cur = ""; }
+      curEs = lang; cur += w;
+    });
+    if (cur.trim()) out.push([cur.trim(), curEs]);
+    // a lone short Spanish-looking word in a long English sentence stays English (avoids voice ping-pong on loanwords)
+    // a word or two that is also Spanish (de, en, y, la) between Spanish words belongs with them
+    for (let i = 1; i < out.length - 1; i++) { const x = out[i], ws = x[0].toLowerCase().match(/[a-záéíóúüñ]+/g) || []; if (!x[1] && out[i - 1][1] && out[i + 1][1] && ws.length && ws.length <= 2 && ws.every((w) => L.es.has(w))) x[1] = true; }
+    return out.map((x, i) => (x[1] && !/[áéíóúñ¿¡ü]/.test(x[0]) && x[0].split(/\s+/).length === 1 && x[0].replace(/[^a-z]/gi, "").length <= 2 && !(out[i - 1] && out[i - 1][1]) && !(out[i + 1] && out[i + 1][1]) ? [x[0], false] : x)).reduce((a, x) => { const l = a[a.length - 1]; if (l && l[1] === x[1]) l[0] += " " + x[0]; else a.push(x); return a; }, []);
+  }
+  window.__raSplit = raSplitEs;
   function raSegs(el) {
     if (el.querySelector && el.querySelector(".pa")) { el = el.cloneNode(true); el.querySelectorAll(".pa").forEach((x) => x.remove()); }
-    const segs = [], push = (t, es) => {
+    const segs = [], push0 = (t, es) => {
       t = t.replace(/[\u{1F300}-\u{1FAFF}☀-➿]/gu, " ").replace(/\s*(→|⇒|·|•|\|)\s*/g, ", ").replace(/\s+\/\s+/g, " or ").replace(/_{2,}/g, " blank ").replace(/\s+/g, " ").trim();
       if (!t || !/[\p{L}\d]/u.test(t)) return;
       const last = segs[segs.length - 1]; if (last && last.es === es) last.t += " " + t; else segs.push({ t, es });
     };
+    const push = (t, es) => { if (es) return push0(t, true); raSplitEs(t).forEach(([x, e]) => push0(x, e)); };
     const stop = () => { const last = segs[segs.length - 1]; if (last && !/[.!?:,;]$/.test(last.t)) last.t += "."; };
     const walk = (n, forceEs) => {
       if (n.nodeType === 3) {
@@ -3331,7 +3364,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const next = () => {
       if (gen !== RA.gen || !RA.on || RA.paused) return;
       if (k >= item.segs.length) { RA.i++; setTimeout(() => { if (gen === RA.gen && RA.on && !RA.paused) raPlay(); }, 350); return; }
-      const sg = item.segs[k++], u = utter(sg.t, sg.es ? "es" : "en", (sg.es ? 0.9 : 1) * RA.rate);
+      const sg = item.segs[k++], u = utter(sg.t, sg.es ? "es" : "en", (sg.es ? 0.8 : 1) * RA.rate);
       let moved = false; const go = () => { if (moved) return; moved = true; if (sg.after) setTimeout(next, sg.after); else next(); };
       u.onend = go; u.onerror = (e) => { if (e && e.error === "interrupted") return; go(); };
       try { speechSynthesis.speak(u); } catch (e) { go(); }
@@ -3358,7 +3391,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const pl = document.getElementById("ra-player"); if (pl) pl.setAttribute("aria-label", "Read aloud, about " + Math.max(1, Math.round((T.total - T.done) / 60)) + " minutes left");
   }
   // estimated reading time: words at the speaking speed, plus the pauses
-  function raSecs(it) { let s = 0.35; it.segs.forEach((g) => { const w = (g.t.match(/\S+/g) || []).length; s += w / ((g.es ? 2.35 * 0.9 : 2.7) * RA.rate) + 0.25 + (g.after || 0) / 1000; }); return s; }
+  function raSecs(it) { let s = 0.35; it.segs.forEach((g) => { const w = (g.t.match(/\S+/g) || []).length; s += w / ((g.es ? 2.35 * 0.8 : 2.7) * RA.rate) + 0.25 + (g.after || 0) / 1000; }); return s; }
   function raTimes() { let total = 0, done = 0; RA.q.forEach((it, k) => { const x = it.secs || (it.secs = raSecs(it)); total += x; if (k < RA.i) done += x; }); return { total, done }; }
   const raClock = (sec) => { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ":" + String(sec % 60).padStart(2, "0"); };
   function raBtn() {
@@ -7301,7 +7334,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130428";
+  var BUILD = "202611130431";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
