@@ -1415,6 +1415,7 @@ a.chipl::after { content: " ›"; opacity: .6 }
 .exsubmit { justify-content: center; margin: 10px 0 30px }
 </style>
 
+<script>window.__BUILD = "202611131857";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -2611,7 +2612,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       uiGroup("Review", [
         uiRow({ ic: "cards", t: "Flashcards", href: "#repaso", val: due ? '<span class="badge2">' + due + "</span>" : "", sub: due ? "Reviews due now" : "Spaced repetition for every level" }),
         uiRow({ ic: "mist", t: "My mistakes", href: "#errores", val: nm ? '<span class="badge2">' + nm + "</span>" : "", sub: "Questions you got wrong, to try again" }),
-        uiRow({ ic: "mock", t: "Full DELE exams · " + LV[cl].name, href: "#" + cl + "-examenes", sub: "Complete practice exams: reading, listening, writing and speaking, marked with the DELE criteria" }),
+        uiRow({ ic: "mock", t: "Full DELE exams", href: "#examenes", sub: "15 complete A1 exams ready: reading, listening, writing and speaking, marked with the DELE criteria" }),
         uiRow({ ic: "mock", t: "Mock exam · " + LV[cl].name, href: "#" + cl + "-mock", sub: "Quick 10-question check" }),
       ]) + "</div>";
   }
@@ -2632,6 +2633,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<h2 class="ghead">Theme</h2><div class="pals" role="group" aria-label="Colour theme">' + [["", "Classic"]].concat(Object.keys(PALS).map((k) => [k, PALS[k].n])).map(([k, n]) => { const P = PALS[k]; return '<button type="button" class="pal" data-act="ui-pal" data-v="' + k + '" aria-pressed="' + ((UI.pal || "") === k) + '"><span class="pal-sw' + (P ? "" : " split") + '"' + (P ? ' style="--pb:' + P.bg + ";--ps:" + P.su + ";--pi:" + P.ink + ";--pt:" + P.ti + ";--pa:" + P.sa + '"' : "") + ">" + (P ? "<i></i><u></u><em></em>" : "") + "</span><small>" + n + "</small></button>"; }).join("") + "</div>" +
       '<p class="gfoot" style="margin-top:0">Swipe for more. Classic follows the Appearance setting below.</p>' +
       '<h2 class="ghead">Daily goal</h2><div class="ilist pad">' + seg("goal", S.goal || 20, GOALS.map(([v, n]) => [v, n + " · " + v])) + "</div>" +
+      '<h2 class="ghead">App</h2><div class="ilist pad"><p class="small" style="margin:0">Version <b>' + esc(updDate(window.__BUILD)) + '</b></p><div class="row" style="margin-top:8px"><button class="btn small" data-act="upd-check">⟳ Check for updates</button></div><p id="upd-res" class="small" style="margin:6px 0 0"></p></div>' +
       '<h2 class="ghead">Microphone</h2><div class="ilist pad"><p class="muted small" style="margin:0">Used to talk to Profe and for the pronunciation check.' + (IOS_OTHER ? " On iPhone this only works in Safari." : "") + '</p><div class="row" style="margin-top:8px"><button class="btn small" data-act="mic-test">🎙️ Test microphone</button>' + (IS_IOS ? '<button class="btn small" data-act="mic-help">Help</button>' : "") + '</div><p id="mic-res" class="small" style="margin:6px 0 0"></p></div>' +
       '<h2 class="ghead">Display</h2><div class="ilist pad"><p class="setl">Text size</p>' + seg("ui-fs", UI.fs || 1, [[0.9, "A−"], [1, "A"], [1.12, "A+"], [1.25, "A++"]]) +
       '<p class="setl">Translation cue tips <span class="muted small">· Reading and Listening</span></p>' + seg("ui-cue", UI.cues === false ? "off" : "on", [["on", "On"], ["off", "Off"]]) + '<p class="setl">Appearance</p>' + seg("ui-theme", UI.theme || "auto", [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]]) + "</div>" +
@@ -5546,6 +5548,24 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return navigator.mediaDevices.getUserMedia({ audio: true }).then((st) => { st.getTracks().forEach((t) => t.stop()); MIC_OK = true; return new Promise((r) => setTimeout(() => r(true), 300)); })
       .catch((err) => { micHelp(err && err.name === "NotAllowedError" ? "denied" : "nomic"); return false; });
   }
+
+  // Settings › About: the version and a way to force the latest one
+  function updCheck(btn) {
+    const out = document.getElementById("upd-res"); if (out) out.textContent = "Checking…";
+    fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => {
+      const mine = window.__BUILD || "";
+      if (j && j.v && j.v > mine) {
+        if (out) out.textContent = "Updating to the latest version…";
+        const go = () => (window.__updFresh ? window.__updFresh(j.v) : location.reload());
+        Promise.resolve().then(() => (window.caches ? caches.keys().then((ks) => Promise.all(ks.filter((k) => /^ruta-dele-/.test(k)).map((k) => caches.delete(k)))) : null))
+          .then(() => (navigator.serviceWorker && navigator.serviceWorker.getRegistrations ? navigator.serviceWorker.getRegistrations().then((rs) => Promise.all(rs.map((r) => r.update().catch(() => {})))) : null))
+          .catch(() => {}).then(go);
+      } else if (j) { if (out) out.textContent = "✓ You have the latest version."; }
+      else if (out) out.textContent = "Couldn’t check: no internet connection?";
+    }).catch(() => { if (out) out.textContent = "Couldn’t check: no internet connection?"; });
+  }
+  const updDate = (v) => { v = String(v || ""); if (v.length < 12) return v; try { return new Date(Date.UTC(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12))).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }); } catch (e) { return v; } };
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="upd-check"]'); if (t) updCheck(t); });
   function micHelp(kind) {
     let m = document.getElementById("michelp"); if (!m) { m = document.createElement("div"); m.id = "michelp"; m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Microphone help"); document.body.appendChild(m); }
     const url = location.origin + location.pathname;
@@ -8073,6 +8093,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const g1 = (g("lectura") || 0) + (g("escritura") || 0), g2 = (g("auditiva") || 0) + (g("oral") || 0), tot = g1 + g2;
     return { all, g1, g2, tot, pass: all && tot >= 60 && g1 >= 30 && g2 >= 30, done: EXORDER.filter((k) => g(k) != null).length };
   }
+  // every level: which exams are ready
+  const EXREADY = { a1: 15 };
+  function exAll() {
+    document.body.classList.remove("no-tabs");
+    app.innerHTML = '<div class="stack"><div><p class="eyebrow">DELE practice</p><h1>Full DELE exams</h1><p class="lead2">Complete practice exams with the four papers, real timing and DELE marking.</p></div><ul class="exlist">' +
+      Object.keys(EXL).map((lv) => { const n = EXREADY[lv] || 0;
+        return "<li>" + (n ? '<a href="#' + lv + '-examenes">' : '<a aria-disabled="true" class="exsoon">') + '<span class="exn">' + EXL[lv] + '</span><span class="ext"><b>DELE ' + EXL[lv] + "</b><small>" + (n ? n + " complete exams" : "Being written · coming soon") + "</small></span>" + (n ? '<span class="exgo">Open ›</span>' : "") + "</a></li>"; }).join("") + "</ul></div>";
+  }
   function exHub(lv, D) {
     const F = D.format;
     app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#' + lv + '">' + EXL[lv] + '</a><span aria-hidden="true">›</span><span>Full exams</span></p>' +
@@ -8335,6 +8363,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (/^g-[a-z]+$/.test(h)) { setSec("gramatica"); navChips(null); gPage(h.slice(2)); }
     else if (/^verbo-\d+$/.test(h)) { setSec("verbos"); navChips(null); verbDetail(parseInt(h.slice(6), 10) - 1); }
     else if (/^(a1|a2|b1|b2|c1|c2)-examen(es|-\d+(-(lectura|auditiva|escritura|oral))?)$/.test(h)) { const mm = /^(a1|a2|b1|b2|c1|c2)-examen(?:es|-(\d+)(?:-(lectura|auditiva|escritura|oral))?)$/.exec(h); setSec("curso"); navChips(null); exRoute(mm[1], mm[2], mm[3]); }
+    else if (h === "examenes") { setSec("curso"); navChips(null); exAll(); }
     else if (/^palabra-/.test(h)) { setSec("palabras"); navChips(null); let w = h.slice(8); try { w = decodeURIComponent(w); } catch (e) {} wordPage(w); }
     else if (h === "palabras") { setSec("palabras"); navChips(null); WV.quiz = null; wordsView(); }
     else if (h === "curso") { setSec("curso"); navChips(null); courseHub(); }
@@ -8447,17 +8476,20 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131813";
+  var BUILD = "202611131857";
+  window.__BUILD = BUILD;
+  function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
+  window.__updFresh = fresh;
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
       var busy = document.body.classList.contains("tutor-open") || document.body.classList.contains("gp-on");
-      if (auto && !busy) { try { if (sessionStorage.getItem("rd-upd") === j.v) return; sessionStorage.setItem("rd-upd", j.v); } catch (e) {} location.reload(); return; }
+      if (auto && !busy) { try { if (sessionStorage.getItem("rd-upd") === j.v) return; sessionStorage.setItem("rd-upd", j.v); } catch (e) {} fresh(j.v); return; }
       if (document.getElementById("upd-bar")) return;
       var b = document.createElement("div"); b.id = "upd-bar"; b.setAttribute("role", "status");
       b.style.cssText = "position:fixed;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));z-index:50;background:var(--cobalt);color:var(--on-cobalt);border-radius:12px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 6px 20px rgba(0,0,0,.2);font-weight:600";
       b.innerHTML = '<span>A new version of Ruta DELE is ready.</span><button type="button" style="border:0;border-radius:999px;padding:6px 16px;font:inherit;font-weight:700;cursor:pointer;background:#fff;color:#1F4FA3">Update</button>';
-      b.querySelector("button").onclick = function () { location.reload(); };
+      b.querySelector("button").onclick = function () { fresh(j.v); };
       document.body.appendChild(b);
     }).catch(function () {});
   }
