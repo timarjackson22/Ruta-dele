@@ -1146,6 +1146,23 @@ body.study .srbtns { width: 100%; max-width: 620px; justify-self: center; gap: 8
 body.study .srb { min-height: 66px; justify-content: center; border-radius: 16px; font-size: 1.05rem }
 body.study .fc-wrap > p.small { font-size: .82rem; max-width: 52ch; justify-self: center }
 body.study .srmore { width: 100%; max-width: 620px; justify-self: center }
+
+.s30 { width: 100%; max-width: 620px; justify-self: center; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center }
+.s30h { margin: 0; font-size: .85rem; color: var(--muted); font-weight: 600 }
+.s30b { display: flex; gap: 8px }
+.s30x { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--ink); border-radius: 999px; padding: 7px 14px; font: inherit; font-weight: 600; font-size: .92rem; cursor: pointer }
+.s30x:disabled { opacity: .4; cursor: default }
+.s30bar { width: 100%; max-width: 620px; justify-self: center; display: flex; align-items: center; gap: 10px; font-size: .95rem }
+.s30bar > span:first-child { white-space: nowrap }
+.s30prog { flex: 1; height: 6px; border-radius: 6px; background: var(--surface-2); overflow: hidden } .s30prog i { display: block; height: 100%; background: var(--good); border-radius: 6px; transition: width .3s }
+.srcard { transform-style: preserve-3d; backface-visibility: hidden }
+.srcard.fl-out { animation: flOut .19s cubic-bezier(.5, 0, .9, .6) forwards }
+.srcard.fl-in { animation: flIn .42s cubic-bezier(.15, .85, .3, 1.15) }
+@keyframes flOut { to { transform: perspective(1100px) rotateY(90deg) scale(.96); box-shadow: 0 30px 60px rgba(0, 0, 0, .25) } }
+@keyframes flIn { from { transform: perspective(1100px) rotateY(-90deg) scale(.96); box-shadow: 0 30px 60px rgba(0, 0, 0, .25) } 70% { transform: perspective(1100px) rotateY(6deg) } }
+.srcard.nx-in { animation: nxIn .38s cubic-bezier(.2, .8, .3, 1.1) }
+@keyframes nxIn { from { transform: translateX(40px) rotate(2deg); opacity: .2 } }
+@media (prefers-reduced-motion: reduce) { .srcard.fl-in, .srcard.fl-out, .srcard.nx-in { animation: none } }
 </style>
 
 </head>
@@ -2752,8 +2769,21 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return { nw: Math.min(nw, newLeft), lrn, due: Math.min(due, SRD.opt.maxRev), total: items.length, seen: items.length - nw };
   }
   // next card: learning cards that are due, then reviews, then new cards (Anki order)
+  // a set of 30: the first unseen words, the cards you've seen (soonest due first), or half and half
+  function q30(id, kind) {
+    const items = deckItems(id), now = Date.now(), t = today();
+    const unseen = items.filter((x) => !SRD.c[x.id] && !(x.rev && !SRD.c[x.id.slice(0, -2)])).map((x) => x.id);
+    const key = (k) => (k.s === 2 ? k.d : (k.due || now) / 864e5 - 1e6 + t);
+    const seen = items.filter((x) => SRD.c[x.id]).sort((a, b) => key(SRD.c[a.id]) - key(SRD.c[b.id])).map((x) => x.id);
+    if (kind === "new") return unseen.slice(0, 30);
+    if (kind === "old") return seen.slice(0, 30);
+    const n = unseen.slice(0, 15), o = seen.slice(0, 30 - Math.min(15, n.length)), out = [];
+    const n2 = n.concat(unseen.slice(15, 30 - o.length)); while (out.length < 30 && (n2.length || o.length)) { if (o.length) out.push(o.shift()); if (n2.length && out.length < 30) out.push(n2.shift()); }
+    return out;
+  }
   function nextCard(id) {
     const t = today(), now = Date.now(), items = deckItems(id), c = counts(id);
+    if (SV && SV.deck === id && SV.mode === "s30") { const k = (SV.q30 || []).shift(); return k ? items.find((x) => x.id === k) || null : null; }
     if (SV && SV.deck === id && SV.mode === "cram") { // practise everything you've seen, no scheduling
       const seen = items.filter((x) => SRD.c[x.id]); if (!seen.length) return null;
       SV.cq = (SV.cq || []).filter((k) => seen.some((x) => x.id === k)); if (!SV.cq.length) SV.cq = seen.map((x) => x.id).sort(() => Math.random() - 0.5);
@@ -2811,8 +2841,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   let SV = null; // study view state
   document.addEventListener("click", (e) => {
-    const b = e.target.closest && e.target.closest('[data-act="sr-xnew"],[data-act="sr-ahead"],[data-act="sr-cram"],[data-act="sr-normal"]'); if (!b || !SV) return;
+    const b = e.target.closest && e.target.closest('[data-act="sr-xnew"],[data-act="sr-ahead"],[data-act="sr-cram"],[data-act="sr-normal"],[data-act="sr-30"]'); if (!b || !SV) return;
     const a = b.dataset.act, t = today();
+    if (a === "sr-30") { SV.mode = "s30"; SV.k30 = b.dataset.k; SV.q30 = q30(SV.deck, b.dataset.k); SV.t30 = SV.q30.length; SV.n30 = 0; SV.card = null; SV.shown = false; window.__nextIn = 1; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); return; }
     if (a === "sr-xnew") { const d = SRD.days[t] = SRD.days[t] || { n: 0, r: 0, ok: 0, nd: {} }; d.xn = d.xn || {}; d.xn[SV.deck] = (d.xn[SV.deck] || 0) + 10; try { localStorage.setItem(SRS_KEY, JSON.stringify(SRD)); } catch (er) {} SV.mode = ""; }
     else if (a === "sr-ahead") SV.mode = "ahead"; else if (a === "sr-cram") { SV.mode = "cram"; SV.cq = []; } else SV.mode = "";
     SV.card = null; SV.shown = false; studyView(SV.deck, SV.inLevel); scrollTo(0, 0);
@@ -3283,7 +3314,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const others = allDeckIds().filter((d) => d !== id).map((d) => { const c = counts(d); return [d, c.due + c.lrn]; }).filter((x) => x[1] > 0).slice(0, 4);
     const opt = (act, ic, t1, t2) => '<button type="button" class="srmore-b" data-act="' + act + '"><span class="srm-ic" aria-hidden="true">' + ic + "</span><span><b>" + t1 + "</b><small>" + t2 + "</small></span></button>";
     return '<div class="srmore">' +
-      (unseen ? opt("sr-xnew", "✨", "Learn 10 more new words", unseen + " new words left in this deck") : "") +
+      (unseen ? opt("sr-30\" data-k=\"new", "✨", "30 new words", unseen + " new words left in this deck") : "") +
+      (seen ? opt("sr-30\" data-k=\"old", "🔁", "30 old words", "Cards you’ve already studied, soonest due first") : "") +
+      (unseen && seen ? opt("sr-30\" data-k=\"mix", "🔀", "30 mixed", "Half new, half old") : "") +
       (soon ? opt("sr-ahead", "⏩", "Review ahead", soon + " cards due in the next 7 days") : "") +
       (seen ? opt("sr-cram", "🔁", "Practise the whole deck", "All " + seen + " cards you’ve seen, shuffled. Won’t change your schedule.") : "") +
       (others.length ? '<p class="small muted" style="margin:10px 0 4px">Other decks with reviews due now:</p><div class="row">' + others.map(([d, n]) => '<a class="btn small" href="#repaso-' + d + '">' + esc(deckName(d).replace(/\s*\(.*\)$/, "")) + " · " + n + "</a>").join("") + "</div>" : "") +
@@ -3296,11 +3329,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!SV.card || !SV.shown) SV.card = nextCard(id);
     const card = SV.card ? Object.assign({ deck: id }, SV.card) : null, c = counts(id);
     const head = inLevel && L ? levelHead(L, "-cards") : '<p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#repaso">Flashcard review</a><span aria-hidden="true">›</span><span>' + esc(deckName(id)) + "</span></p><h1>" + esc(deckName(id)) + "</h1>";
-    const cnt = SV.mode ? '<p class="srcount">' + (SV.mode === "cram" ? "🔁 Practising the whole deck" : "⏩ Reviewing ahead") + ' · <button class="btn small" data-act="sr-normal">Stop</button></p>' : '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
+    const cnt = SV.mode === "s30" ? '<div class="s30bar"><span>' + ({ new: "✨ 30 new", old: "🔁 30 old", mix: "🔀 30 mixed" }[SV.k30] || "Set") + " · <b>" + Math.min(SV.n30 || 0, SV.t30) + " / " + SV.t30 + '</b></span><span class="s30prog"><i style="width:' + Math.round(100 * (SV.n30 || 0) / Math.max(1, SV.t30)) + '%"></i></span><button class="btn small" data-act="sr-normal">Stop</button></div>' :
+      SV.mode ? '<p class="srcount">' + (SV.mode === "cram" ? "🔁 Practising the whole deck" : "⏩ Reviewing ahead") + ' · <button class="btn small" data-act="sr-normal">Stop</button></p>' : '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
     let body;
     if (!card) {
       const st = srStats();
-      body = '<div class="fc" style="cursor:default"><div><p class="face">¡Listo por hoy!</p><p class="muted" style="margin-top:8px">' + (SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done. Want to keep going?") + "</p></div></div>" + srMoreHTML(id);
+      body = '<div class="fc" style="cursor:default"><div><p class="face">' + (SV.mode === "s30" ? "¡Set completo!" : "¡Listo por hoy!") + '</p><p class="muted" style="margin-top:8px">' + (SV.mode === "s30" ? "🎉 " + (SV.n30 || 0) + " cards done. Pick another set of 30 below, or tap Stop." : SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done. Want to keep going?") + "</p></div></div>" + srMoreHTML(id);
     } else {
       const front = card.rev ? card.en : card.es, back = card.rev ? card.es : card.en;
       const k = SRD.c[card.id], tag = SV.mode === "cram" ? '<span class="srtag r">Practice · no schedule change</span>' : !k ? '<span class="srtag n">New</span>' : k.s === 2 ? '<span class="srtag r">' + (SV.mode === "ahead" && k.d > today() ? "Review ahead" : "Review") + "</span>" : '<span class="srtag l">Learning</span>';
@@ -3314,10 +3348,21 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
           : '<p class="muted small" style="text-align:center">' + (typed ? 'Type your answer, then press Enter or <button class="btn small primary" data-act="sr-show">Check</button>' : "Tap the card to flip it") + "</p>");
     }
     const opts = '<details class="small srset"><summary>Deck settings</summary><div class="row" style="margin-top:8px"><label for="sr-new">New cards per day</label><select id="sr-new">' + [5, 10, 15, 20, 30, 50].map((n) => '<option' + (SRD.opt.newPerDay === n ? " selected" : "") + ">" + n + "</option>").join("") + '</select></div><label class="row"><input type="checkbox" id="sr-rev"' + (SRD.opt.rev ? " checked" : "") + '> Both directions (also English → Spanish, to practise speaking)</label><label class="row"><input type="checkbox" id="sr-type"' + (SRD.opt.type ? " checked" : "") + '> Type the Spanish on English → Spanish cards (checks accents)</label></div></details>';
-    app.innerHTML = '<div class="stack">' + head + '<div class="fc-wrap">' + cnt + (body || "") + '<p class="muted small" style="text-align:center">Rate honestly: <b>Again</b> if you forgot, <b>Hard</b> if it took effort, <b>Good</b> if you knew it, <b>Easy</b> if it was instant. The app brings each word back just before you would forget it.</p>' + opts + "</div></div>";
+    const items0 = deckItems(id), un0 = items0.filter((x) => !SRD.c[x.id]).length, se0 = items0.length - un0;
+    const sets = (SV.mode === "s30" && card) || !card ? "" : '<div class="s30"><p class="s30h">Study a set of 30</p><div class="s30b">' + [["new", "✨", "New", un0], ["old", "🔁", "Old", se0], ["mix", "🔀", "Mixed", un0 && se0 ? 1 : 0]].map(([k, ic, n, ok]) => '<button type="button" class="s30x" data-act="sr-30" data-k="' + k + '"' + (ok ? "" : " disabled") + '><span aria-hidden="true">' + ic + "</span>" + n + "</button>").join("") + "</div></div>";
+    app.innerHTML = '<div class="stack">' + head + '<div class="fc-wrap">' + cnt + (body || "") + sets + '<p class="muted small" style="text-align:center">Rate honestly: <b>Again</b> if you forgot, <b>Hard</b> if it took effort, <b>Good</b> if you knew it, <b>Easy</b> if it was instant. The app brings each word back just before you would forget it.</p>' + opts + "</div></div>";
     const inp = document.getElementById("sr-in"); if (inp) { inp.focus(); inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { SV.typed = inp.value; SV.shown = true; studyView(id, inLevel); } }); }
     SV.inLevel = inLevel;
+    const cd = document.querySelector(".srcard");
+    if (cd && window.__flipIn) { cd.classList.add("fl-in"); window.__flipIn = 0; window.__nextIn = 0; }
+    else if (cd && window.__nextIn) { cd.classList.add("nx-in"); window.__nextIn = 0; }
   }
+  // flip: turn the card edge-on, swap to the answer, turn it back
+  document.addEventListener("click", (e) => {
+    const f = e.target.closest && e.target.closest('[data-act="sr-flip"]'); if (!f || f.dataset.fl || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    e.stopImmediatePropagation(); e.preventDefault(); f.dataset.fl = "1"; f.classList.add("fl-out");
+    setTimeout(() => { window.__flipIn = 1; f.click(); }, 190);
+  }, true);
   // compare a typed answer with the right one, letter by letter, accents highlighted
   function typedDiff(typed, right) {
     const r = right.replace(/\s*\(.*?\)/g, "").trim(), alts = r.split(/\s*[\/,;]\s*/);
@@ -7014,7 +7059,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     else if (act === "mock-reset" && L) mock(L);
     else if (act === "sr-show") { const i = document.getElementById("sr-in"); if (i) SV.typed = i.value; SV.shown = true; studyView(SV.deck, SV.inLevel); }
-    else if (act === "sr-rate" && SV && SV.card) { if (SV.mode === "cram") { try { actAdd(1); } catch (e) {} if (+t.dataset.e === 1) (SV.cq = SV.cq || []).splice(Math.min(3, SV.cq.length), 0, SV.card.id); } else schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
+    else if (act === "sr-rate" && SV && SV.card) { window.__nextIn = 1; if (SV.mode === "s30") { SV.n30 = (SV.n30 || 0) + (+t.dataset.e === 1 ? 0 : 1); if (+t.dataset.e === 1) SV.q30.splice(Math.min(3, SV.q30.length), 0, SV.card.id); } if (SV.mode === "cram") { try { actAdd(1); } catch (e) {} if (+t.dataset.e === 1) (SV.cq = SV.cq || []).splice(Math.min(3, SV.cq.length), 0, SV.card.id); } else schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
     else if (act === "sr-add") { const es = t.dataset.es, en = t.dataset.en; if (!SRD.mine.some((m) => ckey(m.es) === ckey(es))) { SRD.mine.push({ es, en, src: CUR ? CUR.t : "" }); srSave(); } t.textContent = "✓ Added to Mis palabras"; t.disabled = true; }
     else if (act === "flip") { FC.flipped = !FC.flipped; cardsView(LV[FC.l]); }
     else if (act === "fc-rev") { FC.rev = !FC.rev; FC.flipped = false; cardsView(LV[FC.l]); }
@@ -7044,7 +7089,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130201";
+  var BUILD = "202611130211";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
