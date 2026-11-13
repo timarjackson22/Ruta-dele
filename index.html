@@ -1258,6 +1258,8 @@ body.study .srm-ic { width: 34px; height: 34px; border-radius: 10px; font-size: 
 .pxcard .btn { font-size: .92rem; padding: 7px 14px }
 .btn { font-size: .95rem }
 .btn.small, .small.btn { font-size: .85rem }
+
+@media (max-width: 820px) { body.no-tabs.tutor-open .tutor, body.ra-on.tutor-open .tutor { bottom: 0 !important; padding-bottom: env(safe-area-inset-bottom, 0px) !important } }
 </style>
 
 </head>
@@ -3243,16 +3245,25 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     try { COURSE.forEach((l) => l.units.forEach((u) => (u.v || []).forEach((g) => (g.w || []).forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[1]).forEach((x) => en.add(x)); })))); } catch (e) {}
     "a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english but".split(" ").forEach((x) => en.add(x));
     "de en y la el los las un una unos unas que con por para del al mi tu su es son muy soy estoy eres está se lo le nos ya vamos".split(" ").forEach((x) => es.add(x));
+    // every Spanish word form the app knows (the 7,000-word list and its forms, the tagging dictionary), and the English of their glosses
+    const enG = (g) => tok(String(g || "").replace(/\([^)]*\)/g, " ").replace(/[«“"][^»”"]*[»”"]/g, " "));
+    const pos = {}; try { W.forEach((w) => { const t0 = tok(w[0]); if (t0.length === 1) pos[t0[0]] = w[1]; }); } catch (e) {}
+    try { W.forEach((w) => { tok(w[0]).forEach((x) => es.add(x)); tok(w[3]).forEach((x) => es.add(x)); enG(w[2]).forEach((x) => en.add(x)); }); } catch (e) {}
+    try { Object.keys(TG).forEach((k) => { if (/^[a-záéíóúüñ]+$/.test(k)) es.add(k); enG(TG[k][2]).forEach((x) => en.add(x)); }); } catch (e) {}
     // a word in both lists (a Spanish word quoted in an English gloss, or a loanword) counts as Spanish, unless it's everyday English
-    const COMMON = new Set("a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english red pan son come dime".split(" "));
-    const en2 = new Set(COMMON); en.forEach((x) => { if (!es.has(x)) en2.add(x); });
+    const COMMON = new Set("a an the and or but if so to of in on at by for with from as is are was be it its this that these those he she we they you i me my your our their his her them us not no yes do does did can will would should could have has had what when where who why how which than then there here very just also only more most some any all each every one two three about into over after before up down out off again new old good bad big small long short time year day way man woman people word words verb verbs noun nouns sound sounds letter letters say said like same different always never often example examples means mean use used spanish english red pan son come dime once sea has he van era me fin pie real general final normal local animal hotel doctor idea radio taxi piano metro capital natural casual personal formal simple internet bus canal decide describe reduce uses late den".split(" "));
+    const en2 = new Set(COMMON); en.forEach((x) => en2.add(x));
     const esN = new Set(); es.forEach((x) => { const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (!en2.has(n)) esN.add(n); });
-    RA_LEX = { es, en: en2, esN }; return RA_LEX;
+    RA_LEX = { es, en: en2, esN, common: COMMON, pos }; return RA_LEX;
   }
+  const RA_FN = /^(por|para|pero|porque|cuando|donde|muy|sin|sobre|entre|hasta|desde|hacia|contra|durante|también|tampoco|nunca|siempre|aquí|allí|ahora|hoy|ayer|nosotros|nosotras|vosotros|vosotras|ellos|ellas|usted|ustedes|yo|tú|él|ella|este|esta|ese|esa|aquel|aquella|estos|estas|esos|esas|del|al|los|las|una|unos|unas|qué|cómo|cuál|quién|dónde|cuándo|ser|estar|haber|tener|hacer|hay)$/;
   // an English run with Spanish words in it: give the Spanish words to the Spanish voice
   function raSplitEs(t) {
     const L = raLex(), out = [], parts = String(t).split(/(\s+)/);
-    const isEs = (w) => { const x = w.toLowerCase().replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/i.test(w)) return true; if (L.en.has(x)) return false; const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (x.length >= 3 && (L.es.has(x) || L.esN.has(n) || (/s$/.test(n) && (L.esN.has(n.slice(0, -1)) || (/es$/.test(n) && L.esN.has(n.slice(0, -2))))))) return true; return false; };
+    { const one = String(t).trim().replace(/[.,;:!?]+$/, "").toLowerCase();
+      if (/^(a|be|ce|de|e|efe|ge|hache|i|jota|ka|ele|eme|ene|eñe|o|pe|cu|erre|ese|te|u|uve|uve doble|doble uve|equis|ye|i griega|zeta|be larga|ve corta)$/.test(one) && one.length > 1) return [[String(t).trim(), true]];
+      if (/^[a-záéíóúüñ]+$/.test(one) && one.length >= 3 && L.es.has(one) && !L.en.has(one) && !L.common.has(one)) return [[String(t).trim(), true]]; if (/^[a-záéíóúüñ]+$/.test(one) && typeof TG !== "undefined" && TG[one] && /verb|pron|det|art|prep|conj/.test(TG[one][1]) && !/^(a|i|no|me|he|has|van|era|sea|once|son)$/.test(one)) return [[String(t).trim(), true]]; }
+    const isEs = (w) => { const x = w.toLowerCase().split("/")[0].replace(/^[^a-záéíóúüñ¿¡]+|[^a-záéíóúüñ]+$/g, ""); if (x.length < 2) return null; if (/[áéíóúñ¿¡ü]/i.test(w)) return true; if (RA_FN.test(x)) return true; const ps0 = ((typeof TG !== "undefined" && TG[x] && TG[x][1]) || "") + " " + (L.pos[x] || ""); if (ps0.trim() && !L.common.has(x)) { const ps = ps0; if (/verb|pron|det|art|prep|conj/.test(ps)) return true; if (/adj|noun/.test(ps) && x.length >= 4 && /(o|a|os|as|ción|ciones|dad|dades|mente|ero|era|eros|eras|ito|ita)$/.test(x) && !L.en.has(x)) return true; if (/adj|noun/.test(ps) && /(ano|ana|anos|anas|eño|eña|ense|és|esa)$/.test(x)) return true; }  if (L.en.has(x)) return false; const n = x.normalize("NFD").replace(/[̀-ͯ]/g, ""); if (x.length >= 3 && (L.es.has(x) || L.esN.has(n) || (/s$/.test(n) && (L.esN.has(n.slice(0, -1)) || (/es$/.test(n) && L.esN.has(n.slice(0, -2))))))) return true; return false; };
     let cur = "", curEs = false;
     parts.forEach((w) => {
       if (/^\s+$/.test(w) || !w) { cur += w; return; }
@@ -3325,7 +3336,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (e.tagName === "TR" && e.closest("table.vocab") && e.querySelector("td.es") && e.querySelector("td.en")) {
         const es = e.querySelector("td.es").textContent.replace(/🇵🇦/gu, "").replace(/\((Esp|LatAm)[^)]*\)/g, "").trim(), en = e.querySelector("td.en").textContent.trim();
         let o = { reps: 3, gap: 1.5, en: 1 }; try { o = GP.o; } catch (x) {}
-        const segs = []; if (+o.en) segs.push({ t: en, es: false, after: 500 });
+        const segs = []; if (+o.en) { const sp = raSplitEs(en); sp.forEach(([x, e], j) => segs.push({ t: x, es: e, after: j === sp.length - 1 ? 500 : 0 })); }
         for (let k = 0; k < +o.reps; k++) segs.push({ t: es, es: true, after: Math.round(+o.gap * 1000) });
         q.push({ el: e, segs }); return;
       }
@@ -7344,7 +7355,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130449";
+  var BUILD = "202611130457";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
