@@ -1298,6 +1298,9 @@ body.study .srm-ic { width: 34px; height: 34px; border-radius: 10px; font-size: 
 body.no-tabs .pxret { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) }
 body.no-tabs .pxback { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important }
 body.tutor-open .pxret { display: none }
+
+.tret { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0 4px 12px; padding: 7px 14px 7px 10px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 650; font-size: .9rem; background: var(--cobalt); color: var(--on-cobalt); box-shadow: 0 4px 12px color-mix(in srgb, var(--cobalt) 30%, transparent) }
+.tret svg { width: 18px; height: 18px }
 </style>
 
 </head>
@@ -4830,6 +4833,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("visibilitychange", () => { if (!GP_NATIVE && document.visibilityState === "visible" && GP.on && !GP.paused) { gpWake(true); if (!speechSynthesis.speaking) gpSay(); } });
   function gpButton() { return canSpeak ? '<button class="btn small primary gp-btn" data-act="gp-play" aria-pressed="false">▶ Listen: ' + (GP.o.en ? "English, then " : "") + "Spanish ×" + GP.o.reps + "</button>" : ""; }
 
+
+  // remember where Profe was opened from, to offer the way back
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest('[data-act="t-ask"], [data-act="t-open"]'); if (!t || t.closest("#tutor")) return;
+    if (t.closest("#runner, .pxfb") && typeof PX !== "undefined" && PX) window.__tRet = { kind: "q", n: (PX.i || 0) + 1 };
+    else if (document.body.classList.contains("no-tabs")) window.__tRet = { kind: "lesson" };
+    else window.__tRet = null;
+  }, true);
   /* ================= AI TUTOR (Profe): voice, on-device AI, Claude, offline practice ================= */
   const TK = "ruta-dele-tutor-v1";
   let TS = { sessions: [], memory: "", apiKey: "", localModel: "", localReady: false, engine: "auto", sttLang: "", autoListen: true };
@@ -6379,7 +6390,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     TB = resolveTB();
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
-    const head = '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
+    const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + "</button>" : "";
+    const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
     else if (tView === "practice") body = practiceHTML();
@@ -6454,7 +6466,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const act = t.dataset.act;
     if (act === "t-open") tOpen();
     else if (act === "t-ask") tOpen(t.dataset.p);
-    else if (act === "t-close") { voiceMode = false; stopListening(); document.getElementById("tutor").hidden = true; document.body.classList.remove("tutor-open"); }
+    else if (act === "t-ret") { const R = window.__tRet; window.__tRet = null; const c = document.querySelector('#tutor [data-act="t-close"]'); if (c) c.click(); setTimeout(() => { const el = R && R.kind === "q" ? document.getElementById("runner") : null; if (el) el.scrollIntoView({ block: "start" }); }, 60); }
+    else if (act === "t-close") { window.__tRet = null; voiceMode = false; stopListening(); document.getElementById("tutor").hidden = true; document.body.classList.remove("tutor-open"); }
     else if (act === "t-tab") { tView = t.dataset.v; tRender(); }
     else if (act === "t-chip") tSend(t.dataset.p);
     else if (act === "t-new" && window.AndroidLLM && window.AndroidLLM.resetChat) { try { window.AndroidLLM.resetChat(); } catch (x) {} }
@@ -7439,7 +7452,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130519";
+  var BUILD = "202611130529";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
