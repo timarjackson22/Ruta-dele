@@ -4137,15 +4137,15 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     document.querySelectorAll("#ltext .w.spk").forEach((x) => F.els.indexOf(x) < 0 && x.classList.remove("spk"));
     if (!el) return; F.els.forEach((x) => x.classList.add("spk"));
     if (CUE.w) return; // a tapped word stays until you tap elsewhere
-    // little words (el, de, y…) and names don't replace the bubble: the last real translation stays up to be read
-    const little = F.els.length === 1 && /^(el|la|los|las|un|una|unos|unas|de|del|a|al|y|e|o|u|en|que|con|se|me|te|le|lo|les|nos|os|mi|mis|tu|tus|su|sus|es|por|para|no|ni|si)$/.test(cNorm(el.textContent));
-    if (!F.en || little) return;
-    const html = '<b class="cue-one">' + esc(F.en) + "</b>", key = F.els[0];
-    if (CUE.cur === key) return;
-    clearTimeout(CUE.dw);
-    const wait = CUE.at ? Math.max(0, CUE_DWELL - (Date.now() - CUE.at)) : 0; // each translation stays at least this long
-    const show = () => { if (CUE.w || !PL.playing || !cueOn()) return; CUE.cur = key; CUE.at = Date.now(); cueShow(html, F.els); };
-    if (wait) CUE.dw = setTimeout(show, wait); else show();
+    // never wait: show the meaning of this word, or while the voice is on a little word (y, de, el…) or a name,
+    // jump ahead to the next real word or phrase so it is already up when you hear it
+    const little = (g, ws) => !g || !g.en || (g.a === g.b && /^(el|la|los|las|un|una|unos|unas|de|del|a|al|y|e|o|u|en|que|con|se|me|te|le|lo|les|nos|os|mi|mis|tu|tus|su|sus|es|por|para|no|ni|si)$/.test(cNorm(ws[g.a].textContent)));
+    const sent = el.closest(".sent"); let T = null;
+    if (sent) { try { const A = cueAlign(sent), i = A.ws.indexOf(el); for (let j = i; j < A.ws.length; j++) { const g = A.G[j]; if (g && !little(g, A.ws)) { T = { els: A.ws.slice(g.a, g.b + 1), en: g.en }; break; } if (g) j = g.b; } } catch (e) {} }
+    else if (F.en) T = F;
+    if (!T) return; // nothing left to translate in this sentence: keep the last one up
+    const key = T.els[0]; if (CUE.cur === key) return;
+    CUE.cur = key; CUE.at = Date.now(); cueShow('<b class="cue-one">' + esc(T.en) + "</b>", T.els);
   }
   const CUE_DWELL = 750;
   // just one English word or short phrase: the first meaning, without "to"
@@ -4323,7 +4323,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const cps = 13.5 * (u.rate || 1), T = []; let acc = 0.05;
     ws.forEach((w, n) => { T.push(acc); const after = txt.slice(offs[n] + w.textContent.length, offs[n + 1] != null ? offs[n + 1] : txt.length); acc += (w.textContent.length + 1) / cps + (/[.!?…;:]/.test(after) ? 0.38 : /,/.test(after) ? 0.22 : 0); });
     const total = acc;
-    const tick = () => { if (bnd || !live()) { clearInterval(tm); return; } const el = (Date.now() - t0) / 1000 / cueF() + 0.12; let n = -1; for (let j = 0; j < T.length; j++) if (T[j] <= el) n = j; if (n > i) at(n); };
+    const tick = () => { if (bnd || !live()) { clearInterval(tm); return; } const el = (Date.now() - t0) / 1000 / cueF() + 0.22; let n = -1; for (let j = 0; j < T.length; j++) if (T[j] <= el) n = j; if (n > i) at(n); };
     const go = () => { if (started) return; started = true; t0 = Date.now(); tm = setInterval(tick, 70); tick(); };
     const prevE = u.onend;
     u.onend = (ev) => { clearInterval(tm);
@@ -7945,7 +7945,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131403";
+  var BUILD = "202611131417";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
