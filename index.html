@@ -1312,6 +1312,7 @@ body.tutor-open .pxret { display: none }
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); font-size: .95rem; line-height: 1.35; text-align: left;
   opacity: 0; transform: translateY(-4px) scale(.97); transform-origin: var(--ax, 50%) 0; transition: opacity .18s, transform .22s cubic-bezier(.2, .9, .3, 1.2) }
 .cue.in { opacity: 1; transform: none }
+.cue.glide { transition: opacity .18s, transform .22s, left .16s ease-out, top .16s ease-out }
 .cue::before { content: ""; position: absolute; top: -6px; left: calc(var(--ax, 50%) - 7px); border: 7px solid transparent; border-top: 0; border-bottom-color: color-mix(in srgb, var(--ink) 88%, transparent) }
 .cue-en { display: block; font-style: italic; font-weight: 600; letter-spacing: .005em }
 .cue-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
@@ -1319,6 +1320,7 @@ body.tutor-open .pxret { display: none }
 .cue-w { font-size: 1.02rem } .cue-g { opacity: .9 }
 .cue-b { flex: none; width: 28px; height: 28px; margin-left: auto; border-radius: 50%; border: 0; display: grid; place-items: center; cursor: pointer; padding: 0; color: inherit; background: color-mix(in srgb, var(--bg, #fff) 16%, transparent) }
 .cue-b + .cue-b { margin-left: 0 } .cue-b svg { width: 16px; height: 16px }
+.w.spk { background: var(--saffron); color: #1b1300; border-radius: 4px; box-shadow: 0 0 0 2px var(--saffron); transition: background .12s }
 .w.cue-on { background: var(--saffron-soft); border-radius: 4px; box-shadow: 0 0 0 2px var(--saffron-soft) }
 .cue-sw { display: inline-flex; align-items: center; gap: 5px; order: 1; padding-left: 10px !important; padding-right: 12px !important }
 .player > :nth-child(-n+5) { order: 0 } .player > * { order: 2 } .player > .cue-sw { order: 1 } .cue-sw svg { width: 16px; height: 16px }
@@ -3953,10 +3955,27 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // ---- translation cue tips ----
   const CUE = { w: null, k: -1 };
   const cueOn = () => UI.cues !== false;
-  function cueGloss(word) {
+  // the little words, with the meaning they have inside a sentence
+  const CFN = { y: "and", e: "and", o: "or", u: "or", pero: "but", sino: "but rather", que: "that, which", de: "of, from", del: "of the", a: "to, at", al: "to the", en: "in, on, at", con: "with", sin: "without", por: "for, by, through", para: "for, to", el: "the", la: "the", los: "the", las: "the", un: "a, an", una: "a, an", unos: "some", unas: "some",
+    lo: "it, him", le: "(to) him, her, you", les: "(to) them", me: "me, myself", te: "you, yourself", se: "himself, herself, itself", nos: "us, ourselves", os: "you all", mi: "my", mis: "my", tu: "your", tus: "your", su: "his, her, their, your", sus: "his, her, their, your",
+    yo: "I", tú: "you", él: "he", ella: "she", usted: "you (formal)", nosotros: "we", ellos: "they", no: "not, no", sí: "yes", si: "if", muy: "very", más: "more", también: "also, too", ya: "already, now", es: "is", son: "are", está: "is", hay: "there is, there are", como: "like, as", cuando: "when", porque: "because", donde: "where", este: "this", esta: "this", esto: "this", ese: "that", esa: "that", eso: "that" };
+  // a capital letter in the middle of a sentence is a name (Cuenca, Paola): no dictionary meaning
+  function cueCtx(el) {
+    if (!el || !el.closest) return {};
+    const sent = el.closest(".sent"); if (!sent) return {};
+    let before = ""; for (const n of sent.childNodes) { if (n === el) break; before += n.textContent; }
+    const prev = (before.match(/([a-záéíóúüñ]+)[\s]*$/i) || [])[1] || "";
+    return { start: !/[A-Za-zÁÉÍÓÚÑáéíóúñ0-9]/.test(before) || /[.!?:;…"«“—]\s*[¿¡]?\s*$/.test(before), prev: prev.toLowerCase() };
+  }
+  function cueGloss(word, el) {
+    const lw = word.toLowerCase(), cx = cueCtx(el);
+    if (el && /^[A-ZÁÉÍÓÚÑ]/.test(word) && cx.start === false) return "";
+    if (lw === "mañana" && /^(la|esta|cada|por|una|toda)$/.test(cx.prev)) return "morning";
+    if (CFN[lw]) return CFN[lw];
     let g = "";
     try { const l = wordLines(word)[0] || ""; g = l.replace(/<span class="pill[^>]*>.*?<\/span>/g, "").replace(/<span class="tag">.*?<\/span>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·"); } catch (e) {}
-    g = g.split(/;/)[0].replace(/\s*\(.*?\)\s*/g, " ").trim();
+    g = g.split(/;/)[0].replace(/\s*\(.*?\)\s*/g, " ").replace(/^(an? )?(inflection|form|plural|feminine|masculine) of [^:]*:\s*/i, "").replace(/^letter:.*$/i, "").trim();
+    if (g.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() === lw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")) g = ""; // names: no echo
     return g.length > 46 ? g.slice(0, 44).replace(/[ ,]+\S*$/, "") + "…" : g;
   }
   function cueEl() {
@@ -3968,23 +3987,47 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function cueHide() { const c = document.getElementById("cue"); if (c) { c.hidden = true; c.classList.remove("in"); } }
   function cuePlace(c, el) {
     const box = document.getElementById("ltext"), rs = el.getClientRects(); if (!box || !rs.length) return;
-    const cr = box.getBoundingClientRect(), r = CUE.w ? rs[0] : rs[rs.length - 1];
+    const cr = box.getBoundingClientRect(), r = el.classList.contains("w") ? rs[0] : rs[rs.length - 1];
     c.hidden = false; c.style.left = "0px"; c.style.maxWidth = Math.min(340, cr.width) + "px";
     const w = c.offsetWidth, cx = (r.left + r.right) / 2 - cr.left;
     const left = Math.max(0, Math.min(cr.width - w, cx - w / 2));
     c.style.left = left + "px"; c.style.top = (r.bottom - cr.top + 9) + "px"; c.style.setProperty("--ax", Math.max(14, Math.min(w - 14, cx - left)) + "px");
     requestAnimationFrame(() => c.classList.add("in"));
   }
-  function cueShow(html, el) { const c = cueEl(); if (!c || !el) return; const same = c.innerHTML === html && !c.hidden; c.innerHTML = html; if (!same) c.classList.remove("in"); cuePlace(c, el); }
+  function cueShow(html, el) { const c = cueEl(); if (!c || !el) return; const was = !c.hidden && c.classList.contains("in"); c.innerHTML = html; if (!was) c.classList.remove("in"); c.classList.toggle("glide", was); cuePlace(c, el); }
+  // while a text plays, the bubble follows the voice word by word
   function cueSync() {
+    if (!cueOn() || !PL.playing) { cueSpk(null); if (!CUE.w) cueHide(); }
+  }
+  const CGL = {};
+  function cueSpk(el) {
+    document.querySelectorAll("#ltext .w.spk").forEach((x) => x !== el && x.classList.remove("spk"));
+    if (!el) return; el.classList.add("spk");
     if (CUE.w) return; // a tapped word stays until you tap elsewhere
-    if (!cueOn() || !PL.playing) { cueHide(); return; }
-    const it = PL.items[PL.i], el = document.querySelector('#ltext .sent[data-pi="' + PL.i + '"]');
-    if (!it || !it.en || !el) { cueHide(); return; }
-    cueShow('<i class="cue-en">“' + esc(it.en) + '”</i>', el);
+    const word = el.textContent, key = word.toLowerCase(), g = cueGloss(word, el);
+    cueShow('<div class="cue-top"><b class="cue-w">' + esc(word) + "</b>" + (g ? '<span class="cue-g">' + esc(g) + "</span>" : "") + "</div>", el);
+  }
+  // follow the speech: word boundaries from the voice when it sends them, otherwise timed from the length of each word
+  function cueTrack(u, k) {
+    const sent = document.querySelector('#ltext .sent[data-pi="' + k + '"]'), it = PL.items[k]; if (!sent || !it) return;
+    const ws = [...sent.querySelectorAll(".w")], txt = it.text; let pos = 0;
+    const offs = ws.map((w) => { const j = txt.indexOf(w.textContent, pos); if (j >= 0) pos = j + w.textContent.length; return j < 0 ? pos : j; });
+    let bnd = false, i = -1, tm = 0, started = false;
+    const live = () => PL.cur === u && PL.playing && cueOn();
+    const at = (n) => { if (!live() || n === i || n >= ws.length) return; i = n; cueSpk(ws[n]); };
+    const cps = 13.5 * (u.rate || 1);
+    const tick = () => { if (bnd || !live()) return; const n = i + 1; if (n >= ws.length) return; at(n);
+      const w = ws[n].textContent, after = txt.slice(offs[n] + w.length, (offs[n + 1] != null ? offs[n + 1] : txt.length));
+      tm = setTimeout(tick, 1000 * ((w.length + 1) / cps + (/[.!?…;:]/.test(after) ? 0.38 : /,/.test(after) ? 0.2 : 0))); };
+    const go = () => { if (started) return; started = true; tick(); };
+    const prevB = u.onboundary;
+    u.onboundary = (ev) => { if (prevB) try { prevB(ev); } catch (e) {} if (ev.name && ev.name !== "word") return; bnd = true; clearTimeout(tm);
+      let n = 0; for (let j = 0; j < offs.length; j++) if (offs[j] <= ev.charIndex) n = j; at(n); };
+    const prevS = u.onstart; u.onstart = (ev) => { if (prevS) try { prevS(ev); } catch (e) {} setTimeout(go, 60); };
+    setTimeout(go, 700); // some voices never send "start"
   }
   function cueWord(t) {
-    const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, it = PL.items[k], g = cueGloss(word);
+    const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, it = PL.items[k], g = cueGloss(word, t);
     CUE.w = t; CUE.k = k;
     document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); t.classList.add("cue-on");
     cueShow('<div class="cue-top"><b class="cue-w">' + esc(word) + "</b>" + (g ? '<span class="cue-g">' + esc(g) + "</span>" : "") +
@@ -3992,7 +4035,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<button class="cue-b" data-act="cue-more" aria-label="More about ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>' +
       (it && it.en ? '<i class="cue-en">“' + esc(it.en) + "”</i>" : ""), t);
   }
-  function cueDrop() { if (!CUE.w) return; CUE.w.classList.remove("cue-on"); CUE.w = null; CUE.k = -1; cueSync(); }
+  function cueDrop() { if (!CUE.w) return; CUE.w.classList.remove("cue-on"); CUE.w = null; CUE.k = -1; const sp = document.querySelector("#ltext .w.spk"); if (sp && PL.playing && cueOn()) cueSpk(sp); else cueSync(); }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act;
     if (a === "l-cue") { UI.cues = !cueOn(); uiSave(); t.setAttribute("aria-pressed", cueOn()); if (!cueOn()) cueDrop(); cueSync(); e.stopImmediatePropagation(); return; }
@@ -4016,7 +4059,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (PL.i < PL.items.length) plSpeak();
       else { PL.playing = false; PL.i = 0; const st = S.l[PL.id] || {}; st.heard = true; S.l[PL.id] = st; save(); plUI(); }
     };
-    PL.cur = u;
+    PL.cur = u; cueTrack(u, PL.i);
     try { speechSynthesis.speak(u); } catch (e) {}
     plUI();
   }
@@ -4136,7 +4179,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div><p class="eyebrow">' + esc(meta) + "</p><h1>" + esc(x.t) + '</h1><p class="muted" style="font-size:1.1rem;margin-top:6px">' + esc(x.s) + (x.author ? " · " + esc(x.author) + (x.year ? " (" + esc(x.year) + ")" : "") : "") + "</p></div>" +
       (x.note ? '<p class="callout">' + esc(x.note) + (x.cat === "song" ? " The app reads the lyrics aloud. Turn on the rhythm for a simple " + esc(x.genre || "") + " percussion loop underneath." : "") + "</p>" : "") +
       (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap “Show text” to read along.</p>' : "") +
-      '<p class="muted small">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips show the English as it plays" : "") + "</p>" +
+      '<p class="muted small">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips follow the voice word by word" : "") + "</p>" +
       '<section class="block" id="ltext">' + body + "</section>" + playerBar(x) +
       '<section class="block"><div class="shead"><h2>Glosario</h2></div><div class="tbl"><table class="vocab"><tbody>' + x.gl.map((g) => '<tr><td class="en">' + esc(g[1]) + '</td><td class="sp">' + sayBtn(g[0]) + '</td><td class="es">' + esc(g[0]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
       '<section class="block"><div class="shead"><h2>Comprensión</h2><span class="result" id="lq-res" aria-live="polite"></span></div>' + mcList(x.q, "lq") + '<div class="row"><button class="btn small" data-act="t-ask" data-p="Talk me through this text and my answers to the comprehension questions. Then ask me one follow-up question about it.">Talk it through with Profe</button></div></section>' +
@@ -7579,7 +7622,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131221";
+  var BUILD = "202611131258";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
