@@ -4001,7 +4001,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function cueShow(html, el) { const c = cueEl(); if (!c || !el || (Array.isArray(el) && !el.length)) return; const was = !c.hidden && c.classList.contains("in"); c.innerHTML = html; if (!was) c.classList.remove("in"); c.classList.toggle("glide", was); cuePlace(c, el); }
   // while a text plays, the bubble follows the voice word by word
   function cueSync() {
-    if (!cueOn() || !PL.playing) { cueSpk(null); if (!CUE.w) cueHide(); }
+    if (!cueOn() || !PL.playing) { cueSpk(null); clearTimeout(CUE.dw); CUE.cur = null; CUE.at = 0; if (!CUE.w) cueHide(); }
   }
   const CGL = {};
   function cueSpk(el) {
@@ -4009,9 +4009,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     document.querySelectorAll("#ltext .w.spk").forEach((x) => F.els.indexOf(x) < 0 && x.classList.remove("spk"));
     if (!el) return; F.els.forEach((x) => x.classList.add("spk"));
     if (CUE.w) return; // a tapped word stays until you tap elsewhere
-    if (!F.en) { cueHide(); return; } // a name: nothing to translate
-    cueShow('<b class="cue-one">' + esc(F.en) + "</b>", F.els);
+    // little words (el, de, y…) and names don't replace the bubble: the last real translation stays up to be read
+    const little = F.els.length === 1 && /^(el|la|los|las|un|una|unos|unas|de|del|a|al|y|e|o|u|en|que|con|se|me|te|le|lo|les|nos|os|mi|mis|tu|tus|su|sus|es|por|para|no|ni|si)$/.test(cNorm(el.textContent));
+    if (!F.en || little) return;
+    const html = '<b class="cue-one">' + esc(F.en) + "</b>", key = F.els[0];
+    if (CUE.cur === key) return;
+    clearTimeout(CUE.dw);
+    const wait = CUE.at ? Math.max(0, CUE_DWELL - (Date.now() - CUE.at)) : 0; // each translation stays at least this long
+    const show = () => { if (CUE.w || !PL.playing || !cueOn()) return; CUE.cur = key; CUE.at = Date.now(); cueShow(html, F.els); };
+    if (wait) CUE.dw = setTimeout(show, wait); else show();
   }
+  const CUE_DWELL = 750;
   // just one English word or short phrase: the first meaning, without "to"
   function cueOne(g) {
     g = String(g || "").split(/[,/|;]| or /)[0].replace(/[?¿!¡…]/g, "").replace(/^\s*to\s+(?=\S)/i, "").trim();
@@ -4156,21 +4164,28 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const i = A.ws.indexOf(el), g = A.G[i]; if (!g) return { els: [el], en: "" };
     return { els: A.ws.slice(g.a, g.b + 1), en: g.en || "" };
   }
+  // how much slower (>1) or faster (<1) this phone's voice is than the estimate; remembered between visits
+  function cueF(v) { if (v != null) { CUE.f = Math.max(0.6, Math.min(2, v)); try { localStorage.setItem("ruta-cuef", String(CUE.f)); } catch (e) {} } if (!CUE.f) { let x = 1; try { x = +localStorage.getItem("ruta-cuef") || 1; } catch (e) {} CUE.f = x; } return CUE.f; }
   // follow the speech: word boundaries from the voice when it sends them, otherwise timed from the length of each word
   function cueTrack(u, k) {
     const sent = document.querySelector('#ltext .sent[data-pi="' + k + '"]'), it = PL.items[k]; if (!sent || !it) return;
     const ws = [...sent.querySelectorAll(".w")], txt = it.text; let pos = 0;
     const offs = ws.map((w) => { const j = txt.indexOf(w.textContent, pos); if (j >= 0) pos = j + w.textContent.length; return j < 0 ? pos : j; });
-    let bnd = false, i = -1, tm = 0, started = false;
+    let bnd = false, i = -1, tm = 0, started = false, t0 = 0;
     const live = () => PL.cur === u && PL.playing && cueOn();
     const at = (n) => { if (!live() || n === i || n >= ws.length) return; i = n; cueSpk(ws[n]); };
-    const cps = 13.5 * (u.rate || 1);
-    const tick = () => { if (bnd || !live()) return; const n = i + 1; if (n >= ws.length) return; at(n);
-      const w = ws[n].textContent, after = txt.slice(offs[n] + w.length, (offs[n + 1] != null ? offs[n + 1] : txt.length));
-      tm = setTimeout(tick, 1000 * ((w.length + 1) / cps + (/[.!?…;:]/.test(after) ? 0.38 : /,/.test(after) ? 0.2 : 0))); };
-    const go = () => { if (started) return; started = true; tick(); };
+    // when each word starts, from its length and the pauses; scaled by what this phone's voice has shown it really takes
+    const cps = 13.5 * (u.rate || 1), T = []; let acc = 0.05;
+    ws.forEach((w, n) => { T.push(acc); const after = txt.slice(offs[n] + w.textContent.length, offs[n + 1] != null ? offs[n + 1] : txt.length); acc += (w.textContent.length + 1) / cps + (/[.!?…;:]/.test(after) ? 0.38 : /,/.test(after) ? 0.22 : 0); });
+    const total = acc;
+    const tick = () => { if (bnd || !live()) { clearInterval(tm); return; } const el = (Date.now() - t0) / 1000 / cueF() + 0.12; let n = -1; for (let j = 0; j < T.length; j++) if (T[j] <= el) n = j; if (n > i) at(n); };
+    const go = () => { if (started) return; started = true; t0 = Date.now(); tm = setInterval(tick, 70); tick(); };
+    const prevE = u.onend;
+    u.onend = (ev) => { clearInterval(tm);
+      if (started && !bnd && PL.cur === u && txt.length > 25) { const real = (Date.now() - t0) / 1000, f = real / total; if (f > 0.5 && f < 2.2) { let fresh = false; try { fresh = !localStorage.getItem("ruta-cuef"); } catch (e) {} cueF(fresh ? f : cueF() * 0.6 + f * 0.4); } } // learn this voice's real speed
+      if (prevE) return prevE.call(u, ev); };
     const prevB = u.onboundary;
-    u.onboundary = (ev) => { if (prevB) try { prevB(ev); } catch (e) {} if (ev.name && ev.name !== "word") return; bnd = true; clearTimeout(tm);
+    u.onboundary = (ev) => { if (prevB) try { prevB(ev); } catch (e) {} if (ev.name && ev.name !== "word") return; bnd = true; clearInterval(tm);
       let n = 0; for (let j = 0; j < offs.length; j++) if (offs[j] <= ev.charIndex) n = j; at(n); };
     const prevS = u.onstart; u.onstart = (ev) => { if (prevS) try { prevS(ev); } catch (e) {} setTimeout(go, 60); };
     setTimeout(go, 700); // some voices never send "start"
@@ -7770,7 +7785,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131339";
+  var BUILD = "202611131347";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
