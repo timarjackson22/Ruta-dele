@@ -70,6 +70,8 @@ public class MainActivity extends Activity {
         trb = new TranslateBridge(web);
         web.addJavascriptInterface(llm, "AndroidLLM");
         web.addJavascriptInterface(trb, "AndroidTR");
+        web.addJavascriptInterface(new AppBridge(this), "AndroidApp");
+        ReminderReceiver.schedule(this); // keep the daily reminder set after updates
 
         bridgeJs = readAsset("bridge.js");
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
@@ -120,7 +122,9 @@ public class MainActivity extends Activity {
         });
 
         String shared = sharedUrl(getIntent());
+        String hash = getIntent() == null ? null : getIntent().getStringExtra("hash");
         if (shared != null) web.loadUrl(shared);
+        else if (hash != null) web.loadUrl(URL + "#" + hash); // from the daily reminder
         else if (saved != null) web.restoreState(saved);
         else web.loadUrl(URL);
     }
@@ -138,6 +142,7 @@ public class MainActivity extends Activity {
         super.onNewIntent(in);
         String shared = sharedUrl(in);
         if (shared != null) web.loadUrl(shared);
+        else if (in != null && in.getStringExtra("hash") != null) web.evaluateJavascript("location.hash='" + in.getStringExtra("hash").replaceAll("[^a-z0-9-]", "") + "'", null);
     }
 
     @Override

@@ -1,0 +1,59 @@
+.hoyhero { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 16px; text-decoration: none; color: inherit; background: linear-gradient(135deg, #fff3d6, #ffe0b8); border: 1px solid #f6c87a; margin-bottom: 8px }
+.hoyhero.done { background: linear-gradient(135deg, #dff6e9, #c4ecd6); border-color: #8fd3ad }
+.hoyhero .hh-ic { font-size: 28px; line-height: 1 }
+.hoyhero .ext, .hoysteps .ext, .quests .ext { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.hoyhero b { color: #4a2d00 } .hoyhero small { color: #6f5426 } .hoyhero.done b { color: #0f4a2c } .hoyhero.done small { color: #2c6347 }
+.hoyhero .exgo { font-weight: 700; color: #a25a00; font-size: 20px }
+.hhchips { display: flex; gap: 8px; margin: 0 0 14px; flex-wrap: wrap }
+.hhchips a { padding: 7px 12px; border-radius: 999px; background: var(--card, #fff); border: 1px solid var(--line, #ddd); text-decoration: none; color: inherit; font-size: 14px; font-weight: 600 }
+.hoybar, .qbar, .drprog { display: block; height: 10px; border-radius: 99px; background: color-mix(in srgb, currentColor 12%, transparent); overflow: hidden }
+.hoybar i, .qbar i, .drprog i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, #ffb02e, #ff7a2e); transition: width .3s }
+.qbar { height: 7px; margin-top: 4px } .qbar i.ok, .quests li.ok .qbar i { background: #2a9d6b }
+.hoysteps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px }
+.hoysteps a { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 14px; background: var(--card, #fff); border: 1px solid var(--line, #ddd); text-decoration: none; color: inherit }
+.hoysteps small, .quests small { color: var(--muted, #666) }
+.hs-ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; background: color-mix(in srgb, #ffb02e 18%, transparent); flex: none }
+.hoysteps li.done a { opacity: .7 } .hoysteps li.done .hs-ic { background: #2a9d6b; color: #fff; font-weight: 800 }
+.hoysteps .exgo { font-weight: 700; color: var(--cobalt, #2557b8); white-space: nowrap }
+.quests { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px }
+.quests li { display: flex; align-items: center; gap: 10px } .quests li > span:first-child { font-size: 22px }
+#hoypill { position: fixed; left: 50%; transform: translateX(-50%); top: calc(10px + env(safe-area-inset-top, 0px)); z-index: 60; padding: 7px 14px; border-radius: 999px; background: #1f2a44; color: #fff; text-decoration: none; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px rgba(0,0,0,.25) }
+.drill { max-width: 640px; margin: 0 auto }
+.drtop { display: flex; align-items: center; gap: 12px } .drtop .drprog { flex: 1; height: 12px }
+.drbody { display: flex; flex-direction: column; gap: 14px; align-items: stretch; min-height: 240px }
+.drq { margin: 6px 0 0; font-size: 22px }
+.dren { margin: 0; font-size: 18px; color: var(--muted, #555) }
+.drsay { font-size: 24px; font-weight: 700; text-align: center; margin: 8px 0 0 }
+.drplay { align-self: center; width: 84px; height: 84px; border-radius: 50%; border: 0; font-size: 36px; background: linear-gradient(135deg, #3fa0ff, #1f63e0); color: #fff; cursor: pointer; box-shadow: 0 6px 16px rgba(31,99,224,.35) }
+.drplay.sm { width: 48px; height: 48px; font-size: 22px }
+.drbody > .btn.small { align-self: center }
+.drmatch { display: grid; grid-template-columns: 1fr 1fr; gap: 10px } .drmatch > div { display: flex; flex-direction: column; gap: 10px }
+.drtile { padding: 12px 10px; border-radius: 12px; border: 2px solid var(--line, #d6d6d6); border-bottom-width: 4px; background: var(--card, #fff); color: inherit; font: inherit; font-size: 16px; cursor: pointer; min-height: 48px }
+.drtile[aria-pressed="true"] { border-color: #1f63e0; background: color-mix(in srgb, #1f63e0 10%, var(--card, #fff)) }
+.drtile:disabled { opacity: .25; cursor: default }
+.drtile.shake { animation: drsh .3s } @keyframes drsh { 25% { transform: translateX(-4px) } 75% { transform: translateX(4px) } }
+.drline { min-height: 58px; border-bottom: 2px solid var(--line, #ccc); display: flex; flex-wrap: wrap; gap: 8px; padding: 6px 0 }
+.drbank { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center }
+.drline .drtile, .drbank .drtile { padding: 8px 12px; min-height: 0 }
+.drfoot { display: flex; justify-content: space-between; gap: 10px; margin-top: 16px }
+.drfoot .btn.primary { flex: 1 }
+.drfb { margin-top: 16px; padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px }
+.drfb.ok { background: #dff6e9; color: #0f4a2c } .drfb.no { background: #fde4e1; color: #7a1d14 } .drfb p { margin: 0 }
+.drend { text-align: center; padding: 40px 0 } .dr-big { font-size: 64px; margin: 0 }
+.pstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px }
+.pstats > div { background: var(--card, #fff); border: 1px solid var(--line, #ddd); border-radius: 14px; padding: 10px 6px; text-align: center; display: flex; flex-direction: column }
+.pstats b { font-size: 18px } .pstats small { color: var(--muted, #666); font-size: 12px }
+.pcal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px }
+.pcal span { aspect-ratio: 1; border-radius: 8px; display: grid; place-items: center; font-size: 12px; background: color-mix(in srgb, currentColor 7%, transparent); color: var(--muted, #777) }
+.pcal .l1 { background: #ffe7c2; color: #7a4a00 } .pcal .l2 { background: #ffc46b; color: #4a2d00 } .pcal .l3 { background: #f07b16; color: #fff; font-weight: 700 } .pcal .frz { background: #bfe3ff; color: #0d4a7a }
+.pbars { display: flex; align-items: flex-end; gap: 8px; height: 130px }
+.pbars > div { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px }
+.pbars i { display: block; width: 100%; min-height: 3px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, #ffb02e, #f07b16) }
+.pbars small { font-size: 11px; color: var(--muted, #777) }
+.pskills { display: flex; flex-direction: column; gap: 10px } .pskills > div { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px } .pskills b { text-align: right; font-size: 14px }
+.pbadges { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px }
+.pbadges > div { border: 1px solid var(--line, #ddd); border-radius: 14px; padding: 10px; text-align: center; display: flex; flex-direction: column; gap: 2px; opacity: .45; filter: grayscale(1) }
+.pbadges > div.on { opacity: 1; filter: none; background: color-mix(in srgb, #ffb02e 10%, var(--card, #fff)) }
+.pbadges span { font-size: 28px } .pbadges b { font-size: 13px } .pbadges small { font-size: 11px; color: var(--muted, #777) }
+.remt { font: inherit; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line, #ccc); background: var(--card, #fff); color: inherit }
+@media (max-width: 420px) { .pstats { grid-template-columns: repeat(2, 1fr) } .pskills > div { grid-template-columns: 96px 1fr 54px } }
