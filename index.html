@@ -1299,8 +1299,11 @@ body.no-tabs .pxret { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) }
 body.no-tabs .pxback { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important }
 body.tutor-open .pxret { display: none }
 
-.tret { display: inline-flex; align-items: center; gap: 8px; margin: 10px 0 4px 12px; padding: 7px 14px 7px 10px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; font-weight: 650; font-size: .9rem; background: var(--cobalt); color: var(--on-cobalt); box-shadow: 0 4px 12px color-mix(in srgb, var(--cobalt) 30%, transparent) }
-.tret svg { width: 18px; height: 18px }
+.tret { position: fixed; left: 14px; bottom: 26vh; z-index: 40; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; border-radius: 999px; cursor: pointer; font: inherit; font-weight: 700; font-size: .92rem;
+  background: color-mix(in srgb, var(--cobalt) 38%, transparent); color: #fff; border: 1px solid rgba(255, 255, 255, .45); text-shadow: 0 1px 3px rgba(0, 0, 0, .45); box-shadow: 0 6px 18px rgba(0, 0, 0, .12); animation: pcIn .35s cubic-bezier(.2, .8, .3, 1.2) }
+.tret:active { transform: scale(.95) }
+.tret svg { width: 22px; height: 22px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)) }
+.lite .tret { background: color-mix(in srgb, var(--cobalt) 45%, transparent) }
 </style>
 
 </head>
@@ -2904,7 +2907,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (one && lev(strip(a.toLowerCase()), strip(b.toLowerCase())) <= (b.length >= 6 ? 2 : 1)) return "<li>Spelling: <del>" + esc(a) + "</del> → " + letters(a, b) + "</li>";
       return "<li><del>" + esc(a) + "</del> → <ins>" + esc(b) + "</ins></li>";
     }).join("");
-    const offT = reasons && /tilde|accent/i.test(why || "") && !/accent|tilde/i.test(reasons);
+    const offT = reasons && /<\/(del|ins|b)>[^<]*: |is the neuter|Agreement|form;|is a form of/.test(reasons) && /tilde|accent/i.test(why || "") && !/accent|tilde/i.test(reasons);
     return { cls: "no", html: '<span class="fxline">' + line + "</span>" + (reasons ? "<ul>" + reasons + "</ul>" : "") + (offT ? "" : whyH) };
   }
 
@@ -5467,15 +5470,17 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (r && !r.ok) {
       out.push("❌ You answered «" + (r.val || "nothing") + "». The answer is **" + rightOf(it) + "**.");
       dr = r.val ? diffReasons(r.val, it.t === "mc" ? [rightOf(it)] : (it.a || [rightOf(it)])) : [];
-      if (dr.length) out.push("**What you got wrong:**\n" + dr.map((x) => "- " + x).join("\n"));
+      if (dr.length) out.push("**What you got wrong:**\n" + dr.map((x) => "↳ " + x).join("\n"));
       window.__lastMistake = { t: Date.now(), q: it.q, val: r.val || "", ans: rightOf(it), reasons: dr.map((x) => x.replace(/\*\*|~~/g, "")) };
     }
     else out.push("✅ The answer is **" + rightOf(it) + "**" + (it.a && it.a.length > 1 ? " *(also accepted: " + it.a.slice(1).join(", ") + ")*" : "") + ".");
-    const offTopic = dr.length && /tilde|accent/i.test(it.why || "") && !dr.some((x) => /\(accent\)|accent/i.test(x));
+    const explained = dr.length && dr.every((x) => /\*\*: |: /.test(x));
+    const offTopic = explained && /tilde|accent/i.test(it.why || "") && !dr.some((x) => /\(accent\)|accent/i.test(x));
     if (it.why && !offTopic) out.push((dr.length ? "**Also about this question:** " : "**Why:** ") + it.why);
     if (x.li) { const l = textLine(x.li, it); if (l) out.push("📖 **In the text:** “" + l[0] + "”\n*" + l[1] + "*"); }
-    let b = bestBlock(dr.length ? dr.join(" ") + " " + rightOf(it) : it.q + " " + rightOf(it) + " " + (it.why || ""));
-    if (b && dr.length) { const keys = dr.join(" ").match(/\*\*[^*]+→ ([^*]+)\*\*/g) || []; const words = keys.map((k) => k.replace(/.*→ |\*/g, "").trim().toLowerCase()).filter(Boolean); const bt = (b.t + " " + b.r + " " + b.n.join(" ") + " " + b.ex.join(" ")).toLowerCase(); if (words.length && !words.some((w) => new RegExp("(^|[^a-záéíóúñ])" + w + "([^a-záéíóúñ]|$)").test(bt))) b = null; }
+    const explained0 = dr.length && dr.every((x) => /: /.test(x));
+    let b = bestBlock(explained0 ? dr.join(" ") + " " + rightOf(it) : it.q + " " + rightOf(it) + " " + (it.why || ""));
+    if (b && explained) { const keys = dr.join(" ").match(/\*\*[^*]+→ ([^*]+)\*\*/g) || []; const words = keys.map((k) => k.replace(/.*→ |\*/g, "").trim().toLowerCase()).filter(Boolean); const bt = (b.t + " " + b.r + " " + b.n.join(" ") + " " + b.ex.join(" ")).toLowerCase(); if (words.length && !words.some((w) => new RegExp("(^|[^a-záéíóúñ])" + w + "([^a-záéíóúñ]|$)").test(bt))) b = null; }
     if (b) {
       out.push("📘 **From the lesson, “" + b.t + "”:** " + b.r);
       const T = ptoks(it.q + " " + rightOf(it)); const nn = b.n.find((k) => [...ptoks(k)].some((w) => T.has(w))) || b.n[0];
@@ -6147,7 +6152,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     h = h.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/(^|[^*])\*(?!\s)(.+?)\*(?!\*)/g, "$1<em>$2</em>");
     return h.split(/\n{2,}/).map((p) => /^\s*([-•]|\d+\.)\s/m.test(p) ? "<ul>" + p.split("\n").filter(Boolean).map((l) => "<li>" + l.replace(/^\s*([-•]|\d+\.)\s*/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
   }
-  const plainForSpeech = (s) => String(s).replace(/_{2,}/g, " blank ").replace(/…{2,}|\.{4,}/g, " blank ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
+  const plainForSpeech = (s) => String(s).replace(/↳/g, " ").replace(/_{2,}/g, " blank ").replace(/…{2,}|\.{4,}/g, " blank ").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}\u{200D}]/gu, "").replace(/\*\*|\*|#+\s|`|🎭|🗣️|✓|✗/g, "").replace(/^\s*[-•]\s*/gm, "");
   /* ---------- corrections: what in the learner's Spanish is wrong or could be better ---------- */
   const FXP = { yo: 0, "tú": 1, tu: -1, "él": 2, ella: 2, usted: 2, nosotros: 3, nosotras: 3, vosotros: 4, vosotras: 4, ellos: 5, ellas: 5, ustedes: 5 };
   const PNAME = ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"];
@@ -6429,7 +6434,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     TB = resolveTB();
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
-    const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + "</button>" : "";
+    const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 19c0-6-4-10-10-10H4M8.5 4.5 4 9l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + "</button>" : "";
     const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
@@ -7491,7 +7496,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130539";
+  var BUILD = "202611130542";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
