@@ -1186,6 +1186,16 @@ body.study .srmore { width: 100%; max-width: 620px; justify-self: center }
 .srb.picked { box-shadow: 0 0 0 3px color-mix(in srgb, var(--cobalt) 40%, transparent) }
 @media (prefers-reduced-motion: reduce) { .pcmic.on::before, .pcwave i, .pcbox { animation: none } }
 @media (max-width: 370px) { .nb-title { display: none !important } }
+
+.s30done { text-align: center }
+.s30medal { font-size: 2.6rem; margin: 0 0 2px; line-height: 1; animation: s30pop .5s cubic-bezier(.2, .9, .3, 1.4) }
+@keyframes s30pop { from { transform: scale(.3); opacity: 0 } }
+.s30sum { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 12px }
+.s30sum span { border-radius: 999px; padding: 4px 10px; font-size: .85rem; white-space: nowrap; background: var(--surface-2) }
+.s30sum .s30ok b { color: var(--good) } .s30sum .s30no b { color: var(--bad, #c0392b) }
+.s30what { width: 100%; max-width: 620px; justify-self: center; margin: 4px 0 0; font-weight: 700; text-align: center }
+.srmore-b.hi { border-color: var(--good); box-shadow: 0 0 0 1px var(--good) inset }
+@media (prefers-reduced-motion: reduce) { .s30medal { animation: none } }
 </style>
 
 </head>
@@ -2899,7 +2909,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (rev.length) return rev[0];
     if (c.nw > 0) { const n = items.find((x) => !SRD.c[x.id] && !(x.rev && !SRD.c[x.id.slice(0, -2)])); if (n) return n; }
     const ahead = items.filter((x) => { const k = SRD.c[x.id]; return k && (k.s === 1 || k.s === 3) && k.due <= now + 20 * MIN; }).sort((a, b) => SRD.c[a.id].due - SRD.c[b.id].due);
-    if (ahead[0]) return ahead[0];
+    const ah = ahead.filter((x) => !SV || x.id !== SV.last); if (ah[0]) return ah[0];
     if (SV && SV.deck === id && SV.mode === "ahead") { // reviews due in the next 7 days, soonest first
       const soon = items.filter((x) => { const k = SRD.c[x.id]; return k && (k.s === 2 && k.d <= t + 7 || (k.s === 1 || k.s === 3)); }).sort((a, b) => ((SRD.c[a.id].d || 0) - (SRD.c[b.id].d || 0)));
       return soon[0] || null; }
@@ -2948,7 +2958,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest('[data-act="sr-xnew"],[data-act="sr-ahead"],[data-act="sr-cram"],[data-act="sr-normal"],[data-act="sr-30"]'); if (!b || !SV) return;
     const a = b.dataset.act, t = today();
-    if (a === "sr-30") { SV.mode = "s30"; SV.k30 = b.dataset.k; SV.q30 = q30(SV.deck, b.dataset.k); SV.t30 = SV.q30.length; SV.n30 = 0; SV.card = null; SV.shown = false; window.__nextIn = 1; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); return; }
+    if (a === "sr-30") { const k = b.dataset.k, q = k === "miss" ? (SV.miss || []).slice() : q30(SV.deck, k); SV.mode = "s30"; SV.k30 = k; SV.q30 = q; SV.t30 = q.length; SV.n30 = 0; SV.miss = []; SV.card = null; SV.shown = false; window.__nextIn = 1; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); return; }
     if (a === "sr-xnew") { const d = SRD.days[t] = SRD.days[t] || { n: 0, r: 0, ok: 0, nd: {} }; d.xn = d.xn || {}; d.xn[SV.deck] = (d.xn[SV.deck] || 0) + 10; try { localStorage.setItem(SRS_KEY, JSON.stringify(SRD)); } catch (er) {} SV.mode = ""; }
     else if (a === "sr-ahead") SV.mode = "ahead"; else if (a === "sr-cram") { SV.mode = "cram"; SV.cq = []; } else SV.mode = "";
     SV.card = null; SV.shown = false; studyView(SV.deck, SV.inLevel); scrollTo(0, 0);
@@ -3427,17 +3437,36 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (others.length ? '<p class="small muted" style="margin:10px 0 4px">Other decks with reviews due now:</p><div class="row">' + others.map(([d, n]) => '<a class="btn small" href="#repaso-' + d + '">' + esc(deckName(d).replace(/\s*\(.*\)$/, "")) + " · " + n + "</a>").join("") + "</div>" : "") +
       '<p class="small" style="margin-top:10px"><a href="#repaso">See all decks and stats</a></p></div>';
   }
+  function s30Done(id) {
+    const items = deckItems(id), unseen = items.filter((x) => !SRD.c[x.id] && !(x.rev && !SRD.c[x.id.slice(0, -2)])).length, seen = items.filter((x) => SRD.c[x.id]).length;
+    const tot = SV.t30 || 0, miss = (SV.miss || []).length, first = Math.max(0, tot - miss);
+    const name = { new: "new words", old: "review cards", mix: "mixed cards", miss: "missed cards" }[SV.k30] || "cards";
+    const opt = (act, ic, t1, t2, cls) => '<button type="button" class="srmore-b' + (cls || "") + '" data-act="' + act + '"><span class="srm-ic" aria-hidden="true">' + ic + "</span><span><b>" + t1 + "</b><small>" + t2 + "</small></span></button>";
+    const msg = !tot ? "There were no cards for this set." : miss === 0 ? "All " + tot + " right first time. ¡Fantástico!" : "";
+    return '<div class="fc s30done" style="cursor:default"><div><p class="s30medal" aria-hidden="true">' + (miss === 0 && tot ? "🏆" : "🎉") + '</p><p class="face">¡Set completo!</p>' +
+      '<p class="muted" style="margin-top:6px">You finished ' + tot + " " + name + ".</p>" +
+      (tot ? '<div class="s30sum"><span class="s30ok"><b>' + first + '</b> right first time</span><span class="s30no"><b>' + miss + "</b> marked Again</span></div>" : "") +
+      (msg ? '<p class="small" style="margin-top:8px">' + msg + "</p>" : "") + "</div></div>" +
+      '<p class="s30what">What would you like to do next?</p><div class="srmore">' +
+      (miss ? opt('sr-30" data-k="miss', "🎯", "Practise the " + miss + " you missed", "Go over the cards you marked Again until they stick", " hi") : "") +
+      (unseen ? opt('sr-30" data-k="new', "✨", "30 more new words", unseen + " new words left in this deck") : "") +
+      (seen ? opt('sr-30" data-k="old', "🔁", "30 old words", "Cards you’ve already studied, soonest due first") : "") +
+      (unseen && seen ? opt('sr-30" data-k="mix', "🔀", "30 mixed", "Half new, half old") : "") +
+      opt("sr-normal", "✓", "I’m done for now", "Back to the deck. Your progress is saved.") +
+      '<p class="small" style="margin-top:10px"><a href="#repaso">See all decks and stats</a></p></div>';
+  }
   function studyView(id, inLevel) {
     document.body.classList.add("study");
     const L = LV[id];
     if (!SV || SV.deck !== id) SV = { deck: id, card: null, shown: false, typed: "", mode: "" };
-    if (!SV.card || !SV.shown) SV.card = nextCard(id);
+    if (!SV.card || (!SV.shown && SV.mode !== "s30" && SV.mode !== "cram")) SV.card = nextCard(id);
     const card = SV.card ? Object.assign({ deck: id }, SV.card) : null, c = counts(id);
     const head = inLevel && L ? levelHead(L, "-cards") : '<p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#repaso">Flashcard review</a><span aria-hidden="true">›</span><span>' + esc(deckName(id)) + "</span></p><h1>" + esc(deckName(id)) + "</h1>";
-    const cnt = SV.mode === "s30" ? '<div class="s30bar"><span>' + ({ new: "✨ 30 new", old: "🔁 30 old", mix: "🔀 30 mixed" }[SV.k30] || "Set") + " · <b>" + Math.min(SV.n30 || 0, SV.t30) + " / " + SV.t30 + '</b></span><span class="s30prog"><i style="width:' + Math.round(100 * (SV.n30 || 0) / Math.max(1, SV.t30)) + '%"></i></span><button class="btn small" data-act="sr-normal">Stop</button></div>' :
+    const cnt = SV.mode === "s30" && !card ? "" : SV.mode === "s30" ? '<div class="s30bar"><span>' + ({ new: "✨ 30 new", old: "🔁 30 old", mix: "🔀 30 mixed", miss: "🎯 Missed cards" }[SV.k30] || "Set") + " · <b>" + Math.min(SV.n30 || 0, SV.t30) + " / " + SV.t30 + '</b></span><span class="s30prog"><i style="width:' + Math.round(100 * (SV.n30 || 0) / Math.max(1, SV.t30)) + '%"></i></span><button class="btn small" data-act="sr-normal">Stop</button></div>' :
       SV.mode ? '<p class="srcount">' + (SV.mode === "cram" ? "🔁 Practising the whole deck" : "⏩ Reviewing ahead") + ' · <button class="btn small" data-act="sr-normal">Stop</button></p>' : '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
     let body;
-    if (!card) {
+    if (!card && SV.mode === "s30") body = s30Done(id);
+    else if (!card) {
       const st = srStats();
       body = '<div class="fc" style="cursor:default"><div><p class="face">' + (SV.mode === "s30" ? "¡Set completo!" : "¡Listo por hoy!") + '</p><p class="muted" style="margin-top:8px">' + (SV.mode === "s30" ? "🎉 " + (SV.n30 || 0) + " cards done. Pick another set of 30 below, or tap Stop." : SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done. Want to keep going?") + "</p></div></div>" + srMoreHTML(id);
     } else {
@@ -7164,7 +7193,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     else if (act === "mock-reset" && L) mock(L);
     else if (act === "sr-show") { const i = document.getElementById("sr-in"); if (i) SV.typed = i.value; SV.shown = true; studyView(SV.deck, SV.inLevel); }
-    else if (act === "sr-rate" && SV && SV.card) { window.__nextIn = 1; if (SV.mode === "s30") { SV.n30 = (SV.n30 || 0) + (+t.dataset.e === 1 ? 0 : 1); if (+t.dataset.e === 1) SV.q30.splice(Math.min(3, SV.q30.length), 0, SV.card.id); } if (SV.mode === "cram") { try { actAdd(1); } catch (e) {} if (+t.dataset.e === 1) (SV.cq = SV.cq || []).splice(Math.min(3, SV.cq.length), 0, SV.card.id); } else schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
+    else if (act === "sr-rate" && SV && SV.card) { window.__nextIn = 1; if (SV.mode === "s30") { const again = +t.dataset.e === 1; SV.miss = SV.miss || []; if (again && !SV.miss.includes(SV.card.id)) SV.miss.push(SV.card.id); if (!again || !SV.q30.length) SV.n30 = (SV.n30 || 0) + 1; if (again && SV.q30.length) SV.q30.splice(Math.min(3, SV.q30.length), 0, SV.card.id); } if (SV.mode === "cram") { try { actAdd(1); } catch (e) {} if (+t.dataset.e === 1) (SV.cq = SV.cq || []).splice(Math.min(3, SV.cq.length), 0, SV.card.id); } else schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.last = SV.card.id; SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
     else if (act === "sr-add") { const es = t.dataset.es, en = t.dataset.en; if (!SRD.mine.some((m) => ckey(m.es) === ckey(es))) { SRD.mine.push({ es, en, src: CUR ? CUR.t : "" }); srSave(); } t.textContent = "✓ Added to Mis palabras"; t.disabled = true; }
     else if (act === "flip") { FC.flipped = !FC.flipped; cardsView(LV[FC.l]); }
     else if (act === "fc-rev") { FC.rev = !FC.rev; FC.flipped = false; cardsView(LV[FC.l]); }
@@ -7194,7 +7223,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130252";
+  var BUILD = "202611130337";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
