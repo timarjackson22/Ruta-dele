@@ -1129,6 +1129,23 @@ p, li { line-height: 1.55 }
 .tctl select { max-width: 42vw; padding: 3px 6px !important; border-radius: 10px }
 .tctl .small { white-space: nowrap }
 .tctl .btn.small { min-width: 30px !important; padding: 2px 6px !important }
+
+/* ===== deck layout ===== */
+body.study #app h1 { font-size: 1.3rem !important; line-height: 1.2; margin: 0 }
+body.study #app .stack { gap: 10px }
+body.study .fc-wrap { gap: 12px; justify-items: stretch }
+body.study .srcount { font-size: .95rem; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap }
+body.study .fc { width: 100%; max-width: 620px; justify-self: center; min-height: clamp(280px, calc(100dvh - 390px), 600px); border-radius: 24px; padding: 54px 20px 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box }
+body.study .fc > div { width: 100% }
+body.study .srtag { top: 16px; left: 16px; max-width: calc(100% - 80px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .7rem }
+body.study .fc .say { top: 12px; right: 12px }
+body.study .srcard .face:not(.back) { font-size: clamp(1.9rem, 8vw, 2.8rem); line-height: 1.15; overflow-wrap: anywhere }
+body.study .srcard .face.back { font-size: clamp(1.35rem, 5.5vw, 1.9rem) }
+body.study .srhr { width: 40%; margin: 18px auto }
+body.study .srbtns { width: 100%; max-width: 620px; justify-self: center; gap: 8px }
+body.study .srb { min-height: 66px; justify-content: center; border-radius: 16px; font-size: 1.05rem }
+body.study .fc-wrap > p.small { font-size: .82rem; max-width: 52ch; justify-self: center }
+body.study .srmore { width: 100%; max-width: 620px; justify-self: center }
 </style>
 
 </head>
@@ -7027,7 +7044,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130125";
+  var BUILD = "202611130201";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
