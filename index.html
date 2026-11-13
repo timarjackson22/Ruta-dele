@@ -1119,6 +1119,11 @@ p, li { line-height: 1.55 }
 .lite .top { background: var(--bg) !important }
 .lite .tabbar { background: var(--surface) !important }
 .lite :is(.ilist, .goal3, .lpath, .lt-btn, .reg, .ulist > li > a) { background: color-mix(in srgb, var(--surface) 88%, transparent) !important }
+
+.srmore { display: flex; flex-direction: column; gap: 8px; margin: 12px 0 }
+.srmore-b { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--ink); font: inherit; text-align: left; cursor: pointer }
+.srmore-b b { display: block; font-weight: 600 } .srmore-b small { display: block; color: var(--muted); font-size: .84rem; line-height: 1.3 }
+.srm-ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: var(--surface-2); flex: none }
 </style>
 
 </head>
@@ -2721,19 +2726,27 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const t = today(), now = Date.now(), items = deckItems(id), d = SRD.days[t] || { n: 0, r: 0 };
     let nw = 0, lrn = 0, due = 0;
     items.forEach((x) => { const c = SRD.c[x.id]; if (!c) nw++; else if (c.s === 1 || c.s === 3) { if (c.due <= now + 20 * MIN) lrn++; } else if (c.d <= t) due++; });
-    const newLeft = Math.max(0, SRD.opt.newPerDay - (d.nd && d.nd[id] || 0));
+    const newLeft = Math.max(0, SRD.opt.newPerDay + (d.xn && d.xn[id] || 0) - (d.nd && d.nd[id] || 0));
     return { nw: Math.min(nw, newLeft), lrn, due: Math.min(due, SRD.opt.maxRev), total: items.length, seen: items.length - nw };
   }
   // next card: learning cards that are due, then reviews, then new cards (Anki order)
   function nextCard(id) {
     const t = today(), now = Date.now(), items = deckItems(id), c = counts(id);
+    if (SV && SV.deck === id && SV.mode === "cram") { // practise everything you've seen, no scheduling
+      const seen = items.filter((x) => SRD.c[x.id]); if (!seen.length) return null;
+      SV.cq = (SV.cq || []).filter((k) => seen.some((x) => x.id === k)); if (!SV.cq.length) SV.cq = seen.map((x) => x.id).sort(() => Math.random() - 0.5);
+      const k = SV.cq.shift(); return seen.find((x) => x.id === k) || null; }
     const lrnDue = items.filter((x) => { const k = SRD.c[x.id]; return k && (k.s === 1 || k.s === 3) && k.due <= now; }).sort((a, b) => SRD.c[a.id].due - SRD.c[b.id].due);
     if (lrnDue.length) return lrnDue[0];
     const rev = items.filter((x) => { const k = SRD.c[x.id]; return k && k.s === 2 && k.d <= t; }).sort((a, b) => SRD.c[a.id].d - SRD.c[b.id].d);
     if (rev.length) return rev[0];
     if (c.nw > 0) { const n = items.find((x) => !SRD.c[x.id] && !(x.rev && !SRD.c[x.id.slice(0, -2)])); if (n) return n; }
     const ahead = items.filter((x) => { const k = SRD.c[x.id]; return k && (k.s === 1 || k.s === 3) && k.due <= now + 20 * MIN; }).sort((a, b) => SRD.c[a.id].due - SRD.c[b.id].due);
-    return ahead[0] || null;
+    if (ahead[0]) return ahead[0];
+    if (SV && SV.deck === id && SV.mode === "ahead") { // reviews due in the next 7 days, soonest first
+      const soon = items.filter((x) => { const k = SRD.c[x.id]; return k && (k.s === 2 && k.d <= t + 7 || (k.s === 1 || k.s === 3)); }).sort((a, b) => ((SRD.c[a.id].d || 0) - (SRD.c[b.id].d || 0)));
+      return soon[0] || null; }
+    return null;
   }
   const STEPS = [1, 10], RSTEPS = [10];
   function schedule(card, ease, dry) {
@@ -2775,6 +2788,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return { done: d.n + d.r, streak, ret, mature, young, lrn, fc };
   }
   let SV = null; // study view state
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest && e.target.closest('[data-act="sr-xnew"],[data-act="sr-ahead"],[data-act="sr-cram"],[data-act="sr-normal"]'); if (!b || !SV) return;
+    const a = b.dataset.act, t = today();
+    if (a === "sr-xnew") { const d = SRD.days[t] = SRD.days[t] || { n: 0, r: 0, ok: 0, nd: {} }; d.xn = d.xn || {}; d.xn[SV.deck] = (d.xn[SV.deck] || 0) + 10; try { localStorage.setItem(SRS_KEY, JSON.stringify(SRD)); } catch (er) {} SV.mode = ""; }
+    else if (a === "sr-ahead") SV.mode = "ahead"; else if (a === "sr-cram") { SV.mode = "cram"; SV.cq = []; } else SV.mode = "";
+    SV.card = null; SV.shown = false; studyView(SV.deck, SV.inLevel); scrollTo(0, 0);
+  });
   function cardsView(L) { studyView(L.id, true); }
   // «x» in app text reads like code: show it as bold instead. Spanish reading texts keep their real quotation marks.
   const UNQ_SKIP = ".story, .pod, .verse, .passage, .mtext, .dlg, .doc-body, input, textarea, script, style, [contenteditable]";
@@ -3235,21 +3255,33 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     n.textContent = "🇵🇦 " + t.dataset.n; n.hidden = false; clearTimeout(n._t); n._t = setTimeout(() => (n.hidden = true), 3500);
   }, true);
 
+  function srMoreHTML(id) {
+    const items = deckItems(id), unseen = items.filter((x) => !SRD.c[x.id]).length, seen = items.length - unseen, t = today();
+    const soon = items.filter((x) => { const k = SRD.c[x.id]; return k && k.s === 2 && k.d <= t + 7; }).length;
+    const others = allDeckIds().filter((d) => d !== id).map((d) => { const c = counts(d); return [d, c.due + c.lrn]; }).filter((x) => x[1] > 0).slice(0, 4);
+    const opt = (act, ic, t1, t2) => '<button type="button" class="srmore-b" data-act="' + act + '"><span class="srm-ic" aria-hidden="true">' + ic + "</span><span><b>" + t1 + "</b><small>" + t2 + "</small></span></button>";
+    return '<div class="srmore">' +
+      (unseen ? opt("sr-xnew", "✨", "Learn 10 more new words", unseen + " new words left in this deck") : "") +
+      (soon ? opt("sr-ahead", "⏩", "Review ahead", soon + " cards due in the next 7 days") : "") +
+      (seen ? opt("sr-cram", "🔁", "Practise the whole deck", "All " + seen + " cards you’ve seen, shuffled. Won’t change your schedule.") : "") +
+      (others.length ? '<p class="small muted" style="margin:10px 0 4px">Other decks with reviews due now:</p><div class="row">' + others.map(([d, n]) => '<a class="btn small" href="#repaso-' + d + '">' + esc(deckName(d).replace(/\s*\(.*\)$/, "")) + " · " + n + "</a>").join("") + "</div>" : "") +
+      '<p class="small" style="margin-top:10px"><a href="#repaso">See all decks and stats</a></p></div>';
+  }
   function studyView(id, inLevel) {
     document.body.classList.add("study");
     const L = LV[id];
-    if (!SV || SV.deck !== id) SV = { deck: id, card: null, shown: false, typed: "" };
+    if (!SV || SV.deck !== id) SV = { deck: id, card: null, shown: false, typed: "", mode: "" };
     if (!SV.card || !SV.shown) SV.card = nextCard(id);
     const card = SV.card ? Object.assign({ deck: id }, SV.card) : null, c = counts(id);
     const head = inLevel && L ? levelHead(L, "-cards") : '<p class="crumbs"><a href="#inicio">Ruta DELE</a><span aria-hidden="true">›</span><a href="#repaso">Flashcard review</a><span aria-hidden="true">›</span><span>' + esc(deckName(id)) + "</span></p><h1>" + esc(deckName(id)) + "</h1>";
-    const cnt = '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
+    const cnt = SV.mode ? '<p class="srcount">' + (SV.mode === "cram" ? "🔁 Practising the whole deck" : "⏩ Reviewing ahead") + ' · <button class="btn small" data-act="sr-normal">Stop</button></p>' : '<p class="srcount"><span class="cn">' + c.nw + '</span> new · <span class="cl">' + c.lrn + '</span> learning · <span class="cd">' + c.due + "</span> to review</p>";
     let body;
     if (!card) {
       const st = srStats();
-      body = '<div class="fc" style="cursor:default"><div><p class="face">¡Listo por hoy!</p><p class="muted" style="margin-top:8px">No more cards due in ' + esc(deckName(id)) + ". " + (st.fc[0] ? st.fc[0] + " come back tomorrow." : "Come back tomorrow for the next reviews.") + '</p><p class="small" style="margin-top:8px"><a href="#repaso">See all decks and stats</a></p></div></div>';
+      body = '<div class="fc" style="cursor:default"><div><p class="face">¡Listo por hoy!</p><p class="muted" style="margin-top:8px">' + (SV.mode === "cram" ? "You haven’t studied any cards in this deck yet." : SV.mode === "ahead" ? "Nothing else is due in the next 7 days." : "Your reviews for " + esc(deckName(id)) + " are done. Want to keep going?") + "</p></div></div>" + srMoreHTML(id);
     } else {
       const front = card.rev ? card.en : card.es, back = card.rev ? card.es : card.en;
-      const k = SRD.c[card.id], tag = !k ? '<span class="srtag n">New</span>' : k.s === 2 ? '<span class="srtag r">Review</span>' : '<span class="srtag l">Learning</span>';
+      const k = SRD.c[card.id], tag = SV.mode === "cram" ? '<span class="srtag r">Practice · no schedule change</span>' : !k ? '<span class="srtag n">New</span>' : k.s === 2 ? '<span class="srtag r">' + (SV.mode === "ahead" && k.d > today() ? "Review ahead" : "Review") + "</span>" : '<span class="srtag l">Learning</span>';
       let typed = "";
       if (card.rev && SRD.opt.type) {
         typed = SV.shown ? '<div class="srtyped">' + typedDiff(SV.typed, card.es) + "</div>" : '<input id="sr-in" class="srin" placeholder="Type the Spanish (with accents)…" autocomplete="off" spellcheck="false" autocapitalize="off" value="' + esc(SV.typed) + '">';
@@ -6943,7 +6975,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     else if (act === "mock-reset" && L) mock(L);
     else if (act === "sr-show") { const i = document.getElementById("sr-in"); if (i) SV.typed = i.value; SV.shown = true; studyView(SV.deck, SV.inLevel); }
-    else if (act === "sr-rate" && SV && SV.card) { schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
+    else if (act === "sr-rate" && SV && SV.card) { if (SV.mode === "cram") { try { actAdd(1); } catch (e) {} if (+t.dataset.e === 1) (SV.cq = SV.cq || []).splice(Math.min(3, SV.cq.length), 0, SV.card.id); } else schedule(Object.assign({ deck: SV.deck }, SV.card), +t.dataset.e); SV.shown = false; SV.card = null; SV.typed = ""; studyView(SV.deck, SV.inLevel); scrollTo(0, 0); }
     else if (act === "sr-add") { const es = t.dataset.es, en = t.dataset.en; if (!SRD.mine.some((m) => ckey(m.es) === ckey(es))) { SRD.mine.push({ es, en, src: CUR ? CUR.t : "" }); srSave(); } t.textContent = "✓ Added to Mis palabras"; t.disabled = true; }
     else if (act === "flip") { FC.flipped = !FC.flipped; cardsView(LV[FC.l]); }
     else if (act === "fc-rev") { FC.rev = !FC.rev; FC.flipped = false; cardsView(LV[FC.l]); }
@@ -6973,7 +7005,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130102";
+  var BUILD = "202611130118";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
