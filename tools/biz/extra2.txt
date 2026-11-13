@@ -1,0 +1,340 @@
+# job titles and roles
+el/la gerente de ventas|sales manager
+el/la gerente de proyectos|project manager
+el/la gerente financiero/a|finance manager
+el/la director/a financiero/a|chief financial officer (CFO)
+el/la director/a de operaciones|chief operating officer (COO)
+el/la director/a comercial|sales director
+el/la director/a de recursos humanos|HR director
+el/la director/a de marketing|marketing director
+el/la jefe/a de departamento|head of department
+el/la jefe/a de equipo|team leader
+el/la administrador/a|administrator; manager
+el/la auxiliar administrativo/a|administrative assistant
+el/la oficinista|office worker
+el/la recepcionista|receptionist
+el/la secretario/a ejecutivo/a|executive secretary
+el/la asistente ejecutivo/a|executive assistant
+el/la analista financiero/a|financial analyst
+el/la analista de riesgos|risk analyst
+el/la analista de datos|data analyst
+el/la economista|economist
+el/la contador/a público/a autorizado/a|certified public accountant (Panama)
+el/la tesorero/a|treasurer
+el/la cajero/a de banco|bank teller
+el/la banquero/a|banker
+el/la gestor/a de cartera|portfolio manager
+el/la gestor/a de cuentas|account manager
+el/la operador/a de bolsa|trader
+el/la agente de seguros|insurance agent
+el/la consultor/a|consultant
+el/la asesor/a fiscal|tax adviser
+el/la auditor/a interno/a|internal auditor
+el/la abogado/a corporativo/a|corporate lawyer
+el/la programador/a|programmer
+el/la desarrollador/a|developer
+el/la diseñador/a gráfico/a|graphic designer
+el/la técnico/a|technician
+el/la vendedor/a ambulante|street vendor
+el/la comerciante|trader; shopkeeper
+el/la distribuidor/a|distributor
+el/la mayorista|wholesaler
+el/la minorista|retailer
+el/la proveedor/a|supplier
+el/la contratista|contractor
+el/la subcontratista|subcontractor
+el/la freelance|freelancer
+el/la trabajador/a independiente|self-employed worker
+el/la autónomo/a|self-employed person (Spain)
+el/la emprendedor/a social|social entrepreneur
+el/la consejero/a delegado/a|managing director (Spain)
+el/la vicepresidente/a|vice president
+# sectors and industries
+la banca|banking (sector)
+el sector financiero|financial sector
+el sector inmobiliario|real-estate sector
+el sector energético|energy sector
+el sector agrícola|agricultural sector
+el sector tecnológico|tech sector
+el sector de la construcción|construction sector
+la industria manufacturera|manufacturing industry
+la industria hotelera|hotel industry
+la hostelería|hospitality (Spain)
+el comercio minorista|retail trade
+el comercio mayorista|wholesale trade
+las telecomunicaciones|telecommunications
+la industria farmacéutica|pharmaceutical industry
+la minería|mining
+la energía renovable|renewable energy
+la agroindustria|agribusiness
+el transporte|transport
+la consultoría|consultancy
+los servicios profesionales|professional services
+la administración pública|public administration
+las organizaciones sin fines de lucro|non-profit organisations
+la ONG|NGO
+# business verbs
+administrar|to manage; administer
+dirigir|to run; direct
+organizar|to organise
+planificar|to plan
+presupuestar|to budget
+asignar|to allocate; assign
+distribuir|to distribute
+vender al por mayor|to sell wholesale
+comercializar|to market; sell
+exportar|to export
+importar mercancía|to import goods
+abastecer|to supply
+suministrar|to supply
+fabricar|to manufacture
+producir|to produce
+facturar|to invoice; to turn over
+cobrar una factura|to collect an invoice
+pagar una factura|to pay an invoice
+emitir una factura|to issue an invoice
+contratar personal|to hire staff
+despedir a un empleado|to fire an employee
+ascender|to promote
+capacitar|to train (LatAm)
+formar|to train
+evaluar el desempeño|to assess performance
+motivar|to motivate
+negociar el salario|to negotiate salary
+firmar un contrato|to sign a contract
+renovar un contrato|to renew a contract
+cancelar un pedido|to cancel an order
+confirmar un pedido|to confirm an order
+reclamar|to claim; complain
+indemnizar|to compensate
+reembolsar los gastos|to reimburse expenses
+ahorrar costos|to save costs
+recortar|to cut
+recortar gastos|to cut spending
+invertir en bolsa|to invest in the stock market
+pedir un préstamo|to ask for a loan
+conceder un préstamo|to grant a loan
+pagar a plazos|to pay in instalments
+abrir un negocio|to open a business
+cerrar un negocio|to close a business
+fundar una empresa|to found a company
+constituir una sociedad|to incorporate a company
+fusionarse|to merge
+adquirir una empresa|to acquire a company
+quebrar|to go bankrupt
+declararse en quiebra|to file for bankruptcy
+cotizar un precio|to quote a price
+regatear|to haggle
+rebajar|to reduce (price)
+subir los precios|to raise prices
+bajar los precios|to lower prices
+competir|to compete
+liderar el mercado|to lead the market
+diversificar el negocio|to diversify the business
+digitalizar|to digitise
+externalizar|to outsource
+delegar tareas|to delegate tasks
+coordinar un equipo|to coordinate a team
+programar una reunión|to schedule a meeting
+reprogramar|to reschedule
+confirmar asistencia|to confirm attendance
+redactar un informe|to write a report
+elaborar un presupuesto|to draw up a budget
+presentar una propuesta|to submit a proposal
+aprobar el presupuesto|to approve the budget
+revisar las cuentas|to check the accounts
+cuadrar las cuentas|to balance the books
+llevar la contabilidad|to keep the accounts
+declarar impuestos|to file taxes
+pagar impuestos|to pay taxes
+evadir impuestos|to evade taxes
+# business adjectives
+rentable|profitable
+lucrativo|lucrative
+competitivo|competitive
+eficiente|efficient
+eficaz|effective
+productivo|productive
+solvente|solvent
+insolvente|insolvent
+endeudado|in debt
+financiero|financial
+económico|economic; cheap
+comercial|commercial
+empresarial|business; corporate
+corporativo|corporate
+laboral|work; labour
+fiscal|fiscal; tax
+bancario|banking
+bursátil|stock-market
+monetario|monetary
+contable|accounting
+presupuestario|budgetary
+mercantil|mercantile; commercial
+industrial|industrial
+logístico|logistical
+estratégico|strategic
+operativo|operational
+administrativo|administrative
+jurídico|legal
+legal|legal
+ilegal|illegal
+confidencial|confidential
+urgente|urgent
+prioritario|priority
+pendiente|pending
+vencido|overdue; expired
+vigente|in force; valid
+anual|annual
+mensual|monthly
+semanal|weekly
+trimestral|quarterly
+semestral|half-yearly
+bruto|gross
+neto|net
+fijo|fixed
+variable|variable
+caro|expensive
+barato|cheap
+asequible|affordable
+gratuito|free of charge
+rentabilidad negativa|negative return
+# finance extras
+el mercado de capitales|capital markets
+el mercado monetario|money market
+el mercado de divisas|foreign exchange market
+el mercado secundario|secondary market
+el mercado primario|primary market
+la acción ordinaria|ordinary share
+la acción preferente|preferred share
+el bono del Tesoro|Treasury bond
+el bono corporativo|corporate bond
+el bono soberano|sovereign bond
+la letra del Tesoro|Treasury bill
+el diferencial|spread
+el rendimiento al vencimiento|yield to maturity
+la duración|duration
+la curva de rendimiento|yield curve
+el valor nominal|face value
+el valor de mercado|market value
+el valor contable|book value
+la capitalización bursátil|market capitalisation
+el precio de cierre|closing price
+el precio de apertura|opening price
+la orden de compra|buy order
+la orden de venta|sell order
+la orden límite|limit order
+el corto plazo|short term
+el largo plazo|long term
+vender en corto|to short-sell
+la opción de compra|call option
+la opción de venta|put option
+el futuro|futures contract
+el contrato a plazo|forward contract
+la permuta financiera|swap
+el fondo indexado|index fund
+el fondo cotizado|exchange-traded fund (ETF)
+la gestora de fondos|fund manager
+la sociedad de inversión|investment company
+el patrimonio neto|net worth
+el patrimonio gestionado|assets under management
+la comisión de gestión|management fee
+la comisión de rendimiento|performance fee
+el perfil conservador|conservative profile
+el perfil agresivo|aggressive profile
+la tolerancia al riesgo|risk tolerance
+el rendimiento esperado|expected return
+la rentabilidad acumulada|cumulative return
+el índice de referencia|benchmark
+la cartera diversificada|diversified portfolio
+el reequilibrio|rebalancing
+el plan de jubilación|retirement plan
+el fondo de emergencia|emergency fund
+las finanzas personales|personal finance
+el presupuesto familiar|household budget
+la deuda de tarjeta|credit-card debt
+la consolidación de deudas|debt consolidation
+el historial de pagos|payment history
+la tasa de usura|usury rate
+la quiebra|bankruptcy
+el concurso de acreedores|insolvency proceedings
+el embargo|seizure; garnishment
+la reestructuración|restructuring
+el rescate|bailout
+la recapitalización|recapitalisation
+el colchón de liquidez|liquidity buffer
+el apetito de riesgo|risk appetite
+la prueba de estrés|stress test
+el riesgo país|country risk
+el riesgo de liquidez|liquidity risk
+el riesgo de tipo de cambio|exchange-rate risk
+la calificación AAA|AAA rating
+la rebaja de calificación|downgrade
+la mejora de calificación|upgrade
+# workplace phrases
+estar de vacaciones|to be on holiday
+estar de baja|to be on sick leave
+trabajar desde casa|to work from home
+trabajar a tiempo completo|to work full-time
+trabajar a tiempo parcial|to work part-time
+hacer horas extras|to work overtime
+fichar|to clock in
+la hora de entrada|start time
+la hora de salida|finishing time
+la pausa para el café|coffee break
+la hora del almuerzo|lunch break
+el día libre|day off
+el día feriado|public holiday (LatAm)
+el puente|long weekend
+la fecha de pago|payday
+la quincena|fortnightly pay (LatAm)
+el recibo de sueldo|payslip
+la nómina mensual|monthly payroll
+el uniforme|uniform
+el código de vestimenta|dress code
+la oficina abierta|open-plan office
+el espacio de coworking|coworking space
+la mesa de ayuda|help desk
+el buzón de sugerencias|suggestion box
+la intranet de la empresa|company intranet
+el comunicado interno|internal memo
+la circular|circular; memo
+el memorando|memo
+el boletín|newsletter
+la evaluación anual|annual review
+la meta trimestral|quarterly goal
+el informe de gastos|expense report
+la reunión de equipo|team meeting
+la reunión semanal|weekly meeting
+la reunión uno a uno|one-to-one meeting
+el almuerzo de trabajo|business lunch
+el viaje de negocios|business trip
+la feria de empleo|job fair
+el evento de networking|networking event
+hacer contactos|to network
+el contacto profesional|professional contact
+la red de contactos|network (of contacts)
+el perfil profesional|professional profile
+la marca personal|personal brand
+la entrevista por videollamada|video interview
+la prueba técnica|technical test
+la oferta salarial|salary offer
+la contraoferta salarial|salary counter-offer
+el paquete de beneficios|benefits package
+el seguro médico privado|private health insurance
+el bono anual|annual bonus
+la participación en las ganancias|profit sharing
+las opciones sobre acciones|stock options
+la jubilación anticipada|early retirement
+la renuncia voluntaria|voluntary resignation
+el ambiente de trabajo|working atmosphere
+el exceso de trabajo|overwork
+el agotamiento laboral|burnout
+la productividad laboral|labour productivity
+la carga de trabajo|workload
+la fecha de vencimiento|due date; expiry date
+el aviso de cobro|payment reminder
+el recordatorio|reminder
+la carta de recomendación|letter of recommendation
+el certificado laboral|employment certificate
+el paz y salvo|clearance certificate (Panama)

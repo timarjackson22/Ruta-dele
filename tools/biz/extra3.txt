@@ -1,0 +1,64 @@
+la ganancia neta|net gain
+la pérdida neta|net loss
+el margen neto|net margin
+el flujo de efectivo|cash flow (LatAm)
+el estado de flujo de efectivo|cash flow statement
+el capital de riesgo corporativo|corporate venture capital
+el préstamo puente|bridge loan
+la financiación puente|bridge financing
+la deuda subordinada|subordinated debt
+la deuda senior|senior debt
+el bono convertible|convertible bond
+la emisión de acciones|share issue
+la ampliación de capital|capital increase
+la recompra de acciones|share buyback
+el dividendo extraordinario|special dividend
+la junta general|general meeting
+el consejo de administración|board of directors (Spain)
+el comité de auditoría|audit committee
+el comité de crédito|credit committee
+el comité de inversiones|investment committee
+la política de inversión|investment policy
+la cartera de préstamos|loan book
+la cartera vencida|non-performing loans (LatAm)
+la provisión para pérdidas|loan-loss provision
+el índice de morosidad|delinquency rate
+la tasa de recuperación|recovery rate
+el informe de crédito|credit report
+la línea de financiamiento|financing line (LatAm)
+el financiamiento de proyectos|project finance
+el financiamiento comercial|trade finance
+la factura comercial|commercial invoice
+el factoraje|factoring (LatAm)
+el leasing|leasing
+el arrendamiento financiero|finance lease
+la garantía bancaria|bank guarantee
+la carta de garantía|letter of guarantee
+el seguro de crédito|credit insurance
+el tipo de cambio fijo|fixed exchange rate
+la devaluación|devaluation
+la revaluación|revaluation
+la paridad|parity; peg
+el banco central|central bank
+la reserva federal|Federal Reserve
+la política fiscal|fiscal policy
+el riesgo sistémico|systemic risk
+la supervisión bancaria|banking supervision
+el capital regulatorio|regulatory capital
+Basilea III|Basel III
+la debida diligencia reforzada|enhanced due diligence
+la persona expuesta políticamente|politically exposed person (PEP)
+el reporte de operación sospechosa|suspicious activity report
+el financiamiento del terrorismo|terrorist financing
+la evasión de sanciones|sanctions evasion
+el origen de los fondos|source of funds
+el perfil transaccional|transaction profile
+la matriz de riesgo|risk matrix
+el apetito comercial|commercial appetite
+la propuesta de valor|value proposition
+el plan estratégico|strategic plan
+el plan de acción|action plan
+el análisis de la competencia|competitor analysis
+la cuota de ventas|sales quota
+el pronóstico de ventas|sales forecast
+el ciclo de ventas|sales cycle
