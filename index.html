@@ -2838,6 +2838,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const y = ra.find((r) => r.v === same.v);
     return "«" + a + "» is the " + TNAMES[y.t] + "; this sentence needs the " + TNAMES[same.t] + ": «" + b + "».";
   }
+  const DEM = { este: ["m", "this"], esta: ["f", "this"], esto: ["n", "this"], estos: ["mp", "these"], estas: ["fp", "these"], ese: ["m", "that"], esa: ["f", "that"], eso: ["n", "that"], esos: ["mp", "those"], esas: ["fp", "those"], aquel: ["m", "that (over there)"], aquella: ["f", "that (over there)"], aquello: ["n", "that (over there)"], aquellos: ["mp", "those (over there)"], aquellas: ["fp", "those (over there)"] };
+  function demWhy(a, b) {
+    const A = DEM[a.toLowerCase()], B = DEM[b.toLowerCase()]; if (!A || !B) return "";
+    if (B[0] === "n") return "«" + b + "» is the neuter form: use it on its own for something unknown or not named, or for an idea (¿Qué es " + b + "? = What is " + B[1] + "?). «" + a + "» must go with, or stand for, a " + (A[0][0] === "f" ? "feminine" : "masculine") + " noun (" + a + " " + (A[0][0] === "f" ? "casa" : "libro") + ").";
+    if (A[0] === "n") return "«" + a + "» is only for unknown things or ideas; here it refers to a " + (B[0][0] === "f" ? "feminine" : "masculine") + (/p/.test(B[0]) ? " plural" : "") + " noun, so «" + b + "».";
+    return "Agreement: «" + b + "» matches a " + (B[0][0] === "f" ? "feminine" : "masculine") + (/p/.test(B[0]) ? " plural" : " singular") + " noun; «" + a + "» is " + (A[0][0] === "f" ? "feminine" : "masculine") + (/p/.test(A[0]) ? " plural" : " singular") + ".";
+  }
   function agreeWhy(a, b) {
     const sa = strip(a.toLowerCase()), sb = strip(b.toLowerCase()), stem = (x) => x.replace(/(os|as|es|o|a|e|s)$/, "");
     if (sa === sb || stem(sa) !== stem(sb) || verbReadings(b.toLowerCase()).length) return "";
@@ -2849,6 +2856,27 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     // mark the letters that differ (simple alignment)
     const A = a.toLowerCase(), B = b.toLowerCase(); let out = "", i = 0, j = 0;
     while (j < B.length) { if (A[i] === B[j]) { out += esc(b[j]); i++; j++; } else if (strip(A[i] || "") === strip(B[j])) { out += '<mark class="acc">' + esc(b[j]) + "</mark>"; i++; j++; } else if (A[i + 1] === B[j]) { i++; } else { out += '<mark class="sp">' + esc(b[j]) + "</mark>"; if (A[i + 1] === B[j + 1]) i++; j++; } }
+    return out;
+  }
+  // what exactly differs between the learner's answer and the right one, with a reason for each difference
+  function diffReasons(val, alts) {
+    const v = norm(val || ""); if (!v || !alts || !alts.length) return [];
+    if (alts.some((a) => norm(a) === v)) return [];
+    const best = alts.map((a) => ({ a, d: lev(strip(norm(a)), strip(v)) })).sort((x, y) => x.d - y.d)[0].a;
+    const d = wordDiff(val, best), out = [];
+    d.pairs.forEach((pr) => {
+      const a = pr.from.replace(/[¿?¡!.,;:«»"]/g, ""), b = pr.to.replace(/[¿?¡!.,;:«»"]/g, "");
+      if (!a && !b) return;
+      if (!a) { out.push("Missing word: **" + b + "**."); return; }
+      if (!b) { out.push("Not needed here: ~~" + a + "~~."); return; }
+      if (a.toLowerCase() === b.toLowerCase()) { out.push("Capital letter: **" + b + "**."); return; }
+      if (strip(a.toLowerCase()) === strip(b.toLowerCase())) { out.push("**" + a + " → " + b + "** (accent): " + accentWhy(b, a)); return; }
+      const one = !/\s/.test(a) && !/\s/.test(b), al = a.toLowerCase(), bl = b.toLowerCase();
+      const r = one ? demWhy(al, bl) || verbWhy(al, bl) || agreeWhy(a, b) : "";
+      if (r) { out.push("**" + a + " → " + b + "**: " + r); return; }
+      if (one && lev(strip(al), strip(bl)) <= (b.length >= 6 ? 2 : 1)) { out.push("**" + a + " → " + b + "**: spelling."); return; }
+      out.push("**" + a + " → " + b + "**.");
+    });
     return out;
   }
   function explainAns(val, alts, why) {
@@ -2871,12 +2899,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (!b) return "<li>Not needed here: <del>" + esc(a) + "</del></li>";
       if (strip(a.toLowerCase()) === strip(b.toLowerCase())) return "<li>" + accentMarks(a, b) + ": " + esc(accentWhy(b, a)) + "</li>";
       const one = !/\s/.test(a) && !/\s/.test(b);
-      const r = (one && (verbWhy(a.toLowerCase(), b.toLowerCase()) || agreeWhy(a, b))) || "";
+      const r = (one && (demWhy(a.toLowerCase(), b.toLowerCase()) || verbWhy(a.toLowerCase(), b.toLowerCase()) || agreeWhy(a, b))) || "";
       if (r) return "<li>" + esc(r) + "</li>";
       if (one && lev(strip(a.toLowerCase()), strip(b.toLowerCase())) <= (b.length >= 6 ? 2 : 1)) return "<li>Spelling: <del>" + esc(a) + "</del> → " + letters(a, b) + "</li>";
       return "<li><del>" + esc(a) + "</del> → <ins>" + esc(b) + "</ins></li>";
     }).join("");
-    return { cls: "no", html: '<span class="fxline">' + line + "</span>" + (reasons ? "<ul>" + reasons + "</ul>" : "") + whyH };
+    const offT = reasons && /tilde|accent/i.test(why || "") && !/accent|tilde/i.test(reasons);
+    return { cls: "no", html: '<span class="fxline">' + line + "</span>" + (reasons ? "<ul>" + reasons + "</ul>" : "") + (offT ? "" : whyH) };
   }
 
 
@@ -5299,7 +5328,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   /* ---------- steering the small on-phone model, turn by turn ---------- */
   const GENERIC = /(en qu[eé]|en lo que) (te )?pued[ao] ayudar|algo m[aá]s en lo que|c[oó]mo (te )?puedo ayudar|gracias por tu (mensaje|pregunta)|si tienes (alguna )?(otra )?pregunta|no dudes en|estoy aqu[ií] para ayudar|is there anything else|how can i help/i;
-  const looksEnglish = (t) => { const w = (String(t).toLowerCase().match(/[a-z']+/g) || []); const en = w.filter((x) => /^(the|and|is|are|what|how|do|does|i|you|can|in|of|to|with|my|me|when|why|which|give|let's|please|should|mean|say)$/.test(x)).length; return en >= 2 && en >= w.length * 0.25 && !/[ñ¿¡áéíóú]/.test(t); };
+  const looksEnglish = (t) => { const w = (String(t).toLowerCase().match(/[a-z']+/g) || []); const en = w.filter((x) => /^(the|and|is|are|was|what|how|do|does|did|i|you|can|in|of|to|with|my|me|when|why|which|give|let's|please|should|mean|means|say|used|use|there|here|this|that|it|not|wrong|right|correct|instead|difference|explain|tell|would|could|why's|isn't|don't)$/.test(x)).length; return (/^(why|what|how|when|where|which|is|are|can|could|should|does|do|did|explain|tell me|i don'?t|so )\b/i.test(String(t).trim()) && en >= 1) || (en >= 2 && en >= w.length * 0.25); };
   function roleOf(t) {
     const m = /(?:you are|you're|you play|t[uú] eres|eres)\s+(?:the\s+|el\s+|la\s+|un\s+|una\s+)?([a-záéíóúñ ]{3,30}?)(?:[.,!]|$| and | y )/i.exec(t);
     if (m && /role ?play|juego de rol|vamos a practicar|let'?s practi|you are|t[uú] eres|eres el|eres la/i.test(t)) return m[1].trim();
@@ -5336,6 +5365,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (role) return "(Role-play: you are the " + role + ". Stay in character. Answer as the " + role + " with one short line in simple Spanish, and move the scene forward.)";
     if (/\b(cansad[oa]|enferm[oa]|triste|me duele|mal|aburrid[oa]|estresad[oa]|preocupad[oa])\b/.test(q)) return "(The learner feels bad: be sympathetic first (¡Lo siento!), then say one kind or useful thing, then ask one gentle question. No greeting, no nicknames.)";
     if (/^(bien|muy bien|todo bien|bastante bien)\b.*\b(y t[uú]|y usted)/.test(q)) return "(The learner asked how you are: say you are well and add one short thing about your day as a teacher, then ask them one question. No nicknames.)";
+    const LM = window.__lastMistake;
+    if (LM && Date.now() - LM.t < 15 * 60e3 && looksEnglish(lastU)) return "(The learner is asking about their mistake. They wrote «" + LM.val + "»; the right answer is «" + LM.ans + "». " + (LM.reasons.length ? "What was wrong: " + LM.reasons.join(" ") : "") + " Answer in ENGLISH, in 2 or 3 sentences, about exactly that difference, with one short Spanish example. Do not talk about accents or tildes unless that was the mistake. No greeting.)";
     if (looksEnglish(lastU)) return "(The learner wrote in English: answer clearly in English in 2 or 3 sentences, with one short Spanish example. No greeting.)";
     if (/^(s[ií]|ok|okay|vale|dale|claro|bueno|listo|yes|sure)\b/.test(q) && q.split(" ").length <= 3 && prevA) return "(The learner said yes to what you last proposed: «" + prevA.slice(0, 160) + "». Do it now: start the activity with a concrete example or question. No greeting.)";
     return "(Reply as Profe: respond to what the learner said by sharing something yourself (an opinion, a fact about the topic, or an example) in 1 or 2 short sentences, then ask at most one question. No greeting, no nicknames.)";
@@ -5432,11 +5463,19 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const it = x.it, r = x.r, out = ["**" + (n ? "Question " + n : "The question") + ":** " + it.q.replace(/_{2,}/g, "____")];
     if (it.t === "mc") out.push("*Options:* " + it.opts.join(" · "));
     if (r && r.ok) out.push("✅ You answered **" + (r.val || rightOf(it)) + "**. That’s right.");
-    else if (r) out.push("❌ You answered «" + (r.val || "nothing") + "». The answer is **" + rightOf(it) + "**.");
+    let dr = [];
+    if (r && !r.ok) {
+      out.push("❌ You answered «" + (r.val || "nothing") + "». The answer is **" + rightOf(it) + "**.");
+      dr = r.val ? diffReasons(r.val, it.t === "mc" ? [rightOf(it)] : (it.a || [rightOf(it)])) : [];
+      if (dr.length) out.push("**What you got wrong:**\n" + dr.map((x) => "- " + x).join("\n"));
+      window.__lastMistake = { t: Date.now(), q: it.q, val: r.val || "", ans: rightOf(it), reasons: dr.map((x) => x.replace(/\*\*|~~/g, "")) };
+    }
     else out.push("✅ The answer is **" + rightOf(it) + "**" + (it.a && it.a.length > 1 ? " *(also accepted: " + it.a.slice(1).join(", ") + ")*" : "") + ".");
-    if (it.why) out.push("**Why:** " + it.why);
+    const offTopic = dr.length && /tilde|accent/i.test(it.why || "") && !dr.some((x) => /\(accent\)|accent/i.test(x));
+    if (it.why && !offTopic) out.push((dr.length ? "**Also about this question:** " : "**Why:** ") + it.why);
     if (x.li) { const l = textLine(x.li, it); if (l) out.push("📖 **In the text:** “" + l[0] + "”\n*" + l[1] + "*"); }
-    const b = bestBlock(it.q + " " + rightOf(it) + " " + (it.why || ""));
+    let b = bestBlock(dr.length ? dr.join(" ") + " " + rightOf(it) : it.q + " " + rightOf(it) + " " + (it.why || ""));
+    if (b && dr.length) { const keys = dr.join(" ").match(/\*\*[^*]+→ ([^*]+)\*\*/g) || []; const words = keys.map((k) => k.replace(/.*→ |\*/g, "").trim().toLowerCase()).filter(Boolean); const bt = (b.t + " " + b.r + " " + b.n.join(" ") + " " + b.ex.join(" ")).toLowerCase(); if (words.length && !words.some((w) => new RegExp("(^|[^a-záéíóúñ])" + w + "([^a-záéíóúñ]|$)").test(bt))) b = null; }
     if (b) {
       out.push("📘 **From the lesson, “" + b.t + "”:** " + b.r);
       const T = ptoks(it.q + " " + rightOf(it)); const nn = b.n.find((k) => [...ptoks(k)].some((w) => T.has(w))) || b.n[0];
@@ -7452,7 +7491,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130529";
+  var BUILD = "202611130539";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
