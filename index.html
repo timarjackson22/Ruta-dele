@@ -1376,6 +1376,12 @@ a.chipl::after { content: " ›"; opacity: .6 }
 .rgpill { display: inline-block; font-size: .78rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); color: var(--muted) }
 .rgpill.v0, .rgpill.v1 { background: color-mix(in srgb, #d4473a 14%, transparent); color: #b23b30 } .rgpill.v3, .rgpill.v4 { background: color-mix(in srgb, var(--cobalt) 14%, transparent); color: var(--cobalt) }
 .rgcard { margin: 6px 0 0; display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap }
+
+#michelp { position: fixed; inset: auto 0 0 0; z-index: 96; display: flex; justify-content: center; padding: 0 10px calc(10px + env(safe-area-inset-bottom, 0px)); transform: translateY(110%); transition: transform .25s cubic-bezier(.2, .9, .3, 1.05) }
+#michelp.on { transform: none }
+.mh-in { width: min(100%, 520px); background: var(--surface); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 -10px 40px rgba(0, 0, 0, .22); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; max-height: 80vh; overflow: auto }
+.mh-in ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px } .mh-in p { margin: 0 }
+.mh-url { font-family: ui-monospace, monospace; font-size: .85rem; background: var(--surface-2); padding: 6px 10px; border-radius: 10px; word-break: break-all }
 </style>
 
 </head>
@@ -2594,6 +2600,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<h2 class="ghead">Theme</h2><div class="pals" role="group" aria-label="Colour theme">' + [["", "Classic"]].concat(Object.keys(PALS).map((k) => [k, PALS[k].n])).map(([k, n]) => { const P = PALS[k]; return '<button type="button" class="pal" data-act="ui-pal" data-v="' + k + '" aria-pressed="' + ((UI.pal || "") === k) + '"><span class="pal-sw' + (P ? "" : " split") + '"' + (P ? ' style="--pb:' + P.bg + ";--ps:" + P.su + ";--pi:" + P.ink + ";--pt:" + P.ti + ";--pa:" + P.sa + '"' : "") + ">" + (P ? "<i></i><u></u><em></em>" : "") + "</span><small>" + n + "</small></button>"; }).join("") + "</div>" +
       '<p class="gfoot" style="margin-top:0">Swipe for more. Classic follows the Appearance setting below.</p>' +
       '<h2 class="ghead">Daily goal</h2><div class="ilist pad">' + seg("goal", S.goal || 20, GOALS.map(([v, n]) => [v, n + " · " + v])) + "</div>" +
+      '<h2 class="ghead">Microphone</h2><div class="ilist pad"><p class="muted small" style="margin:0">Used to talk to Profe and for the pronunciation check.' + (IOS_OTHER ? " On iPhone this only works in Safari." : "") + '</p><div class="row" style="margin-top:8px"><button class="btn small" data-act="mic-test">🎙️ Test microphone</button>' + (IS_IOS ? '<button class="btn small" data-act="mic-help">Help</button>' : "") + '</div><p id="mic-res" class="small" style="margin:6px 0 0"></p></div>' +
       '<h2 class="ghead">Display</h2><div class="ilist pad"><p class="setl">Text size</p>' + seg("ui-fs", UI.fs || 1, [[0.9, "A−"], [1, "A"], [1.12, "A+"], [1.25, "A++"]]) +
       '<p class="setl">Translation cue tips <span class="muted small">· Reading and Listening</span></p>' + seg("ui-cue", UI.cues === false ? "off" : "on", [["on", "On"], ["off", "Off"]]) + '<p class="setl">Appearance</p>' + seg("ui-theme", UI.theme || "auto", [["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]]) + "</div>" +
       '<h2 class="ghead">Spanish variety · Variedad</h2><div class="regs">' + [["latam", "🌎", "Latin America", "Latinoamérica", "ustedes · carro · computadora"], ["es", "🇪🇸", "Spain", "España", "vosotros · coche · ordenador"]].map(([v, f, n, es, ex]) => { const on = (S.region === "es" ? "es" : "latam") === v; return '<button type="button" class="reg' + (on ? " on" : "") + '"' + (on ? "" : ' data-act="region"') + ' aria-pressed="' + on + '"><span class="reg-f" aria-hidden="true">' + f + "</span><b>" + n + "</b><small>" + es + '</small><span class="reg-ex">' + ex + "</span>" + (on ? '<span class="reg-ck">✓</span>' : "") + "</button>"; }).join("") + "</div>" +
@@ -3031,6 +3038,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function pcDone() { if (!PC) return; const b = PC.btn; try { PC.rec && PC.rec.abort(); } catch (e) {} clearTimeout(PC.tm); PC = null; b.dataset.pc = "1"; b.click(); }
   function pcListen() {
     if (!PC) return;
+    if (typeof IS_IOS !== "undefined" && IS_IOS && !MIC_OK) { micAsk().then((ok) => { if (ok) pcListen(); else pcPanel("no", "The microphone is blocked", "See the steps on screen"); }); return; }
     try { speechSynthesis.cancel(); } catch (e) {}
     const r = new PC_SR(); PC.rec = r; r.lang = S.region === "es" ? "es-ES" : "es-US"; r.interimResults = false; r.continuous = false; r.maxAlternatives = 5;
     let got = false;
@@ -3052,7 +3060,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         speak(no[0] + " " + PC.word);
       }
     };
-    r.onerror = (e) => { if (!PC || PC.rec !== r) return; got = true; const er = e && e.error; pcPanel("no", er === "not-allowed" || er === "service-not-allowed" ? "The microphone is blocked" : "I didn’t catch that", er === "not-allowed" || er === "service-not-allowed" ? "Allow the microphone for Ruta DELE, or turn this check off in Deck settings." : "Tap the mic and say «" + esc(PC.word) + "»."); };
+    r.onerror = (e) => { if (!PC || PC.rec !== r) return; got = true; const er = e && e.error; if (IS_IOS && (er === "not-allowed" || er === "service-not-allowed")) { MIC_OK = false; micHelp("denied"); } pcPanel("no", er === "not-allowed" || er === "service-not-allowed" ? "The microphone is blocked" : "I didn’t catch that", er === "not-allowed" || er === "service-not-allowed" ? "Allow the microphone for Ruta DELE, or turn this check off in Deck settings." : "Tap the mic and say «" + esc(PC.word) + "»."); };
     r.onend = () => { if (!PC || PC.rec !== r || got) return; pcPanel("no", "I didn’t hear anything", "Tap the mic and say «" + esc(PC.word) + "»."); };
     try { r.start(); } catch (e) { pcPanel("no", "The microphone couldn’t start", "Tap the mic to try again, or Skip."); }
   }
@@ -5491,6 +5499,59 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
   const CAN_MIC = !!SR && !IN_CLAUDE;
   const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+  /* ---------- iPhone microphone ---------- */
+  const IOS_OTHER = IS_IOS && /CriOS|FxiOS|EdgiOS|OPiOS/.test(navigator.userAgent); // Chrome, Firefox, Edge on iPhone: no speech recognition
+  const IS_STANDALONE = navigator.standalone === true || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+  let MIC_OK = false;
+  // ask inside the tap (iOS shows its permission prompt), then let go so speech recognition can use it
+  function micAsk() {
+    if (!IS_IOS || MIC_OK) return Promise.resolve(true);
+    if (!SR) { micHelp("nosr"); return Promise.resolve(false); }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { MIC_OK = true; return Promise.resolve(true); }
+    return navigator.mediaDevices.getUserMedia({ audio: true }).then((st) => { st.getTracks().forEach((t) => t.stop()); MIC_OK = true; return new Promise((r) => setTimeout(() => r(true), 300)); })
+      .catch((err) => { micHelp(err && err.name === "NotAllowedError" ? "denied" : "nomic"); return false; });
+  }
+  function micHelp(kind) {
+    let m = document.getElementById("michelp"); if (!m) { m = document.createElement("div"); m.id = "michelp"; m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Microphone help"); document.body.appendChild(m); }
+    const url = location.origin + location.pathname;
+    const steps = kind === "nosr"
+      ? '<p>This browser can’t turn speech into text on iPhone (Apple only allows it in <b>Safari</b>). Open Ruta DELE in Safari to talk to Profe and check your pronunciation:</p><p class="mh-url">' + esc(url) + "</p>"
+      : '<p>' + (kind === "nomic" ? "The microphone couldn’t start." : "The microphone or speech recognition is blocked.") + " On your iPhone:</p><ol>" +
+        "<li><b>Settings › Apps › Safari › Microphone</b>: choose <b>Ask</b> or <b>Allow</b>.</li>" +
+        "<li><b>Settings › General › Keyboard</b>: turn on <b>Enable Dictation</b>.</li>" +
+        "<li><b>Settings › Siri</b>: on some iOS versions speech recognition only works when Siri is turned on.</li>" +
+        "<li><b>Settings › Privacy &amp; Security › Speech Recognition</b>: allow Safari if it’s listed.</li>" +
+        (IS_STANDALONE ? "<li>Some iPhones block voice in apps added to the Home Screen. If it still says blocked, open the app in Safari with the button below.</li>" : "<li>In Safari, tap <b>aA</b> in the address bar › <b>Website Settings</b> › <b>Microphone</b> › <b>Allow</b>.</li>") + "</ol>";
+    m.innerHTML = '<div class="mh-in"><div class="dkp-h"><b>🎙️ Turn on the microphone</b><button class="dkx" data-act="mic-close" aria-label="Close">×</button></div>' + steps +
+      '<div class="row">' + (kind !== "nosr" ? '<button class="btn primary" data-act="mic-retry">Try again</button>' : "") +
+      (IS_STANDALONE || kind === "nosr" ? '<button class="btn" data-act="mic-safari">Open in Safari</button>' : "") + '<button class="btn" data-act="mic-copy">Copy link</button></div></div>';
+    m.hidden = false; requestAnimationFrame(() => m.classList.add("on"));
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a || !/^mic-/.test(a)) return;
+    const m = document.getElementById("michelp"), close = () => { if (m) { m.classList.remove("on"); setTimeout(() => (m.hidden = true), 200); } };
+    if (a === "mic-close") close();
+    else if (a === "mic-retry") { MIC_OK = false; close(); micAsk().then((ok) => { if (ok) micTest(); }); }
+    else if (a === "mic-safari") { try { window.open(location.origin + location.pathname + location.hash, "_blank"); } catch (x) {} }
+    else if (a === "mic-copy") { try { navigator.clipboard.writeText(location.origin + location.pathname); t.textContent = "✓ Copied"; } catch (x) {} }
+    else if (a === "mic-test") micTest();
+    else if (a === "mic-help") micHelp(IOS_OTHER || !SR ? "nosr" : "denied");
+  });
+  // Settings › Test microphone: say something, see what was heard
+  function micTest() {
+    const out = document.getElementById("mic-res");
+    if (!SR) { if (out) out.textContent = "Speech recognition isn’t available in this browser."; if (IS_IOS) micHelp("nosr"); return; }
+    micAsk().then((ok) => {
+      if (!ok) { if (out) out.textContent = "✗ Microphone blocked"; return; }
+      const r = new SR(); r.lang = S.region === "es" ? "es-ES" : "es-US"; r.continuous = false; r.interimResults = false; let heard = false;
+      if (out) out.textContent = "Listening… say «Hola, ¿qué tal?»";
+      r.onresult = (ev) => { heard = true; if (out) out.innerHTML = "✓ Heard: «<b>" + esc(ev.results[0][0].transcript) + "</b>». The microphone works."; };
+      r.onerror = (ev) => { heard = true; if (out) out.textContent = "✗ " + ({ "not-allowed": "Blocked", "service-not-allowed": "Speech recognition blocked", "no-speech": "Didn’t hear anything; try again closer to the phone", "audio-capture": "No microphone found", network: "Needs an internet connection" }[ev.error] || ev.error); if (/not-allowed|service-not-allowed|audio-capture/.test(ev.error)) micHelp(ev.error === "audio-capture" ? "nomic" : "denied"); };
+      r.onend = () => { if (!heard && out) out.textContent = "I didn’t hear anything. Try again closer to the phone."; };
+      try { r.start(); } catch (x) { if (out) out.textContent = "✗ Couldn’t start: " + x.message; }
+    });
+  }
   const HAS_GPU = !!navigator.gpu && !IS_IOS; // iOS browsers close the page when a 1.5 GB+ model loads
   if (IS_IOS) { // remove any partial on-device AI download
     try { caches.keys().then((ks) => ks.filter((k) => /webllm/i.test(k)).forEach((k) => caches.delete(k))).catch(() => {}); } catch (e) {}
@@ -6453,7 +6514,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (UNFINISHED.test(t) || FILLER.test(t)) ms += 2500; // the sentence clearly goes on
     return Math.min(ms, 9000);
   }
-  function listen(onFinal, opts) {
+  function listen(onFinal, opts) { if (IS_IOS && !MIC_OK) { micAsk().then((ok) => { if (ok) listen0(onFinal, opts); }); return; } listen0(onFinal, opts); }
+  function listen0(onFinal, opts) {
     opts = opts || {};
     if (!CAN_MIC) return;
     SPK_GEN++;
@@ -6461,7 +6523,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (rec) try { rec.abort(); } catch (e) {}
     // keep the recognizer open (continuous) and decide ourselves when the learner has finished: after a pause of TS.waitMs
     const manual = !!opts.continuous, waitMs = TS.waitMs || 3000;
-    rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = true; rec.maxAlternatives = 1;
+    rec = new SR(); rec.lang = sttLang(); rec.interimResults = true; rec.continuous = !IS_IOS; rec.maxAlternatives = 1; // iPhone loses results in continuous mode
     let quiet = null; const arm = (ms) => { clearTimeout(quiet); if (!manual) quiet = setTimeout(() => {
       if (rec !== me || !listening) return;
       const t = (liveText || final || heard).trim();
@@ -6478,7 +6540,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else if (prevI && interim && interim.split(" ").length < prevI.split(" ").length && interim.split(" ")[0].toLowerCase() !== prevI.split(" ")[0].toLowerCase()) kept += (kept ? " " : "") + prevI;
       prevN = nf; if (interim) prevI = interim;
       final = (kept + " " + fin).trim(); liveText = (final + " " + interim).trim(); if (liveText) heard = liveText; paintLive(); arm(endWait(liveText)); };
-    rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
+    rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; } if (e.error === "not-allowed" || e.error === "service-not-allowed") { voiceMode = false; liveText = IS_IOS ? "Voice input is blocked on this iPhone. Follow the steps on screen." : "Microphone blocked. Allow the microphone for this app in Chrome’s site settings."; if (IS_IOS) { MIC_OK = false; micHelp("denied"); } } else if (e.error === "no-speech") liveText = "I didn’t hear anything. Tap the mic and try again."; else if (e.error === "language-not-supported" && rec.lang !== "es-ES") { TS.sttLang = "es-ES"; tsave(); } paintLive(); uiVoice(); };
     rec.onend = () => { if (done || rec !== me) return; done = true; clearTimeout(quiet); listening = false; uiVoice(); const t = (final || heard).trim(); if (t) { liveText = ""; paintLive(); onFinal(t); } };
     try { if (window.AndroidSTT && window.AndroidSTT.setBias) window.AndroidSTT.setBias(JSON.stringify(biasWords())); } catch (e) {}
     try { rec.start(); listening = true; } catch (e) { listening = false; }
@@ -7046,7 +7108,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     else if (tView === "practice") body = practiceHTML();
     else {
       const msgs = tCur ? tCur.msgs : [];
-      const intro = TB ? "¡Hola! Soy Profe. I can see what you have open (<b>" + esc(ctx.label) + "</b>). Ask me anything" + (CAN_MIC ? ", tap the mic to talk, or start a hands-free voice chat." : ", or pick an option below.") :
+      const intro = TB ? "¡Hola! Soy Profe. I can see what you have open (<b>" + esc(ctx.label) + "</b>). Ask me anything" + (IOS_OTHER ? " (to talk by voice on iPhone, open the app in Safari)" : "") + (CAN_MIC ? ", tap the mic to talk, or start a hands-free voice chat." : ", or pick an option below.") :
         (IS_IOS && !IN_CLAUDE ? "¡Hola! Soy Profe. On iPhone my free chat AI isn’t available (it’s too large for iOS), but <b>Practice</b> works fully, with voice: drills, quizzes and role-plays. Tap <b>Practice</b> above to start." : "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.");
       body = '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a">' + pAvatar() + '<div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
         '<div class="t-live" id="t-live" hidden></div>' +
@@ -8127,7 +8189,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611131525";
+  var BUILD = "202611131739";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
