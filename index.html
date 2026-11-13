@@ -1290,6 +1290,14 @@ body.study .srm-ic { width: 34px; height: 34px; border-radius: 10px; font-size: 
 .pgr.next b { color: var(--cobalt) }
 .pgr.prev { grid-column: 1 }
 .pgr:active { transform: scale(.98) }
+
+.pxret { position: fixed; left: 14px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 13; display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px; border-radius: 999px; border: 0; cursor: pointer; font: inherit; text-align: left;
+  background: var(--cobalt); color: var(--on-cobalt); box-shadow: 0 10px 26px color-mix(in srgb, var(--cobalt) 40%, transparent), inset 0 1px 0 rgba(255, 255, 255, .3); animation: pcIn .35s cubic-bezier(.2, .8, .3, 1.2); max-width: calc(100vw - 92px) }
+.pxret svg { width: 22px; height: 22px; flex: none }
+.pxret span { display: flex; flex-direction: column; min-width: 0; line-height: 1.2 } .pxret small { font-size: .7rem; opacity: .85 } .pxret b { font-size: .9rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+body.no-tabs .pxret { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) }
+body.no-tabs .pxback { bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important }
+body.tutor-open .pxret { display: none }
 </style>
 
 </head>
@@ -2705,6 +2713,30 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   let pgrQ = false;
   new MutationObserver(() => { if (pgrQ) return; pgrQ = true; requestAnimationFrame(() => { pgrQ = false; if (document.querySelector("#app .unav a.btn:not(.pgr)")) uiPager(); }); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+
+  // a link from a practice question to another page: remember the question and offer the way back
+  let PXRET = null;
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest("#runner a[href^='#'], .pxfb a[href^='#']"); if (!a || !PX) return;
+    const to = a.getAttribute("href"); if (!to || to === location.hash) return;
+    PXRET = { hash: location.hash, i: PX.i || 0, n: (PX.i || 0) + 1, title: (document.querySelector("#app h1") || {}).textContent || "" };
+  }, true);
+  function pxRetPill() {
+    let b = document.getElementById("px-ret");
+    if (!PXRET) { if (b) b.remove(); return; }
+    if (location.hash === PXRET.hash) { // back on the lesson: go to the question
+      const r = PXRET; PXRET = null; if (b) b.remove();
+      setTimeout(() => {
+        if (PX && "#" + PX.key === r.hash) { PX.i = Math.min(r.i, PX.order.length - 1); const k = PX.order[PX.i]; PX.phase = PX.res[k] ? "fb" : "q"; pxRender(); }
+        const run = document.getElementById("runner"); if (run) run.scrollIntoView({ block: "start" });
+      }, 300);
+      return;
+    }
+    if (!b) { b = document.createElement("button"); b.id = "px-ret"; b.type = "button"; b.className = "pxret"; document.body.appendChild(b); }
+    b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span><small>Back to your practice</small><b>Question ' + PXRET.n + (PXRET.title ? " · " + esc(PXRET.title.trim().slice(0, 28)) : "") + "</b></span>";
+    b.onclick = () => { if (PXRET) location.hash = PXRET.hash; };
+  }
+  window.addEventListener("hashchange", () => setTimeout(pxRetPill, 60));
   function rvRow(attrs, icon, kind, title, where, tag) {
     tag = tag || "button";
     return "<" + tag + ' class="rvrow" ' + attrs + (tag === "button" ? ' type="button"' : "") + '><span class="rv-ic" aria-hidden="true">' + icon + '</span><span class="rv-t"><small>' + esc(kind) + "</small><b>" + esc(title) + '</b></span><span class="rv-go' + (where === "Jump" ? " up" : "") + '" title="' + (where === "Jump" ? "Go up to it in this lesson" : where === "Chat" ? "Ask Profe" : "Open") + '">' + (where === "Jump"
@@ -7407,7 +7439,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130508";
+  var BUILD = "202611130519";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
