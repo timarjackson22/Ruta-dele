@@ -1124,6 +1124,11 @@ p, li { line-height: 1.55 }
 .srmore-b { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 80%, transparent); color: var(--ink); font: inherit; text-align: left; cursor: pointer }
 .srmore-b b { display: block; font-weight: 600 } .srmore-b small { display: block; color: var(--muted); font-size: .84rem; line-height: 1.3 }
 .srm-ic { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-size: 1.2rem; background: var(--surface-2); flex: none }
+
+.tctl { flex-wrap: nowrap !important; gap: 6px !important; padding: 6px 12px 2px !important; font-size: .88rem }
+.tctl select { max-width: 42vw; padding: 3px 6px !important; border-radius: 10px }
+.tctl .small { white-space: nowrap }
+.tctl .btn.small { min-width: 30px !important; padding: 2px 6px !important }
 </style>
 
 </head>
@@ -4981,7 +4986,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return top && top[1] > 0.3 ? B[top[0]] : null;
   }
   // the questions on this page, with the learner's answers when there are any
+  // a Grammar list page (nouns, adjectives…): "How do you say … in Spanish?" from the most-used words
+  function gListItems() {
+    const m = /^g-([a-z]+)$/.exec(hashNow()); if (!m || typeof GD === "undefined" || !GD[m[1]] || !GD[m[1]].items) return [];
+    const kind = { sustantivos: "noun", adjetivos: "adjective", adverbios: "adverb", preposiciones: "preposition", conjunciones: "conjunction", pronombres: "pronoun", determinantes: "determiner", articulos: "article", conectores: "connector", numerales: "number", interjecciones: "interjection", reflexivos: "verb" }[m[1]] || "word";
+    return GD[m[1]].items.filter((x) => x.w && x.en).slice(0, 30).map((x) => {
+      const art = x.g === "f" ? "la " : x.g === "m" ? "el " : "", en = String(x.en).split(/[;(]/)[0].trim();
+      const a = [x.w]; if (art) a.unshift(art + x.w); if (x.fem) a.push(x.fem);
+      return { it: { q: "How do you say «" + en + "» in Spanish? *(" + kind + (art ? ", with el or la" : "") + ")*", a, why: (art ? "**" + art + x.w + "**" + (x.pl ? " (plural: " + x.pl + ")" : "") + ". " : "") + (x.use || "") + (x.ex ? " Example: " + x.ex + (x.exEn ? " (" + x.exEn + ")" : "") : "") } };
+    });
+  }
   function pageItems() {
+    { const gl = gListItems(); if (gl.length) return gl; }
     try { if (PX && PX.items && document.getElementById("runner")) return PX.items.map((it, k) => ({ it, r: PX.res[k] })); } catch (e) {}
     const x = LI[hashNow()];
     if (x) return [...document.querySelectorAll('.mc[data-scope="lq"] > li')].map((li, k) => { const q = x.q[k]; if (!q) return null; const w = li.querySelector(".opt.wrong"), r = li.querySelector(".opt.right"); return { it: { t: "mc", q: q[0], opts: q[1], c: q[2], why: "" }, r: r ? { ok: !w, val: w ? w.textContent.trim() : r.textContent.trim() } : null, li: x }; }).filter(Boolean);
@@ -5044,6 +5060,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (it.t === "mc") { const L = /^[abcd]$/.exec(t); ok = L ? "abcd".indexOf(t) === it.c : t === qnorm(it.opts[it.c]); }
     else ok = (it.a || []).some((a) => qnorm(a) === t || (t.length > 2 && qnorm(a).split(" ").length > 1 && t.endsWith(qnorm(a))));
     x.tries = x.tries || 0;
+    if (!ok && /^(no se|no lo se|ni idea|paso|pass|skip|idk|i dont know|i don t know|dont know|no idea|next|siguiente)$/.test(t)) x.tries = 1;
     let out;
     // a whole sentence when the answer is a word or two: the learner has moved on to something else
     if (!ok && t.split(" ").length > qnorm(rightOf(it)).split(" ").length + 2) { Q.done = 1; return null; }
@@ -5411,7 +5428,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const speakSeg = (es) => es || !!TS.speakEn;
   // speaks finished sentences as soon as they appear, so voice replies start before the whole answer is written
   function streamSpeaker(onAllDone) {
-    const gen = ++SPK_GEN, q = []; let said = 0, playing = false, ended = false, called = false;
+    const gen = ++SPK_GEN, q = []; let said = 0, playing = false, ended = false, called = false, any = false;
     try { speechSynthesis.cancel(); } catch (e) {}
     const done = () => { if (!called && ended && !playing && !q.length && gen === SPK_GEN) { called = true; if (onAllDone) onAllDone(); } };
     const play = () => {
@@ -5424,12 +5441,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     };
     const push = (txt) => {
       const parts = (txt.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean);
-      parts.forEach((x) => { const es = isSpanish(x); if (!speakSeg(es)) return; const last = q[q.length - 1]; if (last && last.es === es) last.t += " " + x; else q.push({ es, t: x }); });
+      parts.forEach((x) => { const es = isSpanish(x); if (!speakSeg(es) && !push.all) return; any = true; const last = q[q.length - 1]; if (last && last.es === es) last.t += " " + x; else q.push({ es, t: x }); });
       if (!playing) play();
     };
     return {
       feed(full) { if (!canSpeak || gen !== SPK_GEN) return; const t = plainForSpeech(forVoice(full)).replace(/\n+/g, ". "); const m = t.slice(said).match(/^[\s\S]*[.!?…](?=\s|$)/); if (m) { push(m[0]); said += m[0].length; } },
-      finish(full) { if (!canSpeak) { ended = true; called = true; if (onAllDone) onAllDone(); return; } const t = plainForSpeech(forVoice(full || "")).replace(/\n+/g, ". "); if (t.length > said) push(t.slice(said)); said = t.length; ended = true; setTimeout(() => { if (!called && gen === SPK_GEN) { playing = false; q.length = 0; done(); } }, 6000 + t.length * 120); done(); },
+      finish(full) { if (!canSpeak) { ended = true; called = true; if (onAllDone) onAllDone(); return; } const t = plainForSpeech(forVoice(full || "")).replace(/\n+/g, ". "); if (t.length > said) push(t.slice(said)); said = t.length;
+        if (!any && !q.length && !playing) { const all = plainForSpeech(String(full || "")).replace(/\n+/g, ". "); if (all.trim()) { push.all = true; push(all); push.all = false; } } // nothing in Spanish: read it in English rather than stay silent
+        ended = true; setTimeout(() => { if (!called && gen === SPK_GEN) { playing = false; q.length = 0; done(); } }, 6000 + t.length * 120); done(); },
       gen,
     };
   }
@@ -5447,6 +5466,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     // join neighbouring sentences in the same language, then play the pieces one after another
     // (the Android voice replaces whatever is playing, so queuing them would keep only the last sentence)
     const segs = []; parts.forEach((p) => { const es = isSpanish(p); if (!speakSeg(es)) return; if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); });
+    if (!segs.length) { const all = plainForSpeech(String(text || "")).replace(/\n+/g, ". "); (all.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || []).map((x) => x.trim()).filter(Boolean).forEach((p) => { const es = isSpanish(p); if (segs.length && segs[segs.length - 1].es === es) segs[segs.length - 1].t += " " + p; else segs.push({ es, t: p }); }); }
     if (!segs.length) { if (onDone) onDone(); return; }
     let fired = false, k = 0, gen = ++SPK_GEN; const finish = () => { if (fired) return; fired = true; clearTimeout(guard); if (onDone) onDone(); };
     const guard = setTimeout(finish, 6000 + clean.length * 120);
@@ -5495,7 +5515,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     while (turns.length && turns[0].role !== "user") turns.shift();
     const live = { r: "a", c: "", t: Date.now(), pending: true }; tCur.msgs.push(live);
     tBusy = true; tCtl = new AbortController(); tRender();
-    const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => autoAgain()) : null;
+    const spk = (voiceMode || lastVoice) && canSpeak ? streamSpeaker(() => autoAgain()) : canSpeak && TS.autoRead !== false ? streamSpeaker(null) : null;
     EXPERT_LAST = "";
     try { const out = await ask(turns, ctx, (t) => { live.c = t; tPaintLast(); if (spk && !/^\*?(Thinking|Loading|Starting|Profe is writing)/.test(t)) spk.feed(t); }, tCtl.signal); live.c = out; delete live.pending; if (out && out === EXPERT_LAST) live.x = 1; }
     catch (e) {
@@ -5506,7 +5526,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
     if (!(tCur && tCur.coached === um.c)) checkMsg(um);
     trReply(live);
-    if (spk) { if (live.c && !live.err) { spk.finish(live.c); afterSpeech(); } else { SPK_GEN++; } }
+    if (spk) { if (live.c && !live.err) { spk.finish(live.c); if (voiceMode || lastVoice) afterSpeech(); } else { SPK_GEN++; } }
     else if ((voiceMode || lastVoice) && live.c && !live.err) { speakMixed(live.c, () => autoAgain()); afterSpeech(); }
     if (tCur.msgs.filter((m) => m.r === "u").length % 6 === 0) tRemember();
   }
@@ -5913,6 +5933,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-fix"' + (TS.noFix ? "" : " checked") + '> Correct my Spanish (marks wrong words under each message)</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-name">Your name (Profe uses it)</label><input id="pv-name" value="' + esc(TS.lname || "") + '" placeholder="e.g. Timar" style="max-width:10em"></div>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-enline"' + (TS.noEnLine ? "" : " checked") + '> Show English under Profe’s replies (never read aloud)</label>' +
+      '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-auto"' + (TS.autoRead !== false ? " checked" : "") + '> Read every reply aloud</label>' +
       '<label class="row small" style="margin-top:8px"><input type="checkbox" id="pv-en-on"' + (TS.speakEn ? " checked" : "") + '> Also read English aloud</label>' +
       '<div class="row" style="margin-top:8px"><label class="small" for="pv-rate">Speed</label><select id="pv-rate">' + [[0.6, "0.6× (very slow)"], [0.7, "0.7×"], [0.8, "0.8× (slow)"], [0.9, "0.9×"], [1, "1.0× (normal)"], [1.1, "1.1×"], [1.2, "1.2×"], [1.3, "1.3×"], [1.4, "1.4×"], [1.5, "1.5× (fast)"], [1.6, "1.6×"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.prate || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><label class="small" for="pv-pitch">Pitch</label><select id="pv-pitch">' + [[0.85, "Lower"], [1, "Normal"], [1.15, "Higher"]].map(([r, n]) => '<option value="' + r + '"' + ((TS.ppitch || 1) == r ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="pv-try">Listen</button></div>' +
       (es.length ? '<p class="small muted">More voices: Android Settings → General management → Text-to-speech → Preferred engine → Settings → Install voice data → Spanish.</p>' : '<p class="small muted">No Spanish voices found on this phone yet. Install them in Android Settings → General management → Text-to-speech.</p>') + "</div>";
@@ -5920,6 +5941,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   document.addEventListener("change", (e) => {
     const id = e.target.id;
     if (id === "pv-en-on") { TS.speakEn = e.target.checked; tsave(); }
+    if (id === "pv-auto") { TS.autoRead = e.target.checked; tsave(); }
     else if (id === "pv-wait") { TS.waitMs = +e.target.value; tsave(); }
     else if (id === "pv-fix") { TS.noFix = !e.target.checked; tsave(); }
     else if (id === "t-lvl") { TS.clvl = e.target.value; tsave(); tRender(); }
@@ -5955,7 +5977,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         (IS_IOS && !IN_CLAUDE ? "¡Hola! Soy Profe. On iPhone my free chat AI isn’t available (it’s too large for iOS), but <b>Practice</b> works fully, with voice: drills, quizzes and role-plays. Tap <b>Practice</b> above to start." : "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.");
       body = '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a">' + pAvatar() + '<div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
         '<div class="t-live" id="t-live" hidden></div>' +
-        '<div class="tctl"><label class="small" for="t-lvl">Level</label><select id="t-lvl">' + [["", "Auto (" + (pageCtx().lvl || (S.last && S.last.l) || "a2").toUpperCase() + ")"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"], ["b2", "B2"], ["c1", "C1"], ["c2", "C2"], ["open", "Open (no limit)"]].map(([v, n]) => '<option value="' + v + '"' + ((TS.clvl || "") === v ? " selected" : "") + ">" + n + "</option>").join("") + '</select><span class="small" style="margin-left:auto">Voice speed</span><button class="btn small" data-act="t-rate" data-d="-1" aria-label="Slower">−</button><b class="small" id="t-rate">' + (TS.prate || 1).toFixed(1) + '×</b><button class="btn small" data-act="t-rate" data-d="1" aria-label="Faster">+</button></div>' +
+        '<div class="tctl"><label class="small" for="t-lvl">Level</label><select id="t-lvl">' + [["", "Auto (" + (pageCtx().lvl || (S.last && S.last.l) || "a2").toUpperCase() + ")"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"], ["b2", "B2"], ["c1", "C1"], ["c2", "C2"], ["open", "Open (no limit)"]].map(([v, n]) => '<option value="' + v + '"' + ((TS.clvl || "") === v ? " selected" : "") + ">" + n + "</option>").join("") + '</select><span class="small" style="margin-left:auto">🔊 Speed</span><button class="btn small" data-act="t-rate" data-d="-1" aria-label="Slower">−</button><b class="small" id="t-rate">' + (TS.prate || 1).toFixed(1) + '×</b><button class="btn small" data-act="t-rate" data-d="1" aria-label="Faster">+</button></div>' +
         '<div class="tchips">' + (CAN_MIC && TB ? '<button class="btn small" id="t-voice" data-act="t-voice" aria-pressed="' + voiceMode + '">' + (voiceMode ? "End voice chat" : "Voice chat") + "</button>" : "") + [["Explain this page to me", "Explain"], ["Quiz me on this, one question at a time", "Quiz me"], ["Go through my answers on this page and explain my mistakes", "Check my answers"], ["Let's have a short conversation in Spanish about this topic. You start.", "Conversation"], ["Give me DELE exam tips for this level", "DELE tips"]].map(([p, n]) => '<button class="btn small" data-act="t-chip" data-p="' + esc(p) + '"' + (tBusy ? " disabled" : "") + ">" + n + "</button>").join("") + "</div>" +
         '<form class="tform" id="t-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="t-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="t-input">Message Profe</label><textarea id="t-input" rows="1" placeholder="Escribe aquí…"></textarea>' + (tBusy ? '<button class="btn" type="button" data-act="t-stop">Stop</button>' : '<button class="btn primary" type="submit">Send</button>') + "</form>";
     }
@@ -7005,7 +7027,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611130118";
+  var BUILD = "202611130125";
   function check(auto) {
     fetch("version.json?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
       if (!j || !j.v || j.v <= BUILD) return;
