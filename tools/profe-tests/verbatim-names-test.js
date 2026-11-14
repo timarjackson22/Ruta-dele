@@ -1,0 +1,12 @@
+const { chromium, devices } = require("playwright");
+const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
+(async () => { const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" }); const p = await c.newPage(); const er = []; p.on("pageerror", (x) => er.push(x.message));
+  await p.goto("http://localhost:8766/#historia-a1-1"); await p.waitForTimeout(1500);
+  const has = await p.$$eval("#litem .w", (a) => a.map((x) => x.textContent)).catch(() => []);
+  rec("Story open with tappable words", has.includes("Sofía"), has.slice(0, 8).join(" "));
+  const tapCue = async (w) => { await p.evaluate((w) => { const el = [...document.querySelectorAll("#litem .w")].find((x) => x.textContent === w && x.closest(".sent") && x.previousSibling); el.scrollIntoView({ block: "center" }); el.click(); }, w); await p.waitForTimeout(500); return p.evaluate(() => { const c = document.getElementById("cue"); return c && !c.hidden ? c.textContent.trim() : null; }); };
+  const c1 = await tapCue("Sofía"); rec("Tap the name «Sofía» mid-sentence: Verbatim says it back", c1 && /^Sofía/.test(c1), String(c1));
+  const c2 = await tapCue("llamo"); rec("An ordinary word still gets its English (llamo → my name is / call)", c2 && /name|call/i.test(c2), String(c2));
+  const g = await p.evaluate(() => { const s = [...document.querySelectorAll("#litem .sent")].find((x) => /Me llamo Sofía/.test(x.textContent)); const ws = [...s.querySelectorAll(".w")]; const i = ws.findIndex((x) => x.textContent === "Sofía"); return i; });
+  rec("No script errors", !er.length, er.join("|"));
+  console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close(); })();

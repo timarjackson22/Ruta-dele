@@ -10,3 +10,9 @@
 - One setting behind all of them: turning Verbatim off in one place turns it off everywhere.
 
 **Done when** no visible "cue tip(s)" or "Cues" label is left, the buttons fit on a phone, and the earlier tests pass.
+
+## Names (update)
+- Proper names are said back, not skipped: when the speech reaches a name (Marta, Madrid, BBC), the Verbatim bubble shows the name exactly as written, so it keeps pace with the voice instead of pausing and jumping ahead.
+- A name of several words (Joan Manuel Serrat, Casco Viejo) is one bubble that stays up while the whole name is spoken.
+- What counts as a name: a capitalised word in the middle of a sentence, an all-capitals acronym, or a capitalised word the dictionary doesn't know. A capitalised ordinary word at the start of a sentence is still translated.
+- Same rule in Reading, Listening, tapped words and Videos. (YouTube's automatic captions are mostly lower case, so names there look like ordinary words.)

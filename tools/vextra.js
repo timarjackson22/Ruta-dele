@@ -72,6 +72,7 @@
   async function vWordCheck(id) {
     if (VCAP.checked === id + ":" + VCAP.cues.length) return; VCAP.checked = id + ":" + VCAP.cues.length;
     try { await loadLex(); } catch (e) {}
+    VCAP.cues.forEach((c) => { c.gl = null; }); VCAP.word = -1; // the full dictionary is in: work out the Verbatim bubbles again
     const seen = new Map();
     VCAP.cues.forEach((c) => { const ws = c.text.match(/[\p{L}'’]+/gu) || []; ws.forEach((w, i) => { const lw = w.toLowerCase().replace(/’/g, "'"); const name = i > 0 && /^\p{Lu}/u.test(w); if (!seen.has(lw)) seen.set(lw, { name, ex: c.text }); else if (!name) seen.get(lw).name = false; }); });
     const known = (w) => { try { if (TG[w] || TG[w.replace(/'+$/, "")]) return true; } catch (e) {} if (lexIdx(w) >= 0) return true; if (VSLANG[w] || VSHORT[w] || VJARGON[w] || vLex()[w]) return true; return !!vInformal(w, ""); };
@@ -81,9 +82,10 @@
     let n = 0;
     for (const [w, o] of todo) {
       if (VP.id !== id) break;
-      let en = ""; try { if (window.__trEn) en = String(await window.__trEn(w) || "").trim(); } catch (e) {}
+      const m = vMorph(w); let en = m ? m.en : ""; // a word built from a known one (abracito → little hug) needs no translator
+      if (!en) { try { if (window.__trEn) en = String(await window.__trEn(w) || "").trim(); } catch (e) {} }
       if (en && en.toLowerCase() === w) en = "";
-      vLex()[w] = { en, v: id, ex: o.ex.slice(0, 160), t: Date.now() }; n++;
+      vLex()[w] = Object.assign({ en, v: id, ex: o.ex.slice(0, 160), t: Date.now() }, m && m.base ? { base: m.base, how: m.how } : {}); n++;
     }
     save();
     if (n && VP.id === id) try { coachToast(n + " new word" + (n > 1 ? "s" : "") + " from this video added to Words › Informal"); } catch (e) {}
@@ -96,7 +98,7 @@
     Object.entries(VSHORT).forEach(([w, b]) => rows.push([w, "short for «" + b + "»", "Shortened form"]));
     Object.entries(VPHRASE).forEach(([w, m]) => rows.push([w, m[0], "Expression · " + m[1]]));
     Object.entries(VJARGON).forEach(([w, m]) => rows.push([w, m, "Jargon"]));
-    Object.entries(vLex()).forEach(([w, o]) => { const v = vFind(o.v); rows.push([w, o.en || "(no translation yet)", "From a video" + (v ? " · " + v.t : ""), o.ex]); });
+    Object.entries(vLex()).forEach(([w, o]) => { const v = vFind(o.v); rows.push([w, o.en || "(no translation yet)", "From a video" + (o.base ? " · from «" + o.base + "»" : "") + (v ? " · " + v.t : ""), o.ex]); });
     return rows.sort((a, b) => a[0].localeCompare(b[0], "es"));
   }
   function infHTML(q) {

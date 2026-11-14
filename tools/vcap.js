@@ -207,11 +207,33 @@
     const vl = (S.vlex || {})[lw]; if (vl && vl.en) return cueOne(vl.en) || vl.en;
     try { return cueOne(cueGloss(w)); } catch (e) { return ""; }
   }
+  // names are said back as written (Marta, BBC); a name of several words (Joan Manuel Serrat) is one bubble
+  const vcWord = (sp) => sp.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, "");
+  function vcIsName(spans, i) {
+    const w = vcWord(spans[i]); if (!/^\p{Lu}/u.test(w)) return false;
+    if (/^\p{Lu}{2,}$/u.test(w)) return true; // BBC, ONU
+    if (i > 0) return true; // capital in the middle of a sentence
+    const lw = w.toLowerCase(); let known = false;
+    try { known = !!(TG[lw] || lw in CFN || VSLANG[lw] || VSHORT[lw] || VJARGON[lw] || (S.vlex || {})[lw] || lexIdx(lw) >= 0 || vMorph(lw)); } catch (e) {}
+    return !known; // at the start: a name only if it isn't an ordinary word
+  }
+  function vcGloss(c, spans) {
+    if (c.gl && c.gl.length === spans.length) return;
+    c.gl = []; c.grp = [];
+    for (let i = 0; i < spans.length; i++) {
+      if (!spans[i].dataset.inf && vcIsName(spans, i)) {
+        if (i > 0 && c.grp[i - 1] != null && !/[,.;:!?]/.test(spans[i - 1].nextSibling ? spans[i - 1].nextSibling.textContent || "" : "")) { c.grp[i] = c.grp[i - 1]; c.gl[i] = ""; c.gl[c.grp[i]] += " " + vcWord(spans[i]); continue; }
+        c.grp[i] = i; c.gl[i] = vcWord(spans[i]); continue;
+      }
+      c.gl[i] = vcGl(spans[i]);
+    }
+  }
   function vcTip(k, spans, wi) {
     const tip = document.getElementById("vtip"); if (!tip) return;
     if (!cueOn() || vcPref().hide || wi < 0) { tip.hidden = true; return; }
-    const c = VCAP.cues[k]; c.gl = c.gl || [];
-    let j = -1; for (let i = wi; i < spans.length; i++) { if (c.gl[i] == null) c.gl[i] = vcGl(spans[i]); if (c.gl[i]) { j = i; break; } }
+    const c = VCAP.cues[k]; vcGloss(c, spans);
+    let j = c.grp[wi] != null ? c.grp[wi] : -1; // inside a name: its bubble stays
+    if (j < 0) for (let i = wi; i < spans.length; i++) { if (c.gl[i]) { j = i; break; } }
     if (j < 0) return; // nothing left to translate in this sentence: the last bubble stays
     if (tip.dataset.k === k + ":" + j && !tip.hidden) return;
     tip.dataset.k = k + ":" + j; tip.textContent = c.gl[j];
@@ -250,3 +272,67 @@
   function vcHTML() { const P = vcPref();
     return '<section class="vcapw" id="vcapw" aria-label="Captions"><div class="vcap-head"><span class="vcap-tg"><button class="btn small" data-act="vc-cue" aria-pressed="' + cueOn() + '">Cue tips</button><button class="btn small" data-act="vc-en" aria-pressed="' + !!P.en + '">English</button><button class="btn small" data-act="vc-hide" aria-pressed="' + !!P.hide + '">Just listen</button></span></div>' +
       '<div class="vcap" id="vcap"><div class="vcap-in" id="vcap-in"></div><div class="vcap-listen" aria-hidden="true">Listening mode: text hidden</div></div><p class="vcap-note small muted" id="vcap-note"></p></section>'; }
+  /* ---------- word forms: break a new word into a known word + an ending (tools/WORD_FORMS_BRIEF.md) ---------- */
+  const VDIM = { poquito: "a little bit", poquita: "a little bit", poquitos: "a few", poquitas: "a few", ahorita: "right now", ahoritita: "right this minute", cerquita: "really close", chiquito: "tiny", chiquita: "tiny; little one", chiquitito: "teeny-tiny", chiquitita: "teeny-tiny", chiquitico: "teeny-tiny",
+    despacito: "nice and slow", despacio: "slowly", ratito: "a little while", ratico: "a little while", momentito: "just a moment", momentico: "just a moment", amorcito: "sweetheart", besito: "little kiss", besitos: "little kisses", perrito: "puppy", perritos: "puppies", gatito: "kitten", gatitos: "kittens",
+    abuelita: "grandma", abuelito: "grandpa", mamita: "mommy; babe", mamacita: "mommy; babe", papito: "daddy; babe", papacito: "daddy; babe", hermanito: "little brother", hermanita: "little sister", todito: "every last bit", toditos: "every single one", toditas: "every single one", solito: "all alone", solita: "all alone",
+    juntitos: "close together", juntitas: "close together", tempranito: "nice and early", igualito: "exactly the same", igualita: "exactly the same", rapidito: "real quick", lueguito: "in a little bit", adiosito: "bye-bye", cosita: "little thing; cutie", gordito: "chubby; sweetie", gordita: "chubby; sweetie", bebito: "little baby", bebita: "little baby", cafecito: "little coffee", mañanita: "early morning", señorita: "miss; young lady", señorito: "young gentleman", palomitas: "popcorn", frutilla: "strawberry", mañanitas: "early morning (birthday song)", riquísimo: "delicious", riquísima: "delicious", buenísimo: "really good", buenísima: "really good", malísimo: "really bad", grandote: "huge", grandota: "huge" };
+  const VADJ_EN = /^.{3,}(y|ful|ous|ive|al|ic|ble|ed|ing|less|ish|ent|ant)$|^(hot|warm|cold|cool|small|big|tall|short|early|late|fast|quick|slow|near|close|alone|together|new|old|good|bad|pretty|cute|nice|soft|quiet|little|sweet|rich|poor|fat|thin|tired|happy|sad|clean|dirty|full|empty|wet|dry|light|dark|easy|hard|young|same|equal|calm|fresh|tasty|delicious|lovely|beautiful|ugly|crazy|strong|weak|brave|silly|naughty|chubby)$/i;
+  const VSUF = [["ititos", "dim", 1], ["ititas", "dim", 1], ["itito", "dim"], ["itita", "dim"], ["iticos", "dim", 1], ["itico", "dim"], ["itica", "dim"], ["ecitos", "dim", 1], ["ecitas", "dim", 1], ["ecito", "dim"], ["ecita", "dim"], ["citos", "dim", 1], ["citas", "dim", 1], ["cito", "dim"], ["cita", "dim"],
+    ["itos", "dim", 1], ["itas", "dim", 1], ["ito", "dim"], ["ita", "dim"], ["icos", "dim", 1], ["icas", "dim", 1], ["ico", "dim"], ["ica", "dim"], ["illos", "dim", 1], ["illas", "dim", 1], ["illo", "dim"], ["illa", "dim"], ["ines", "dim", 1], ["ín", "dim"], ["ina", "dim"],
+    ["ísimos", "sup", 1], ["ísimas", "sup", 1], ["ísimo", "sup"], ["ísima", "sup"], ["otes", "aug", 1], ["otas", "aug", 1], ["ote", "aug"], ["ota", "aug"], ["ones", "aug", 1], ["onas", "aug", 1], ["ón", "aug"], ["ona", "aug"], ["azos", "aug", 1], ["azas", "aug", 1], ["azo", "aug"], ["aza", "aug"]];
+  const VSUF_EN = { dim: "small or affectionate", sup: "very", aug: "big or intense" };
+  function vLook(c) { // a known word's first meaning and kind, without breaking anything down
+    let tg = null; try { tg = TG[c] || null; } catch (e) {}
+    let lines = []; try { lines = wordLines(c); } catch (e) {}
+    if (!tg && !lines.length) return null;
+    const l = lines[0] || "", pos = (tg && tg[1]) || (l.match(/class="tag">([^<]+)</) || [])[1] || "";
+    let g = tg ? tg[2] : l.replace(/<span class="pill[^>]*>.*?<\/span>/g, "").replace(/<span class="tag">.*?<\/span>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·");
+    g = cueOne(String(g).split(/;/)[0].replace(/\s*\(.*?\)\s*/g, " ").replace(/^(an? )?(inflection|form|plural|feminine|masculine) of [^:]*:\s*/i, "").trim());
+    return g ? { w: c, g, pos } : null;
+  }
+  const vAccents = (s) => { const out = [s]; for (let i = s.length - 1, n = 0; i >= 0 && n < 3; i--) { const k = "aeiou".indexOf(s[i]); if (k >= 0) { out.push(s.slice(0, i) + "áéíóú"[k] + s.slice(i + 1)); n++; } } return out; };
+  const vPlural = (e) => e.replace(/\b(\w+)$/, (m) => (/(s|x|sh|ch)$/.test(m) ? m + "es" : /[^aeiou]y$/.test(m) ? m.slice(0, -1) + "ies" : m + "s"));
+  const VMC = new Map();
+  function vMorph(word) { // cached; candidate look-ups never break words down again
+    const w = String(word || "").toLowerCase().replace(/^['’]+|['’]+$/g, "");
+    const key = w + (typeof LEX !== "undefined" && LEX ? "+" : ""); if (VMC.has(key)) return VMC.get(key);
+    const was = wordLines.busy; wordLines.busy = true; let r = null;
+    try { r = vMorph0(w); } finally { wordLines.busy = was; }
+    VMC.set(key, r); return r;
+  }
+  // words that look like small/big forms but are words of their own (a knife isn't a little "cuchi")
+  const VLEXICAL = new Set("tortilla tortillas bolsillo bolsillos cuchillo cuchillos ratón ratones cigarrillo cigarrillos mantequilla pasillo pasillos anillo anillos castillo castillos zapatilla zapatillas ventanilla bombilla bombillas pañuelo camión camiones cajón cajones salón sillón bastón pepino mosquito mosquitos bonito bonita bonitos bonitas cerilla ardilla rodilla rodillas mejilla mejillas semilla semillas pastilla pastillas tobillo tobillos martillo cepillo bocadillo membrillo ladrillo grillo novillo canilla barbilla pantalón pantalones montón corazón canción botón limón melón jamón balcón región millón razón ocasión pasión cita gratis bandido maldito bendito".split(" "));
+  function vMorph0(w) {
+    if (VLEXICAL.has(w)) return null;
+    if (w.length < 4 || !/^\p{L}+$/u.test(w)) return null;
+    if (vLook(w)) return null; // a word the dictionary knows is never broken down (bonito, cita)
+    let best = null;
+    for (const [suf, how, pl] of VSUF) {
+      if (!w.endsWith(suf)) continue;
+      let st = w.slice(0, -suf.length); if (st.length < 2) continue;
+      const stems = [st]; if (/qu$/.test(st)) stems.push(st.slice(0, -2) + "c"); if (/gu$/.test(st)) stems.push(st.slice(0, -2) + "g"); if (/c$/.test(st)) stems.push(st.slice(0, -1) + "z"); if (/c$/.test(st) && suf.startsWith("ec")) stems.push(st.slice(0, -1) + "z");
+      const plain = stems.length; stems.slice().forEach((x) => { const i = x.lastIndexOf("e"), j = x.lastIndexOf("o"); if (i > 0) stems.push(x.slice(0, i) + "ie" + x.slice(i + 1)); if (j > 0) stems.push(x.slice(0, j) + "ue" + x.slice(j + 1)); });
+      const fem = /a$|as$/.test(suf), ends = /^ec/.test(suf) ? ["", "e"] : fem ? ["a", "o", "", "e"] : ["o", "a", "", "e"]; // -ecito goes on sol, pan, flor, luz
+      const conv = /(qu|gu|c)$/.test(st);
+      stems.forEach((s0, si) => { for (const e of ends) for (const c of vAccents(s0 + e)) {
+        if (c === w) continue; const L = vLook(c); if (!L) continue;
+        let core = false; try { core = !!TG[c]; } catch (x) {}
+        // best fit: an everyday word, ending in the vowel the suffix implies (-ito → -o, -ita → -a), after the usual spelling change (qu → c, gu → g, c → z);
+        // a vowel change (caliente → calentito) only when nothing plainer fits
+        const score = c.length + (core ? 3 : 0) + (e === (fem ? "a" : "o") ? 2 : e === "" ? 1 : 0) + (conv && si > 0 && si < plain ? 2 : 0) - (si >= plain ? 3 : 0);
+        if (!best || score > best.score) best = { base: c, how, pl: !!pl, suf, L, score };
+      } });
+    }
+    if (!best) return VDIM[w] ? { en: VDIM[w], base: null, how: "dim", suf: null } : null;
+    const { L, how, pl } = best, g = L.g.replace(/^(an?|the) /i, "");
+    const adj = (/adj|adv/.test(L.pos) && VADJ_EN.test(g.split(/[ ,]/)[0])) || (/adv/.test(L.pos));
+    let en;
+    if (how === "sup") en = "very " + g;
+    else if (how === "aug") en = (adj ? "really " : "big ") + g;
+    else en = adj ? "nice and " + g : "little " + g;
+    if (pl && !adj) en = vPlural(en);
+    if (VDIM[w]) en = VDIM[w];
+    return { en, base: best.base, baseEn: g, how, suf: "-" + best.suf };
+  }
+  window.__vMorph = vMorph; window.__loadLex = () => loadLex().then(() => VMC.clear());
