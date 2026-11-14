@@ -84,6 +84,8 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri u = req.getUrl();
                 if (HOST.equals(u.getHost())) return false;
+                // the embedded YouTube player (Practice › Videos) loads inside its frame; anything else it opens goes to the YouTube app
+                if (!req.isForMainFrame() && u.getHost() != null && u.getHost().contains("youtube") && u.getPath() != null && u.getPath().startsWith("/embed/")) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
                 return true;
             }
@@ -129,7 +131,7 @@ public class MainActivity extends Activity {
         else web.loadUrl(URL);
     }
 
-    // Text or links shared from other apps (Chrome's Share menu) open in Mis lecturas → Add a text
+    // Text or links shared from other apps open in Mis lecturas → Add a text; YouTube links open in Practice › Videos (handled in the page)
     String sharedUrl(Intent in) {
         if (in == null || !Intent.ACTION_SEND.equals(in.getAction())) return null;
         String text = in.getStringExtra(Intent.EXTRA_TEXT), title = in.getStringExtra(Intent.EXTRA_SUBJECT);
