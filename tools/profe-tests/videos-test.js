@@ -152,11 +152,11 @@ const MOCK = `(() => {
   rec("Remove from the video page", p.url().endsWith("#videos") && ((await S()).vhide || {})["v2Ph5hBmqYA"] > 0);
   await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(300);
   // blocked embed
-  await go("video-CoIL9IsJXiA"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
+  await go("video-XOlmCZFK5FA"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
   rec("Blocked embed: says why, with the code", /only allows it on YouTube \(code 150\)/.test(await p.textContent("#vfail p")));
-  rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=CoIL9IsJXiA");
+  rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=XOlmCZFK5FA");
   rec("…exercises still there", await p.isVisible("#vret"));
-  await go("videos"); rec("Unplayable video leaves the list, with no separate section", !(await p.$('.vcard[href="#video-CoIL9IsJXiA"]')) && !/Not playable/.test(await p.textContent("body")));
+  await go("videos"); rec("Unplayable video leaves the list, with no separate section", !(await p.$('.vcard[href="#video-XOlmCZFK5FA"]')) && !/Not playable/.test(await p.textContent("body")));
   // shared from the YouTube app (Android share sheet)
   await p.goto("http://localhost:8766/?text=" + encodeURIComponent("Mira esto https://youtu.be/ShArEdViD01?si=abc")); await p.waitForTimeout(1300);
   mine = (await S()).myv || [];

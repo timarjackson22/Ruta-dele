@@ -7,7 +7,7 @@ def rep(a, b, n=1):
     global s
     assert s.count(a) == n, ("anchor", a[:90], s.count(a)); s = s.replace(a, b)
 _D = os.path.dirname(os.path.abspath(__file__))
-JS = open(os.path.join(_D, "video.js"), encoding="utf-8").read() + open(os.path.join(_D, "vcap.js"), encoding="utf-8").read()
+JS = "".join(open(os.path.join(_D, f), encoding="utf-8").read() for f in ("video.js", "vcap.js", "vextra.js"))
 # module goes before the share handler, so a shared YouTube link is claimed first (it clears ?text= before the reading handler sees it)
 rep("  /* ---------- shared from another app (Android share sheet) ---------- */", JS + "\n  /* ---------- shared from another app (Android share sheet) ---------- */")
 # routes
@@ -20,6 +20,21 @@ rep('''    if (/^(practicar|escuchar|leer|leer-add|escritura|repaso|errores|exam
 rep('''    if (h === "examenes") return ["#practicar", "Practice"];''', '''    if (h === "examenes" || h === "videos") return ["#practicar", "Practice"];
     if (/^video-/.test(h)) return ["#videos", "Videos"];''')
 rep('''|examenes|recursos|esc|a1|''', '''|examenes|videos|recursos|esc|a1|''')
+# Words › Informal
+rep('''.join("") + "</div>";
+  }
+  function bandChips() {''', '''.join("") + '<button class="btn small winf" data-act="w-inf" aria-pressed="' + !!WV.inf + '">Informal <span class="muted">' + infRows().length + "</span></button></div>";
+  }
+  function bandChips() {''')
+rep('''      '<button class="btn small" data-act="w-hide-known" aria-pressed="' + WV.hideKnown + '">' + (WV.hideKnown ? "Show known" : "Hide known") + "</button>" +
+      '<button class="btn small primary" data-act="w-quiz">Quiz this band</button></div>' +''', '''      (WV.inf ? "" : '<button class="btn small" data-act="w-hide-known" aria-pressed="' + WV.hideKnown + '">' + (WV.hideKnown ? "Show known" : "Hide known") + "</button>" +
+      '<button class="btn small primary" data-act="w-quiz">Quiz this band</button>') + "</div>" +''')
+rep('''  function bandChips() {
+''', '''  function bandChips() {
+    if (WV.inf) return "";
+''')
+rep('''    if (WV.quiz) { el.innerHTML = quizHTML(); return; }''', '''    if (WV.quiz) { el.innerHTML = quizHTML(); return; }
+    if (WV.inf) { el.innerHTML = infHTML(WV.q); return; }''')
 # Profe's "Looking at" context
 rep('''    if (h === "palabras") return { label: "7.000 palabras",''', '''    if (/^video-[\\w-]{11}$/.test(h)) { const c = vCtx(h.slice(6)); if (c) return c; }
     if (h === "videos") return { label: "Videos", text: "List of Spanish videos to watch and practise with." };
@@ -132,6 +147,12 @@ CSS = r'''
   body.vpage-on.no-tabs:not(.tabs-peek) .tutor-fab { transform: translateY(calc(100% + 60px)); opacity: 0; pointer-events: none }
 }
 .vinfo { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--vinf) 10%, transparent); border-left: 3px solid var(--vinf) }
+/* captions from the audio */
+.vabar { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--cobalt) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cobalt) 30%, transparent); display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.vabar.err { background: color-mix(in srgb, #e5484d 10%, var(--surface)); border-color: color-mix(in srgb, #e5484d 35%, transparent) }
+.vabar i { width: 9px; height: 9px; border-radius: 50%; background: #e5484d; animation: rvPulse 1.6s infinite; --a: #e5484d }
+.vabar > span { flex: 1; min-width: 0 } .vabar .btn { margin-left: auto }
+.valive { margin: 0 0 1.25em 0; font-size: 17px; color: var(--muted); font-style: italic }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''

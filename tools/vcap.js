@@ -43,16 +43,18 @@
   }
   const VCAP = { id: null, cues: [], kind: "", raf: 0, cur: -1, word: -1, raw: -1, t0: 0, n0: 0, resume: false, overlayOff: false };
   const vcPref = () => (S.vcap = S.vcap || { en: false, hide: false });
+  // YouTube's tags and markers are noise: [Música], (risas), ♪, >>, a leading dash
+  const vcClean = (t) => String(t || "").replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ").replace(/[♪♫♬🎵🎶]/g, " ").replace(/>>+/g, " ").replace(/(^|\s)[-–—](?=\s)/g, " ").replace(/\s+/g, " ").trim();
   function vcDecode(s) { const ta = document.createElement("textarea"); ta.innerHTML = s; return ta.value; }
   // YouTube caption XML: srv1 (<text start dur>) or srv3 (<p t d> with word timings in <s t>)
   function vcParse(xml) {
     if (!xml) return [];
     const doc = new DOMParser().parseFromString(xml, "text/xml"), out = [];
-    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcDecode(vcDecode(n.textContent || "")).replace(/\s+/g, " ").trim(); if (txt) out.push({ s, e: s + d, text: txt }); });
+    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (txt) out.push({ s, e: s + d, text: txt }); });
     doc.querySelectorAll("body > p, p[t]").forEach((p) => {
       const s = (+p.getAttribute("t") || 0) / 1000, d = (+p.getAttribute("d") || 2000) / 1000, ss = p.querySelectorAll("s"); let words = null, txt;
-      if (ss.length) { words = []; ss.forEach((x) => { const w = vcDecode(x.textContent || "").trim(); if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
-      else txt = vcDecode(vcDecode(p.textContent || "")).replace(/\s+/g, " ").trim();
+      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
+      else txt = vcClean(vcDecode(vcDecode(p.textContent || "")));
       if (txt && !(out.length && out[out.length - 1].s === s && out[out.length - 1].text === txt)) out.push({ s, e: s + d, text: txt, words });
     });
     out.sort((a, b) => a.s - b.s);
@@ -66,17 +68,20 @@
   // caption fragments → sentences. Channel captions are split at their punctuation; YouTube's automatic captions have none,
   // so sentences start at clear pauses (word timings) and the app adds capitals, ¿…?, full stops and a few commas.
   const VQW = new Set(["qué", "cómo", "dónde", "cuándo", "cuál", "cuáles", "quién", "quiénes", "cuánto", "cuánta", "cuántos", "cuántas", "adónde"]);
-  const VOPEN = new Set(["bueno", "pues", "entonces", "oye", "mira", "hola", "sí", "vale", "claro", "gracias", "eh", "ok", "okey", "vaya", "venga", "perdón", "disculpa", "mmm", "ah", "oh"]);
+  const VOPEN = new Set(["bueno", "pues", "entonces", "oye", "mira", "hola", "sí", "vale", "claro", "eh", "ok", "okey", "vaya", "venga", "perdón", "disculpa", "mmm", "ah", "oh"]);
   function vcPunct(ws) {
     const out = ws.slice(), lw = out.map((w) => w.toLowerCase()), n = out.length;
     if (n > 2 && VOPEN.has(lw[0])) out[0] += ",";
     for (let i = 2; i < n; i++) if (/^(pero|aunque|sino)$/.test(lw[i]) && !/[,;:]$/.test(out[i - 1])) out[i - 1] += ",";
     const qi = VQW.has(lw[0]) || (lw[0] === "por" && lw[1] === "qué") ? 0 : VOPEN.has(lw[0]) && (VQW.has(lw[1]) || (lw[1] === "por" && lw[2] === "qué")) ? 1 : -1;
+    const pos = (w) => { try { return (TG[w] || [])[1] || ""; } catch (e) { return ""; } };
+    const ex = qi >= 0 && (lw[qi] === "qué" || lw[qi] === "cuánto" || lw[qi] === "cuánta") && /^(adj|adv)/.test(pos(lw[qi + 1] || "")); // ¡Qué bonito!, ¡Qué bien!
     const tag = n > 3 && qi < 0 && (lw[n - 1] === "verdad" || (lw[n - 1] === "no" && !/^(o|que|si|porque|ni)$/.test(lw[n - 2])));
     if (tag) { out[n - 2] = out[n - 2].replace(/,?$/, ","); out[n - 1] = "¿" + out[n - 1] + "?"; }
+    else if (ex) { out[qi] = "¡" + out[qi]; out[n - 1] += "!"; }
     else if (qi >= 0) { out[qi] = "¿" + out[qi]; out[n - 1] += "?"; }
     else out[n - 1] += ".";
-    out[0] = out[0].replace(/^(¿?)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
+    out[0] = out[0].replace(/^([¿¡]?)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
     return out;
   }
   function vcSentences(cues, en, kind) {
@@ -88,14 +93,14 @@
     const END = /[.?!…]["»”)]?$/, hasP = W.filter((x) => END.test(x.w)).length >= Math.max(1, W.length / 45), S = [];
     let cur = []; const push = () => { if (cur.length) S.push(cur); cur = []; };
     for (let i = 0; i < W.length; i++) {
-      const x = W[i]; if (/^[\[(].*[\])]$/.test(x.w)) { push(); S.push([x]); continue; } // [Música], (risas)
+      const x = W[i];
       cur.push(x); const nx = W[i + 1]; if (!nx) { push(); break; }
       const gap = nx.t - x.t;
       if (hasP) { if (END.test(x.w) || cur.length >= 40) push(); }
       else if ((gap >= 0.8 && cur.length >= 3) || gap >= 1.6) push();
       else if (cur.length >= 22) { let best = -1, bg = 0; for (let k = 6; k < cur.length - 2; k++) { const g = cur[k + 1].t - cur[k].t; if (g > bg) { bg = g; best = k; } } if (best < 0) best = cur.length - 2; const rest = cur.splice(best + 1); S.push(cur); cur = rest; }
     }
-    const out = S.map((ws) => { const raw = ws.map((x) => x.w), mark = /^[\[(]/.test(raw[0]); const txt = hasP || mark ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" "), mark }; });
+    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
     out.forEach((c, i) => { c.e = out[i + 1] ? out[i + 1].s : c.s + Math.max(2, c.words.length * 0.45); });
     if (en.length && kind !== "asr") out.forEach((c) => { const xs = en.filter((x) => x.s >= c.s - 0.3 && x.s < c.e - 0.3).map((x) => x.text); if (xs.length) c.en = xs.join(" "); });
     VCAP.addedP = !hasP;
@@ -107,27 +112,29 @@
     const box = document.getElementById("vcapw"); if (!box) return;
     if (!window.AndroidCap) { vcState("app"); return; }
     let hit = vcCache.get(id); if (!hit) try { const j = localStorage.getItem("vcap:" + id); if (j) hit = JSON.parse(j); } catch (e) {}
-    if (hit) { vcGot(id, hit); return; }
-    vcState("loading");
+    if (hit) { vcGot(id, hit); if (hit.secs) return; } // older saved copies have no video length: fetch again quietly to get it (the ad check needs it)
+    else vcState("loading");
     const rid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     window.__acap = window.__acap || { cbs: {}, ev(k, json, err) { const f = this.cbs[k]; delete this.cbs[k]; if (f) f(json, err); } };
     window.__acap.cbs[rid] = (json, err) => {
       if (VCAP.id !== id) return;
-      if (err || !json) { vcState("error", err); return; }
+      if (err || !json) { if (!hit) vcState("error", err); return; }
       let r; try { r = JSON.parse(json); } catch (e) { vcState("error", "unreadable reply"); return; }
-      if (r.none) { vcState("none"); return; }
+      if (r.none) { if (+r.secs > 0) VP.secs = +r.secs; vData(id).cap = "none"; save(); vcNoCaps(id); return; }
       vcCache.set(id, r);
       try { const keys = Object.keys(localStorage).filter((k) => k.startsWith("vcap:")); if (keys.length >= 8) localStorage.removeItem(keys[0]); localStorage.setItem("vcap:" + id, JSON.stringify(r)); } catch (e) {}
-      vcGot(id, r);
+      if (!hit) vcGot(id, r); else if (+r.secs > 0) VP.secs = +r.secs;
     };
     try { window.AndroidCap.fetch(rid, id); } catch (e) { vcState("error", String(e)); }
   }
   function vcGot(id, r) {
     const es = vcParse(r.es), en = vcParse(r.en), v = vFind(id), hi = v && v.clip ? v.clip[1] : 1e9, lo = v && v.clip ? v.clip[0] : 0;
     VCAP.kind = r.kind; if (+r.secs > 0) VP.secs = +r.secs;
+    const dd = vData(id); if (dd.cap !== r.kind && r.kind !== "audio") { dd.cap = r.kind; save(); }
+    if (r.kind === "asr" && vaHas(id)) { vaUse(id); return; } // your captions from the audio beat YouTube's automatic ones
     VCAP.cues = vcSentences(es.filter((c) => c.s < hi && c.e > lo), en, r.kind).filter((c) => c.s < hi);
-    if (!VCAP.cues.length) { vcState("none"); return; }
-    vcRender(); vcStart();
+    if (!VCAP.cues.length) { vcNoCaps(id); return; }
+    vcRender(); vcStart(); vWordCheck(id);
   }
   function vcState(st, why) {
     const w = document.getElementById("vcap"), n = document.getElementById("vcap-note"); if (!w) return;
@@ -157,7 +164,8 @@
     const w = document.getElementById("vcap"); if (!w) return; const P = vcPref();
     w.classList.remove("vcap-empty"); w.dataset.state = "ready"; w.classList.toggle("show-en", !!P.en); w.classList.toggle("hide-text", !!P.hide);
     w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue' + (c.mark ? " mark" : "") + '" data-i="' + i + '"><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div><div class="vtip" id="vtip" hidden role="status"></div>';
-    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.");
+    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "audio" ? "Captions made from the video's sound on this phone" + (VCAP.addedP ? ", punctuation added by the app" : "") + "." : VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.") +
+      (vaOk() && VCAP.kind !== "manual" ? ' <button class="lnk" data-act="' + (VCAP.kind === "audio" ? "va-redo" : "va-start") + '">' + (VCAP.kind === "audio" ? "Make them again from the audio" : "Make captions from the audio instead") + "</button>" : "") + ' <button class="lnk" data-act="v-report">Report a playback problem</button>';
     VCAP.cur = -1; VCAP.word = -1; vcTick(true);
   }
   // the video's clock, smoothed between the player's updates so lines and words change on time
@@ -196,6 +204,7 @@
     const inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null, w = span.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, ""), lw = w.toLowerCase();
     if (inf) return inf.k === "short" ? (cueOne(cueGloss(inf.base.split(/[ (]/)[0])) || inf.base) + " (" + inf.base.split(" (")[0] + ")" : String(inf.mean).split(/[;(]/)[0].trim();
     if (VLITTLE.test(lw) || !lw) return "";
+    const vl = (S.vlex || {})[lw]; if (vl && vl.en) return cueOne(vl.en) || vl.en;
     try { return cueOne(cueGloss(w)); } catch (e) { return ""; }
   }
   function vcTip(k, spans, wi) {
@@ -222,7 +231,7 @@
     const lines = (() => { try { return wordLines(inf && inf.k === "short" ? inf.base.split(/[ (/]/)[0] : word); } catch (e) { return []; } })();
     const what = !inf ? "" : inf.k === "short" ? '<p class="vinfo vinf-short"><b>Shortened form</b> of «' + esc(inf.base) + "». Informal speech: the end (or start) of the word is dropped.</p>" : inf.k === "jargon" ? '<p class="vinfo vinf-jargon"><b>Jargon:</b> ' + esc(inf.mean) + "</p>" : '<p class="vinfo vinf-slang"><b>Informal' + (inf.ph ? " expression «" + esc(inf.ph) + "»" : " word") + ":</b> " + esc(inf.mean) + (inf.where ? ' <span class="muted">· ' + esc(inf.where) + "</span>" : "") + "</p>";
     VCAP.card = { w: inf && inf.ph ? inf.ph : word, en: inf ? (inf.k === "short" ? inf.base : inf.mean) : "", t: VCAP.cur >= 0 ? VCAP.cues[VCAP.cur].s : vpT() };
-    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : '<p class="muted">Not in the app\'s dictionary yet.</p>') +
+    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : (S.vlex || {})[word.toLowerCase()] && S.vlex[word.toLowerCase()].en ? '<p class="vinfo"><b>Heard in your videos:</b> ' + esc(S.vlex[word.toLowerCase()].en) + ' <span class="muted small">(app translation)</span></p>' : '<p class="muted">Not in the app\'s dictionary. It will be translated when the word check runs.</p>') +
       '<div class="row" style="margin-top:10px"><button class="btn primary small" data-act="vc-catch">' + IC("pen") + " Catch it</button></div>");
     if (!VCAP.card.en) { const txt = lines.join(" ").replace(/<[^>]+>/g, " "); VCAP.card.en = ((txt.match(/·\s*([^·]+?)\s*(?:\s(?:less common|#\d+).*)?$/m) || [])[1] || "").trim().slice(0, 60); }
   }

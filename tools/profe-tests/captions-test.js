@@ -17,7 +17,7 @@ const srv1 = (k) => '<?xml version="1.0" encoding="utf-8" ?><transcript>' + LINE
 // automatic captions with word timings (srv3): each word 0.4 s apart
 const W3 = [[0, "hola amigos bienvenidos al canal"], [2.5, "hoy hablamos de comida"], [5, "vamos pa la cocina"], [7.5, "oye qué vamos a comer hoy"], [10.6, "está muy rico verdad"], [13.2, "pero no sé si te gusta o no"]];
 const srv3 = '<?xml version="1.0" encoding="utf-8" ?><timedtext format="3"><body>' + W3.map(([s, t]) => '<p t="' + s * 1000 + '" d="2500" w="1">' + t.split(" ").map((w, i) => (i ? '<s t="' + i * 400 + '" ac="0"> ' + w + "</s>" : "<s>" + w + "</s>")).join("") + "</p>").join("") + "</body></timedtext>";
-const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv1(2), secs: "300" }, "CoIL9IsJXiA": { lang: "es", kind: "asr", es: srv3, en: "" }, "yOaxqV8Rzf0": { none: true } };
+const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv1(2), secs: "300" }, "LdRsZ1adZWw": { lang: "es", kind: "asr", es: srv3, en: "" }, "09Apgxuk65I": { none: true } };
 (async () => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.route("**/www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: MOCK }));
@@ -117,7 +117,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   await p.click('[data-act="vc-catch"]'); await p.waitForTimeout(250);
   rec("Catch it: the word goes to Words you caught", /agua/.test(await p.textContent("#vcaught")) && /water/i.test(await p.textContent("#vcaught")));
   // automatic captions with word timings
-  await go("video-CoIL9IsJXiA"); await T(0.85, 2); await p.waitForTimeout(200); const ww1 = await nowWord(); await T(4.15, 2); await p.waitForTimeout(200); const ww2 = await nowWord();
+  await go("video-LdRsZ1adZWw"); await T(0.85, 2); await p.waitForTimeout(200); const ww1 = await nowWord(); await T(4.15, 2); await p.waitForTimeout(200); const ww2 = await nowWord();
   rec("Automatic captions: the highlighted word follows YouTube's word timings", ww1 === "bienvenidos" && ww2 === "comida", ww1 + ", " + ww2);
   rec("…labelled as automatic captions", /automatic Spanish captions/.test(await p.textContent("#vcap-note")));
   const as = await p.$$eval("#vcap .ves", (a) => a.map((x) => x.textContent));
@@ -128,7 +128,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   rec("…and the note says the punctuation was added", /punctuation added by the app/.test(await p.textContent("#vcap-note")));
   rec("'pa' in automatic captions is still marked as short for para", await p.$eval("#vcap", (w) => [...w.querySelectorAll(".vinf-short")].some((x) => x.textContent === "pa")));
   // no captions / error / retry
-  await go("video-yOaxqV8Rzf0"); rec("No Spanish captions: says so", /no Spanish captions/.test(await p.textContent("#vcap")));
+  await go("video-09Apgxuk65I"); rec("No Spanish captions: says so", /no Spanish captions/.test(await p.textContent("#vcap")));
   await p.evaluate(() => { localStorage.removeItem("vcap:WLXiu-qp8Lw"); localStorage.setItem("capErr", "IOException: HTTP 429"); }); await p.reload(); await p.waitForTimeout(400); await go("video-WLXiu-qp8Lw");
   rec("Error: says it couldn't load, with Try again", /Couldn't load the captions/.test(await p.textContent("#vcap")) && !!(await p.$('[data-act="vc-retry"]')));
   await p.evaluate(() => localStorage.removeItem("capErr")); await p.click('[data-act="vc-retry"]'); await p.waitForTimeout(500);

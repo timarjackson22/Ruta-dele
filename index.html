@@ -1706,6 +1706,12 @@ body.litem-on .tutor-fab { display: none !important }
   body.vpage-on.no-tabs:not(.tabs-peek) .tutor-fab { transform: translateY(calc(100% + 60px)); opacity: 0; pointer-events: none }
 }
 .vinfo { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--vinf) 10%, transparent); border-left: 3px solid var(--vinf) }
+/* captions from the audio */
+.vabar { margin: 0 0 8px; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, var(--cobalt) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cobalt) 30%, transparent); display: flex; align-items: center; gap: 8px; flex-wrap: wrap }
+.vabar.err { background: color-mix(in srgb, #e5484d 10%, var(--surface)); border-color: color-mix(in srgb, #e5484d 35%, transparent) }
+.vabar i { width: 9px; height: 9px; border-radius: 50%; background: #e5484d; animation: rvPulse 1.6s infinite; --a: #e5484d }
+.vabar > span { flex: 1; min-width: 0 } .vabar .btn { margin-left: auto }
+.valive { margin: 0 0 1.25em 0; font-size: 17px; color: var(--muted); font-style: italic }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 
@@ -1733,7 +1739,7 @@ body.litem-on .tutor-fab { display: none !important }
 @media (prefers-reduced-motion: reduce) { .rvc { animation: none } .rvc.hot .rvn::after { animation: none } }
 </style>
 
-<script>window.__BUILD = "202611141616";</script>
+<script>window.__BUILD = "202611141726";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -5119,9 +5125,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function typeChips() {
     const cnt = {}; W.forEach((e) => { const g = POSGRP(e[1]); cnt[g] = (cnt[g] || 0) + 1; }); cnt.biz = WBIZR.length;
     return '<div class="wtypes" role="group" aria-label="Word types"><span class="small muted">Word types:</span><button class="btn small" data-act="w-type" data-t="" aria-pressed="' + !WV.types.length + '">All</button>' +
-      Object.entries(POSN).map(([k, v]) => '<button class="btn small" data-act="w-type" data-t="' + k + '" aria-pressed="' + WV.types.includes(k) + '">' + v + ' <span class="muted">' + (cnt[k] || 0).toLocaleString("en") + "</span></button>").join("") + "</div>";
+      Object.entries(POSN).map(([k, v]) => '<button class="btn small" data-act="w-type" data-t="' + k + '" aria-pressed="' + WV.types.includes(k) + '">' + v + ' <span class="muted">' + (cnt[k] || 0).toLocaleString("en") + "</span></button>").join("") + '<button class="btn small winf" data-act="w-inf" aria-pressed="' + !!WV.inf + '">Informal <span class="muted">' + infRows().length + "</span></button></div>";
   }
   function bandChips() {
+    if (WV.inf) return "";
     if (!WV.types.length) { const out = []; for (let b = 0; b < WN / BAND; b++) { const k = knownIn(b * BAND, (b + 1) * BAND); out.push('<button class="band-chip" data-act="w-band" data-b="' + b + '" aria-pressed="' + (WV.band === b && !WV.q) + '"><b>' + (b * BAND + 1) + "–" + (b + 1) * BAND + "</b><span>" + k + " known</span></button>"); } return out.join(""); }
     const all = wvTyped(), pages = Math.max(1, Math.ceil(all.length / BAND)); if (WV.page >= pages) WV.page = pages - 1;
     if (!all.length) return '<p class="muted">No words left in these types.</p>';
@@ -5180,8 +5187,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="wtools"><label class="sr" for="w-search">Search</label><input id="w-search" type="search" placeholder="Search Spanish or English" value="' + esc(WV.q) + '" autocomplete="off">' +
       
       '<button class="btn small" data-act="w-hide-en" aria-pressed="' + WV.hideEn + '">' + (WV.hideEn ? "Show English" : "Hide English") + "</button>" +
-      '<button class="btn small" data-act="w-hide-known" aria-pressed="' + WV.hideKnown + '">' + (WV.hideKnown ? "Show known" : "Hide known") + "</button>" +
-      '<button class="btn small primary" data-act="w-quiz">Quiz this band</button></div>' +
+      (WV.inf ? "" : '<button class="btn small" data-act="w-hide-known" aria-pressed="' + WV.hideKnown + '">' + (WV.hideKnown ? "Show known" : "Hide known") + "</button>" +
+      '<button class="btn small primary" data-act="w-quiz">Quiz this band</button>') + "</div>" +
       '<div id="wbody"></div>' +
       '<div class="player" role="group" aria-label="Word audio"><button class="pbtn main" id="wp-play" data-act="w-play" aria-label="Play word audio">' + PLAY + '</button><span><b>Listen to these words</b><br><span class="muted small"><span id="wp-rep">' + (WP.en ? "English → " : "") + "Spanish ×" + WP.reps + (WP.forms ? " + forms" : "") + '</span> · <span id="wp-pos"></span></span></span>' +
       '<details class="wpset"><summary>Settings: ' + WP.reps + "× · " + ({ 1: "short", 1.6: "medium", 2.6: "long" }[WP.gap] || "") + " pause · " + WP.rate + '×</summary><div class="row">' +
@@ -5195,6 +5202,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function wordsBody() {
     const el = document.getElementById("wbody"); if (!el) return;
     if (WV.quiz) { el.innerHTML = quizHTML(); return; }
+    if (WV.inf) { el.innerHTML = infHTML(WV.q); return; }
     const q = norm(WV.q), qs = strip(q);
     let idx = [];
     if (q) { for (let i = 0; i < W.length && idx.length < 200; i++) { const e = W[i]; if (strip(norm(e[0])).includes(qs) || norm(e[2]).includes(q) || strip(norm(e[3])).includes(qs)) idx.push(i); } }
@@ -8527,11 +8535,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "Talk Español", "A real conversation ordering food, the way natives say it."],
     ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "Aprende Español", "Everyday situations acted out in Spanish."],
     ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "SaySpanish", "Real-life situations: what people actually say."],
-    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "nuttinhere", "Young street vendors in Mexico answer questions about their work."],
+    ["LdRsZ1adZWw", "entrevistas", "C1", "Joan Manuel Serrat: «Todo pasa muy deprisa»", "BBC News Mundo", "A sit-down interview with the Catalan singer-songwriter about time, memory and his career (first 4 minutes)."],
     ["WLXiu-qp8Lw", "entrevistas", "B1", "¿Es cara Barcelona?", "Easy Spanish", "People in Barcelona talk about the cost of living."],
-    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "Easy Spanish", "Locals say what they love and what they dislike about Madrid."],
+    ["XOlmCZFK5FA", "entrevistas", "C1", "Entrevista a Fito Páez", "BBC News Mundo", "The Argentine musician in conversation with BBC Mundo (first 4 minutes)."],
     ["ot5L3fIl0z0", "entrevistas", "B1", "¿Cuál es el mejor lugar para vivir?", "Easy Spanish", "Street interviews in Mexico: where people would like to live, and why."],
-    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "La Karencita", "Street interviews in Mexico about dating."],
+    ["09Apgxuk65I", "entrevistas", "B2", "Entrevista a Mon Laferte", "BBC News Mundo", "The Chilean singer talks with BBC Mundo in London about her music and life (first 4 minutes)."],
     ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "Stories in Spanish", "A news story read slowly for elementary learners."],
     ["nGX4VZk0d-w", "noticias", "B1", "Noticias en español lento (28 ago 2026)", "News in Slow Spanish", "World news, read slowly by native speakers."],
     ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "El Tiempo", "The week's most important news in three minutes."],
@@ -8556,6 +8564,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     ["6S243h-V3p4", "musica", "A2", "Quédate con lo sencillo (en vivo)", "Thiago Navarro Music", "Stay with what's simple, and with whoever adds to your life."],
     ["cEsp1dMTM1w", "musica", "A2", "Pasito a pasito", "Thiago Navarro Music", "Step by step: everything comes in its own time."],
     ["aR0GjIVIAdo", "musica", "A2", "Ámate tanto", "Thiago Navarro Music", "A song about loving yourself."],
+    ["FUHaycnjzKg", "musica", "B1", "Verano Rosa", "KAROL G, Feid", "The Colombian stars' summer hit from 2025, full of Medellín slang (official visualizer)."],
     ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Spanishland School", "A short conversation in Spanish about making plans with friends."],
     ["guadxMv8RI8", "podcasts", "A2", "Mi héroe, mi amigo (episodio 1)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
@@ -8585,7 +8594,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function videosHub() {
     const F = (S.vf = S.vf || { c: "", l: "" }), ed = !!VP.edit, hid = vHid(), bad = vBad();
     const card = (v, mode) => { const d = (S.vid || {})[v.yt] || {}, n = (d.c || []).length;
-      const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d)].filter(Boolean).join(" · ") || "Your video";
+      const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d), { manual: "Captions", asr: "Auto captions", audio: "Captions from audio" }[d.cap] || ""].filter(Boolean).join(" · ") || "Your video";
       const body = '<span class="vthumb"><img src="' + vThumb(v.yt) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="vplay" aria-hidden="true">' + IC("play") + "</span>" + (d.w ? '<span class="vdone">' + IC("check") + " Watched</span>" : "") + '</span><span class="vtxt"><b>' + esc(v.t) + "</b><small>" + esc(meta) + (n ? " · " + n + " word" + (n > 1 ? "s" : "") + " caught" : "") + "</small></span>";
       const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
       return '<div class="vcw' + (act ? " has-act" : "") + '"><a class="vcard" href="#video-' + v.yt + '">' + body + "</a>" + act + "</div>"; };
@@ -8633,14 +8642,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const vpPlay = () => { try { VP.p.playVideo(); } catch (e) {} };
   const vpPause = () => { try { VP.p.pauseVideo(); } catch (e) {} };
   const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-  function vpStop() { try { vcStop(); } catch (e) {} document.body.classList.remove("vpage-on"); clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
+  function vpStop() { try { vaStop(); } catch (e) {} try { vcStop(); } catch (e) {} VP.ytAd = undefined; document.body.classList.remove("vpage-on"); clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
   function videoPage(id) {
     vpStop(); const v = vFind(id) || (vAdd(id) && vFind(id)); if (!v) { app.innerHTML = '<div class="stack"><h1>Video not found</h1><a class="btn" href="#videos">All videos</a></div>'; return; }
     const d = vData(id); VP.id = id; VP.failed = false; VP.lastSt = -1; VP.ad = false; VP.secs = 0; VP.resumeAt = 0; document.body.classList.add("vpage-on"); VP.clip = v.clip || null; VP.dur = 0;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
-      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
+      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay sentence</button><button class="btn small" data-act="v-rate" aria-pressed="false" aria-label="Playback speed">Speed 1×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<p class="vad-chip small" id="vadchip" hidden role="status">Ad playing · the video and captions start right after it</p>' +
       vcHTML() +
@@ -8657,25 +8666,25 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
       VP.p = new YT.Player("vplayer", { videoId: id, playerVars: Object.assign(v.clip ? { start: v.clip[0], end: v.clip[1] } : {}, { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] }),
-        events: { onReady: () => { vlive(); if (d.at && d.at > vpLo() + 5 && !d.w) VP.resumeAt = d.at - 2; }, // resumed once the video itself (not an ad) is playing
+        events: { onReady: () => { vlive(); vContinue(d); }, // always from 0:00 (or the clip start); "Continue from" is offered instead
           onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([100, 101, 150, 152].includes(c)) { vBad()[id] = c; save(); try { coachToast("This video can't play inside the app, so it's been taken off your Videos list."); } catch (x) {} } },
-          onStateChange: (e) => { vlive(); if (e.data === 0 && !vAd()) vWatched(id); if (e.data === 1 && VP.lastSt !== 1) vFrameTop(); VP.lastSt = e.data; } } });
+          onStateChange: (e) => { vlive(); if (e.data === 0 && !vAd()) { vWatched(id); try { if (VA.on) vaStop(); } catch (x) {} } if (e.data === 1 && VP.lastSt !== 1) vFrameTop(); VP.lastSt = e.data; } } });
       VP.tick = setInterval(() => {
         if (!VP.ready || VP.id !== id) return;
         const ad = vAd(); if (ad !== VP.ad) vAdState(ad); if (ad) return; // during an ad: nothing moves, nothing is saved or counted
         const t = vpT();
-        if (VP.resumeAt && VP.lastSt === 1) { const r = VP.resumeAt; VP.resumeAt = 0; if (r < vpHi() - 5) vpSeek(r); return; }
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
         if (t > (d.at || 0) + 5) { d.at = Math.floor(t); save(); }
         try { VP.dur = VP.p.getDuration() || VP.dur; } catch (e) {}
         if (VP.dur && (VP.secs || VP.dur >= 45)) { const len = vpHi() - vpLo(); if (Math.round(len) !== d.len) { d.len = Math.round(len); save(); } if (t > vpLo() + len * 0.85 && !d.w) vWatched(id); }
-        if (VP.clip && t > vpHi() + 0.5 && !VP.loop) { vpPause(); vpSeek(vpHi() - 0.6); }
+        if (VP.clip && t > vpHi() + 0.5 && !VP.loop) { vpPause(); vpSeek(vpHi() - 0.6); try { if (VA.on) vaStop(); } catch (x) {} }
       }, 250);
     });
   }
   // ads: YouTube reports another video, or a length that isn't the video's own (the Android app knows the real length)
   function vAd() {
     if (!VP.p || !VP.ready) return false;
+    if (VP.ytAd === true) return true;
     try { const vd = VP.p.getVideoData && VP.p.getVideoData(); if (vd && vd.video_id && vd.video_id !== VP.id) return true; } catch (e) {}
     try { const du = VP.p.getDuration(); if (VP.secs && du && Math.abs(du - VP.secs) > 2.5) return true; } catch (e) {}
     return false;
@@ -8688,6 +8697,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   // play: bring the video's top edge to the top so the video, controls and caption window are all on screen
   function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
+  function vContinue(d) { const at = d.at || 0, el = document.querySelector(".vctl"); if (!el || d.w || at < vpLo() + 20 || at > vpHi() - 10) return; el.insertAdjacentHTML("beforeend", '<button class="btn small" data-act="v-cont" data-t="' + Math.max(0, at - 3) + '">Continue from ' + mmss(at) + "</button>"); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {
     const w = es.toLowerCase().trim().replace(/[¿?¡!.,;:]/g, ""); if (!w) return "";
@@ -8726,8 +8736,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a || !/^(v-|vq$)/.test(a)) return;
     const id = VP.id, d = id ? vData(id) : null;
     if (a === "v-back5") vpSeek(vpT() - 5);
-    else if (a === "v-loop") { if (VP.loop) { VP.loop = null; t.setAttribute("aria-pressed", "false"); } else { const n = vpT(); VP.loop = { a: Math.max(0, n - 5), b: n + 0.2 }; vpSeek(VP.loop.a); vpPlay(); t.setAttribute("aria-pressed", "true"); } }
-    else if (a === "v-rate") { VP.rate = VP.rate === 1 ? 0.75 : 1; try { VP.p.setPlaybackRate(VP.rate); } catch (x) {} t.setAttribute("aria-pressed", String(VP.rate !== 1)); }
+    else if (a === "v-loop") { if (VP.loop) { VP.loop = null; t.setAttribute("aria-pressed", "false"); } else { const n = vpT(), c = VCAP.cues.length ? VCAP.cues[Math.max(0, vcFind(n))] : null; VP.loop = c && n >= c.s - 0.2 ? { a: Math.max(vpLo(), c.s - 0.15), b: c.e + 0.1 } : { a: Math.max(0, n - 5), b: n + 0.2 }; vpSeek(VP.loop.a); vpPlay(); t.setAttribute("aria-pressed", "true"); } }
+    else if (a === "v-rate") { VP.rate = VP.rate === 1 ? 0.75 : 1; try { VP.p.setPlaybackRate(VP.rate); } catch (x) {} t.setAttribute("aria-pressed", String(VP.rate !== 1)); t.textContent = "Speed " + (VP.rate === 1 ? "1×" : "0.75×"); }
+    else if (a === "v-cont") { const at = +t.dataset.t; t.remove(); vpSeek(at); vpPlay(); }
     else if (a === "v-catch") { vpPause(); const f = document.getElementById("vcatch"); f.hidden = false; f.dataset.t = Math.floor(vpT()); document.getElementById("vcat-t").textContent = "at " + mmss(vpT()); const i = document.getElementById("vcin"); i.value = ""; i.focus(); }
     else if (a === "v-catch-x") { document.getElementById("vcatch").hidden = true; vpPlay(); }
     else if (a === "v-seek") { vpSeek(+t.dataset.t - 1); vpPlay(); document.getElementById("vplayer") && document.querySelector(".vframe").scrollIntoView({ block: "start", behavior: "smooth" }); }
@@ -8803,16 +8814,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   const VCAP = { id: null, cues: [], kind: "", raf: 0, cur: -1, word: -1, raw: -1, t0: 0, n0: 0, resume: false, overlayOff: false };
   const vcPref = () => (S.vcap = S.vcap || { en: false, hide: false });
+  // YouTube's tags and markers are noise: [Música], (risas), ♪, >>, a leading dash
+  const vcClean = (t) => String(t || "").replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ").replace(/[♪♫♬🎵🎶]/g, " ").replace(/>>+/g, " ").replace(/(^|\s)[-–—](?=\s)/g, " ").replace(/\s+/g, " ").trim();
   function vcDecode(s) { const ta = document.createElement("textarea"); ta.innerHTML = s; return ta.value; }
   // YouTube caption XML: srv1 (<text start dur>) or srv3 (<p t d> with word timings in <s t>)
   function vcParse(xml) {
     if (!xml) return [];
     const doc = new DOMParser().parseFromString(xml, "text/xml"), out = [];
-    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcDecode(vcDecode(n.textContent || "")).replace(/\s+/g, " ").trim(); if (txt) out.push({ s, e: s + d, text: txt }); });
+    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (txt) out.push({ s, e: s + d, text: txt }); });
     doc.querySelectorAll("body > p, p[t]").forEach((p) => {
       const s = (+p.getAttribute("t") || 0) / 1000, d = (+p.getAttribute("d") || 2000) / 1000, ss = p.querySelectorAll("s"); let words = null, txt;
-      if (ss.length) { words = []; ss.forEach((x) => { const w = vcDecode(x.textContent || "").trim(); if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
-      else txt = vcDecode(vcDecode(p.textContent || "")).replace(/\s+/g, " ").trim();
+      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
+      else txt = vcClean(vcDecode(vcDecode(p.textContent || "")));
       if (txt && !(out.length && out[out.length - 1].s === s && out[out.length - 1].text === txt)) out.push({ s, e: s + d, text: txt, words });
     });
     out.sort((a, b) => a.s - b.s);
@@ -8826,17 +8839,20 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // caption fragments → sentences. Channel captions are split at their punctuation; YouTube's automatic captions have none,
   // so sentences start at clear pauses (word timings) and the app adds capitals, ¿…?, full stops and a few commas.
   const VQW = new Set(["qué", "cómo", "dónde", "cuándo", "cuál", "cuáles", "quién", "quiénes", "cuánto", "cuánta", "cuántos", "cuántas", "adónde"]);
-  const VOPEN = new Set(["bueno", "pues", "entonces", "oye", "mira", "hola", "sí", "vale", "claro", "gracias", "eh", "ok", "okey", "vaya", "venga", "perdón", "disculpa", "mmm", "ah", "oh"]);
+  const VOPEN = new Set(["bueno", "pues", "entonces", "oye", "mira", "hola", "sí", "vale", "claro", "eh", "ok", "okey", "vaya", "venga", "perdón", "disculpa", "mmm", "ah", "oh"]);
   function vcPunct(ws) {
     const out = ws.slice(), lw = out.map((w) => w.toLowerCase()), n = out.length;
     if (n > 2 && VOPEN.has(lw[0])) out[0] += ",";
     for (let i = 2; i < n; i++) if (/^(pero|aunque|sino)$/.test(lw[i]) && !/[,;:]$/.test(out[i - 1])) out[i - 1] += ",";
     const qi = VQW.has(lw[0]) || (lw[0] === "por" && lw[1] === "qué") ? 0 : VOPEN.has(lw[0]) && (VQW.has(lw[1]) || (lw[1] === "por" && lw[2] === "qué")) ? 1 : -1;
+    const pos = (w) => { try { return (TG[w] || [])[1] || ""; } catch (e) { return ""; } };
+    const ex = qi >= 0 && (lw[qi] === "qué" || lw[qi] === "cuánto" || lw[qi] === "cuánta") && /^(adj|adv)/.test(pos(lw[qi + 1] || "")); // ¡Qué bonito!, ¡Qué bien!
     const tag = n > 3 && qi < 0 && (lw[n - 1] === "verdad" || (lw[n - 1] === "no" && !/^(o|que|si|porque|ni)$/.test(lw[n - 2])));
     if (tag) { out[n - 2] = out[n - 2].replace(/,?$/, ","); out[n - 1] = "¿" + out[n - 1] + "?"; }
+    else if (ex) { out[qi] = "¡" + out[qi]; out[n - 1] += "!"; }
     else if (qi >= 0) { out[qi] = "¿" + out[qi]; out[n - 1] += "?"; }
     else out[n - 1] += ".";
-    out[0] = out[0].replace(/^(¿?)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
+    out[0] = out[0].replace(/^([¿¡]?)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
     return out;
   }
   function vcSentences(cues, en, kind) {
@@ -8848,14 +8864,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const END = /[.?!…]["»”)]?$/, hasP = W.filter((x) => END.test(x.w)).length >= Math.max(1, W.length / 45), S = [];
     let cur = []; const push = () => { if (cur.length) S.push(cur); cur = []; };
     for (let i = 0; i < W.length; i++) {
-      const x = W[i]; if (/^[\[(].*[\])]$/.test(x.w)) { push(); S.push([x]); continue; } // [Música], (risas)
+      const x = W[i];
       cur.push(x); const nx = W[i + 1]; if (!nx) { push(); break; }
       const gap = nx.t - x.t;
       if (hasP) { if (END.test(x.w) || cur.length >= 40) push(); }
       else if ((gap >= 0.8 && cur.length >= 3) || gap >= 1.6) push();
       else if (cur.length >= 22) { let best = -1, bg = 0; for (let k = 6; k < cur.length - 2; k++) { const g = cur[k + 1].t - cur[k].t; if (g > bg) { bg = g; best = k; } } if (best < 0) best = cur.length - 2; const rest = cur.splice(best + 1); S.push(cur); cur = rest; }
     }
-    const out = S.map((ws) => { const raw = ws.map((x) => x.w), mark = /^[\[(]/.test(raw[0]); const txt = hasP || mark ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" "), mark }; });
+    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
     out.forEach((c, i) => { c.e = out[i + 1] ? out[i + 1].s : c.s + Math.max(2, c.words.length * 0.45); });
     if (en.length && kind !== "asr") out.forEach((c) => { const xs = en.filter((x) => x.s >= c.s - 0.3 && x.s < c.e - 0.3).map((x) => x.text); if (xs.length) c.en = xs.join(" "); });
     VCAP.addedP = !hasP;
@@ -8867,27 +8883,29 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const box = document.getElementById("vcapw"); if (!box) return;
     if (!window.AndroidCap) { vcState("app"); return; }
     let hit = vcCache.get(id); if (!hit) try { const j = localStorage.getItem("vcap:" + id); if (j) hit = JSON.parse(j); } catch (e) {}
-    if (hit) { vcGot(id, hit); return; }
-    vcState("loading");
+    if (hit) { vcGot(id, hit); if (hit.secs) return; } // older saved copies have no video length: fetch again quietly to get it (the ad check needs it)
+    else vcState("loading");
     const rid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     window.__acap = window.__acap || { cbs: {}, ev(k, json, err) { const f = this.cbs[k]; delete this.cbs[k]; if (f) f(json, err); } };
     window.__acap.cbs[rid] = (json, err) => {
       if (VCAP.id !== id) return;
-      if (err || !json) { vcState("error", err); return; }
+      if (err || !json) { if (!hit) vcState("error", err); return; }
       let r; try { r = JSON.parse(json); } catch (e) { vcState("error", "unreadable reply"); return; }
-      if (r.none) { vcState("none"); return; }
+      if (r.none) { if (+r.secs > 0) VP.secs = +r.secs; vData(id).cap = "none"; save(); vcNoCaps(id); return; }
       vcCache.set(id, r);
       try { const keys = Object.keys(localStorage).filter((k) => k.startsWith("vcap:")); if (keys.length >= 8) localStorage.removeItem(keys[0]); localStorage.setItem("vcap:" + id, JSON.stringify(r)); } catch (e) {}
-      vcGot(id, r);
+      if (!hit) vcGot(id, r); else if (+r.secs > 0) VP.secs = +r.secs;
     };
     try { window.AndroidCap.fetch(rid, id); } catch (e) { vcState("error", String(e)); }
   }
   function vcGot(id, r) {
     const es = vcParse(r.es), en = vcParse(r.en), v = vFind(id), hi = v && v.clip ? v.clip[1] : 1e9, lo = v && v.clip ? v.clip[0] : 0;
     VCAP.kind = r.kind; if (+r.secs > 0) VP.secs = +r.secs;
+    const dd = vData(id); if (dd.cap !== r.kind && r.kind !== "audio") { dd.cap = r.kind; save(); }
+    if (r.kind === "asr" && vaHas(id)) { vaUse(id); return; } // your captions from the audio beat YouTube's automatic ones
     VCAP.cues = vcSentences(es.filter((c) => c.s < hi && c.e > lo), en, r.kind).filter((c) => c.s < hi);
-    if (!VCAP.cues.length) { vcState("none"); return; }
-    vcRender(); vcStart();
+    if (!VCAP.cues.length) { vcNoCaps(id); return; }
+    vcRender(); vcStart(); vWordCheck(id);
   }
   function vcState(st, why) {
     const w = document.getElementById("vcap"), n = document.getElementById("vcap-note"); if (!w) return;
@@ -8917,7 +8935,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const w = document.getElementById("vcap"); if (!w) return; const P = vcPref();
     w.classList.remove("vcap-empty"); w.dataset.state = "ready"; w.classList.toggle("show-en", !!P.en); w.classList.toggle("hide-text", !!P.hide);
     w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue' + (c.mark ? " mark" : "") + '" data-i="' + i + '"><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div><div class="vtip" id="vtip" hidden role="status"></div>';
-    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.");
+    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "audio" ? "Captions made from the video's sound on this phone" + (VCAP.addedP ? ", punctuation added by the app" : "") + "." : VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.") +
+      (vaOk() && VCAP.kind !== "manual" ? ' <button class="lnk" data-act="' + (VCAP.kind === "audio" ? "va-redo" : "va-start") + '">' + (VCAP.kind === "audio" ? "Make them again from the audio" : "Make captions from the audio instead") + "</button>" : "") + ' <button class="lnk" data-act="v-report">Report a playback problem</button>';
     VCAP.cur = -1; VCAP.word = -1; vcTick(true);
   }
   // the video's clock, smoothed between the player's updates so lines and words change on time
@@ -8956,6 +8975,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null, w = span.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, ""), lw = w.toLowerCase();
     if (inf) return inf.k === "short" ? (cueOne(cueGloss(inf.base.split(/[ (]/)[0])) || inf.base) + " (" + inf.base.split(" (")[0] + ")" : String(inf.mean).split(/[;(]/)[0].trim();
     if (VLITTLE.test(lw) || !lw) return "";
+    const vl = (S.vlex || {})[lw]; if (vl && vl.en) return cueOne(vl.en) || vl.en;
     try { return cueOne(cueGloss(w)); } catch (e) { return ""; }
   }
   function vcTip(k, spans, wi) {
@@ -8982,7 +9002,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const lines = (() => { try { return wordLines(inf && inf.k === "short" ? inf.base.split(/[ (/]/)[0] : word); } catch (e) { return []; } })();
     const what = !inf ? "" : inf.k === "short" ? '<p class="vinfo vinf-short"><b>Shortened form</b> of «' + esc(inf.base) + "». Informal speech: the end (or start) of the word is dropped.</p>" : inf.k === "jargon" ? '<p class="vinfo vinf-jargon"><b>Jargon:</b> ' + esc(inf.mean) + "</p>" : '<p class="vinfo vinf-slang"><b>Informal' + (inf.ph ? " expression «" + esc(inf.ph) + "»" : " word") + ":</b> " + esc(inf.mean) + (inf.where ? ' <span class="muted">· ' + esc(inf.where) + "</span>" : "") + "</p>";
     VCAP.card = { w: inf && inf.ph ? inf.ph : word, en: inf ? (inf.k === "short" ? inf.base : inf.mean) : "", t: VCAP.cur >= 0 ? VCAP.cues[VCAP.cur].s : vpT() };
-    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : '<p class="muted">Not in the app\'s dictionary yet.</p>') +
+    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : (S.vlex || {})[word.toLowerCase()] && S.vlex[word.toLowerCase()].en ? '<p class="vinfo"><b>Heard in your videos:</b> ' + esc(S.vlex[word.toLowerCase()].en) + ' <span class="muted small">(app translation)</span></p>' : '<p class="muted">Not in the app\'s dictionary. It will be translated when the word check runs.</p>') +
       '<div class="row" style="margin-top:10px"><button class="btn primary small" data-act="vc-catch">' + IC("pen") + " Catch it</button></div>");
     if (!VCAP.card.en) { const txt = lines.join(" ").replace(/<[^>]+>/g, " "); VCAP.card.en = ((txt.match(/·\s*([^·]+?)\s*(?:\s(?:less common|#\d+).*)?$/m) || [])[1] || "").trim().slice(0, 60); }
   }
@@ -9001,6 +9021,130 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function vcHTML() { const P = vcPref();
     return '<section class="vcapw" id="vcapw" aria-label="Captions"><div class="vcap-head"><span class="vcap-tg"><button class="btn small" data-act="vc-cue" aria-pressed="' + cueOn() + '" title="Verbatim: live word-by-word translation">Verbatim</button><button class="btn small" data-act="vc-en" aria-pressed="' + !!P.en + '">English</button><button class="btn small" data-act="vc-hide" aria-pressed="' + !!P.hide + '">Just listen</button></span></div>' +
       '<div class="vcap" id="vcap"><div class="vcap-in" id="vcap-in"></div><div class="vcap-listen" aria-hidden="true">Listening mode: text hidden</div></div><p class="vcap-note small muted" id="vcap-note"></p></section>'; }
+  /* ---------- videos: captions from the audio, word check, ad signals, playback report (tools/VIDEO_AUDIT_BRIEF.md) ---------- */
+  // F. words that come up in songs and street Spanish
+  Object.assign(VSLANG, {
+    "mami": ["babe, darling (to a woman); also 'mum'", "Caribbean, Latin America"], "papi": ["babe, darling (to a man); also 'dad'", "Caribbean, Latin America"], "bebé": ["baby, darling", "everywhere (songs)"], "baby": ["baby, darling (from English)", "everywhere (songs)"], "mor": ["love (short for amor)", "Caribbean, Colombia"],
+    "perreo": ["reggaeton dancing", "Puerto Rico, Latin America"], "perrear": ["to dance reggaeton", "Puerto Rico, Latin America"], "janguear": ["to hang out (from English)", "Puerto Rico"], "jangueo": ["hanging out, partying", "Puerto Rico"], "corillo": ["group of friends, crew", "Puerto Rico"],
+    "flow": ["style, vibe (from English)", "everywhere (music)"], "rumbear": ["to party", "Colombia, Venezuela, Caribbean"], "parche": ["plan, group of friends", "Colombia"], "parchar": ["to hang out", "Colombia"], "vacilar": ["to have fun, to joke; to flirt", "Latin America"], "vacilón": ["fun, a laugh", "Latin America"], "vacile": ["fun, banter", "Latin America"],
+    "guaya": ["a sad, heartbroken feeling", "Colombia, Puerto Rico (music)"], "dale": ["go on! let's go! OK!", "everywhere"], "fuego": ["hot, amazing (literally 'fire')", "songs"], "duro": ["great, tough (literally 'hard')", "Caribbean, Latin America"], "nena": ["girl, babe", "everywhere"], "nene": ["boy, babe", "everywhere"],
+    "chimba": ["awesome (vulgar); also something bad", "Colombia"], "bandido": ["bad boy, player (literally 'bandit')", "songs"], "bandida": ["bad girl, player", "songs"], "shorty": ["girl (from English)", "songs"], "jevita": ["girlfriend, girl", "Caribbean, Venezuela"], "tiguere": ["street-smart guy", "Dominican Republic"],
+    "bellaco": ["horny (vulgar)", "Puerto Rico"], "bellaca": ["horny (vulgar)", "Puerto Rico"], "wepa": ["yay! woo-hoo!", "Puerto Rico"], "sandunga": ["charm, grace; a party", "Caribbean, Mexico"], "parisear": ["to party", "Caribbean"], "rico": ["tasty; also hot, sexy", "everywhere"], "rica": ["tasty; also hot, sexy", "everywhere"],
+    "parcerito": ["buddy", "Colombia"], "gonorrea": ["very good or very bad (vulgar)", "Colombia"], "pelada": ["girl (Colombia); also bald, broke", "Colombia"], "pelados": ["kids", "Panama, Colombia"], "chévere": ["great, cool", "Caribbean, Venezuela, Colombia, Panama"],
+  });
+  Object.assign(VSHORT, { "pa'l": "para el", "toy'": "estoy", "pa'ca": "para acá", "mija'": "mi hija", "na'ita": "nadita (nothing at all)", "pai": "papá (dad)", "mai": "mamá (mum)", "ma": "mamá / mami (mum, babe)" });
+
+  // A. captions from the audio: the app listens to its own playback (Android 13+), saved per video
+  const vaKey = (id) => "vaud:" + id;
+  const vaGet = (id) => { try { return JSON.parse(localStorage.getItem(vaKey(id)) || "null"); } catch (e) { return null; } };
+  const vaHas = (id) => { const x = vaGet(id); return !!(x && x.cues && x.cues.length); };
+  const vaOk = () => { try { return !!(window.AndroidAud && window.AndroidAud.available()); } catch (e) { return false; } };
+  const VA = { on: false, id: null, seg: null, cues: [], live: "" };
+  function vaXml(cues) { return "<transcript>" + cues.map((c) => '<text start="' + c.s.toFixed(2) + '" dur="' + Math.max(0.5, c.e - c.s).toFixed(2) + '">' + esc(c.text) + "</text>").join("") + "</transcript>"; }
+  function vaUse(id, keepYt) { const x = vaGet(id); if (!x) return; VCAP.fromAudio = true; vcGot(id, { kind: "audio", es: vaXml(x.cues), en: "", secs: VP.secs || 0 }); vData(id).cap = "audio"; save(); }
+  function vcNoCaps(id) {
+    if (vaHas(id)) { vaUse(id); return; }
+    vcState("none");
+    const w = document.querySelector("#vcap .vcap-msg"); if (!w) return;
+    w.innerHTML = esc("This video has no Spanish captions on YouTube.") + (vaOk() ? ' <span class="small">The app can make them from the video\'s sound.</span><br><button class="btn small primary" data-act="va-start" style="margin-top:8px">' + IC("mic") + " Captions from the audio</button>" : " " + esc("Listen and catch words by ear."));
+  }
+  function vaStart() {
+    if (!vaOk()) return;
+    VA.id = VP.id; VA.cues = []; VA.seg = null; VA.live = "";
+    vaBanner("Asking Android for permission to record the video's sound…");
+    try { window.AndroidAud.start(S.region === "es" ? "es-ES" : "es-US"); } catch (e) { vaBanner("Couldn't start: " + e, true); }
+  }
+  function vaStop(save2) { if (!VA.on && !VA.id) return; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} if (save2 !== false) vaFinish(); VA.on = false; }
+  function vaBanner(msg, err) {
+    let b = document.getElementById("vabar"); const host = document.getElementById("vcapw"); if (!host) return;
+    if (!b) { host.insertAdjacentHTML("afterbegin", '<p class="vabar small" id="vabar" role="status"></p>'); b = document.getElementById("vabar"); }
+    if (!msg) { b.remove(); return; }
+    b.className = "vabar small" + (err ? " err" : "") + (VA.on ? " on" : "");
+    b.innerHTML = (VA.on ? '<i aria-hidden="true"></i>' : "") + "<span>" + esc(msg) + "</span>" + (VA.on ? ' <button class="btn small" data-act="va-stop">Stop</button>' : "");
+  }
+  window.__aaud = { ev(type, text) {
+    if (!VA.id || VA.id !== VP.id) return;
+    if (type === "state") {
+      if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
+      else if (text === "asking") vaBanner("Android will ask to record: choose Start (the app only listens to its own video).");
+      else if (text === "stopped") { VA.on = false; vaFinish(); }
+      else if (/^error:/.test(text)) { VA.on = false; vaBanner(text.slice(6), true); }
+      return;
+    }
+    if (VP.ad) { VA.seg = null; return; } // an ad: not part of the video
+    const t = vpT();
+    if (type === "partial") { if (VA.seg == null) VA.seg = Math.max(vpLo(), t - 1.2); VA.live = text; vaShowLive(); return; }
+    if (type === "final") {
+      const s = VA.seg != null ? VA.seg : Math.max(vpLo(), t - Math.min(6, 0.35 * text.split(/\s+/).length)); VA.seg = null; VA.live = "";
+      VA.cues.push({ s, e: Math.max(s + 0.6, t), text: vcClean(text) }); VA.cues.sort((a, b) => a.s - b.s);
+      try { localStorage.setItem(vaKey(VA.id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: false })); } catch (e) {}
+      vcGot(VA.id, { kind: "audio", es: vaXml(VA.cues), en: "", secs: VP.secs || 0 }); vaShowLive();
+    }
+  } };
+  function vaShowLive() { const inn = document.getElementById("vcap-in"); if (!inn) return; let l = document.getElementById("valive"); if (!VA.live) { if (l) l.remove(); return; } if (!l) { inn.insertAdjacentHTML("beforeend", '<p class="valive" id="valive" aria-live="polite"></p>'); l = document.getElementById("valive"); } l.textContent = VA.live + " …"; }
+  function vaFinish() {
+    const id = VA.id; if (!id) return; VA.on = false;
+    if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); setTimeout(() => vaBanner(""), 5000); if (VP.id === id) vWordCheck(id); }
+    else vaBanner("No speech was picked up. Is the volume on? Music can make it harder.", true);
+    VA.id = null;
+  }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (a === "va-start") vaStart(); else if (a === "va-stop") vaStop(); else if (a === "va-redo") { try { localStorage.removeItem(vaKey(VP.id)); } catch (x) {} vaStart(); } else if (a === "v-report") vReport(); else if (a === "v-copyrep") { const ta = document.getElementById("vrep"); try { navigator.clipboard.writeText(ta.value); t.textContent = "Copied"; } catch (x) { ta.select(); document.execCommand("copy"); t.textContent = "Copied"; } } });
+
+  // D. every word in the video in the dictionary: unknown words get a translation and are kept as video words
+  const vLex = () => (S.vlex = S.vlex || {});
+  async function vWordCheck(id) {
+    if (VCAP.checked === id + ":" + VCAP.cues.length) return; VCAP.checked = id + ":" + VCAP.cues.length;
+    try { await loadLex(); } catch (e) {}
+    const seen = new Map();
+    VCAP.cues.forEach((c) => { const ws = c.text.match(/[\p{L}'’]+/gu) || []; ws.forEach((w, i) => { const lw = w.toLowerCase().replace(/’/g, "'"); const name = i > 0 && /^\p{Lu}/u.test(w); if (!seen.has(lw)) seen.set(lw, { name, ex: c.text }); else if (!name) seen.get(lw).name = false; }); });
+    const known = (w) => { try { if (TG[w] || TG[w.replace(/'+$/, "")]) return true; } catch (e) {} if (lexIdx(w) >= 0) return true; if (VSLANG[w] || VSHORT[w] || VJARGON[w] || vLex()[w]) return true; return !!vInformal(w, ""); };
+    const todo = [...seen].filter(([w, o]) => !o.name && w.length > 1 && !/^\d/.test(w) && !known(w) && !known(w.replace(/^'+|'+$/g, ""))).slice(0, 60);
+    VCAP.unknown = todo.map((x) => x[0]);
+    if (!todo.length) return;
+    let n = 0;
+    for (const [w, o] of todo) {
+      if (VP.id !== id) break;
+      let en = ""; try { if (window.__trEn) en = String(await window.__trEn(w) || "").trim(); } catch (e) {}
+      if (en && en.toLowerCase() === w) en = "";
+      vLex()[w] = { en, v: id, ex: o.ex.slice(0, 160), t: Date.now() }; n++;
+    }
+    save();
+    if (n && VP.id === id) try { coachToast(n + " new word" + (n > 1 ? "s" : "") + " from this video added to Words › Informal"); } catch (e) {}
+  }
+
+  // E. Words › Informal: slang, shortened forms, expressions, jargon and words learned from videos
+  function infRows() {
+    const rows = [];
+    Object.entries(VSLANG).forEach(([w, m]) => rows.push([w, m[0], "Informal · " + m[1]]));
+    Object.entries(VSHORT).forEach(([w, b]) => rows.push([w, "short for «" + b + "»", "Shortened form"]));
+    Object.entries(VPHRASE).forEach(([w, m]) => rows.push([w, m[0], "Expression · " + m[1]]));
+    Object.entries(VJARGON).forEach(([w, m]) => rows.push([w, m, "Jargon"]));
+    Object.entries(vLex()).forEach(([w, o]) => { const v = vFind(o.v); rows.push([w, o.en || "(no translation yet)", "From a video" + (v ? " · " + v.t : ""), o.ex]); });
+    return rows.sort((a, b) => a[0].localeCompare(b[0], "es"));
+  }
+  function infHTML(q) {
+    const nq = (x) => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""), qq = nq(q || "");
+    const rows = infRows().filter((r) => !qq || nq(r[0]).includes(qq) || nq(r[1]).includes(qq));
+    return '<p class="muted small">' + rows.length + " informal words, shortened forms, expressions and jargon" + (Object.keys(vLex()).length ? ", including " + Object.keys(vLex()).length + " heard in your videos" : "") + ". They're coloured in the video captions; tap one there to hear it in context.</p>" +
+      '<div class="tbl"><table class="words inf"><thead><tr><th>Spanish</th><th>English</th><th>Kind</th></tr></thead><tbody>' +
+      rows.map((r) => '<tr><td lang="es"><b>' + esc(r[0]) + "</b>" + (r[3] ? '<br><span class="muted small">«' + esc(r[3]) + "»</span>" : "") + "</td><td>" + esc(r[1]) + '</td><td class="muted small">' + esc(r[2]) + "</td></tr>").join("") + "</tbody></table></div>";
+  }
+
+  // C. ads: YouTube's own signals, when its player sends them, plus a playback report to send if anything still drifts
+  const VDIAG = [];
+  addEventListener("message", (e) => {
+    if (!/youtube/.test(String(e.origin))) return; let d; try { d = typeof e.data === "string" ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+    if (!d || d.event !== "infoDelivery" || !d.info) return;
+    const keys = Object.keys(d.info), adKey = keys.find((k) => /^(ad|isAd|adState|adPlaying|showAd)/i.test(k));
+    VP.ytAd = adKey ? !!d.info[adKey] && d.info[adKey] !== "0" : VP.ytAd;
+    if (VDIAG.length < 400) VDIAG.push({ at: Math.round(performance.now() / 100) / 10, msg: keys.slice(0, 12).join(",") + (adKey ? " " + adKey + "=" + JSON.stringify(d.info[adKey]) : "") });
+  });
+  setInterval(() => { if (!VP.p || !VP.ready || !VP.id) return; let r = {}; try { r = { t: Math.round(VP.p.getCurrentTime() * 10) / 10, d: Math.round(VP.p.getDuration()), st: VP.p.getPlayerState(), vid: (VP.p.getVideoData() || {}).video_id, fr: Math.round((VP.p.getVideoLoadedFraction ? VP.p.getVideoLoadedFraction() : 0) * 100) / 100 }; } catch (e) {} r.ad = !!VP.ad; r.secs = VP.secs; VDIAG.push(r); if (VDIAG.length > 400) VDIAG.splice(0, 100); }, 1000);
+  function vReport() {
+    const v = vFind(VP.id) || {}, txt = "Ruta DELE playback report\nvideo: " + VP.id + " " + (v.t || "") + "\nbuild: " + (window.__BUILD || "") + "\nUA: " + navigator.userAgent + "\nreal length: " + (VP.secs || "unknown") + "\n" + VDIAG.slice(-150).map((x) => JSON.stringify(x)).join("\n");
+    openSheet('<div class="row" style="justify-content:space-between"><b>Playback report</b><button class="btn small" data-act="l-close">Close</button></div><p class="small muted">What the YouTube player reported over the last minutes (times, lengths, ads). Copy it and send it in the chat if the captions or the start time go wrong.</p><textarea id="vrep" class="extxt" rows="8" readonly>' + esc(txt) + '</textarea><div class="row" style="margin-top:8px"><button class="btn primary small" data-act="v-copyrep">Copy</button></div>');
+  }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="w-inf"], [data-act="w-type"]'); if (!t) return; if (t.dataset.act === "w-inf") { e.stopImmediatePropagation(); WV.inf = !WV.inf; if (WV.inf) WV.types = []; wordsView(); } else WV.inf = false; }, true);
 
   /* ---------- shared from another app (Android share sheet) ---------- */
   try {
@@ -9940,7 +10084,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611141616";
+  var BUILD = "202611141726";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
