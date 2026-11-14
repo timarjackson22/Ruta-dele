@@ -1476,9 +1476,28 @@ a.chipl::after { content: " ›"; opacity: .6 }
 .remt { font: inherit; padding: 4px 6px; border-radius: 8px; border: 1px solid var(--line, #ccc); background: var(--card, #fff); color: inherit }
 @media (max-width: 420px) { .pstats { grid-template-columns: repeat(2, 1fr) } .pskills > div { grid-template-columns: 96px 1fr 54px } }
 
+
+/* ===== calmer reading & listening ===== */
+#litem .sent.playing { background: color-mix(in srgb, var(--saffron-soft) 60%, transparent); box-shadow: none; border-radius: 3px }
+#litem h1.playing { background: none; box-shadow: none }
+#litem .w.spk { background: none; color: inherit; box-shadow: none; text-decoration: underline 3px var(--saffron); text-underline-offset: 5px; text-decoration-skip-ink: none; transition: text-decoration-color .12s }
+#litem .w.cue-on { background: none; box-shadow: none }
+#litem .sent:not(.playing) .w.spk { text-decoration: none }
+body.litem-on .tutor-fab { display: none !important }
+#litem .player { flex-wrap: nowrap; gap: 6px; padding: 8px 10px; bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important; border-radius: 18px }
+#litem .player.more { flex-wrap: wrap }
+#litem .player > #l-text, #litem .player > #l-en, #litem .player > #rh-btn { display: none; order: 3 }
+#litem .player.more > #l-text, #litem .player.more > #l-en, #litem .player.more > #rh-btn { display: inline-flex }
+#litem .player .pmore { order: 2; margin-left: auto; font-size: 1.3rem; line-height: 1; font-weight: 700 }
+#litem .player.more .pmore { background: var(--surface-2) }
+#litem .player .cue-sw { order: 1; margin-left: auto }
+#litem .player .cue-sw + .pmore, #litem .player .pmore { margin-left: 0 }
+#litem .player #pl-rate { padding-left: 8px; padding-right: 4px; min-width: 0 }
+#litem .player .ppos { font-size: .85rem; white-space: nowrap }
+@media (max-width: 420px) { #litem .player .ppos { display: none } #litem .player .cue-sw { padding-left: 8px !important; padding-right: 10px !important } }
 </style>
 
-<script>window.__BUILD = "202611132237";</script>
+<script>window.__BUILD = "202611140033";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4121,7 +4140,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function uiNav() {
     const h = location.hash.replace(/^#/, ""), b = document.getElementById("nb-back"), t = document.getElementById("nb-title"); if (!b || !t) return;
     const par = uiParent(h);
-    document.body.classList.toggle("no-tabs", /^(a1|a2|b1|b2|c1|c2|esc)-u\d+$/.test(h) || /^guia-/.test(h) || /-examen-\d+-[a-z]+$/.test(h) || h === "drill");
+    document.body.classList.toggle("no-tabs", (typeof LI !== "undefined" && !!LI[h]) || /^(a1|a2|b1|b2|c1|c2|esc)-u\d+$/.test(h) || /^guia-/.test(h) || /-examen-\d+-[a-z]+$/.test(h) || h === "drill");
     if (window.__lqh !== location.hash) { window.__lqh = location.hash; const ap = document.getElementById("app"); if (ap) { ap.classList.remove("lq-in"); void ap.offsetWidth; ap.classList.add("lq-in"); } }
     b.hidden = !par; if (par) { b.setAttribute("href", par[0]); document.getElementById("nb-back-t").textContent = par[1]; b.setAttribute("aria-label", "Back to " + par[1]); }
     const h1 = document.querySelector("#app h1"); t.textContent = h1 ? h1.textContent.trim() : "";
@@ -4269,7 +4288,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const CGL = {};
   function cueSpk(el) {
     const F = el ? cueFor(el) : { els: [] };
-    document.querySelectorAll("#ltext .w.spk").forEach((x) => F.els.indexOf(x) < 0 && x.classList.remove("spk"));
+    document.querySelectorAll("#litem .w.spk").forEach((x) => F.els.indexOf(x) < 0 && x.classList.remove("spk"));
     if (!el) return; F.els.forEach((x) => x.classList.add("spk"));
     if (CUE.w) return; // a tapped word stays until you tap elsewhere
     // never wait: show the meaning of this word, or while the voice is on a little word (y, de, el…) or a name,
@@ -4504,13 +4523,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const s0 = t.closest("[data-pi]"), k = s0 ? +s0.dataset.pi : 0, word = t.textContent, F = cueFor(t), g = F.en;
     if (!g) { lookup(word, k); return; } // no short meaning: the full entry
     CUE.w = t; CUE.k = k;
-    document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); F.els.forEach((x) => x.classList.add("cue-on"));
+    document.querySelectorAll("#litem .w.cue-on").forEach((x) => x.classList.remove("cue-on")); F.els.forEach((x) => x.classList.add("cue-on"));
     CUE.es = F.els.map((x) => x.textContent).join(" "); CUE.en = g;
     cueShow('<div class="cue-top"><b class="cue-one">' + esc(g) + "</b>" +
       '<button class="cue-b sm cue-add" data-act="cue-add" aria-label="Add ' + esc(CUE.es) + ' to a deck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
       '<button class="cue-b sm" data-act="cue-more" aria-label="More about ' + esc(word) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button></div>', F.els);
   }
-  function cueDrop() { if (!CUE.w) return; document.querySelectorAll("#ltext .w.cue-on").forEach((x) => x.classList.remove("cue-on")); CUE.w = null; CUE.k = -1; const sp = document.querySelector("#ltext .w.spk"); if (sp && PL.playing && cueOn()) cueSpk(sp); else cueSync(); }
+  function cueDrop() { if (!CUE.w) return; document.querySelectorAll("#litem .w.cue-on").forEach((x) => x.classList.remove("cue-on")); CUE.w = null; CUE.k = -1; const sp = document.querySelector("#ltext .w.spk"); if (sp && PL.playing && cueOn()) cueSpk(sp); else cueSync(); }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act;
     if (a === "l-cue") { UI.cues = !cueOn(); uiSave(); t.setAttribute("aria-pressed", cueOn()); if (!cueOn()) cueDrop(); cueSync(); e.stopImmediatePropagation(); return; }
@@ -4644,6 +4663,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<button class="pbtn" data-act="l-next" aria-label="Next sentence">' + NEXT + '</button>' +
       '<span class="ppos" id="pl-pos">1 / ' + PL.items.length + '</span>' +
       '<select id="pl-rate" aria-label="Speed">' + [[0.7, "0.7×"], [0.8, "0.8×"], [0.9, "0.9×"], [1, "1×"], [1.1, "1.1×"]].map(([v, n]) => '<option value="' + v + '"' + (v === PL.rate ? " selected" : "") + ">" + n + "</option>").join("") + "</select>" +
+      '<button class="pbtn pmore" data-act="pl-more" aria-label="More options" aria-expanded="false">⋯</button>' +
       '<button class="btn small" data-act="l-text" aria-pressed="false" id="l-text">Hide text</button>' +
       '<button class="btn small" data-act="l-en" aria-pressed="false" id="l-en">English</button>' +
       '<button class="btn small cue-sw" data-act="l-cue" id="l-cue" aria-pressed="' + (UI.cues !== false) + '" title="Translation cue tips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4.5"/></svg>Cues</button>' +
@@ -4662,7 +4682,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div><p class="eyebrow">' + esc(meta) + "</p><h1 class=\"ltitle\"><span class=\"sent\" data-pi=\"t\">" + wrapWords(x.t) + '</span></h1><p class="muted" style="font-size:1.1rem;margin-top:6px">' + esc(x.s) + (x.author ? " · " + esc(x.author) + (x.year ? " (" + esc(x.year) + ")" : "") : "") + "</p></div>" +
       (x.note ? '<p class="callout">' + esc(x.note) + (x.cat === "song" ? " The app reads the lyrics aloud. Turn on the rhythm for a simple " + esc(x.genre || "") + " percussion loop underneath." : "") + "</p>" : "") +
       (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap “Show text” to read along.</p>' : "") +
-      '<p class="muted small">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips follow the voice word by word" : "") + "</p>" +
+      ((UI.lhint = (UI.lhint || 0) + 1) <= 3 ? '<p class="muted small lhint">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips follow the voice word by word" : "") + "</p>" : "") +
       '<section class="block" id="ltext">' + body + "</section>" + playerBar(x) +
       '<section class="block"><div class="shead"><h2>Glosario</h2></div><div class="tbl"><table class="vocab"><tbody>' + x.gl.map((g) => '<tr><td class="en">' + esc(g[1]) + '</td><td class="sp">' + sayBtn(g[0]) + '</td><td class="es">' + esc(g[0]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
       '<section class="block"><div class="shead"><h2>Comprensión</h2><span class="result" id="lq-res" aria-live="polite"></span></div>' + mcList(x.q, "lq") + '<div class="row"><button class="btn small" data-act="t-ask" data-p="Talk me through this text and my answers to the comprehension questions. Then ask me one follow-up question about it.">Talk it through with Profe</button></div></section>' +
@@ -4672,6 +4692,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     CUR.dict = dict;
     if (hidden) { const b = document.getElementById("l-text"); if (b) { b.textContent = "Show text"; b.setAttribute("aria-pressed", "true"); } }
     if (reading) { const st = S.l[x.id] || {}; st.heard = true; S.l[x.id] = st; save(); }
+    try { uiSave(); } catch (e) {} document.body.classList.add("litem-on");
     afterItem(x);
     plUI();
   }
@@ -4863,6 +4884,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else plJump(PL.i - 1); }
     else if (act === "l-next") plJump(PL.i + 1);
     else if (act === "l-text") { const box = document.getElementById("litem"); const on = box.classList.toggle("hide-text"); t.textContent = on ? "Show text" : "Hide text"; t.setAttribute("aria-pressed", on); const n = document.getElementById("hidden-note"); if (n && !on) n.hidden = true; }
+    else if (act === "pl-more") { const pl = t.closest(".player"); const on = pl.classList.toggle("more"); t.setAttribute("aria-expanded", on); }
     else if (act === "l-en") { const box = document.getElementById("litem"); const on = box.classList.toggle("show-en"); t.setAttribute("aria-pressed", on); }
     else if (act === "l-rhythm" && CUR) { if (RH.on) rhStop(); else if (rhStart(CUR.genre)) { t.setAttribute("aria-pressed", "true"); t.textContent = "Stop rhythm"; } }
     else if (act === "l-word") { if (window.getSelection && !window.getSelection().isCollapsed) return; const s = t.closest("[data-pi]"); lookup(t.textContent, s ? +s.dataset.pi : 0); }
@@ -8729,6 +8751,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     }
     window.scrollTo(0, 0);
   }
+  window.addEventListener("hashchange", () => setTimeout(() => { if (!document.getElementById("litem")) document.body.classList.remove("litem-on"); }, 0));
   window.addEventListener("hashchange", route);
   window.addEventListener("hashchange", () => { const b = document.getElementById("px-back"); if (b) b.hidden = true; });
   document.addEventListener("keydown", (e) => { if (e.key === "Enter" && PX && PX.phase === "fb" && !/input|textarea|select|button/i.test(e.target.tagName)) { e.preventDefault(); const n = document.querySelector('[data-act="px-next"]'); if (n) n.click(); } });
@@ -8822,7 +8845,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611132237";
+  var BUILD = "202611140033";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
