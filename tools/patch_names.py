@@ -13,7 +13,7 @@ rep('''    if (g.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase(
 rep('''    if (!g && /^[A-ZÁÉÍÓÚÑ]/.test(word)) g = word; // a capitalised word the dictionary doesn't know: a name, said back''',
     '''    { const g2 = g.replace(/,\\s*(diminutive|augmentative|superlative|endearing form|affectionate form) of [a-záéíóúüñ]+\\s*$/i, "").trim(); if (g2) g = g2; } // "doggy, diminutive of perro" → "doggy"
     const dm = g.match(/^(?:an? )?(diminutive|augmentative|superlative|endearing form|affectionate form) of ([a-záéíóúüñ]+)/i);
-    if (dm) { const L = vLook(dm[2].toLowerCase()); const lg = L ? L.g.replace(/^(an?|the) /i, "") : "", aj = L && /adj|adv/.test(L.pos) && VADJ_EN.test(lg.split(/[ ,]/)[0]); g = L ? (/^aug/i.test(dm[1]) ? (aj ? "really " : "big ") : /^sup/i.test(dm[1]) ? "very " : aj ? "nice and " : "little ") + lg : ""; }
+    if (dm) { const L = vLook(dm[2].toLowerCase()); const lg = L ? L.g.replace(/^(an?|the) /i, "") : "", pt = /(ad|id)[oa]s?$/.test(dm[2].toLowerCase()), aj = L && /adj|adv/.test(L.pos) && VADJ_EN.test(lg.split(/[ ,]/)[0]); g = L ? (pt ? "really " + (/verb/.test(L.pos) || /^to /.test(L.g0 || "") ? vPP(lg) : lg) : (/^aug/i.test(dm[1]) ? (aj ? "really " : "big ") : /^sup/i.test(dm[1]) ? "very " : aj ? "nice and " : "little ") + lg) : ""; } // pegadita: really stuck
     if (!g) { const m = vMorph(word); if (m) g = m.en; } // a new word built from a known one: cafecito → little coffee
     if (!g && /^[A-ZÁÉÍÓÚÑ]/.test(word)) g = word; // a capitalised word the dictionary doesn't know: a name, said back''')
 rep('''    return out;
@@ -32,5 +32,8 @@ rep('''    if (lw in CFN) return CFN[lw];
     let g = "";''')
 rep('''  function cueEl() {''', '''  window.__cueGloss = (w) => cueGloss(w);
   function cueEl() {''')
+# meaning in context (tools/CONTEXT_MEANING_BRIEF.md): tapped words in Reading/Listening use the same context rules
+rep('''    if (lw === "mañana" && /^(la|esta|cada|por|una|toda)$/.test(cx.prev)) return "morning";''', '''    if (lw === "mañana" && /^(la|esta|cada|por|una|toda)$/.test(cx.prev)) return "morning";
+    if (el && typeof vcCtxRule === "function") { const sn = el.closest && el.closest(".sent"); const r = sn ? vcCtxRule(lw, sn.textContent.toLowerCase()) : ""; if (r) return r; }''')
 open(p, "w", encoding="utf-8").write(s)
 print("names ok")

@@ -153,6 +153,7 @@ CSS = r'''
 .vabar i { width: 9px; height: 9px; border-radius: 50%; background: #e5484d; animation: rvPulse 1.6s infinite; --a: #e5484d }
 .vabar > span { flex: 1; min-width: 0 } .vabar .btn { margin-left: auto }
 .valive { margin: 0 0 1.25em 0; font-size: 17px; color: var(--muted); font-style: italic }
+.vhere { border-left-color: var(--cobalt); background: color-mix(in srgb, var(--cobalt) 10%, transparent) }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''
