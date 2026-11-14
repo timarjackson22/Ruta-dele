@@ -1590,9 +1590,12 @@ body.litem-on .tutor-fab { display: none !important }
 #v-body, #g-body { display: flex; flex-direction: column; gap: 12px }
 #v-body > .row, #g-body > .row { gap: 8px }
 #v-body > p.muted.small { margin: 0 }
+
+.t-ctx { margin: 2px 0 0; font-size: .8rem; color: var(--muted); display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62vw }
+.t-ctx b { color: var(--ink); font-weight: 600; overflow: hidden; text-overflow: ellipsis }
 </style>
 
-<script>window.__BUILD = "202611140615";</script>
+<script>window.__BUILD = "202611140629";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4291,9 +4294,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const LVRE = /^(a1|a2|b1|b2|c1|c2|esc)(-|$)/;
   function uiTab() {
     const h = location.hash.replace(/^#/, "");
-    if (!h || h === "inicio" || h === "ajustes") return "hoy";
+    if (!h || /^(inicio|ajustes|hoy|progreso|drill)$/.test(h)) return "hoy";
     if (h === "curso" || h === "nivel" || LVRE.test(h)) return "curso";
-    if (/^(practicar|escuchar|leer|leer-add|escritura|repaso|errores)$/.test(h) || /^(escritura|repaso|my)-/.test(h) || LI[h]) return "practicar";
+    if (/^(practicar|escuchar|leer|leer-add|escritura|repaso|errores|examenes)$/.test(h) || /^(escritura|repaso|my)-/.test(h) || LI[h]) return "practicar";
     return "biblioteca";
   }
   function uiParent(h) {
@@ -7622,14 +7625,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
     const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret" aria-label="' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 19c0-6-4-10-10-10H4M8.5 4.5 4 9l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + "<span>" + (R.kind === "q" ? "Q" + R.n : "Lesson") + "</span></button>" : "";
-    const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small t-enbtn" data-act="t-en" aria-pressed="' + !TS.noEnLine + '" title="English under Profe’s Spanish">EN</button><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
+    const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span><p class="t-ctx">' + (window.__IC ? __IC("pin") : "") + ' Looking at: <b>' + esc(ctx.label || "Ruta DELE") + '</b></p></div><span class="row"><button class="btn small t-enbtn" data-act="t-en" aria-pressed="' + !TS.noEnLine + '" title="English under Profe’s Spanish">EN</button><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
     else if (tView === "practice") body = practiceHTML();
     else {
       const msgs = tCur ? tCur.msgs : [];
       const intro = TB ? "¡Hola! Soy Profe. I can see what you have open (<b>" + esc(ctx.label) + "</b>). Ask me anything" + (IOS_OTHER ? " (to talk by voice on iPhone, open the app in Safari)" : "") + (CAN_MIC ? ", tap the mic to talk, or start a hands-free voice chat." : ", or pick an option below.") :
-        (IS_IOS && !IN_CLAUDE ? "¡Hola! Soy Profe. On iPhone my free chat AI isn’t available (it’s too large for iOS), but <b>Practice</b> works fully, with voice: drills, quizzes and role-plays. Tap <b>Practice</b> above to start." : "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (works offline on your phone) or add a Claude key." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.");
+        (IS_IOS && !IN_CLAUDE ? "¡Hola! Soy Profe. On iPhone my free chat AI isn’t available (it’s too large for iOS), but <b>Practice</b> works fully, with voice: drills, quizzes and role-plays. Tap <b>Practice</b> above to start." : "¡Hola! Soy Profe. To chat freely, set up my AI in <b>History &amp; settings</b>: download the on-device AI (free, and it works offline on your phone)." + (IN_CLAUDE ? "" : "") + " Meanwhile, <b>Practice</b> works right now, with voice.");
       body = (tCur && tCur.task ? '<div class="t-task"><span aria-hidden="true">' + (tCur.task.done ? "🏁" : "🎯") + '</span><span class="ext"><small>' + (tCur.task.done ? "Task done" : "Current task") + "</small><b>" + esc(tCur.task.t.length > 70 ? tCur.task.t.slice(0, 68) + "…" : tCur.task.t) + '</b></span><button class="btn small" data-act="t-task-end">End</button></div>' : "") + '<div class="tscroll" id="t-msgs">' + (msgs.length ? msgs.map(bubble).join("") : '<div class="tm a">' + pAvatar() + '<div class="tb"><p>' + intro + "</p>" + (TS.memory ? '<p class="muted small">I remember our earlier sessions.</p>' : "") + "</div></div>") + "</div>" +
         '<div class="t-live" id="t-live" hidden></div>' +
         '<div class="tctl"><label class="small" for="t-lvl">Level</label><select id="t-lvl">' + [["", "Auto (" + (pageCtx().lvl || (S.last && S.last.l) || "a2").toUpperCase() + ")"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"], ["b2", "B2"], ["c1", "C1"], ["c2", "C2"], ["open", "Open (no limit)"]].map(([v, n]) => '<option value="' + v + '"' + ((TS.clvl || "") === v ? " selected" : "") + ">" + n + "</option>").join("") + '</select><span class="small" style="margin-left:auto">🔊 Speed</span><button class="btn small" data-act="t-rate" data-d="-1" aria-label="Slower">−</button><b class="small" id="t-rate">' + (TS.prate || 1).toFixed(1) + '×</b><button class="btn small" data-act="t-rate" data-d="1" aria-label="Faster">+</button></div>' +
@@ -7671,7 +7674,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     setTimeout(natWarm, 300);
     if (resolveTB() === "local" && !LLM) loadLocal().catch(() => {}); // warm up while the learner reads or types
     if (resolveTB() === "native") try { window.AndroidLLM.preload(); } catch (e) {}
+    let paused = "";
+    try { if (PL.playing) { const b = document.getElementById("pl-play"); if (b) b.click(); else { PL.playing = false; speechSynthesis.cancel(); } paused = "Reading"; } } catch (e) {}
+    try { if (typeof RA !== "undefined" && RA.on && !RA.paused) { RA.paused = true; RA.gen++; speechSynthesis.cancel(); raPlayerUI(); paused = "The lesson"; } } catch (e) {}
     const pan = document.getElementById("tutor"); pan.hidden = false; document.body.classList.add("tutor-open"); if (!PR) tView = "chat"; tRender();
+    if (paused) try { coachToast("⏸ " + paused + " paused while you talk to Profe. Press play to continue after."); } catch (e) {}
     if (prompt) { tView = "chat"; tSend(prompt); }
   }
   async function downloadModel(which) {
@@ -9156,6 +9163,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   window.addEventListener("hashchange", () => setTimeout(() => { if (!document.getElementById("litem")) document.body.classList.remove("litem-on"); }, 0));
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("#tabpeek"); if (!t) return; const on = document.body.classList.toggle("tabs-peek"); t.setAttribute("aria-expanded", on); t.setAttribute("aria-label", on ? "Hide the menu" : "Show the menu"); });
   window.addEventListener("hashchange", () => { document.body.classList.remove("tabs-peek"); const t = document.getElementById("tabpeek"); if (t) { t.setAttribute("aria-expanded", "false"); t.setAttribute("aria-label", "Show the menu"); } });
+  window.addEventListener("hashchange", () => setTimeout(() => { const t = document.getElementById("tutor"); if (t && !t.hidden) try { tRender(); } catch (e) {} }, 60));
   window.addEventListener("hashchange", route);
   window.addEventListener("hashchange", () => { const b = document.getElementById("px-back"); if (b) b.hidden = true; });
   document.addEventListener("keydown", (e) => { if (e.key === "Enter" && PX && PX.phase === "fb" && !/input|textarea|select|button/i.test(e.target.tagName)) { e.preventDefault(); const n = document.querySelector('[data-act="px-next"]'); if (n) n.click(); } });
@@ -9249,7 +9257,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140615";
+  var BUILD = "202611140629";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
