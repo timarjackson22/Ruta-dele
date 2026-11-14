@@ -34,6 +34,8 @@ public class MainActivity extends Activity {
     LlmBridge llm;
     TranslateBridge trb;
     AudioCapBridge aud;
+    WakeBridge wake;
+    ExamRecBridge erec;
 
     WebView web;
     TtsBridge tts;
@@ -75,6 +77,10 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new CaptionBridge(web), "AndroidCap"); // Practice › Videos caption window
         aud = new AudioCapBridge(this, web);
         web.addJavascriptInterface(aud, "AndroidAud"); // Practice › Videos: captions from the audio
+        wake = new WakeBridge(this, web);
+        web.addJavascriptInterface(wake, "AndroidWake"); // hands-free: "Ok Profe", on-device only
+        erec = new ExamRecBridge(this, web);
+        web.addJavascriptInterface(erec, "AndroidRec"); // exam speaking: record, words delivered when you stop
         ReminderReceiver.schedule(this); // keep the daily reminder set after updates
 
         bridgeJs = readAsset("bridge.js");
@@ -211,7 +217,17 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPause() {
+        // hands-free: never keep the microphone while the app isn't in front; the page restarts it when it's visible again
+        if (wake != null) wake.pause();
+        if (erec != null && erec.running) erec.stop(); // leaving mid-answer: keep what was said
+        super.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
+        if (wake != null) wake.destroy();
+        if (erec != null) erec.destroy();
         if (aud != null) aud.end();
         stt.destroy();
         llm.destroy();

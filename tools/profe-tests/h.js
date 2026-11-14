@@ -56,14 +56,21 @@ const MOCKS = () => {
   };
 };
 
+// ---- on-device wake listener (WakeBridge.java): the test feeds what it "hears" ----
+const WAKE = () => {
+  const W = (window.__W = { log: [], on: false, status: "ok" });
+  window.AndroidWake = { status: () => W.status, start(l) { W.log.push(["start", performance.now()]); setTimeout(() => { if (W.status !== "ok") { window.__awake && __awake.ev("state", W.status); return; } W.on = true; window.__awake && __awake.ev("state", "listening"); }, 10); }, stop() { W.log.push(["stop", performance.now()]); const was = W.on; W.on = false; if (was) setTimeout(() => window.__awake && __awake.ev("state", "stopped"), 5); } };
+  window.__hear = (t, final) => { if (!W.on) return false; window.__awake.ev(final ? "final" : "partial", t); return true; };
+};
 async function open(o = {}) {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.addInitScript(MOCKS); await c.addInitScript(BRIDGE);
+  if (o.wake) await c.addInitScript(WAKE);
   if (o.init) await c.addInitScript(o.init);
   const p = await c.newPage(); const errs = []; p.on("pageerror", (x) => errs.push(x.message));
   await p.goto("http://localhost:" + PORT + "/" + (o.hash || "#curso")); await p.waitForTimeout(1400);
   await p.evaluate(([l, w]) => { window.__T.lat = l; window.__T.wps = w; }, [+(process.env.LAT || 120), +(process.env.WPS || 5)]);
-  await p.click('[data-act="t-open"]'); await p.waitForTimeout(400);
+  if (!o.noOpen) { await p.click('[data-act="t-open"]'); await p.waitForTimeout(400); }
   const H = {
     b, p, errs,
     wait: (ms) => p.waitForTimeout(ms),

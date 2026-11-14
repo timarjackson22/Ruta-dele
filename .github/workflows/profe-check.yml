@@ -1,0 +1,19 @@
+name: Profe capability check
+
+# Profe's voice capabilities must stay in step with the app: every route and on-screen action has a voice status,
+# and the registry never points at something that no longer exists (tools/PROFE_HANDSFREE_BRIEF.md §7).
+on:
+  push:
+    paths: ["index.html", "tools/profe_registry.py", "tools/profe_acts.json", "tools/profe_check.js"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: node tools/profe_check.js index.html

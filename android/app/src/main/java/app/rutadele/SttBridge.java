@@ -23,7 +23,7 @@ public class SttBridge {
     String lang = "es-US";
     boolean interim = true, continuous = false, active = false, pending = false, ended = true;
     // each start() is a new session: late events from the previous one (a delayed end, an error from cancelling it) are ignored
-    int sid = 0; boolean stale = false;
+    int sid = 0; boolean stale = false, ready = false, retried = false;
     // the last words shown while speaking; some phones end a segment with "no match" instead of a result, so they are kept
     String lastPartial = "";
 
@@ -46,7 +46,7 @@ public class SttBridge {
             this.lang = lang == null || lang.isEmpty() ? "es-US" : lang;
             this.interim = interim;
             this.continuous = continuous;
-            sid++;
+            sid++; ready = false; retried = false;
             stale = !ended || rec != null; // a previous session may still report back: ignore it until this one is ready
             this.ended = false;
             if (!SpeechRecognizer.isRecognitionAvailable(act)) { js("error", "service-not-allowed"); end(); return; }
@@ -67,7 +67,7 @@ public class SttBridge {
         if (rec == null) {
             rec = SpeechRecognizer.createSpeechRecognizer(act);
             rec.setRecognitionListener(new RecognitionListener() {
-                @Override public void onReadyForSpeech(Bundle b) { stale = false; js("start", null); }
+                @Override public void onReadyForSpeech(Bundle b) { stale = false; ready = true; js("start", null); }
                 @Override public void onBeginningOfSpeech() { }
                 @Override public void onRmsChanged(float v) { }
                 @Override public void onBufferReceived(byte[] b) { }
@@ -88,7 +88,14 @@ public class SttBridge {
                     else { active = false; end(); }
                 }
                 @Override public void onError(int e) {
-                    if (ended || stale) return;
+                    if (ended) return;
+                    if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT) && !ready && !retried && active) {
+                        retried = true; final int my = sid;
+                        try { rec.destroy(); } catch (Exception ignored) { } rec = null;
+                        main.postDelayed(() -> { if (sid == my && active) begin(); }, 350);
+                        return;
+                    }
+                    if (stale) return;
                     if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
                     if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
                     if (continuous && active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {

@@ -114,7 +114,10 @@ const INIT = () => {
   await p.click('[data-act="ex-mic"][data-t="0"]'); await W(100);
   rec("Speaking: the box is read-only while recording", await p.$eval('[data-ex-t="0"]', (x) => x.readOnly));
   await sr("say", "hola me llamo Timar y vivo en la ciudad de Panamá con mi familia", false); await W(100);
-  rec("Speaking: words appear in the box while you speak", /me llamo Timar/.test(await box(0)));
+  rec("Live mode: words still being worked out show in the faint “Hearing” line, never in the box", /Hearing: hola me llamo Timar/.test(await p.textContent("#ex-live-0")) && !(await box(0)), (await p.textContent("#ex-live-0")) + " | box: " + (await box(0)));
+  await sr("say", "hola me llamo Timar", true); await sr("say", "y vivo en la ciudad de Panamá con mi familia", false); await W(60);
+  rec("Live mode: confirmed words go into the box and are only ever added to", (await box(0)) === "hola me llamo Timar", await box(0));
+  rec("Speaking time bar is shown while recording", !!(await p.$("#ex-tb-0")) && /\d:\d\d \/ 1:30/.test(await p.textContent("#ex-tt-0")), await p.textContent("#ex-rec-0").catch(() => "none"));
   // Finish while still recording, with the phrase never marked final (the Android case)
   await p.click('[data-act="ex-submit"]'); await W(100);
   rec("Speaking: finishing with empty tasks warns (names them)", /Tarea 2, Tarea 3, Tarea 4 have no answer yet/.test(await p.textContent('[data-act="ex-submit"]')), await p.textContent('[data-act="ex-submit"]'));
@@ -173,6 +176,7 @@ const INIT = () => {
   // the clock runs out while recording
   await go("a1-examen-3-oral"); await start(false);
   await p.click('[data-act="ex-mic"][data-t="0"]'); await W(100); await sr("say", "me llamo Timar y tengo treinta años y soy de Panamá", false); await W(50);
+  rec("Timed paper: the paper clock bar is shown and filling", !!(await p.$("#ex-pbar")));
   await p.evaluate(() => (window.__ex().end = Date.now() - 1)); await p.waitForFunction(() => window.__ex().phase === "result", null, { timeout: 8000 }); await W(200);
   rec("Speaking: when time runs out mid-sentence, the words are kept and the paper is marked as late", /Time ran out/.test(await p.textContent("#app")) && /me llamo Timar/.test(await p.textContent("#app")));
   // leaving the page while recording
@@ -202,7 +206,7 @@ const INIT = () => {
   const raw = await p.evaluate(() => { const a = []; ["lectura", "escritura"].forEach(() => {}); return document.body.innerText.match(/<br>|\*\*/g); });
   rec("No raw <br> or ** anywhere on the speaking paper", !raw, JSON.stringify(raw));
   const hb = await p.$eval(".exbar", (x) => x.getBoundingClientRect().height);
-  rec("Exam header stays one line (compact)", hb < 70, hb);
+  rec("Exam header stays compact (title on one line + clock bar)", hb < 90 && (await p.$eval(".exbar .ext b", (x) => x.getBoundingClientRect().height)) < 30, hb);
   await p.evaluate(() => (window.__ex().end = Date.now() - 1)); await p.waitForFunction(() => window.__ex().phase === "result", null, { timeout: 8000 }); await W(200);
   rec("Time running out on an empty speaking paper marks it (0, explained), not stuck at 0:00", /Time ran out/.test(await p.textContent("#app")) && (await p.$$eval(".exnone", (x) => x.length)) === 4);
   for (const k of ["lectura", "escritura"]) { await go("a1-examen-9-" + k); await start(true); const r = await p.evaluate(() => document.body.innerText.match(/<br>|\*\*/g)); rec("No raw <br> or ** on the " + k + " paper", !r, JSON.stringify(r)); await go("a1"); }
@@ -220,6 +224,51 @@ const INIT = () => {
   await go("a1-examen-7"); await p.click('[data-act="ex-reset"]'); await W(300);
   rec("Clear results resets the exam", !(await p.$(".exresult")) && /Start ›/.test(await p.textContent(".expapers")));
   rec("No script errors (Android)", !p.er.length, p.er.join(" | "));
+
+  // ---------- H. Android: record, then the words ----------
+  const ra = await (async () => { const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" }); await c.addInitScript(INIT);
+    await c.addInitScript(() => { const A = (window.__AR = { log: [], status: "ok", words: "", fail: null, lvl: null });
+      window.AndroidRec = { status: () => A.status, start(l) { A.log.push("start"); setTimeout(() => { if (A.fail) { __arec.ev("state", "error:" + A.fail); return; } __arec.ev("state", "recording"); A.lvl = setInterval(() => __arec.ev("level", A.loud ? "0.5" : "0.01"), 160); }, 20); },
+        stop() { A.log.push("stop"); clearInterval(A.lvl); setTimeout(() => { __arec.ev("state", "transcribing"); setTimeout(() => __arec.ev("done", A.words), 300); }, 20); }, cancel() { A.log.push("cancel"); clearInterval(A.lvl); } }; });
+    await c.route("**/fonts.googleapis.com/**", (r) => r.fulfill({ contentType: "text/css", body: "" })); const pp = await c.newPage(); const er = []; pp.on("pageerror", (x) => er.push(x.message)); pp.er = er; return pp; })();
+  await ra.goto(URL + "#a1-examen-10-oral"); await ra.waitForTimeout(1500); await ra.click('[data-act="ex-start"][data-free="1"]'); await ra.waitForTimeout(200);
+  await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(150);
+  await ra.evaluate(() => { window.__AR.loud = true; window.__AR.words = "Hola, me llamo Timar. Soy de Panamá y trabajo en un banco."; }); await ra.waitForTimeout(900);
+  const rb = await ra.evaluate(() => ({ box: document.querySelector('[data-ex-t="0"]').value, st: document.getElementById("ex-live-0").textContent, lvl: getComputedStyle(document.querySelector("#ex-lvl-0 i:nth-child(3)")).transform, tb: document.getElementById("ex-tb-0").style.width }));
+  rec("Record mode: nothing appears or changes in the box while you speak", rb.box === "" && /Recording… your words appear when you stop/.test(rb.st), JSON.stringify(rb));
+  rec("Record mode: the level meter moves and the time bar fills", rb.lvl !== "none" && /matrix/.test(rb.lvl) && parseFloat(rb.tb) > 0, JSON.stringify(rb));
+  await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(100);
+  rec("Record mode: Stop shows “Writing down what you said…”", /Writing down what you said/.test(await ra.textContent("#ex-live-0")));
+  await ra.waitForTimeout(600);
+  rec("Record mode: then the words appear, saved", (await ra.$eval('[data-ex-t="0"]', (x) => x.value)) === "Hola, me llamo Timar. Soy de Panamá y trabajo en un banco." && /Saved · 12 words/.test(await ra.textContent("#ex-live-0")), await ra.textContent("#ex-live-0"));
+  // finishing while recording waits for the words
+  await ra.click('[data-act="ex-mic"][data-t="1"]'); await ra.waitForTimeout(150); await ra.evaluate(() => { window.__AR.words = "Mi barrio es tranquilo y tiene un parque muy bonito."; });
+  await ra.click('[data-act="ex-submit"]'); await ra.waitForTimeout(100); await ra.click('[data-act="ex-submit"]');
+  await ra.waitForFunction(() => window.__ex().phase === "result", null, { timeout: 15000 });
+  const r1 = await ra.evaluate(() => window.__ex().txt[1]);
+  rec("Record mode: Finish while recording writes the words down first, then marks", r1 === "Mi barrio es tranquilo y tiene un parque muy bonito." && /Mi barrio es tranquilo/.test(await ra.textContent("#app")), r1);
+  // a conversation: the examiner asks, the answer is recorded, quiet after speaking moves on
+  await ra.click('[data-act="ex-again"]'); await ra.waitForTimeout(300); await ra.evaluate(() => { location.hash = "a1-examen-10-oral"; }); await ra.waitForTimeout(500); await ra.click('[data-act="ex-start"][data-free="1"]'); await ra.waitForTimeout(200);
+  const ask2 = await ra.evaluate(() => window.__ex().tasks[2].ask);
+  await ra.evaluate(() => { window.__said = []; window.__AR.words = "Tengo treinta años."; window.__AR.loud = true; }); await ra.click('[data-act="ex-mic"][data-t="2"]');
+  await ra.waitForFunction(() => window.__AR.log.filter((x) => x === "start").length >= 3, null, { timeout: 4000 }).catch(() => {});
+  await ra.waitForTimeout(600); await ra.evaluate(() => { window.__AR.loud = false; }); // quiet after the answer
+  await ra.waitForFunction((q) => window.__said.includes(q), ask2[1], { timeout: 6000 }).catch(() => {});
+  rec("Record mode, conversation: quiet after your answer moves to the next question", await ra.evaluate((q) => window.__said.includes(q) && window.__ex().qa[2][0].a === "Tengo treinta años.", ask2[1]), JSON.stringify(await ra.evaluate(() => [window.__said, window.__ex().qa[2]])));
+  await ra.evaluate(() => { window.__AR.words = "Vivo con mi familia."; window.__AR.loud = true; }); await ra.waitForTimeout(500);
+  await ra.click('[data-act="ex-next"][data-t="2"]'); await ra.waitForFunction((q) => window.__said.includes(q), ask2[2], { timeout: 6000 }).catch(() => {});
+  rec("Record mode, conversation: Next question writes down the answer and asks the next", await ra.evaluate(() => window.__ex().qa[2][1].a === "Vivo con mi familia."), JSON.stringify(await ra.evaluate(() => window.__ex().qa[2])));
+  await ra.click('[data-act="ex-mic"][data-t="2"]').catch(() => {}); await ra.waitForTimeout(800);
+  // time up while recording
+  await ra.evaluate(() => { location.hash = "a1-examen-11-oral"; }); await ra.waitForTimeout(500); await ra.click('[data-act="ex-start"]:not([data-free])'); await ra.waitForTimeout(200);
+  await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(200); await ra.evaluate(() => { window.__AR.words = "Me llamo Ana y estudio medicina."; window.__ex().end = Date.now() - 1; });
+  await ra.waitForFunction(() => window.__ex().phase === "result", null, { timeout: 15000 }).catch(() => {});
+  rec("Record mode: time up while recording writes the words down, then marks (late)", /Time ran out/.test(await ra.textContent("#app")) && /Me llamo Ana y estudio medicina/.test(await ra.textContent("#app")));
+  // no Spanish pack: says why and carries on live
+  await ra.evaluate(() => { location.hash = "a1-examen-12-oral"; window.__AR.fail = "no-lang"; }); await ra.waitForTimeout(500); await ra.click('[data-act="ex-start"][data-free="1"]'); await ra.waitForTimeout(200);
+  await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(400);
+  rec("No offline Spanish pack: says where to get it and carries on with live words", /Offline speech recognition/.test(await ra.textContent("#app")) && (await ra.evaluate(() => !!window.__sr())), await ra.textContent("#ex-live-0"));
+  rec("No script errors (record mode)", !ra.er.length, ra.er.join(" | "));
 
   // ---------- G. iPhone: one phrase per session ----------
   const q = await mk("iPhone 13"); const Wq = (ms) => q.waitForTimeout(ms);

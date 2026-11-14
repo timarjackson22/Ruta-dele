@@ -1,0 +1,956 @@
+{
+"aw-back": {
+"voice": "unsuitable",
+"why": "read-aloud 'back to my place' button"
+},
+"bk-save": {
+"voice": "unsuitable",
+"why": "bookmark save"
+},
+"cue-add": {
+"voice": "unsuitable",
+"why": "Verbatim cue editing"
+},
+"cue-more": {
+"voice": "unsuitable",
+"why": "Verbatim cue editing"
+},
+"cue-say": {
+"voice": "unsuitable",
+"why": "listen to one cue (tap target)"
+},
+"dk-addrow": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-cancel": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-close": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-create": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-del": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-new": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-put": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-put-new": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-ren": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-ren-ok": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dk-rm": {
+"voice": "unsuitable",
+"why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
+},
+"dr-again": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-b": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-check": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-m": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-mic": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-next": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-pick": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-play": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-skip": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"dr-un": {
+"voice": "pending",
+"why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
+},
+"ex-again": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-ans": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-mic": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-next": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-play": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-reset": "exam.reset",
+"ex-start": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"ex-submit": {
+"voice": "pending",
+"why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
+},
+"fc-again": {
+"voice": "pending",
+"why": "flashcards: 'again' by voice planned"
+},
+"fc-know": {
+"voice": "pending",
+"why": "flashcards: 'I know it' by voice planned"
+},
+"fc-new": {
+"voice": "pending",
+"why": "flashcards"
+},
+"fc-reset": {
+"voice": "pending",
+"why": "flashcards reset: needs confirmation"
+},
+"fc-rev": {
+"voice": "pending",
+"why": "flashcards: reviewing by voice (again / I know it) is planned"
+},
+"fc-shuffle": {
+"voice": "pending",
+"why": "flashcards"
+},
+"fx-say": {
+"voice": "unsuitable",
+"why": "listen to a correction (tap target)"
+},
+"g-lvl": {
+"voice": "unsuitable",
+"why": "grammar page filters and sorting"
+},
+"g-more": {
+"voice": "unsuitable",
+"why": "grammar page filters and sorting"
+},
+"g-test": {
+"voice": "unsuitable",
+"why": "grammar page filters and sorting"
+},
+"g-tog": {
+"voice": "unsuitable",
+"why": "grammar page filters and sorting"
+},
+"g-type": {
+"voice": "unsuitable",
+"why": "grammar page filters and sorting"
+},
+"goal": {
+"voice": "pending",
+"why": "daily goal setting"
+},
+"gp-next": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"gp-opt": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"gp-pause": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"gp-play": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"gp-prev": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"gp-stop": {
+"voice": "pending",
+"why": "guide player controls: pause/resume by voice planned"
+},
+"hf-tap": {
+"voice": "unsuitable",
+"why": "the tap-to-talk button of hands-free itself"
+},
+"hide-en": {
+"voice": "pending",
+"why": "hide English on lesson pages"
+},
+"jump": {
+"voice": "unsuitable",
+"why": "in-page jump links"
+},
+"l-cf": {
+"voice": "unsuitable",
+"why": "cue font chooser"
+},
+"l-close": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-cue": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-dcheck": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-dsay": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-en": "play.english",
+"l-from": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-lf": {
+"voice": "unsuitable",
+"why": "reading font chooser"
+},
+"l-next": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-play": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-prev": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-rf": {
+"voice": "unsuitable",
+"why": "reading font chooser"
+},
+"l-rhythm": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-saysel": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-sent": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-text": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"l-word": {
+"voice": "pending",
+"why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
+},
+"lh-opts": {
+"voice": "unsuitable",
+"why": "headline options menu (rename/delete need typing)"
+},
+"lq-back": {
+"voice": "unsuitable",
+"why": "visual navigation helpers"
+},
+"lq-where": {
+"voice": "unsuitable",
+"why": "visual navigation helpers"
+},
+"mc": {
+"voice": "unsuitable",
+"why": "generic multiple-choice widget outside lessons"
+},
+"mic-close": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mic-copy": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mic-help": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mic-retry": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mic-safari": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mic-test": {
+"voice": "unsuitable",
+"why": "microphone help dialogs (shown when the mic fails, so voice can't reach them)"
+},
+"mock-reset": {
+"voice": "pending",
+"why": "mock test reset: will need voice confirmation like exam reset"
+},
+"my-clean": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-clean-save": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-del": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-import": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-q": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-rename": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-stop": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-tab": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-tr": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-trk": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"my-trsel": {
+"voice": "unsuitable",
+"why": "your own texts: importing, cleaning, renaming and deleting need typing or files"
+},
+"pa-note": {
+"voice": "unsuitable",
+"why": "note editing"
+},
+"pc-hear": {
+"voice": "complete",
+"why": "pronunciation check is itself voice-driven"
+},
+"pc-mic": {
+"voice": "complete",
+"why": "pronunciation check is itself voice-driven"
+},
+"pc-skip": {
+"voice": "complete",
+"why": "pronunciation check is itself voice-driven"
+},
+"pl-more": {
+"voice": "pending",
+"why": "reading player details (sentence jumps); pause/resume/speed/English are covered"
+},
+"pl-play": "play.pause",
+"play-dlg": {
+"voice": "unsuitable",
+"why": "dialogue play buttons"
+},
+"pr-clear": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-conj": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-exit": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-lvl": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-mic": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-next": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-report": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-rp": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-skip": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-sp": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pr-vocab": {
+"voice": "complete",
+"why": "Profe's practice drills are already voice-driven (they listen for answers)"
+},
+"pv-av": {
+"voice": "unsuitable",
+"why": "pronunciation of a word: tap targets"
+},
+"pv-col": {
+"voice": "unsuitable",
+"why": "pronunciation of a word: tap targets"
+},
+"pv-diag": {
+"voice": "unsuitable",
+"why": "shows mic diagnostics"
+},
+"pv-try": {
+"voice": "unsuitable",
+"why": "pronunciation of a word: tap targets"
+},
+"px-back": {
+"voice": "unsuitable",
+"why": "'back to the question' jump button (visual)"
+},
+"px-dunno": "q.show",
+"px-go": "lesson.quiz",
+"px-next": "q.next",
+"px-pick": "q.pick",
+"px-prev": "q.prev",
+"px-reset": {
+"voice": "pending",
+"why": "reset this practice: will need voice confirmation"
+},
+"px-restart": "q.restart",
+"px-retry": {
+"voice": "pending",
+"why": "retry missed questions: say 'start the questions again' for now"
+},
+"px-review": {
+"voice": "pending",
+"why": "review links inside feedback"
+},
+"px-show": "q.show",
+"px-skip": "q.skip",
+"px-submit": "q.check",
+"ra-next": {
+"voice": "pending",
+"why": "read-aloud controls beyond start/pause/resume"
+},
+"ra-pp": {
+"voice": "pending",
+"why": "read-aloud controls beyond start/pause/resume"
+},
+"ra-prev": {
+"voice": "pending",
+"why": "read-aloud controls beyond start/pause/resume"
+},
+"ra-start": "lesson.read",
+"ra-stop": {
+"voice": "pending",
+"why": "read-aloud controls beyond start/pause/resume"
+},
+"region": {
+"voice": "pending",
+"why": "Spain/Latin America setting"
+},
+"rem-ics": {
+"voice": "unsuitable",
+"why": "calendar file download"
+},
+"reset-ex": {
+"voice": "pending",
+"why": "reset an exercise: needs confirmation"
+},
+"reveal": {
+"voice": "unsuitable",
+"why": "tap to reveal"
+},
+"say": {
+"voice": "unsuitable",
+"why": "listen buttons next to words (tap targets)"
+},
+"show-ans": {
+"voice": "unsuitable",
+"why": "reveal answer in older widgets"
+},
+"sr-30": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-add": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-ahead": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-cram": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-flip": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-normal": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-rate": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-show": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"sr-xnew": {
+"voice": "pending",
+"why": "flashcard grading by voice (again/hard/good/easy) is planned"
+},
+"t-ask": "profe.explain",
+"t-check": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-chip": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-close": "profe.close",
+"t-delmodel": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-dlmodel": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-en": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-engine": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-forgetkey": {
+"voice": "unsuitable",
+"why": "removes the saved API key (settings)"
+},
+"t-mic": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-ncancel": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-ndel": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-ndl": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-new": "profe.new",
+"t-ntest": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-open": "profe.open",
+"t-open-s": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-rate": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-remember": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-ret": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-savekey": {
+"voice": "unsuitable",
+"why": "API key entry needs typing"
+},
+"t-savemem": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-say": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-speak": "practise.convo",
+"t-stop": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-tab": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-task-end": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"t-voice": {
+"voice": "unsuitable",
+"why": "Profe panel buttons: Profe is driven by talking to it directly"
+},
+"th-play": {
+"voice": "pending",
+"why": "theme vocabulary audio buttons"
+},
+"th-rep": {
+"voice": "pending",
+"why": "theme vocabulary audio buttons"
+},
+"toggle-done": {
+"voice": "unsuitable",
+"why": "mark a unit done (tap)"
+},
+"tts-settings": {
+"voice": "unsuitable",
+"why": "opens Android voice settings"
+},
+"ui-cue": {
+"voice": "pending",
+"why": "display setting"
+},
+"ui-fs": {
+"voice": "pending",
+"why": "display settings (theme, palette, text size): 'dark mode' by voice planned"
+},
+"ui-pal": {
+"voice": "pending",
+"why": "display settings (theme, palette, text size): 'dark mode' by voice planned"
+},
+"ui-rf": {
+"voice": "pending",
+"why": "reading font setting"
+},
+"ui-sfx": {
+"voice": "pending",
+"why": "sound effects setting"
+},
+"ui-theme": {
+"voice": "pending",
+"why": "display settings (theme, palette, text size): 'dark mode' by voice planned"
+},
+"upd-check": {
+"voice": "unsuitable",
+"why": "check for app updates"
+},
+"v-back5": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-catch": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-catch-x": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-cont": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-copyrep": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-deck": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-del": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-edit": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-f": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-loop": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-mood": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-more": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-open": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-rate": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-remove": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-rename": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-report": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-restore": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-ret-check": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-ret-mic": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-ret-profe": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-rm": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-seek": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-shadow": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-showhid": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"v-top": {
+"voice": "unsuitable",
+"why": "video page scroll helper"
+},
+"v-type": {
+"voice": "unsuitable",
+"why": "video library filter"
+},
+"v-undo": {
+"voice": "unsuitable",
+"why": "undo a removed video (tap toast)"
+},
+"va-redo": {
+"voice": "unsuitable",
+"why": "redo audio captions"
+},
+"va-start": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"va-stop": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-catch": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-close": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-cue": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-en": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-hide": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-retry": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vc-seek": {
+"voice": "unsuitable",
+"why": "tap a caption line to jump"
+},
+"vc-w": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"voices": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vq": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vs-close": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"vs-try": {
+"voice": "pending",
+"why": "video page controls: pause/resume covered; captions and words by touch"
+},
+"w-again": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-ans": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-band": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-en": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-forms": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-hide-en": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-hide-known": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-inf": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-known": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-lvl": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-new": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-next": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-page": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-play": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-quiz": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-quiz-exit": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-rep": {
+"voice": "unsuitable",
+"why": "writing report detail"
+},
+"w-start": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-submit": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+},
+"w-type": {
+"voice": "unsuitable",
+"why": "writing tasks need typing"
+}
+}
