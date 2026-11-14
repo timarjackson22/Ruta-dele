@@ -1,10 +1,18 @@
   /* ===================== videos: watch Spanish and practise with it (tools/VIDEO_BRIEF.md) ===================== */
   const VID_START = [];
   // the library: short clips (4 minutes at most) of native speakers, by type and estimated level; IDs found by web search (tools/VIDEO_LIBRARY_BRIEF.md)
-  const VCATS = [["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"]];
+  const VCATS = [["dele", "DELE exam guides", "Guía del DELE"], ["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"]];
   const VCL = Object.fromEntries(VCATS.map((c) => [c[0], c]));
   const VCLIP = 240;
   [
+    // what each level's DELE exam contains (checked embeddable; shown in full, not clipped)
+    ["1zhIqQ0SV88", "dele", "A1", "¿Qué es el DELE? (A1 and up)", "a por el DELE", "What the DELE is, how the papers work at every level and how to prepare: the best overview for A1, where no A1-only guide was found."],
+    ["UnwIOx-qTHU", "dele", "A2", "DELE A2: estructura completa, tiempos y pruebas", "a por el DELE", "The four papers of DELE A2, their tasks and timing, explained."],
+    ["i1Srwh2Jza0", "dele", "B1", "DELE B1: estructura completa, tiempos y evaluación", "a por el DELE", "Every DELE B1 paper, the timing and how it is marked."],
+    ["fkRLpWCg6nk", "dele", "B2", "Cómo es el examen DELE B2", "Linguatua", "DELE B2: structure, duration and scoring."],
+    ["BaIJbViW3L4", "dele", "C1", "Todo sobre el examen DELE C1", "a por el DELE", "DELE C1 papers, timing and assessment."],
+    ["CQoEcy23ovw", "dele", "C2", "Estructura del examen DELE C2", "a por el DELE", "How the DELE C2 exam is organised: its three tests and their tasks."],
+    ["tFy4phJyzI8", "dele", "B1", "¿Cómo se corrige el DELE? (all levels)", "a por el DELE", "How the DELE is marked and what you need for APTO, at every level."],
     ["W0LLExzov2A", "dialogos", "A1", "En el restaurante", "Language Freak", "A short, easy conversation in a restaurant: ordering, asking and paying."],
     ["3DWcMCxBN24", "dialogos", "A1", "Conversaciones en el restaurante", "Español Rápido", "Several short restaurant conversations for beginners."],
     ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "Talk Español", "A real conversation ordering food, the way natives say it."],
@@ -45,7 +53,7 @@
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "A Language Learning channel", "A podcast in Spanish from Spain for learners."],
     ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Spanishland School", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
-  ].forEach(([yt, cat, lvl, t, ch, note]) => VID_START.push({ yt, cat, lvl, t, ch, note, q: [], clip: [0, VCLIP] }));
+  ].forEach(([yt, cat, lvl, t, ch, note]) => VID_START.push({ yt, cat, lvl, t, ch, note, q: [], clip: cat === "dele" ? null : [0, VCLIP] }));
   const ytId = (s) => { const m = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(String(s || "")) || /^([\w-]{11})$/.exec(String(s || "").trim()); return m ? m[1] : null; };
   const vMine = () => (S.myv = S.myv || []);
   const vData = (id) => { S.vid = S.vid || {}; return (S.vid[id] = S.vid[id] || { c: [] }); };
