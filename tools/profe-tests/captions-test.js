@@ -10,7 +10,7 @@ const LINES = [
   [9.5, "Estoy cansao de trabajar todo el día.", "I'm tired of working all day."],
   [13, "Hubo un golazo y luego una borrasca.", "There was a great goal and then a storm."],
 ];
-for (let i = 0; i < 16; i++) LINES.push([17 + i * 4, "Esta es la frase número " + (i + 6) + " del vídeo de prueba.", "This is sentence number " + (i + 6) + " of the test video."]);
+for (let i = 0; i < 16; i++) LINES.push([17 + i * 4, i === 5 ? "Hoy hablamos con Joan Manuel Serrat en Madrid." : "Esta es la frase número " + (i + 6) + " del vídeo de prueba.", i === 5 ? "Today we talk with Joan Manuel Serrat in Madrid." : "This is sentence number " + (i + 6) + " of the test video."]);
 LINES.push([250, "Esta frase está fuera del clip.", "This sentence is outside the clip."]);
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/'/g, "&amp;#39;");
 const srv1 = (k) => '<?xml version="1.0" encoding="utf-8" ?><transcript>' + LINES.map((l, i) => '<text start="' + l[0] + '" dur="' + ((LINES[i + 1] || [l[0] + 4])[0] - l[0]) + '">' + esc(l[k]) + "</text>").join("") + "</transcript>";
@@ -79,6 +79,15 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   rec("…little words skip ahead: on 'el', the tip is already on agua → water", tp1 && tp1.word === "agua" && /water/.test(tp1.tip), JSON.stringify(tp1) + " now=" + (await nowWord()));
   await T(0.3, 2); await p.waitForTimeout(400); tp1 = await tipOf(); await T(1.85, 2); await p.waitForTimeout(400); const tp2 = await tipOf();
   rec("…shortened forms say what they stand for (pa' → for (para))", tp2 && tp2.word === "pa'" && /\(para\)/.test(tp2.tip), JSON.stringify(tp2));
+  // names are said back: one bubble for a whole name, no skipping
+  await T(38.1, 2); await p.waitForTimeout(400); let nm = await tipOf();
+  rec("Names said back: on 'con' the bubble is already on «Joan Manuel Serrat»", nm && nm.word === "Joan" && nm.tip === "Joan Manuel Serrat" && nm.above, JSON.stringify(nm) + " now=" + (await nowWord()));
+  await T(38.8, 2); await p.waitForTimeout(400); nm = await tipOf();
+  rec("…the bubble stays while the whole name is spoken (on 'Manuel')", nm && nm.tip === "Joan Manuel Serrat" && (await nowWord()) === "Manuel", JSON.stringify(nm));
+  await T(39.9, 2); await p.waitForTimeout(400); nm = await tipOf();
+  rec("…and the next name follows straight after (en → «Madrid»)", nm && nm.word === "Madrid" && nm.tip === "Madrid", JSON.stringify(nm) + " now=" + (await nowWord()));
+  await T(37.05, 2); await p.waitForTimeout(400); nm = await tipOf();
+  rec("…an ordinary word at the start is still translated (Hoy → today)", nm && nm.word === "Hoy" && /today/i.test(nm.tip), JSON.stringify(nm));
   await p.click('[data-act="vc-cue"]'); await p.waitForTimeout(300);
   rec("Cue tips button turns them off", !(await tipOf()) && (await p.getAttribute('[data-act="vc-cue"]', "aria-pressed")) === "false");
   await p.reload(); await p.waitForTimeout(1300); await T(3.7, 2); await p.waitForTimeout(400);
