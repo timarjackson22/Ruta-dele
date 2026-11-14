@@ -63,6 +63,44 @@
     if (!en.length) return; let j = 0;
     es.forEach((c) => { while (j < en.length - 1 && Math.abs(en[j + 1].s - c.s) <= Math.abs(en[j].s - c.s)) j++; if (Math.abs(en[j].s - c.s) < 1.2) c.en = en[j].text; });
   }
+  // caption fragments → sentences. Channel captions are split at their punctuation; YouTube's automatic captions have none,
+  // so sentences start at clear pauses (word timings) and the app adds capitals, ¿…?, full stops and a few commas.
+  const VQW = new Set(["qué", "cómo", "dónde", "cuándo", "cuál", "cuáles", "quién", "quiénes", "cuánto", "cuánta", "cuántos", "cuántas", "adónde"]);
+  const VOPEN = new Set(["bueno", "pues", "entonces", "oye", "mira", "hola", "sí", "vale", "claro", "gracias", "eh", "ok", "okey", "vaya", "venga", "perdón", "disculpa", "mmm", "ah", "oh"]);
+  function vcPunct(ws) {
+    const out = ws.slice(), lw = out.map((w) => w.toLowerCase()), n = out.length;
+    if (n > 2 && VOPEN.has(lw[0])) out[0] += ",";
+    for (let i = 2; i < n; i++) if (/^(pero|aunque|sino)$/.test(lw[i]) && !/[,;:]$/.test(out[i - 1])) out[i - 1] += ",";
+    const qi = VQW.has(lw[0]) || (lw[0] === "por" && lw[1] === "qué") ? 0 : VOPEN.has(lw[0]) && (VQW.has(lw[1]) || (lw[1] === "por" && lw[2] === "qué")) ? 1 : -1;
+    const tag = n > 3 && qi < 0 && (lw[n - 1] === "verdad" || (lw[n - 1] === "no" && !/^(o|que|si|porque|ni)$/.test(lw[n - 2])));
+    if (tag) { out[n - 2] = out[n - 2].replace(/,?$/, ","); out[n - 1] = "¿" + out[n - 1] + "?"; }
+    else if (qi >= 0) { out[qi] = "¿" + out[qi]; out[n - 1] += "?"; }
+    else out[n - 1] += ".";
+    out[0] = out[0].replace(/^(¿?)(\p{L})/u, (m, a, b) => a + b.toUpperCase());
+    return out;
+  }
+  function vcSentences(cues, en, kind) {
+    const W = [];
+    cues.forEach((c) => {
+      if (c.words && c.words.length) c.words.forEach((x) => W.push({ t: x.t, w: x.w }));
+      else { const ws = c.text.split(/\s+/).filter(Boolean), tot = ws.reduce((a, b) => a + b.length + 1, 0), dur = Math.max(0.5, (c.e - c.s) * 0.92); let acc = 0; ws.forEach((w) => { W.push({ t: c.s + (dur * acc) / tot, w }); acc += w.length + 1; }); }
+    });
+    const END = /[.?!…]["»”)]?$/, hasP = W.filter((x) => END.test(x.w)).length >= Math.max(1, W.length / 45), S = [];
+    let cur = []; const push = () => { if (cur.length) S.push(cur); cur = []; };
+    for (let i = 0; i < W.length; i++) {
+      const x = W[i]; if (/^[\[(].*[\])]$/.test(x.w)) { push(); S.push([x]); continue; } // [Música], (risas)
+      cur.push(x); const nx = W[i + 1]; if (!nx) { push(); break; }
+      const gap = nx.t - x.t;
+      if (hasP) { if (END.test(x.w) || cur.length >= 40) push(); }
+      else if ((gap >= 0.8 && cur.length >= 3) || gap >= 1.6) push();
+      else if (cur.length >= 22) { let best = -1, bg = 0; for (let k = 6; k < cur.length - 2; k++) { const g = cur[k + 1].t - cur[k].t; if (g > bg) { bg = g; best = k; } } if (best < 0) best = cur.length - 2; const rest = cur.splice(best + 1); S.push(cur); cur = rest; }
+    }
+    const out = S.map((ws) => { const raw = ws.map((x) => x.w), mark = /^[\[(]/.test(raw[0]); const txt = hasP || mark ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" "), mark }; });
+    out.forEach((c, i) => { c.e = out[i + 1] ? out[i + 1].s : c.s + Math.max(2, c.words.length * 0.45); });
+    if (en.length && kind !== "asr") out.forEach((c) => { const xs = en.filter((x) => x.s >= c.s - 0.3 && x.s < c.e - 0.3).map((x) => x.text); if (xs.length) c.en = xs.join(" "); });
+    VCAP.addedP = !hasP;
+    return out;
+  }
   const vcCache = new Map();
   function vcLoad(id) {
     VCAP.id = id; VCAP.cues = []; VCAP.cur = -1; VCAP.word = -1; VCAP.overlayOff = false;
@@ -86,8 +124,8 @@
   }
   function vcGot(id, r) {
     const es = vcParse(r.es), en = vcParse(r.en), v = vFind(id), hi = v && v.clip ? v.clip[1] : 1e9, lo = v && v.clip ? v.clip[0] : 0;
-    vcPair(es, en);
-    VCAP.cues = es.filter((c) => c.s < hi && c.e > lo); VCAP.kind = r.kind;
+    VCAP.kind = r.kind; if (+r.secs > 0) VP.secs = +r.secs;
+    VCAP.cues = vcSentences(es.filter((c) => c.s < hi && c.e > lo), en, r.kind).filter((c) => c.s < hi);
     if (!VCAP.cues.length) { vcState("none"); return; }
     vcRender(); vcStart();
   }
@@ -118,12 +156,13 @@
   function vcRender() {
     const w = document.getElementById("vcap"); if (!w) return; const P = vcPref();
     w.classList.remove("vcap-empty"); w.dataset.state = "ready"; w.classList.toggle("show-en", !!P.en); w.classList.toggle("hide-text", !!P.hide);
-    w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue" data-i="' + i + '"><button class="vct" data-act="vc-seek" data-t="' + c.s.toFixed(2) + '" aria-label="Play from ' + mmss(c.s) + '">' + mmss(c.s) + '</button><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div>';
-    const n = document.getElementById("vcap-note"); if (n) n.textContent = VCAP.kind === "asr" ? "YouTube's automatic Spanish captions: they can mishear a word now and then." : "The channel's own Spanish captions.";
+    w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue' + (c.mark ? " mark" : "") + '" data-i="' + i + '"><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div><div class="vtip" id="vtip" hidden role="status"></div>';
+    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.");
     VCAP.cur = -1; VCAP.word = -1; vcTick(true);
   }
   // the video's clock, smoothed between the player's updates so lines and words change on time
   function vcNow() {
+    if (VP.ad) return -1; // an ad is playing: the captions wait at the start
     const raw = vpT(), now = performance.now(); let st = 2; try { st = VP.p.getPlayerState(); } catch (e) {}
     if (raw !== VCAP.raw) { VCAP.raw = raw; VCAP.t0 = raw; VCAP.n0 = now; }
     return st === 1 ? VCAP.t0 + Math.min(0.6, ((now - VCAP.n0) / 1000) * (VP.rate || 1)) : raw;
@@ -141,15 +180,36 @@
       rows.forEach((r, i) => { r.classList.toggle("on", i === k); r.classList.toggle("past", i < k); });
       VCAP.cur = k; VCAP.word = -1;
       const row = rows[Math.max(0, k)], inner = w.querySelector("#vcap-in");
-      if (row && inner) { const y = Math.max(0, row.offsetTop - w.clientHeight * 0.2); inner.style.transform = "translateY(" + -y + "px)"; }
+      if (row && inner) { const y = Math.max(0, row.offsetTop - w.clientHeight * (cueOn() ? 0.3 : 0.2)); inner.style.transform = "translateY(" + -y + "px)"; }
       if (vcPref().en) vcFillEn(k);
     }
-    if (k < 0) return;
+    if (k < 0) { const tp = document.getElementById("vtip"); if (tp) tp.hidden = true; return; }
     const c = VCAP.cues[k], row = w.querySelectorAll(".vcue")[k], spans = row ? row.querySelectorAll(".ves .vword") : []; if (!spans.length) return;
     let wi;
     if (c.words && c.words.length === spans.length) { wi = 0; for (let i = 0; i < c.words.length; i++) if (c.words[i].t <= t + 0.05) wi = i; }
     else { const len = [...spans].map((s) => s.textContent.length + 1), tot = len.reduce((a, b) => a + b, 0), f = Math.min(1, Math.max(0, (t - c.s) / Math.max(0.5, (c.e - c.s) * 0.92))); let acc = 0; wi = spans.length - 1; for (let i = 0; i < len.length; i++) { acc += len[i]; if (acc / tot > f) { wi = i; break; } } }
-    if (wi !== VCAP.word) { spans.forEach((s, i) => { s.classList.toggle("now", i === wi); s.classList.toggle("said", i < wi); }); VCAP.word = wi; }
+    if (wi !== VCAP.word) { spans.forEach((s, i) => { s.classList.toggle("now", i === wi); s.classList.toggle("said", i < wi); }); VCAP.word = wi; vcTip(k, spans, wi); }
+  }
+  // cue tips: the English bubble above the word being said; little words (de, el…) and names jump ahead to the next real word
+  const VLITTLE = /^(el|la|los|las|lo|un|una|unos|unas|de|del|a|al|y|e|o|u|en|que|con|se|me|te|le|les|nos|os|mi|mis|tu|tus|su|sus|es|por|para|no|ni|si|ya|pues|eh|ah)$/;
+  function vcGl(span, prev) {
+    const inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null, w = span.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, ""), lw = w.toLowerCase();
+    if (inf) return inf.k === "short" ? (cueOne(cueGloss(inf.base.split(/[ (]/)[0])) || inf.base) + " (" + inf.base.split(" (")[0] + ")" : String(inf.mean).split(/[;(]/)[0].trim();
+    if (VLITTLE.test(lw) || !lw) return "";
+    try { return cueOne(cueGloss(w)); } catch (e) { return ""; }
+  }
+  function vcTip(k, spans, wi) {
+    const tip = document.getElementById("vtip"); if (!tip) return;
+    if (!cueOn() || vcPref().hide || wi < 0) { tip.hidden = true; return; }
+    const c = VCAP.cues[k]; c.gl = c.gl || [];
+    let j = -1; for (let i = wi; i < spans.length; i++) { if (c.gl[i] == null) c.gl[i] = vcGl(spans[i]); if (c.gl[i]) { j = i; break; } }
+    if (j < 0) return; // nothing left to translate in this sentence: the last bubble stays
+    if (tip.dataset.k === k + ":" + j && !tip.hidden) return;
+    tip.dataset.k = k + ":" + j; tip.textContent = c.gl[j];
+    const inner = document.getElementById("vcap-in"), r = spans[j].getBoundingClientRect(), ir = inner.getBoundingClientRect();
+    tip.hidden = false; const tw = tip.offsetWidth, maxL = inner.clientWidth - tw - 4;
+    const cx = r.left + r.width / 2 - ir.left, left = Math.max(4, Math.min(maxL, cx - tw / 2));
+    tip.style.left = left + "px"; tip.style.top = (r.top - ir.top - tip.offsetHeight - 7) + "px"; tip.style.setProperty("--ax", Math.max(10, Math.min(tw - 10, cx - left)) + "px");
   }
   function vcFillEn(k) { // lines YouTube didn't translate: the app's translator, a few lines ahead
     if (!window.__trEn) return;
@@ -174,9 +234,10 @@
     else if (a === "vc-catch") { const d = vData(VP.id), c = VCAP.card; if (c && !d.c.some((x) => x.es.toLowerCase() === c.w.toLowerCase())) { d.c.push({ t: Math.floor(c.t), es: c.w, en: c.en }); save(); try { actAdd(1); } catch (x) {} vRedraw(); } vcCloseCard(); try { coachToast("Caught «" + c.w + "»"); } catch (x) {} }
     else if (a === "vc-seek") { vpSeek(+t.dataset.t); vpPlay(); VCAP.raw = -1; vcTick(true); }
     else if (a === "vc-en") { const P = vcPref(); P.en = !P.en; save(); t.setAttribute("aria-pressed", String(P.en)); const w = document.getElementById("vcap"); if (w) w.classList.toggle("show-en", P.en); if (P.en) vcFillEn(VCAP.cur); VCAP.cur = -2; }
+    else if (a === "vc-cue") { UI.cues = !cueOn(); uiSave(); t.setAttribute("aria-pressed", String(cueOn())); VCAP.cur = -2; VCAP.word = -1; const tp = document.getElementById("vtip"); if (tp) { tp.hidden = true; tp.dataset.k = ""; } }
     else if (a === "vc-hide") { const P = vcPref(); P.hide = !P.hide; save(); t.setAttribute("aria-pressed", String(P.hide)); const w = document.getElementById("vcap"); if (w) w.classList.toggle("hide-text", P.hide); }
     else if (a === "vc-retry") { try { localStorage.removeItem("vcap:" + VP.id); } catch (x) {} vcCache.delete(VP.id); vcLoad(VP.id); }
   });
   function vcHTML() { const P = vcPref();
-    return '<section class="vcapw" id="vcapw" aria-label="Captions"><div class="vcap-head"><span class="vkey"><i aria-hidden="true"></i>Informal word</span><span class="vcap-tg"><button class="btn small" data-act="vc-en" aria-pressed="' + !!P.en + '">English</button><button class="btn small" data-act="vc-hide" aria-pressed="' + !!P.hide + '">Just listen</button></span></div>' +
+    return '<section class="vcapw" id="vcapw" aria-label="Captions"><div class="vcap-head"><span class="vcap-tg"><button class="btn small" data-act="vc-cue" aria-pressed="' + cueOn() + '">Cue tips</button><button class="btn small" data-act="vc-en" aria-pressed="' + !!P.en + '">English</button><button class="btn small" data-act="vc-hide" aria-pressed="' + !!P.hide + '">Just listen</button></span></div>' +
       '<div class="vcap" id="vcap"><div class="vcap-in" id="vcap-in"></div><div class="vcap-listen" aria-hidden="true">Listening mode: text hidden</div></div><p class="vcap-note small muted" id="vcap-note"></p></section>'; }

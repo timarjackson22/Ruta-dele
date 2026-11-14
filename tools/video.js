@@ -116,16 +116,17 @@
   const vpPlay = () => { try { VP.p.playVideo(); } catch (e) {} };
   const vpPause = () => { try { VP.p.pauseVideo(); } catch (e) {} };
   const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-  function vpStop() { try { vcStop(); } catch (e) {} clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
+  function vpStop() { try { vcStop(); } catch (e) {} document.body.classList.remove("vpage-on"); clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
   function videoPage(id) {
     vpStop(); const v = vFind(id) || (vAdd(id) && vFind(id)); if (!v) { app.innerHTML = '<div class="stack"><h1>Video not found</h1><a class="btn" href="#videos">All videos</a></div>'; return; }
-    const d = vData(id); VP.id = id; VP.failed = false; VP.framed = 0; VP.clip = v.clip || null; VP.dur = 0;
+    const d = vData(id); VP.id = id; VP.failed = false; VP.lastSt = -1; VP.ad = false; VP.secs = 0; VP.resumeAt = 0; document.body.classList.add("vpage-on"); VP.clip = v.clip || null; VP.dur = 0;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
-      vcHTML() +
       '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
+      '<p class="vad-chip small" id="vadchip" hidden role="status">Ad playing · the video and captions start right after it</p>' +
+      vcHTML() +
       '<section class="block"><div class="shead"><h2>Words you caught</h2><button class="btn small" data-act="v-deck"' + (d.c.length ? "" : " hidden") + ">" + IC("cards") + ' Add all to flashcards</button></div><ul class="vcaught" id="vcaught">' + vCaughtHTML(d) + "</ul></section>" +
       (v.q && v.q.length ? '<section class="block"><div class="shead"><h2>Check your understanding</h2><span class="result" id="vq-res"></span></div>' + vQuizHTML(v, d) + "</section>" : "") +
       '<section class="block"><div class="shead"><h2>Retell it</h2></div><p class="muted small" style="margin-top:0">In Spanish, say what happened: ¿Quién aparece? ¿Dónde están? ¿Qué pasa? ¿Cómo termina? (3–6 sentences)</p><textarea id="vret" class="extxt" rows="5" placeholder="En el vídeo…">' + esc(d.r || "") + '</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="v-ret-check">Check my Spanish</button>' + (CAN_MIC ? '<button class="btn" data-act="v-ret-mic">' + IC("mic") + " Say it</button>" : "") + '<button class="btn" data-act="v-ret-profe">' + IC("speech") + ' Ask Profe to review</button></div><div id="vret-res"></div></section>' +
@@ -139,20 +140,36 @@
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
       VP.p = new YT.Player("vplayer", { videoId: id, playerVars: Object.assign(v.clip ? { start: v.clip[0], end: v.clip[1] } : {}, { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] }),
-        events: { onReady: () => { vlive(); try { VP.dur = VP.p.getDuration() || 0; } catch (e) {} if (d.at && d.at > vpLo() + 5 && d.at < vpHi() - 5 && !d.w) vpSeek(d.at - 2); },
+        events: { onReady: () => { vlive(); if (d.at && d.at > vpLo() + 5 && !d.w) VP.resumeAt = d.at - 2; }, // resumed once the video itself (not an ad) is playing
           onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([100, 101, 150, 152].includes(c)) { vBad()[id] = c; save(); try { coachToast("This video can't play inside the app, so it's been taken off your Videos list."); } catch (x) {} } },
-          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); if (e.data === 1 && !VP.framed) { VP.framed = 1; vFrameTop(); } } } });
+          onStateChange: (e) => { vlive(); if (e.data === 0 && !vAd()) vWatched(id); if (e.data === 1 && VP.lastSt !== 1) vFrameTop(); VP.lastSt = e.data; } } });
       VP.tick = setInterval(() => {
-        if (!VP.ready || VP.id !== id) return; const t = vpT();
+        if (!VP.ready || VP.id !== id) return;
+        const ad = vAd(); if (ad !== VP.ad) vAdState(ad); if (ad) return; // during an ad: nothing moves, nothing is saved or counted
+        const t = vpT();
+        if (VP.resumeAt && VP.lastSt === 1) { const r = VP.resumeAt; VP.resumeAt = 0; if (r < vpHi() - 5) vpSeek(r); return; }
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
         if (t > (d.at || 0) + 5) { d.at = Math.floor(t); save(); }
         try { VP.dur = VP.p.getDuration() || VP.dur; } catch (e) {}
-        if (VP.dur) { const len = vpHi() - vpLo(); if (Math.round(len) !== d.len) { d.len = Math.round(len); save(); } if (t > vpLo() + len * 0.85 && !d.w) vWatched(id); }
+        if (VP.dur && (VP.secs || VP.dur >= 45)) { const len = vpHi() - vpLo(); if (Math.round(len) !== d.len) { d.len = Math.round(len); save(); } if (t > vpLo() + len * 0.85 && !d.w) vWatched(id); }
         if (VP.clip && t > vpHi() + 0.5 && !VP.loop) { vpPause(); vpSeek(vpHi() - 0.6); }
       }, 250);
     });
   }
-  // first play: bring the video to the top so the video and the caption window are both on screen
+  // ads: YouTube reports another video, or a length that isn't the video's own (the Android app knows the real length)
+  function vAd() {
+    if (!VP.p || !VP.ready) return false;
+    try { const vd = VP.p.getVideoData && VP.p.getVideoData(); if (vd && vd.video_id && vd.video_id !== VP.id) return true; } catch (e) {}
+    try { const du = VP.p.getDuration(); if (VP.secs && du && Math.abs(du - VP.secs) > 2.5) return true; } catch (e) {}
+    return false;
+  }
+  function vAdState(on) {
+    VP.ad = on; const c = document.getElementById("vadchip"); if (c) c.hidden = !on;
+    document.querySelectorAll(".vctl .btn").forEach((b) => (b.disabled = on));
+    if (on) { VP.loop = null; const lb = document.querySelector('[data-act="v-loop"]'); if (lb) lb.setAttribute("aria-pressed", "false"); }
+    try { VCAP.raw = -1; VCAP.cur = -2; } catch (e) {}
+  }
+  // play: bring the video's top edge to the top so the video, controls and caption window are all on screen
   function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {

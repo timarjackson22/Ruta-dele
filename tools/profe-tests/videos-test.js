@@ -13,7 +13,7 @@ const MOCK = `(() => {
     getCurrentTime() { return this.t; }, getDuration() { return this.dur; },
     seekTo(t) { window.__yt.log.push(["seek", Math.round(t * 10) / 10]); this.t = t; },
     playVideo() { window.__yt.log.push(["play"]); this.st = 1; }, pauseVideo() { window.__yt.log.push(["pause"]); this.st = 2; },
-    getPlayerState() { return this.st; }, unloadModule(m) { window.__yt.log.push(["unload", m]); },
+    getPlayerState() { return this.st; }, getVideoData() { return { video_id: this.adId || this.o.videoId }; }, unloadModule(m) { window.__yt.log.push(["unload", m]); },
     setPlaybackRate(r) { window.__yt.log.push(["rate", r]); this.rate = r; },
     destroy() { this.destroyed = 1; window.__yt.log.push(["destroy"]); clearInterval(this._iv); },
     _end() { this.st = 0; this.o.events.onStateChange({ data: 0 }); }, _err(c) { this.o.events.onError({ data: c }); },

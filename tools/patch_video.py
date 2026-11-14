@@ -97,10 +97,10 @@ CSS = r'''
 .vcap-tg .btn[aria-pressed="true"] { background: color-mix(in srgb, var(--cobalt) 16%, var(--surface)); border-color: var(--cobalt) }
 :root { --vinf: #c2410c } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --vinf: #fb923c } } :root[data-theme="dark"] { --vinf: #fb923c }
 .vcap { position: relative; height: clamp(190px, calc(100svh - 56vw - 210px), 360px); overflow: hidden; overflow: clip; border-radius: 14px; border: 1px solid var(--line); background: var(--surface);
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%) }
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 11%, #000 84%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 11%, #000 84%, transparent 100%) }
 .vcap.vcap-empty { height: auto; -webkit-mask-image: none; mask-image: none }
 .vcap-in { position: relative; padding: 0 14px; transition: transform .7s cubic-bezier(.22, .61, .36, 1); will-change: transform }
-.vcap-pad { height: 18% } .vcap-pad.end { height: 60% }
+.vcap-pad { height: 44px } .vcap-pad.end { height: 240px }
 .vcap-msg { margin: 0; padding: 14px 0; font-size: 14px; color: var(--muted) }
 .vcue { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 1.25em; opacity: .55; transition: opacity .4s }
 .vcue.on { opacity: 1 } .vcue.past { opacity: .28 }
@@ -117,11 +117,25 @@ CSS = r'''
 .vcap-listen { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-weight: 600; color: var(--muted); pointer-events: none }
 .vcap.hide-text .vcl { filter: blur(7px); user-select: none } .vcap.hide-text .vcl * { pointer-events: none }
 .vcap.hide-text .vcap-listen { display: flex }
-.vcap-note { margin: 6px 0 0 }
+.vcap-note { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center }
+.vcue.mark .ves { font-size: 14px; font-style: italic; color: var(--muted) }
+.vtip { position: absolute; z-index: 3; max-width: 220px; padding: 5px 10px; border-radius: 10px; background: var(--ink); color: var(--surface); font-size: 13.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  box-shadow: 0 6px 16px rgba(0,0,0,.22); transition: left .28s cubic-bezier(.22,.61,.36,1), top .28s cubic-bezier(.22,.61,.36,1); pointer-events: none }
+.vtip::after { content: ""; position: absolute; left: var(--ax, 50%); bottom: -5px; width: 10px; height: 10px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px }
+.vtip[hidden] { display: none }
+.vad-chip { margin: 0; padding: 8px 12px; border-radius: 10px; background: color-mix(in srgb, #e8a317 18%, var(--surface)); border: 1px solid color-mix(in srgb, #e8a317 40%, transparent); font-weight: 600 }
+.vad-chip[hidden] { display: none }
+.vctl .btn:disabled { opacity: .45; pointer-events: none }
+/* video page: Profe tucks away with the bottom menu and comes back up with it */
+@media (max-width: 820px) {
+  body.vpage-on .tutor-fab { transition: transform .35s cubic-bezier(.3, .8, .3, 1), opacity .25s, bottom .35s cubic-bezier(.3, .8, .3, 1) }
+  body.vpage-on.no-tabs:not(.tabs-peek) .tutor-fab { transform: translateY(calc(100% + 60px)); opacity: 0; pointer-events: none }
+}
 .vinfo { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--vinf) 10%, transparent); border-left: 3px solid var(--vinf) }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''
+rep('Translation cue tips <span class="muted small">· Reading and Listening</span>', 'Translation cue tips <span class="muted small">· Reading, Listening and Videos</span>')
 k = s.rindex("</style>", 0, s.index("</head>")); s = s[:k] + CSS + s[k:]
 open(p, "w", encoding="utf-8").write(s)
 print("video ok")

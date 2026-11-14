@@ -23,3 +23,12 @@
 - Music adds Thiago Navarro's 4 most-viewed songs (view counts from his official channels' YouTube feeds).
 
 **Done when** the window, glide, sync (play, pause, seek, loop, speed), English toggle, Just listen, word cards, informal-word colouring and the playable-only list are covered by automated tests with a simulated player and simulated captions, the earlier tests pass, and the Android code builds. Real caption fetching is checked on the phone (YouTube blocks the test servers).
+
+## Revision 2 — sentences, punctuation and cue tips
+
+- **Cue tips:** a small English bubble sits above the word being said and follows the speech word by word (the same cue tips as Reading and Listening, with the same meanings and phrases; little words like *de*, *el* are skipped ahead). Informal words show their meaning (pa' → for). A "Cue tips" button in the window turns them on or off; it is the same setting as in Reading and Listening.
+- **No timing buttons** beside the lines.
+- **One sentence per line**, a blank line before the next sentence (English sentence line, when on, directly under its Spanish sentence). Caption fragments are regrouped into sentences.
+- **Punctuation:** captions that have it (made by the channel) are split at . ? ! …. YouTube's automatic captions have none, so the app adds it: a new sentence at each clear pause in speech (YouTube's word timings), long runs split at their longest pause; capital letter at the start; ¿…? when the sentence starts with a question word (qué, cómo, dónde, cuándo, cuál, quién, cuánto, por qué) or ends with ¿verdad? / ¿no?; full stop otherwise; commas after openers (bueno, pues, entonces, oye, mira, hola, sí, no…) and before pero / porque / aunque. The note under the window says the punctuation was added by the app.
+- **English sentence lines:** each sentence translated whole (the app's translator, offline on Android), or the channel's English captions for that stretch when the captions were made by the channel.
+- Sync stays word-accurate: word timings from YouTube, or spread across the caption line when it has none.

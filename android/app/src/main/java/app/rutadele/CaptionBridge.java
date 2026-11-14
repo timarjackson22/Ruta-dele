@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * open-source transcript tools use (watch page → player data → caption track). Websites can't do this (browsers block
  * it), so the app does it here.
  * JavaScript: AndroidCap.fetch(id, videoId). Result: window.__acap.ev(id, json, error),
- * json = {lang, kind: "manual"|"asr", es: xml, en: xml} or {none: true}.
+ * json = {lang, kind: "manual"|"asr", es: xml, en: xml, secs} or {none: true, secs}; secs = the video's real length.
  */
 public class CaptionBridge {
     static final String UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36";
@@ -91,7 +91,7 @@ public class CaptionBridge {
         if (!k.find()) throw new IOException(page.contains("g-recaptcha") ? "YouTube asked to confirm you're not a robot" : "player data not found");
         String[][] clients = {{"ANDROID", "20.10.38"}, {"WEB_EMBEDDED_PLAYER", "1.20241009.01.00"}};
         JSONArray tracks = null;
-        String status = "";
+        String status = "", secs = "";
         for (String[] cl : clients) {
             JSONObject ctx = new JSONObject().put("client", new JSONObject().put("clientName", cl[0]).put("clientVersion", cl[1]).put("hl", "es"));
             if (cl[0].startsWith("WEB_EMBEDDED")) ctx.put("thirdParty", new JSONObject().put("embedUrl", "https://timarjackson22.github.io/Ruta-dele/"));
@@ -100,12 +100,14 @@ public class CaptionBridge {
             try { pr = new JSONObject(http("https://www.youtube.com/youtubei/v1/player?key=" + k.group(1) + "&prettyPrint=false", body.toString())); }
             catch (Exception e) { status = e.getMessage(); continue; }
             status = pr.optJSONObject("playabilityStatus") == null ? "" : pr.optJSONObject("playabilityStatus").optString("status");
+            JSONObject vd = pr.optJSONObject("videoDetails"); // the video's real length: lets the page tell an ad from the video
+            if (vd != null && !vd.optString("lengthSeconds").isEmpty()) secs = vd.optString("lengthSeconds");
             JSONObject caps = pr.optJSONObject("captions");
             JSONObject tl = caps == null ? null : caps.optJSONObject("playerCaptionsTracklistRenderer");
             tracks = tl == null ? null : tl.optJSONArray("captionTracks");
             if (tracks != null && tracks.length() > 0) break;
         }
-        if (tracks == null || tracks.length() == 0) return new JSONObject().put("none", true).put("status", status);
+        if (tracks == null || tracks.length() == 0) return new JSONObject().put("none", true).put("status", status).put("secs", secs);
         JSONObject best = null;
         for (int i = 0; i < tracks.length(); i++) {
             JSONObject t = tracks.getJSONObject(i);
@@ -113,7 +115,7 @@ public class CaptionBridge {
             boolean asr = "asr".equals(t.optString("kind"));
             if (best == null || ("asr".equals(best.optString("kind")) && !asr)) best = t;
         }
-        if (best == null) return new JSONObject().put("none", true).put("status", "no Spanish track");
+        if (best == null) return new JSONObject().put("none", true).put("status", "no Spanish track").put("secs", secs);
         String base = best.getString("baseUrl");
         String es = http(base, null);
         if (!es.contains("<text") && !es.contains("<p ")) es = http(base.replace("&fmt=srv3", ""), null);
@@ -121,6 +123,6 @@ public class CaptionBridge {
         if (best.optBoolean("isTranslatable", true)) {
             try { en = http(base.replace("&fmt=srv3", "") + "&tlang=en", null); } catch (Exception ignored) { }
         }
-        return new JSONObject().put("lang", best.optString("languageCode")).put("kind", "asr".equals(best.optString("kind")) ? "asr" : "manual").put("es", es).put("en", en);
+        return new JSONObject().put("lang", best.optString("languageCode")).put("kind", "asr".equals(best.optString("kind")) ? "asr" : "manual").put("es", es).put("en", en).put("secs", secs);
     }
 }
