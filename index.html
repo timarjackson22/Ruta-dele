@@ -1647,10 +1647,11 @@ body.litem-on .tutor-fab { display: none !important }
 .vsk .qbar { display: block; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden }
 .vsk .qbar i { display: block; height: 100%; background: var(--cobalt); border-radius: 99px }
 .vfix { margin: 0; padding-left: 18px }
+.vslow { margin: -4px 0 0; color: var(--muted) } .vslow[hidden] { display: none }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 </style>
 
-<script>window.__BUILD = "202611140825";</script>
+<script>window.__BUILD = "202611140841";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -8472,20 +8473,24 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const d = vData(id); VP.id = id; VP.failed = false;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + (v.mine ? '<p class="small"><button class="btn small" data-act="v-rename">Rename</button> <button class="btn small" data-act="v-remove">Remove</button></p>' : "") + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
+      '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
       '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<section class="block"><div class="shead"><h2>Words you caught</h2><button class="btn small" data-act="v-deck"' + (d.c.length ? "" : " hidden") + ">" + IC("cards") + ' Add all to flashcards</button></div><ul class="vcaught" id="vcaught">' + vCaughtHTML(d) + "</ul></section>" +
       (v.q && v.q.length ? '<section class="block"><div class="shead"><h2>Check your understanding</h2><span class="result" id="vq-res"></span></div>' + vQuizHTML(v, d) + "</section>" : "") +
       '<section class="block"><div class="shead"><h2>Retell it</h2></div><p class="muted small" style="margin-top:0">In Spanish, say what happened: ¿Quién aparece? ¿Dónde están? ¿Qué pasa? ¿Cómo termina? (3–6 sentences)</p><textarea id="vret" class="extxt" rows="5" placeholder="En el vídeo…">' + esc(d.r || "") + '</textarea><div class="row" style="margin-top:8px"><button class="btn primary" data-act="v-ret-check">Check my Spanish</button>' + (CAN_MIC ? '<button class="btn" data-act="v-ret-mic">' + IC("mic") + " Say it</button>" : "") + '<button class="btn" data-act="v-ret-profe">' + IC("speech") + ' Ask Profe to review</button></div><div id="vret-res"></div></section>' +
       '<div class="unav"><a class="btn" href="#videos">‹ All videos</a></div></div>';
-    const vfail = () => { VP.failed = true; const f = document.getElementById("vfail"); if (f) f.hidden = false; const pl = document.getElementById("vplayer"); if (pl) pl.style.visibility = "hidden"; };
-    const tmo = setTimeout(() => { if (VP.id === id && !VP.ready) vfail(); }, 12000);
+    const VERR = { 2: "the link looks wrong", 5: "this phone's player couldn't play it", 100: "the video was removed or made private", 101: "the owner only allows it on YouTube", 150: "the owner only allows it on YouTube", 152: "YouTube refused to play it inside apps", 153: "YouTube couldn't check which site is asking" };
+    const vfail = (code) => { VP.failed = true; const f = document.getElementById("vfail"); if (f) { f.hidden = false; f.querySelector("p").textContent = "This video can't play inside the app: " + (VERR[code] || "YouTube didn't load") + (code ? " (code " + code + ")" : "") + ". The exercises below still work."; } const pl = document.getElementById("vplayer"); if (pl) pl.style.visibility = "hidden"; const sl = document.getElementById("vslow"); if (sl) sl.hidden = true; };
+    const vlive = () => { if (VP.ready) return; VP.ready = true; clearTimeout(tmo); const sl = document.getElementById("vslow"); if (sl) sl.hidden = true; };
+    // slow or silent player: keep it visible (it may still play) and offer YouTube underneath
+    const tmo = setTimeout(() => { if (VP.id !== id || VP.ready) return; if (!window.YT || !window.YT.Player) vfail(0); else { const sl = document.getElementById("vslow"); if (sl) sl.hidden = false; } }, 10000);
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
-      VP.p = new YT.Player("vplayer", { videoId: id, host: "https://www.youtube-nocookie.com", playerVars: { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0 },
-        events: { onReady: () => { VP.ready = true; clearTimeout(tmo); const f = document.getElementById("vfail"); if (f) f.hidden = true; const pl = document.getElementById("vplayer"); if (pl) pl.style.visibility = ""; try { VP.dur = VP.p.getDuration() || 0; } catch (e) {} if (d.at && d.at > 5 && !d.w) vpSeek(d.at - 2); },
-          onError: (e) => { if (e && [2, 5, 100, 101, 150].includes(e.data)) { clearTimeout(tmo); vfail(); } },
-          onStateChange: (e) => { if (e.data === 0) vWatched(id); } } });
+      VP.p = new YT.Player("vplayer", { videoId: id, playerVars: { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] },
+        events: { onReady: () => { vlive(); try { VP.dur = VP.p.getDuration() || 0; } catch (e) {} if (d.at && d.at > 5 && !d.w) vpSeek(d.at - 2); },
+          onError: (e) => { clearTimeout(tmo); vfail(e && e.data); },
+          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); } } });
       VP.tick = setInterval(() => {
         if (!VP.ready || VP.id !== id) return; const t = vpT();
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
@@ -9504,7 +9509,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140825";
+  var BUILD = "202611140841";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
