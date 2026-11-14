@@ -1811,8 +1811,14 @@ body.lplaying #litem .lh-land .m1 { opacity: .3 }
 body.lplaying #litem .lprog { margin-top: 8px; position: relative; z-index: 1 }
 </style>
 
-<script>window.__BUILD = "202611142027";</script>
-</head>
+<script>window.__BUILD = "202611142039";</script>
+<style>
+.exstat{min-height:1.2em;margin:4px 0 6px}.exstat.bad{color:var(--bad,#b3261e)}
+.excvq{margin:0 0 8px;font-size:.95rem}.extxt[readonly]{opacity:.85}
+.excv p{margin:4px 0}.excv .ex-a{padding-left:12px;border-left:3px solid var(--accent,#1d6f5f)}
+.exbar .ext{min-width:0;flex:1}.exbar .ext b{display:block;font-size:1rem;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.exbar .ext small{display:block;font-size:.78rem}.exbar .exclock{flex:none}.exbar{background:var(--surface)!important}
+.exnone{border-left-color:var(--bad,#b3261e)}
+</style></head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
 <header class="top"><div class="wrap nb">
@@ -9685,10 +9691,11 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   // ---------- a paper ----------
   function exPaper(lv, D, n, k) {
     const X = D.exams[n - 1]; if (!X || !X[k]) { exHome(lv, D, n); return; }
-    if (!EX || EX.lv !== lv || EX.n !== n || EX.k !== k) { exStop(); EX = { lv, n, k, X, D, tasks: X[k], ans: {}, txt: {}, phase: "intro", plays: {}, mins: D.format.mins[k] }; }
+    if (!EX || EX.lv !== lv || EX.n !== n || EX.k !== k) { exStop(); EX = { lv, n, k, X, D, tasks: X[k], ans: {}, txt: {}, live: {}, qa: {}, secs: {}, phase: "intro", plays: {}, mins: D.format.mins[k] + (k === "oral" ? Math.max(0, ...X[k].map((t) => +t.prep || 0)) : 0) }; exRestore(); }
+    if (EX.phase === "run" && EX.end && EX.end <= Date.now()) { exSubmit(true); return; }
     exRender();
   }
-  function exStop() { if (EX && EX.tm) clearInterval(EX.tm); if (EX) EX.tm = null; try { speechSynthesis.cancel(); } catch (e) {} if (EX && EX.rec) try { EX.rec.abort(); } catch (e) {} }
+  function exStop() { exHalt(); if (EX && EX.tm) clearInterval(EX.tm); if (EX) EX.tm = null; try { speechSynthesis.cancel(); } catch (e) {} }
   const exClock = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
   function exTick() { const el = document.getElementById("ex-clock"); if (!EX || !EX.end) return; const left = EX.end - Date.now(); if (el) { el.textContent = exClock(left); el.classList.toggle("low", left < 5 * 60000); } if (left <= 0 && EX.phase === "run") { clearInterval(EX.tm); EX.tm = null; exSubmit(true); } }
   function exHead() {
@@ -9696,36 +9703,39 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       (EX.phase === "run" ? '<span class="exclock" id="ex-clock">' + exClock(EX.end - Date.now()) + "</span>" : "") + "</div>";
   }
   function exRender() {
+    if (!exHere()) return;
     const k = EX.k, T = EX.tasks;
     if (EX.phase === "intro") {
-      app.innerHTML = '<div class="stack expage">' + exHead() + '<section class="block"><h1>' + EXP[k][2] + " " + EXP[k][1] + '</h1><p class="lead2">' + T.length + (T.length === 1 ? " task" : " tasks") + " · " + EX.mins + " minutes" + (k === "oral" ? " (plus preparation time)" : "") + "</p><ol>" + T.map((t) => "<li><b>" + esc(t.t) + "</b> · " + esc(t.en) + "</li>").join("") + "</ol>" +
-        ({ lectura: "<p>Answer every question: wrong answers lose no points.</p>", auditiva: "<p>Each recording plays <b>twice</b>, as in the exam. Read the questions before you press play.</p>", escritura: "<p>Write in the boxes; the word count is shown. Your texts are marked with the DELE criteria when you finish.</p>", oral: "<p>Use the microphone to speak" + (CAN_MIC ? "" : " (not available here: type what you would say instead)") + ". Each task shows the preparation and speaking time. What you say is transcribed and marked with the DELE criteria.</p>" }[k]) +
+      app.innerHTML = '<div class="stack expage">' + exHead() + '<section class="block"><h1>' + EXP[k][2] + " " + EXP[k][1] + '</h1><p class="lead2">' + T.length + (T.length === 1 ? " task" : " tasks") + " · " + EX.mins + " minutes" + (k === "oral" && EX.mins > EX.D.format.mins.oral ? " (" + (EX.mins - EX.D.format.mins.oral) + " to prepare + " + EX.D.format.mins.oral + " speaking)" : "") + "</p><ol>" + T.map((t) => "<li><b>" + esc(t.t) + "</b> · " + esc(t.en) + "</li>").join("") + "</ol>" +
+        ({ lectura: "<p>Answer every question: wrong answers lose no points.</p>", auditiva: "<p>Each recording plays <b>twice</b>, as in the exam. Read the questions before you press play.</p>", escritura: "<p>Write in the boxes; the word count is shown. Your texts are marked with the DELE criteria when you finish.</p>", oral: "<p>Use the microphone to speak" + (CAN_MIC ? "" : " (not available here: type what you would say instead)") + ". Each task shows the preparation and speaking time. What you say is saved as you speak, then marked with the DELE criteria. In the conversations the examiner asks one question at a time and waits for your answer.</p>" }[k]) +
         '<div class="row"><button class="btn primary" data-act="ex-start">Start · ' + EX.mins + ' min</button><button class="btn" data-act="ex-start" data-free="1">Practise without a timer</button></div></section></div>';
       return;
     }
     if (EX.phase === "grading") { app.innerHTML = '<div class="stack expage">' + exHead() + '<section class="block"><h2>Marking with the DELE criteria…</h2><p id="ex-prog" class="muted">' + esc(EX.prog || "") + '</p><div class="bar"><i id="ex-bar" style="width:' + (EX.pct || 5) + '%"></i></div></section></div>'; return; }
     if (EX.phase === "result") { app.innerHTML = '<div class="stack expage">' + exHead() + exResultHTML() + "</div>"; scrollTo(0, 0); return; }
     // running
-    app.innerHTML = '<div class="stack expage">' + exHead() + T.map((t, ti) => exTaskHTML(t, ti)).join("") +
+    const rest = EX.restored ? '<p class="callout exrest">✓ Your answers were restored' + (EX.restored > 1 ? " (saved " + new Date(EX.restored).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + ")" : "") + "." + (EX.end ? " The exam clock kept running." : "") + "</p>" : ""; EX.restored = 0;
+    app.innerHTML = '<div class="stack expage">' + exHead() + rest + T.map((t, ti) => exTaskHTML(t, ti)).join("") +
       '<div class="row exsubmit"><button class="btn primary" data-act="ex-submit">Finish and mark this paper</button></div></div>';
     if (!EX.tm && EX.end) EX.tm = setInterval(exTick, 1000);
   }
+  const exRich = (x) => esc(String(x || "")).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/\n/g, "<br>");
   const exOptL = (i) => String.fromCharCode(65 + i);
   function exQHTML(t, ti, q, qi, done) {
     const key = ti + "-" + qi, a = EX.ans[key];
     if (t.opts) { // matching: pick a letter
       const right = done ? q.a : -1;
-      return '<li class="exq' + (done ? (a === q.a ? " ok" : " no") : "") + '"><p>' + rich(q.q) + "</p>" + (done ? '<p class="small">' + (a === q.a ? "✓ " : "✗ Your answer: " + (a == null ? "—" : exOptL(a)) + " · ") + "Correct: <b>" + exOptL(right) + "</b> " + esc(t.opts[right]) + "</p>" :
+      return '<li class="exq' + (done ? (a === q.a ? " ok" : " no") : "") + '"><p>' + exRich(q.q) + "</p>" + (done ? '<p class="small">' + (a === q.a ? "✓ " : "✗ Your answer: " + (a == null ? "—" : exOptL(a)) + " · ") + "Correct: <b>" + exOptL(right) + "</b> " + esc(t.opts[right]) + "</p>" :
         '<div class="exchips">' + t.opts.map((o, oi) => '<button type="button" class="exchip" data-act="ex-ans" data-k="' + key + '" data-v="' + oi + '" aria-pressed="' + (a === oi) + '" title="' + esc(o) + '">' + exOptL(oi) + "</button>").join("") + "</div>") + "</li>";
     }
-    return '<li class="exq' + (done ? (a === q.a ? " ok" : " no") : "") + '"><p>' + rich(q.q) + '</p><div class="exopts">' + q.o.map((o, oi) => '<button type="button" class="exopt' + (done && oi === q.a ? " right" : done && oi === a ? " wrong" : "") + '" data-act="ex-ans" data-k="' + key + '" data-v="' + oi + '" aria-pressed="' + (a === oi) + '"' + (done ? " disabled" : "") + "><span>" + "abc"[oi] + ")</span> " + esc(o) + "</button>").join("") + "</div></li>";
+    return '<li class="exq' + (done ? (a === q.a ? " ok" : " no") : "") + '"><p>' + exRich(q.q) + '</p><div class="exopts">' + q.o.map((o, oi) => '<button type="button" class="exopt' + (done && oi === q.a ? " right" : done && oi === a ? " wrong" : "") + '" data-act="ex-ans" data-k="' + key + '" data-v="' + oi + '" aria-pressed="' + (a === oi) + '"' + (done ? " disabled" : "") + "><span>" + "abc"[oi] + ")</span> " + esc(o) + "</button>").join("") + "</div></li>";
   }
   function exScript(t) { return (t.audio || []).map((l) => (Array.isArray(l) ? "<p><b>" + esc(l[0]) + ":</b> " + esc(l[1]) + "</p>" : "<p>" + esc(l) + "</p>")).join(""); }
   function exTaskHTML(t, ti, done) {
     const k = EX.k;
     let body = "";
     if (k === "lectura" || k === "auditiva") {
-      const texts = (t.texts || []).map((x, xi) => '<div class="extext">' + (x.h ? "<h4>" + esc(x.h) + "</h4>" : "") + rich(String(x.b || x).replace(/\n/g, "<br>")) + "</div>").join("");
+      const texts = (t.texts || []).map((x, xi) => '<div class="extext">' + (x.h ? "<h4>" + esc(x.h) + "</h4>" : "") + exRich(x.b || x) + "</div>").join("");
       const opts = t.opts ? '<div class="exoptlist">' + t.opts.map((o, oi) => "<p><b>" + exOptL(oi) + ")</b> " + esc(o) + "</p>").join("") + "</div>" : "";
       const play = k === "auditiva" ? (done ? '<details class="exscript"><summary>Transcript</summary>' + exScript(t) + "</details>" :
         '<div class="row explay"><button class="btn primary" data-act="ex-play" data-t="' + ti + '"' + ((EX.plays[ti] || 0) >= 2 && !EX.free ? " disabled" : "") + ">▶ " + ((EX.plays[ti] || 0) ? "Play again" : "Play") + "</button><span class=\"muted small\">" + ((EX.plays[ti] || 0) >= 2 ? "Played twice" : "Plays " + (2 - (EX.plays[ti] || 0)) + " more time" + (2 - (EX.plays[ti] || 0) === 1 ? "" : "s")) + "</span></div>") : "";
@@ -9733,24 +9743,24 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       body = play + texts + opts + '<ol class="exqs" start="' + start + '">' + t.q.map((q, qi) => exQHTML(t, ti, q, qi, done)).join("") + "</ol>";
     } else if (k === "escritura") {
       const key = String(ti), v = EX.txt[key] || "";
-      body = (t.source ? '<div class="extext">' + rich(t.source.replace(/\n/g, "<br>")) + "</div>" : "") +
+      body = (t.source ? '<div class="extext">' + exRich(t.source) + "</div>" : "") +
         (t.form ? '<div class="exform">' + t.form.map((f, fi) => '<label><span>' + esc(f) + '</span><input data-ex-f="' + ti + "-" + fi + '" value="' + esc((EX.txt[ti + "-" + fi]) || "") + '"' + (done ? " disabled" : "") + "></label>").join("") + "</div>" :
           '<textarea class="extxt" data-ex-t="' + ti + '" rows="9" placeholder="Escribe aquí…"' + (done ? " disabled" : "") + ">" + esc(v) + '</textarea><p class="small muted"><span data-ex-wc="' + ti + '">' + wWords(v) + "</span> words · " + t.words[0] + "–" + t.words[1] + " required</p>");
     } else if (k === "oral") {
       const key = String(ti), v = EX.txt[key] || "";
-      body = (t.card ? '<div class="extext excard">' + rich(t.card.replace(/\n/g, "<br>")) + "</div>" : "") +
+      body = (t.card ? '<div class="extext excard">' + exRich(t.card) + "</div>" : "") +
         (t.ask ? '<p class="small muted">The examiner will ask: ' + t.ask.map((x) => "<i>" + esc(x) + "</i>").join(" · ") + "</p>" : "") +
         '<p class="small"><b>Preparation:</b> ' + (t.prep || 0) + " min · <b>Speak:</b> about " + t.speak + " min</p>" +
-        (done ? "" : '<div class="row">' + (CAN_MIC ? '<button class="btn primary" data-act="ex-mic" data-t="' + ti + '">' + (EX.recT === ti ? "■ Stop" : "🎙️ " + (t.ask ? "Start the conversation" : "Speak")) + "</button>" : "") + '<span class="muted small" id="ex-live-' + ti + '"></span></div>') +
-        '<textarea class="extxt" data-ex-t="' + ti + '" rows="6" placeholder="' + (CAN_MIC ? "What you say appears here (you can also type)" : "Type what you would say") + '"' + (done ? " disabled" : "") + ">" + esc(v) + '</textarea><p class="small muted"><span data-ex-wc="' + ti + '">' + wWords(v) + "</span> words</p>";
+        (done ? "" : '<div class="exctl" id="ex-ctl-' + ti + '">' + exCtlHTML(ti) + '</div><p class="small muted exstat" id="ex-live-' + ti + '" aria-live="polite"></p>') +
+        '<textarea class="extxt" data-ex-t="' + ti + '" rows="6" placeholder="' + (CAN_MIC ? "What you say is saved here as you speak (you can also type)" : "Type what you would say") + '"' + (done ? " disabled" : EX.recT === ti ? " readonly" : "") + ">" + esc(exAnsText(ti)) + '</textarea><p class="small muted"><span data-ex-wc="' + ti + '">' + wWords(exAnsText(ti)) + "</span> words</p>";
     }
-    return '<section class="block extask" id="ext-' + ti + '"><div class="shead"><h2>' + esc(t.t) + '</h2></div><p class="exins">' + rich(t.ins) + '</p><p class="muted small">' + esc(t.en) + "</p>" + body + "</section>";
+    return '<section class="block extask" id="ext-' + ti + '"><div class="shead"><h2>' + esc(t.t) + '</h2></div><p class="exins">' + exRich(t.ins) + '</p><p class="muted small">' + esc(t.en) + "</p>" + body + "</section>";
   }
   // listening: play twice, each speaker with their own voice
   function exPlay(ti) {
     const t = EX.tasks[ti]; if (!t || !canSpeak) return;
     try { speechSynthesis.cancel(); } catch (e) {}
-    EX.plays[ti] = (EX.plays[ti] || 0) + 1; exRender(); const el = document.getElementById("ext-" + ti); if (el) el.scrollIntoView({ block: "start" });
+    EX.plays[ti] = (EX.plays[ti] || 0) + 1; exSave(true); exRender(); const el = document.getElementById("ext-" + ti); if (el) el.scrollIntoView({ block: "start" });
     const who = {}; let nv = 0;
     const lines = (t.audio || []).map((l) => (Array.isArray(l) ? l : ["", l]));
     const gen = (EX.pgen = (EX.pgen || 0) + 1);
@@ -9768,8 +9778,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     let det = "";
     if (EX.k === "lectura" || EX.k === "auditiva") det = EX.tasks.map((t, ti) => exTaskHTML(t, ti, true)).join("");
     else det = R.tasks.map((r, ti) => '<section class="block"><div class="shead"><h2>' + esc(EX.tasks[ti].t) + "</h2><b>" + r.sc.toFixed(1).replace(/\.0$/, "") + "/25</b></div>" + crit(r.crit, EX.k === "oral") +
+      (r.empty ? '<p class="callout exnone">' + (EX.k === "oral" ? "No answer was recorded for this task, so it scored 0." : "Nothing was written for this task, so it scored 0.") + "</p>" : "") +
       (r.comment ? '<p class="callout"><b>Examiner:</b> ' + esc(r.comment) + "</p>" : "") + (r.tips && r.tips.length ? '<ul class="notes">' + r.tips.map((x) => "<li>" + rich(x) + "</li>").join("") + "</ul>" : "") +
-      (r.text ? '<details><summary>Your answer</summary><p class="extext">' + esc(r.text).replace(/\n/g, "<br>") + "</p></details>" : "") + (EX.tasks[ti].model ? '<details><summary>Model answer</summary><p class="extext">' + esc(EX.tasks[ti].model).replace(/\n/g, "<br>") + "</p></details>" : "") + "</section>").join("");
+      (r.qa && r.qa.length ? '<details class="excvd" open><summary>The conversation</summary><div class="excv">' + r.qa.map((x) => '<p class="ex-q"><b>Examiner:</b> ' + esc(x.q) + '</p><p class="ex-a"><b>You:</b> ' + (x.a ? esc(x.a) : '<i class="muted">no answer</i>') + "</p>").join("") + "</div></details>" : "") +
+      (r.text && !(r.qa && r.qa.length) ? '<details><summary>Your answer</summary><p class="extext">' + esc(r.text).replace(/\n/g, "<br>") + "</p></details>" : "") + (EX.tasks[ti].model ? '<details><summary>Model answer</summary><p class="extext">' + esc(EX.tasks[ti].model).replace(/\n/g, "<br>") + "</p></details>" : "") + "</section>").join("");
     return '<section class="block exresult ' + (R.sc >= 15 ? "ok" : "no") + '"><h2>' + EXP[EX.k][1] + ": " + R.sc.toFixed(1).replace(/\.0$/, "") + '/25</h2><p class="muted">' + (R.raw != null ? R.raw + " of " + R.tot + " correct. " : "") + (R.sc >= 15 ? "That’s a passing level for this paper (60%)." : "Below 60% for this paper: 15/25 is the target.") + (R.late ? " Time ran out, so the paper was marked as it was." : "") + '</p><div class="row"><a class="btn primary" href="#' + EX.lv + "-examen-" + EX.n + '">Back to the exam</a><button class="btn" data-act="ex-again">Do this paper again</button></div></section>' + det;
   }
   async function exGradeText(t, text, oral, secs) {
@@ -9804,7 +9816,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       R[k] = { sc: Math.round((raw / tot) * 250) / 10, raw, tot, d: Date.now(), late: !!late };
       // wrong answers go to My mistakes
       try { EX.tasks.forEach((t, ti) => t.q.forEach((q, qi) => { if (EX.ans[ti + "-" + qi] !== q.a) { const it = { t: "mc", k: EX.n * 100 + ti * 20 + qi, q: (t.opts ? "Match: " : "") + q.q + (k === "lectura" && t.texts && t.texts.length === 1 ? "\n\n" + String(t.texts[0].b || t.texts[0]).slice(0, 600) : k === "auditiva" ? "\n\n🎧 " + (t.audio || []).map((l) => (Array.isArray(l) ? l[0] + ": " + l[1] : l)).join(" ").slice(0, 600) : ""), opts: t.opts ? t.opts : q.o, c: q.a, why: "DELE " + EXL[EX.lv] + " · Examen " + EX.n + " · " + EXP[k][1] + " · " + t.t }; mistakeAdd(it, "exam-" + EX.lv); } })); } catch (e) {}
-      save(); EX.phase = "result"; exRender(); return;
+      EX.phase = "result"; exDropDraft(); save(); exRender(); return;
     }
     EX.phase = "grading"; EX.prog = "Reading your answers…"; EX.pct = 5; exRender();
     const out = [];
@@ -9815,50 +9827,136 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         const vals = t.form.map((_, fi) => String(EX.txt[ti + "-" + fi] || "").trim()), filled = vals.filter((v) => /[\p{L}\d]{2,}/u.test(v)).length, frac = filled / t.form.length;
         let errs = 0; vals.forEach((v) => { try { errs += quickFixes(v).length; } catch (e) {} });
         const c = { ade: clamp3(frac * 3), coh: clamp3(frac * 3), cor: clamp3(3 - errs), alc: clamp3(frac * 3 - (vals.join(" ").split(/\s+/).length < t.form.length * 2 ? 1 : 0)) };
-        out.push({ sc: ((c.ade + c.coh + c.cor + c.alc) / 12) * 25, crit: c, comment: "", tips: frac < 1 ? ["Fill in every field of the form: " + (t.form.length - filled) + " left empty."] : [], text: t.form.map((f, fi) => f + ": " + vals[fi]).join("\n") });
-      } else out.push(await exGradeText(t, String(EX.txt[ti] || "").trim(), k === "oral", (EX.secs || {})[ti]));
+        out.push({ empty: !filled, sc: ((c.ade + c.coh + c.cor + c.alc) / 12) * 25, crit: c, comment: "", tips: frac < 1 ? ["Fill in every field of the form: " + (t.form.length - filled) + " left empty."] : [], text: t.form.map((f, fi) => f + ": " + vals[fi]).join("\n") });
+      } else { const tx = String(EX.txt[ti] || "").trim(), g = await exGradeText(t, tx, k === "oral", (EX.secs || {})[ti]); g.empty = wWords(tx) < 3; if (EX.qa && EX.qa[ti] && EX.qa[ti].length) g.qa = EX.qa[ti]; out.push(g); }
     }
     R[k] = { sc: Math.round((out.reduce((s, r) => s + r.sc, 0) / out.length) * 10) / 10, tasks: out, d: Date.now(), late: !!late, ai: !!resolveTB() };
-    save(); try { actAdd(10); } catch (e) {}
-    EX.phase = "result"; exRender();
+    EX.phase = "result"; exDropDraft(); save(); try { actAdd(10); } catch (e) {}
+    exRender();
   }
-  // speaking: transcribe while you speak; in a conversation the examiner's questions are read aloud first
+  // ---------- answers kept: drafts on the phone ----------
+  const exHere = () => !!EX && location.hash.slice(1) === EX.lv + "-examen-" + EX.n + "-" + EX.k;
+  const exDK = () => EX.lv + "-" + EX.n + "-" + EX.k;
+  function exSave(now) {
+    if (!EX || EX.phase !== "run") return;
+    (S.exDraft = S.exDraft || {})[exDK()] = { ans: EX.ans, txt: EX.txt, live: EX.live || {}, qa: EX.qa || {}, secs: EX.secs || {}, plays: EX.plays, end: EX.end || 0, free: !!EX.free, d: Date.now() };
+    clearTimeout(EX.svT); if (now) save(); else EX.svT = setTimeout(save, 400);
+  }
+  function exRestore() {
+    const d = (S.exDraft || {})[exDK()]; if (!d) return;
+    Object.assign(EX, { ans: d.ans || {}, txt: d.txt || {}, qa: d.qa || {}, secs: d.secs || {}, plays: d.plays || {}, end: d.end || 0, free: !!d.free, phase: "run", restored: d.d || 1 });
+    Object.keys(d.live || {}).forEach((ti) => { if (d.live[ti]) EX.txt[ti] = ((EX.txt[ti] || "") + " " + d.live[ti]).trim(); }); EX.live = {};
+  }
+  function exDropDraft() { if (EX && S.exDraft && S.exDraft[exDK()]) delete S.exDraft[exDK()]; }
+  // ---------- speaking: every recogniser session adds to the answer; words still in progress are committed, never dropped ----------
+  const exAnsText = (ti) => ((EX.txt[ti] || "") + " " + ((EX.live || {})[ti] || "")).trim();
+  const EX_FATAL = /not-allowed|service-not-allowed|audio-capture|network|language|start/;
+  function exBox(ti) { const b = document.querySelector('[data-ex-t="' + ti + '"]'), v = exAnsText(ti); if (b) b.value = v; const w = document.querySelector('[data-ex-wc="' + ti + '"]'); if (w) w.textContent = wWords(v); }
+  function exStat(ti, m, bad) { const l = document.getElementById("ex-live-" + ti); if (l) { l.textContent = m || ""; l.classList.toggle("bad", !!bad); } }
+  function exCommit(ti) { const w = (EX.live || {})[ti]; if (w) { EX.txt[ti] = ((EX.txt[ti] || "") + " " + w).trim(); EX.live[ti] = ""; } }
+  function exCtlHTML(ti) {
+    if (!CAN_MIC || !EX) return "";
+    const t = EX.tasks[ti], on = EX.recT === ti, cv = EX.cv && EX.cv.ti === ti && EX.cv.qi >= 0 ? EX.cv : null;
+    if (cv) return '<p class="excvq">Question ' + (cv.qi + 1) + " of " + t.ask.length + ": <i>" + esc(t.ask[cv.qi]) + '</i></p><div class="row"><button class="btn primary" data-act="ex-next" data-t="' + ti + '">' + (cv.qi + 1 < t.ask.length ? "Next question ›" : "Finish the conversation") + '</button><button class="btn" data-act="ex-mic" data-t="' + ti + '">■ Stop</button></div>';
+    const has = wWords(exAnsText(ti)) > 0;
+    return '<div class="row"><button class="btn primary" data-act="ex-mic" data-t="' + ti + '">' + (on ? "■ Stop" : t.ask ? (has ? "🎙️ Start the conversation again" : "🎙️ Start the conversation") : has ? "🎙️ Speak more" : "🎙️ Speak") + "</button></div>";
+  }
+  function exPaintCtl(ti) { const c = document.getElementById("ex-ctl-" + ti); if (c) c.innerHTML = exCtlHTML(ti); const b = document.querySelector('[data-ex-t="' + ti + '"]'); if (b) b.readOnly = EX ? EX.recT === ti : false; }
+  // one recogniser session for task ti
+  function exListen(ti, o) {
+    const r = new SR(); EX.rec = r; EX.recT = ti; EX.live = EX.live || {}; EX.secs = EX.secs || {};
+    r.lang = sttLang(); r.interimResults = true; r.continuous = !!o.cont && !IS_IOS;
+    const base = String(EX.txt[ti] || ""), t0 = Date.now(); let heard = "", closed = false, err = "";
+    const close = () => { if (closed) return; closed = true; EX.secs[ti] = (EX.secs[ti] || 0) + (Date.now() - t0) / 1000; if (o.done) o.done(heard, err); };
+    r._close = close;
+    r.onresult = (e) => { if (!EX || EX.rec !== r) return; let f = "", im = "";
+      for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
+      EX.txt[ti] = (base + " " + f).trim(); EX.live[ti] = im.trim(); heard = (f + im).trim(); exBox(ti); exStat(ti, "Listening… " + wWords(exAnsText(ti)) + " words"); exSave(); };
+    r.onerror = (e) => { if (!EX || EX.rec !== r) return; err = (e && e.error) || "error"; if (IS_IOS && /not-allowed/.test(err)) { MIC_OK = false; try { micHelp("denied"); } catch (x) {} } };
+    r.onend = () => { if (!EX || EX.rec !== r) return; EX.rec = null; exCommit(ti); exBox(ti); close(); exSave(true); if (o.end) o.end(heard, err, Date.now() - t0); };
+    try { r.start(); } catch (e) { EX.rec = null; err = "start"; close(); if (o.end) o.end("", err, 0); }
+  }
+  // end the session now (Finish, the clock, leaving the page): what was heard so far is kept
+  function exHalt() {
+    if (!EX) return; const cv = EX.cv; EX.cv = null; EX.keep = null;
+    if (cv) { cv.gen = -1; try { speechSynthesis.cancel(); } catch (e) {} }
+    const r = EX.rec, ti = EX.recT; if (r == null && ti == null) return;
+    EX.rec = null; EX.recT = null;
+    if (r && r._close) r._close();
+    if (ti != null) { exCommit(ti); exBox(ti); exPaintCtl(ti); }
+    try { r && r.abort(); } catch (e) {}
+    exSave(true);
+  }
+  const exMicErr = (e) => (/not-allowed/.test(e) ? "The microphone is blocked. Allow it for Ruta DELE, or type your answer." : /network/.test(e) ? "Speech recognition can’t connect right now. Type your answer instead." : /language/.test(e) ? "Spanish speech recognition isn’t available on this phone. Type your answer instead." : "The microphone didn’t start (" + e + "). Type your answer instead.");
+  function exDone(ti, err) {
+    if (!EX) return; EX.recT = null; EX.keep = null; exPaintCtl(ti); const n = wWords(exAnsText(ti)), bad = !!err && EX_FATAL.test(err);
+    exStat(ti, bad ? exMicErr(err) : n ? "✓ Saved · " + n + " word" + (n === 1 ? "" : "s") : err === "no-speech" ? "Didn’t hear anything. Try again, or type your answer." : "", bad); exSave(true);
+  }
+  // a monologue: keeps listening until Stop (iPhone hears one phrase at a time, so it starts again after each one)
+  function exMono(ti) {
+    EX.keep = ti; EX.recT = ti; exPaintCtl(ti); exStat(ti, "Listening…");
+    const go = () => exListen(ti, { cont: true, end: (heard, err, ms) => {
+      if (EX && EX.keep === ti && !EX_FATAL.test(err) && (heard || ms > 1500)) { go(); return; }
+      exDone(ti, err); } });
+    go();
+  }
+  function exStopMic(ti) {
+    EX.keep = null; if (EX.cv) { exHalt(); exDone(ti, ""); return; }
+    const r = EX.rec; if (!r) { exDone(ti, ""); return; }
+    exStat(ti, "Saving…"); try { r.stop(); } catch (e) {}
+    setTimeout(() => { if (EX && EX.rec === r) { exHalt(); exDone(ti, ""); } }, 3000); // the recogniser never reported back: keep what was heard
+  }
+  // a conversation: the examiner asks one question, you answer, then the next one
+  const exQaText = (ti) => (EX.qa[ti] || []).map((x) => x.a).filter(Boolean).join("\n");
+  function exConv(ti) {
+    const t = EX.tasks[ti]; EX.qa = EX.qa || {}; EX.qa[ti] = t.ask.map((q) => ({ q, a: "" }));
+    EX.txt[ti] = ""; EX.live[ti] = ""; exBox(ti);
+    EX.cv = { ti, qi: -1, gen: 1 }; EX.recT = ti; EX.keep = ti; exNextQ(ti);
+  }
+  function exNextQ(ti) {
+    const cv = EX && EX.cv; if (!cv || cv.ti !== ti) return;
+    if (EX.rec) { const r = EX.rec; EX.rec = null; if (r._close) r._close(); try { r.abort(); } catch (e) {} } // keep the answer being heard
+    const gen = ++cv.gen; try { speechSynthesis.cancel(); } catch (e) {}
+    const qa = EX.qa[ti]; cv.qi++;
+    if (cv.qi >= qa.length) { EX.cv = null; exDone(ti, ""); return; }
+    exPaintCtl(ti); exStat(ti, "The examiner is asking…"); exSave();
+    const qi = cv.qi, ok = () => EX && EX.cv === cv && cv.gen === gen;
+    const listen = () => { if (!ok()) return; exStat(ti, "Your turn: answer now"); EX.txt[ti] = exQaText(ti);
+      exListen(ti, { cont: false,
+        done: (heard) => { qa[qi].a = heard; EX.txt[ti] = exQaText(ti); EX.live[ti] = ""; exBox(ti); exSave(); },
+        end: (heard, err) => { if (!ok()) return; if (EX_FATAL.test(err)) { EX.cv = null; exDone(ti, err); return; } setTimeout(() => ok() && exNextQ(ti), heard ? 500 : 900); } }); };
+    if (!canSpeak) { listen(); return; }
+    const u = utter(qa[qi].q, "es", 0.9, V2[1] || V2[0]); u.onend = u.onerror = () => setTimeout(listen, 250); speechSynthesis.speak(u);
+  }
   function exMic(ti) {
-    if (EX.recT === ti) { try { EX.rec && EX.rec.stop(); } catch (e) {} return; }
-    const t = EX.tasks[ti]; const start = () => {
-      const r = new SR(); EX.rec = r; EX.recT = ti; r.lang = sttLang(); r.interimResults = true; r.continuous = !IS_IOS;
-      const box = () => document.querySelector('[data-ex-t="' + ti + '"]'), live = () => document.getElementById("ex-live-" + ti);
-      const base = String(EX.txt[ti] || ""); let fin = ""; const t0 = Date.now();
-      r.onresult = (e) => { let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { if (e.results[i].isFinal) f += e.results[i][0].transcript + " "; else im += e.results[i][0].transcript; } fin = f; EX.txt[ti] = (base + " " + f).trim(); const b = box(); if (b) b.value = (EX.txt[ti] + " " + im).trim(); const l = live(); if (l) l.textContent = "Listening…"; };
-      r.onerror = (e) => { const l = live(); if (l) l.textContent = e.error === "no-speech" ? "Didn’t hear anything" : "Microphone: " + e.error; if (IS_IOS && /not-allowed/.test(e.error)) micHelp("denied"); };
-      r.onend = () => { EX.secs = EX.secs || {}; EX.secs[ti] = (EX.secs[ti] || 0) + (Date.now() - t0) / 1000;
-        if (IS_IOS && EX.recT === ti && EX.keep) { try { r.start(); return; } catch (e) {} } // iPhone: one phrase at a time, keep going
-        EX.recT = null; EX.rec = null; const l = live(); if (l) l.textContent = ""; exRender(); };
-      try { r.start(); EX.keep = true; } catch (e) {}
-      exRender();
-    };
-    const go = () => { if (IS_IOS && !MIC_OK) micAsk().then((ok) => ok && start()); else start(); };
-    if (t.ask && t.ask.length) { // the examiner asks
-      const qs = t.ask.slice(); const say = () => { const q = qs.shift(); if (!q) { go(); return; } const u = utter(q, "es", 0.9, V2[1] || V2[0]); u.onend = () => setTimeout(say, 400); speechSynthesis.speak(u); };
-      EX.txt[ti] = (EX.txt[ti] || ""); say();
-    } else go();
+    if (EX.recT === ti) { exStopMic(ti); return; }
+    if (EX.recT != null) { const o = EX.recT; exHalt(); exDone(o, ""); }
+    const t = EX.tasks[ti], go = () => { if (EX && EX.phase === "run") (t.ask && t.ask.length ? exConv(ti) : exMono(ti)); };
+    if (IS_IOS && !MIC_OK) micAsk().then((ok) => ok && go()); else go();
   }
+  // leaving the paper stops the mic (what was heard is kept); the clock keeps running, as in the real exam
+  addEventListener("hashchange", () => { if (!EX || exHere()) return; if (EX.recT != null || EX.cv) exHalt(); if (EX.k === "auditiva" && EX.pgen) { EX.pgen++; try { speechSynthesis.cancel(); } catch (e) {} } });
+  const exFlush = () => { if (EX && EX.phase === "run") exSave(true); };
+  addEventListener("pagehide", exFlush); document.addEventListener("visibilitychange", () => { if (document.hidden) exFlush(); });
+  window.__ex = () => EX;
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a || !/^ex-/.test(a)) return;
-    if (a === "ex-reset") { delete (S.ex || {})[t.dataset.k]; save(); route(); return; }
+    if (a === "ex-reset") { const kk = t.dataset.k; delete (S.ex || {})[kk]; Object.keys(S.exDraft || {}).forEach((d) => { if (d.indexOf(kk + "-") === 0) delete S.exDraft[d]; }); if (EX && exKey(EX.lv, EX.n) === kk) { exStop(); EX = null; } save(); route(); return; }
     if (!EX) return;
-    if (a === "ex-start") { EX.phase = "run"; EX.free = !!t.dataset.free; EX.end = EX.free ? 0 : Date.now() + EX.mins * 60000; exRender(); scrollTo(0, 0); }
-    else if (a === "ex-ans") { EX.ans[t.dataset.k] = +t.dataset.v; t.parentElement.querySelectorAll("[data-act=ex-ans]").forEach((b) => b.setAttribute("aria-pressed", b === t)); }
+    if (a === "ex-start") { EX.phase = "run"; EX.free = !!t.dataset.free; EX.end = EX.free ? 0 : Date.now() + EX.mins * 60000; exSave(true); exRender(); scrollTo(0, 0); }
+    else if (a === "ex-ans") { EX.ans[t.dataset.k] = +t.dataset.v; t.parentElement.querySelectorAll("[data-act=ex-ans]").forEach((b) => b.setAttribute("aria-pressed", b === t)); exSave(); }
     else if (a === "ex-play") exPlay(+t.dataset.t);
     else if (a === "ex-submit") { const miss = (EX.k === "lectura" || EX.k === "auditiva") ? EX.tasks.reduce((n, tt, ti) => n + tt.q.filter((_, qi) => EX.ans[ti + "-" + qi] == null).length, 0) : 0;
-      if (miss && t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = miss + " unanswered. Tap again to finish"; return; } exSubmit(false); }
-    else if (a === "ex-again") { exStop(); EX = null; route(); }
-    else if (a === "ex-mic") { EX.keep = EX.recT !== +t.dataset.t; exMic(+t.dataset.t); }
+      const emp = (EX.k === "escritura" || EX.k === "oral") ? EX.tasks.map((tt, ti) => ((tt.form ? tt.form.every((_, fi) => !String(EX.txt[ti + "-" + fi] || "").trim()) : wWords(exAnsText(ti)) < 3) ? tt.t : null)).filter(Boolean) : [];
+      if ((miss || emp.length) && t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = miss ? miss + " unanswered. Tap again to finish" : emp.join(", ") + (emp.length > 1 ? " have" : " has") + " no answer yet. Tap again to finish"; return; } exSubmit(false); }
+    else if (a === "ex-again") { exStop(); exDropDraft(); save(); EX = null; route(); }
+    else if (a === "ex-mic") exMic(+t.dataset.t);
+    else if (a === "ex-next") exNextQ(+t.dataset.t);
   });
   document.addEventListener("input", (e) => {
     if (!EX) return; const el = e.target;
-    if (el.dataset && el.dataset.exT != null) { EX.txt[el.dataset.exT] = el.value; const w = document.querySelector('[data-ex-wc="' + el.dataset.exT + '"]'); if (w) w.textContent = wWords(el.value); }
-    if (el.dataset && el.dataset.exF != null) EX.txt[el.dataset.exF] = el.value;
+    if (el.dataset && el.dataset.exT != null) { if (EX.recT === +el.dataset.exT) return; EX.txt[el.dataset.exT] = el.value; if (EX.live) EX.live[el.dataset.exT] = ""; const w = document.querySelector('[data-ex-wc="' + el.dataset.exT + '"]'); if (w) w.textContent = wWords(el.value); exSave(); }
+    if (el.dataset && el.dataset.exF != null) { EX.txt[el.dataset.exF] = el.value; exSave(); }
   });
   function wReportHTML(T, R) {
     const pass = R.total >= 15, bars = WCRIT.map(([k, en, es, d]) => { const v = R.sc[k]; return '<div class="wcr"><div class="wcrh"><b>' + en + '</b> <span class="muted">(' + es + ")</span><span class=\"wsc\">" + v + "/3</span></div><div class=\"wbarb\"><i style=\"width:" + (v / 3) * 100 + "%\" class=\"" + (v >= 2 ? "ok" : "no") + "\"></i></div><p class=\"small\">" + esc(wWhy(k, v, T, R)) + "</p></div>"; }).join("");
@@ -10339,7 +10437,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611142027";
+  var BUILD = "202611142039";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;

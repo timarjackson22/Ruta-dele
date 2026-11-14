@@ -150,7 +150,8 @@ public class SttBridge {
             active = false;
             rec.stopListening();
             final int my = sid;
-            main.postDelayed(() -> { if (sid == my) end(); }, 2500);
+            // the recogniser never sent a result after Stop: the words shown so far become the final result instead of being lost
+            main.postDelayed(() -> { if (sid == my && !ended) { if (!lastPartial.isEmpty()) { js("final", lastPartial); lastPartial = ""; } end(); } }, 2500);
         });
     }
 
