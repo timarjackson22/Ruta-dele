@@ -73,6 +73,21 @@ CSS = r'''
 .vsk .qbar i { display: block; height: 100%; background: var(--cobalt); border-radius: 99px }
 .vfix { margin: 0; padding-left: 18px }
 .vslow { margin: -4px 0 0; color: var(--muted) } .vslow[hidden] { display: none }
+.vchips { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 4px; margin: 4px -16px 0; padding-left: 16px; padding-right: 16px; scrollbar-width: none }
+.vchips::-webkit-scrollbar { display: none }
+.vchip { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 7px 13px; font: inherit; font-size: 13.5px; cursor: pointer; white-space: nowrap }
+.vchip[aria-pressed="true"] { background: var(--cobalt); border-color: var(--cobalt); color: #fff }
+.vcw { min-width: 0 }
+.vcw.has-act { display: flex; align-items: center; gap: 8px }
+.vcw.has-act .vcard { flex: 1; min-width: 0 }
+.vrm { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 4px }
+.vrm .ic { width: 15px; height: 15px }
+.vmore { margin-top: 18px } .vmore > summary { cursor: pointer; font-weight: 600; padding: 8px 0 }
+.vmore .vgrid { margin-top: 8px }
+.vedit-note { margin: 10px 0 0 }
+.vpage-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0 }
+.vpage-act .btn { display: inline-flex; align-items: center; gap: 5px } .vpage-act .ic { width: 15px; height: 15px }
+.lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''
 k = s.rindex("</style>", 0, s.index("</head>")); s = s[:k] + CSS + s[k:]

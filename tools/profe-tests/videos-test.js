@@ -41,7 +41,8 @@ const MOCK = `(() => {
   await go("practicar"); const row = await p.$('a[href="#videos"]'); rec("Practice has a Videos row", !!row);
   await row.click(); await p.waitForTimeout(700);
   let s = await st(); const cards = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href")));
-  rec("Videos list: 4 starter videos", cards.length === 4 && cards.includes("#video-2GrDFoMl978"), cards.join(" "));
+  const per = await p.$$eval("h2.ghead", (hs) => hs.map((h) => [h.textContent.replace(/\s*\(.*$/, ""), h.nextElementSibling.querySelectorAll(".vcard").length]));
+  rec("Library: at least 4 videos in each of the 7 types", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Music", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] >= 4) && cards.includes("#video-2GrDFoMl978"), JSON.stringify(per));
   rec("Videos list: menu shown, Practice tab lit, back to Practice", !s.tucked && s.tab === "practicar" && s.back === "Practice" && !s.wide, JSON.stringify(s));
   // paste a link
   await p.fill("#vlink", "hola que tal"); await p.click('#vadd button[type="submit"]'); await p.waitForTimeout(300);
@@ -119,11 +120,46 @@ const MOCK = `(() => {
   const wb = await p.$$eval(".vcard", (a) => a.filter((x) => /Watched/.test(x.innerText)).length); const cc = await p.$eval('.vcard[href="#video-2GrDFoMl978"]', (x) => x.innerText);
   rec("List shows watched videos and words caught", wb === 2 && /2 words caught/.test(cc), cc.replace(/\s+/g, " "));
   await go("practicar"); rec("Practice row shows the count", /2 watched/.test(await p.$eval('a[href="#videos"]', (x) => x.innerText)));
+  // library clips: 4 minutes at most
+  await go("video-kRt2sRyup6A"); const mk = await p.evaluate(() => window.__yt.made.at(-1).playerVars);
+  rec("Library clip plays 0:00–4:00 only", mk.start === 0 && mk.end === 240 && /Clip: 0:00–4:00/.test(await p.textContent(".vpage-act")), JSON.stringify([mk.start, mk.end]));
+  await p.evaluate(() => { window.__yt.p.dur = 600; window.__yt.p.playVideo(); }); await T(100); await log(); await p.click('[data-act="v-loop"]'); await p.click('[data-act="v-loop"]');
+  await T(250); await p.waitForTimeout(400); L = await log(); rec("Playing past the clip's end stops it at 4:00", L.some((x) => x[0] === "pause") && L.some((x) => x[0] === "seek" && x[1] < 240 && x[1] > 230), JSON.stringify(L));
+  await T(10); await p.evaluate(() => window.__yt.p.seekTo(0)); await T(210); await p.waitForTimeout(400);
+  const kd = (await S()).vid["kRt2sRyup6A"]; rec("85% of the clip counts as watched; length saved as 4:00", kd.w > 0 && kd.len === 240, JSON.stringify({ w: !!kd.w, len: kd.len }));
+  await go("videos"); rec("Card shows the clip length", /4:00/.test(await p.$eval('.vcard[href="#video-kRt2sRyup6A"]', (x) => x.innerText)));
+  // filters
+  await p.click('.vchip[data-k="c"][data-v="noticias"]'); await p.waitForTimeout(200);
+  let hrefs = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href").slice(7)));
+  rec("Filter: News shows only news", hrefs.length >= 4 && hrefs.includes("tjmp1fEk9d4") && !hrefs.includes("kRt2sRyup6A"), hrefs.join(" "));
+  await p.click('.vchip[data-k="l"][data-v="C1"]'); await p.waitForTimeout(200); hrefs = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href").slice(7)));
+  rec("Filter: News + C1", hrefs.length === 2 && hrefs.includes("tjmp1fEk9d4"), hrefs.join(" "));
+  await p.reload(); await p.waitForTimeout(900); rec("Filters are remembered", (await p.getAttribute('.vchip[data-k="l"][data-v="C1"]', "aria-pressed")) === "true");
+  await p.click('.vchip[data-k="c"][data-v=""]'); await p.click('.vchip[data-k="l"][data-v=""]'); await p.waitForTimeout(200);
+  // remove / undo / restore
+  await p.click('[data-act="v-edit"]'); await p.waitForTimeout(200); const nrm = (await p.$$('[data-act="v-rm"]')).length; const ncard = (await p.$$(".vcard")).length;
+  rec("Edit: every video gets a Remove button", nrm === ncard && nrm > 30, nrm + "/" + ncard);
+  await p.click('[data-act="v-rm"][data-id="TiPRNqJnI_k"]'); await p.waitForTimeout(250);
+  rec("Remove takes it off the list, with Undo", !(await p.$('.vcard[href="#video-TiPRNqJnI_k"]:not(.vmore .vcard)')) && /Removed/.test(await p.textContent("#dktoast")), await p.textContent("#dktoast"));
+  await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(250); rec("Undo brings it back", !!(await p.$('.vgrid .vcard[href="#video-TiPRNqJnI_k"]')) && !((await S()).vhide || {})["TiPRNqJnI_k"]);
+  await p.click('[data-act="v-rm"][data-id="TiPRNqJnI_k"]'); await p.waitForTimeout(250);
+  rec("Removed videos listed at the bottom", /Removed videos \(1\)/.test(await p.textContent(".vmore summary")));
+  await p.click(".vmore summary"); await p.click('[data-act="v-restore"][data-id="TiPRNqJnI_k"]'); await p.waitForTimeout(250);
+  rec("Restore brings it back", !(await p.$(".vmore")) && !!(await p.$('.vcard[href="#video-TiPRNqJnI_k"]')));
+  await p.fill("#vlink", "https://youtu.be/MyOwnVideo1"); await p.click('#vadd button[type="submit"]'); await p.waitForTimeout(600); await go("videos"); await p.click('[data-act="v-edit"]'); await p.waitForTimeout(200);
+  await p.click('[data-act="v-rm"][data-id="MyOwnVideo1"]'); await p.waitForTimeout(250);
+  rec("Delete one of my videos", !((await S()).myv || []).some((v) => v.yt === "MyOwnVideo1") && /Deleted/.test(await p.textContent("#dktoast")));
+  await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(250); rec("…Undo restores it", ((await S()).myv || []).some((v) => v.yt === "MyOwnVideo1"));
+  await p.click('[data-act="v-edit"]'); rec("Done leaves edit mode", !(await p.$('[data-act="v-rm"]')));
+  await go("video-v2Ph5hBmqYA"); await p.click('[data-act="v-remove"]'); await p.waitForTimeout(500);
+  rec("Remove from the video page", p.url().endsWith("#videos") && ((await S()).vhide || {})["v2Ph5hBmqYA"] > 0);
+  await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(300);
   // blocked embed
   await go("video-rw-DW_YlfoI"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
   rec("Blocked embed: says why, with the code", /only allows it on YouTube \(code 150\)/.test(await p.textContent("#vfail p")));
   rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=rw-DW_YlfoI");
   rec("…exercises still there", await p.isVisible("#vret"));
+  await go("videos"); rec("Unplayable video leaves the main list, listed separately", !(await p.$('.vgrid:not(.vmore .vgrid) .vcard[href="#video-rw-DW_YlfoI"]')) && /Not playable in the app \(1\)/.test(await p.textContent("body")));
   // shared from the YouTube app (Android share sheet)
   await p.goto("http://localhost:8766/?text=" + encodeURIComponent("Mira esto https://youtu.be/ShArEdViD01?si=abc")); await p.waitForTimeout(1300);
   mine = (await S()).myv || [];
