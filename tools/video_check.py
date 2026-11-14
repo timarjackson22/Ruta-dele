@@ -56,6 +56,14 @@ def rss(ch):
         g = lambda p: (re.search(p, e, re.S) or [None, None])[1]
         print("RSS " + json.dumps({"ch": ch, "id": g(r"<yt:videoId>(.*?)<"), "title": html.unescape(g(r"<title>(.*?)<") or ""), "author": html.unescape(g(r"<name>(.*?)<") or ""), "date": g(r"<published>(.*?)<"), "views": int(g(r'views="(\d+)"') or 0)}, ensure_ascii=False), flush=True)
 for v in sys.argv[1:]:
+    if v.startswith("chan:"):
+        try:
+            j = json.loads(get("https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=" + v[5:])); au = j.get("author_url")
+            pg = get(au); cid = (re.search(r'"(?:externalId|channelId)":"(UC[\w-]{22})"', pg) or re.search(r'channel/(UC[\w-]{22})', pg))
+            print("RSS " + json.dumps({"ch": "lookup", "title": au + " -> " + (cid.group(1) if cid else "?")}))
+            if cid: rss(cid.group(1))
+        except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
+        continue
     if v.startswith("rss:"):
         try: rss(v[4:])
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
