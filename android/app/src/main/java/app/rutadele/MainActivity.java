@@ -33,6 +33,7 @@ public class MainActivity extends Activity {
     ValueCallback<Uri[]> fileCb;
     LlmBridge llm;
     TranslateBridge trb;
+    AudioCapBridge aud;
 
     WebView web;
     TtsBridge tts;
@@ -72,6 +73,8 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(trb, "AndroidTR");
         web.addJavascriptInterface(new AppBridge(this), "AndroidApp");
         web.addJavascriptInterface(new CaptionBridge(web), "AndroidCap"); // Practice › Videos caption window
+        aud = new AudioCapBridge(this, web);
+        web.addJavascriptInterface(aud, "AndroidAud"); // Practice › Videos: captions from the audio
         ReminderReceiver.schedule(this); // keep the daily reminder set after updates
 
         bridgeJs = readAsset("bridge.js");
@@ -151,6 +154,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int code, int result, Intent data) {
         super.onActivityResult(code, result, data);
+        if (code == AudioCapBridge.REQ_PROJ && aud != null) { aud.onProjection(result, data); return; }
         if (code == REQ_FILE && fileCb != null) {
             Uri[] r = null;
             if (result == RESULT_OK && data != null && data.getData() != null) r = new Uri[]{data.getData()};
@@ -172,6 +176,7 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         if (code == REQ_MIC) stt.onPermission(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
+        if (code == AudioCapBridge.REQ_MIC2 && aud != null) aud.onMic(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
     }
 
     String readAsset(String name) {
@@ -207,6 +212,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (aud != null) aud.end();
         stt.destroy();
         llm.destroy();
         trb.destroy();
