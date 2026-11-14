@@ -1592,7 +1592,7 @@ body.litem-on .tutor-fab { display: none !important }
 #v-body > p.muted.small { margin: 0 }
 </style>
 
-<script>window.__BUILD = "202611140603";</script>
+<script>window.__BUILD = "202611140615";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4310,13 +4310,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (/^g-/.test(h)) return ["#gramatica", "Grammar"];
     if (/^guia-/.test(h)) return ["#guias", "Guides"];
     if (/^(gramatica|verbos|palabras|guias|recursos)$/.test(h)) return ["#biblioteca", "Library"];
-    if (h === "ajustes") return ["#inicio", "Today"];
+    if (h === "ajustes" || h === "progreso" || h === "hoy") return ["#inicio", "Today"];
+    if (h === "drill") return ["#hoy", "Today’s session"];
+    if (/^palabra-/.test(h)) return ["#palabras", "Words"];
+    if (h === "examenes") return ["#practicar", "Practice"];
     return null;
   }
+  // the menu shows only where you pick where to go next; any other page (including new ones) tucks it
+  const MENU_HUBS = /^(|inicio|hoy|curso|practicar|biblioteca|repaso|escuchar|leer|escritura|verbos|gramatica|guias|palabras|examenes|recursos|esc|a1|a2|b1|b2|c1|c2|(a1|a2|b1|b2|c1|c2)-examenes)$/;
   function uiNav() {
     const h = location.hash.replace(/^#/, ""), b = document.getElementById("nb-back"), t = document.getElementById("nb-title"); if (!b || !t) return;
     const par = uiParent(h);
-    document.body.classList.toggle("no-tabs", (typeof LI !== "undefined" && !!LI[h]) || /^(a1|a2|b1|b2|c1|c2|esc)-u\d+$/.test(h) || /^guia-/.test(h) || /-examen-\d+-[a-z]+$/.test(h) || h === "drill" || /^repaso-./.test(h) || /^escritura-./.test(h) || h === "errores" || h === "nivel" || /^(a1|a2|b1|b2|c1|c2|esc)-(mock|cards)$/.test(h));
+    document.body.classList.toggle("no-tabs", !MENU_HUBS.test(h));
     if (window.__lqh !== location.hash) { window.__lqh = location.hash; const ap = document.getElementById("app"); if (ap) { ap.classList.remove("lq-in"); void ap.offsetWidth; ap.classList.add("lq-in"); } }
     b.hidden = !par; if (par) { b.setAttribute("href", par[0]); document.getElementById("nb-back-t").textContent = par[1]; b.setAttribute("aria-label", "Back to " + par[1]); }
     const h1 = document.querySelector("#app h1"); t.textContent = h1 ? h1.textContent.trim() : "";
@@ -8547,7 +8552,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const exRes = (lv, n) => ((S.ex = S.ex || {})[exKey(lv, n)] = S.ex[exKey(lv, n)] || {});
   let EX = null;
   function exRoute(lv, n, paper) {
-    document.body.classList.toggle("no-tabs", !!paper);
+    document.body.classList.toggle("no-tabs", !MENU_HUBS.test(location.hash.slice(1)));
     app.innerHTML = '<div class="stack"><p class="muted">Loading the ' + EXL[lv] + " exams…</p></div>";
     exLoad(lv).then((D) => { if (!n) exHub(lv, D); else if (!paper) exHome(lv, D, +n); else exPaper(lv, D, +n, paper); })
       .catch(() => { app.innerHTML = '<div class="stack"><p class="crumbs"><a href="#' + lv + '">' + EXL[lv] + '</a></p><h1>Full DELE ' + EXL[lv] + ' exams</h1><p class="callout">The ' + EXL[lv] + " exams are being written and will appear here soon. A1 is ready now.</p></div>"; });
@@ -8984,7 +8989,6 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     document.body.classList.add("no-tabs");
     if (!QDR) { qdStart(); return; }
     if (QDR.i >= QDR.ex.length) { // the end
-      document.body.classList.remove("no-tabs");
       const perfect = QDR.miss === 0; if (!QDR.fin) { setTimeout(() => celebrate(perfect), 250); QDR.fin = 1; qBump("drills"); if (perfect) qBump("perfect"); actAdd(QDR.ok); }
       app.innerHTML = '<div class="stack drill"><div class="drend"><p class="dr-big">' + (perfect ? "⭐" : "🎉") + '</p><h1>' + (perfect ? "¡Perfecto!" : "¡Bien hecho!") + "</h1><p class=\"lead2\">" + QDR.ok + " of " + QDR.ex.length + " right first time · +" + QDR.ok + ' points</p><div class="row" style="justify-content:center"><a class="btn primary" href="#hoy">Today’s session</a><button class="btn" data-act="dr-again">Another drill</button></div></div></div>';
       return;
@@ -9046,7 +9050,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
 
   /* ---------- progress page ---------- */
   function progView() {
-    document.body.classList.remove("no-tabs"); qCheck();
+    qCheck();
     const A = S.act || {}, F = frzSet(), st = streak(), days = [];
     const d = new Date(); d.setDate(d.getDate() - 34); for (let i = 0; i < 35; i++) { const k = dayKey(d); days.push([k, A[k] || 0, F.has(k), d.getDate()]); d.setDate(d.getDate() + 1); }
     const g = S.goal || 20, cal = '<div class="pcal">' + days.map(([k, v, f, n]) => '<span title="' + k + ": " + v + ' points" class="' + (f ? "frz" : v >= g ? "l3" : v >= 5 ? "l2" : v ? "l1" : "") + '">' + n + "</span>").join("") + "</div>";
@@ -9245,7 +9249,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140603";
+  var BUILD = "202611140615";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
