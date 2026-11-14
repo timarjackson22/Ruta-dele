@@ -1,0 +1,13 @@
+name: Video check
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "YouTube IDs separated by spaces"
+        required: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/video_check.py ${{ github.event.inputs.ids }}

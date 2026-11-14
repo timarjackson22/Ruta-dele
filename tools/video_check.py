@@ -1,0 +1,31 @@
+"""Checks YouTube videos for Ruta DELE: plays in other apps (embeds)? caption tracks? channel, views, length.
+Prints facts only, never caption text. Run on GitHub Actions (workflow video-check): python tools/video_check.py ID ID ..."""
+import sys, re, json, html, urllib.request, http.cookiejar
+cj = http.cookiejar.CookieJar(); op = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj))
+H = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36", "Accept-Language": "es,en;q=0.8"}
+def get(u, data=None, hdr=None):
+    r = urllib.request.Request(u, data=data, headers=dict(H, **(hdr or {}))); return op.open(r, timeout=30).read().decode("utf-8", "replace")
+def check(v):
+    page = html.unescape(get("https://www.youtube.com/watch?v=" + v))
+    if 'action="https://consent.youtube.com/s"' in page:
+        m = re.search('name="v" value="(.*?)"', page); cj.set_cookie(http.cookiejar.Cookie(0, "CONSENT", "YES+" + m.group(1), None, False, ".youtube.com", True, True, "/", True, False, None, False, None, None, {}))
+        page = html.unescape(get("https://www.youtube.com/watch?v=" + v))
+    key = re.search(r'"INNERTUBE_API_KEY":\s*"([a-zA-Z0-9_-]+)"', page)
+    if not key: return {"id": v, "err": "no key" + (" (captcha)" if "g-recaptcha" in page else "")}
+    emb = re.search(r'"playableInEmbed":\s*(true|false)', page)
+    pr = json.loads(get("https://www.youtube.com/youtubei/v1/player?key=" + key.group(1), json.dumps({"context": {"client": {"clientName": "ANDROID", "clientVersion": "20.10.38"}}, "videoId": v}).encode(), {"Content-Type": "application/json"}))
+    ps = pr.get("playabilityStatus", {}); vd = pr.get("videoDetails", {})
+    tr = (pr.get("captions") or {}).get("playerCaptionsTracklistRenderer", {}).get("captionTracks", [])
+    tracks = [t.get("languageCode", "") + ("(auto)" if t.get("kind") == "asr" else "") for t in tr]
+    n = None; es = [t for t in tr if t.get("languageCode", "").startswith("es")]
+    if es:
+        t = sorted(es, key=lambda t: t.get("kind") == "asr")[0]
+        try: n = len(re.findall(r"<text ", get(t["baseUrl"].replace("&fmt=srv3", ""))))
+        except Exception as e: n = "fetch failed: " + str(e)[:60]
+    return {"id": v, "status": ps.get("status"), "reason": ps.get("reason"), "embed_page": emb.group(1) if emb else None, "embed_player": ps.get("playableInEmbed"),
+            "title": vd.get("title"), "author": vd.get("author"), "views": int(vd.get("viewCount", 0) or 0), "secs": int(vd.get("lengthSeconds", 0) or 0), "tracks": tracks, "es_lines": n}
+out = []
+for v in sys.argv[1:]:
+    try: r = check(v)
+    except Exception as e: r = {"id": v, "err": str(e)[:120]}
+    out.append(r); print("ROW " + json.dumps(r, ensure_ascii=False), flush=True)
