@@ -50,7 +50,16 @@ def check_old(v):
     return {"id": v, "status": ps.get("status"), "reason": ps.get("reason"), "embed_page": emb.group(1) if emb else None, "embed_player": ps.get("playableInEmbed"),
             "title": vd.get("title"), "author": vd.get("author"), "views": int(vd.get("viewCount", 0) or 0), "secs": int(vd.get("lengthSeconds", 0) or 0), "tracks": tracks, "es_lines": n}
 out = []
+def rss(ch):
+    x = get("https://www.youtube.com/feeds/videos.xml?channel_id=" + ch)
+    for e in re.findall(r"<entry>(.*?)</entry>", x, re.S):
+        g = lambda p: (re.search(p, e, re.S) or [None, None])[1]
+        print("RSS " + json.dumps({"ch": ch, "id": g(r"<yt:videoId>(.*?)<"), "title": html.unescape(g(r"<title>(.*?)<") or ""), "author": html.unescape(g(r"<name>(.*?)<") or ""), "date": g(r"<published>(.*?)<"), "views": int(g(r'views="(\d+)"') or 0)}, ensure_ascii=False), flush=True)
 for v in sys.argv[1:]:
+    if v.startswith("rss:"):
+        try: rss(v[4:])
+        except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
+        continue
     try: r = check(v)
     except Exception as e: r = {"id": v, "err": str(e)[:120]}
     out.append(r); print("ROW " + json.dumps(r, ensure_ascii=False), flush=True)
