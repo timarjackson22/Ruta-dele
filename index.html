@@ -1585,9 +1585,14 @@ body.litem-on .tutor-fab { display: none !important }
 .pbadges > div.on > span:first-child .ic { color: inherit }
 .pbadges > div { filter: none; opacity: .6 } .pbadges > div.on { opacity: 1 }
 .dr-big .ic { width: 64px; height: 64px; color: var(--saffron) }
+
+/* ===== LAYOUT_V1: spacing rhythm ===== */
+#v-body, #g-body { display: flex; flex-direction: column; gap: 12px }
+#v-body > .row, #g-body > .row { gap: 8px }
+#v-body > p.muted.small { margin: 0 }
 </style>
 
-<script>window.__BUILD = "202611140526";</script>
+<script>window.__BUILD = "202611140603";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -9240,7 +9245,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140526";
+  var BUILD = "202611140603";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
