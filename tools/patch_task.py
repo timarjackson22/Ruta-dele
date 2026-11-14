@@ -11,10 +11,15 @@ JS = r'''
   /* ---------- the task Profe keeps to ---------- */
   const TASK_RE = /\b(quiz me|test me|ask me|practi[cs]e|let'?s (do|practi[cs]e|talk|have|try|work|play|start)|role.?play|conversation|exercise|drill|help me (with|write|prepare|practi)|correct (my|this)|check my|i want to (learn|practi[cs]e|work on|improve|prepare)|teach me|give me (an? |some )?(exercise|question|sentence|task|quiz|practice)|go through|quiero (practicar|aprender|mejorar|repasar)|vamos a|hagamos|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i;
   const YES_RE = /^\s*(s[ií]|yes|yeah|yep|ok(ay)?|vale|claro|dale|continue|continuar|continuemos|seguir|sigamos|sigue|more|m[aá]s|otra|another|again|let'?s go)\b/i;
+  const STOP_RE = /^\s*(stop|let'?s stop|that'?s (all|enough)|i'?m done|finish|end( the)? (session|lesson|task)|terminar|terminamos|termina|basta|ya est[aá]|eso es todo|fin|chao|adi[oó]s|bye)\b/i;
   function taskTrack(text) {
     if (!tCur) return; const T = tCur.task;
-    if (TASK_RE.test(text) && text.length > 6) { tCur.task = { t: text.trim().slice(0, 220), tries: 0, done: false, at: Date.now() }; return; }
-    if (T && T.done && YES_RE.test(text)) { T.done = false; T.tries = 0; T.more = 1; }
+    if (T && STOP_RE.test(text)) { T.stop = 1; return; }
+    const active = T && !T.done, esReq = /\b(vamos a|hagamos|quiero (practicar|aprender|mejorar|repasar)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i.test(text) && !/\b(quiz|test|practi[cs]e|teach|let'?s|exercise|role.?play)\b/i.test(text);
+    // mid-task, a Spanish answer that happens to contain «vamos a…» is an answer, not a new task
+    if (TASK_RE.test(text) && text.length > 6 && (!active || !esReq || /\b(cambiar|otra cosa|en vez|en lugar)\b/i.test(text))) { tCur.task = { t: text.trim().slice(0, 220), tries: 0, done: false, at: Date.now(), n: 0, fixes: [] }; return; }
+    if (T && T.done && YES_RE.test(text)) { T.done = false; T.tries = 0; T.more = 1; T.lastCheck = T.n; return; }
+    if (T && !T.done) T.n = (T.n || 0) + 1; // a substantive response to the task
   }
   let TASK_TAG = null;
   function taskTag(c) { const m = /\[\[\s*(✓|✗|★|·|ok|no|done|-)\s*\]\]/i.exec(c || ""); return m ? ({ ok: "✓", no: "✗", done: "★", "-": "·" }[m[1].toLowerCase()] || m[1]) : null; }
@@ -24,24 +29,46 @@ JS = r'''
     const T = tCur.task, raw = live.c; let tag = taskTag(raw) || taskTag(TASK_TAG); TASK_TAG = null;
     if (!tag) { const plain = raw.toLowerCase(); tag = /¡?(felicidades|enhorabuena|congratulations|well done[^.]*task|has terminado|you('ve| have) (finished|completed))/.test(plain) ? "★" : /(inténtalo|intentalo|try again|otra vez|casi|not quite|almost)/.test(plain) ? "✗" : /(¡?correcto|¡?exacto|¡?perfecto|¡?muy bien|that's right|correct!)/.test(plain) ? "✓" : "·"; }
     if (tag === "✗") T.tries = (T.tries || 0) + 1; else if (tag === "✓") T.tries = 0; else if (tag === "★") { T.done = true; T.tries = 0; try { celebrate(false); } catch (e) {} }
+    if (tag === "✗") { const fx = [...raw.split("\n").filter((l) => !/💡|useful word/i.test(l)).join("\n").matchAll(/\*\*([^*]{2,60})\*\*/g)].map((m) => m[1]); if (fx.length) T.fixes = (T.fixes || []).concat(fx.slice(0, 2)).slice(-6); }
+    if (T.checkNow) { T.lastCheck = T.n; T.checkNow = 0; }
+    if (T.stop) tCur.task = null;
     live.c = taskStrip(raw);
   }
-  const TASK_RULES = "\n\nLesson discipline (most important):\n" +
-    "- Keep to the CURRENT TASK given below. Every reply must serve it. If the learner drifts off topic, answer in one short sentence and bring them back to the task. If the learner clearly asks for a different task, switch to it at once and say so in a few words.\n" +
-    "- When the learner makes an attempt (an answer, a sentence, a turn in the conversation): 1) FIRST evaluate the whole attempt: say clearly whether it is right and name something specific they did well; 2) THEN walk through each mistake politely: the corrected version with the fix in **bold** and a one-line reason; 3) then the next step.\n" +
-    "- If the attempt was not right: kindly ask them to try again. If they have already missed this same item twice, give a clue or a model answer they can use, then ask them to try once more.\n" +
-    "- If it was right: brief, specific praise, then the next item, a little harder.\n" +
-    "- When the whole task is complete: congratulate them, then ask whether they want to continue with more of the same or change to something else. If they want to change, ask one or two short questions (which topic? which skill: speaking, writing, grammar or vocabulary? easier or harder?) to find out what, then start it.\n" +
-    "- Be a polite, patient instructor: warm, encouraging and clear, never vague or sarcastic.\n" +
-    "- At the very end of every reply add ONE tag for the app (it is hidden from the learner): [[✓]] if their last attempt was right, [[✗]] if it was not, [[★]] if the task is now complete, [[·]] if there was nothing to judge.";
+  const TASK_RULES_FULL = "\n\nHOW YOU TEACH (most important; these rules come first):\n" +
+    "1. Goal. At the start, find out what the learner wants to practise, their level if unknown, and any context (travel, work, everyday talk, a grammar topic): one question at a time, only what you need. If the goal is already clear, start practising at once. Turn a broad goal into a manageable session objective (e.g. «Spanish for travel» → practise ordering a meal and asking for the bill).\n" +
+    "2. Focus. The CURRENT TASK below is the anchor: choose questions, vocabulary, examples and exercises that serve it. Do not bring in unrelated topics or turn every mistake into a separate lesson; answer side questions briefly and return to the task. If the learner clearly asks for a different goal, acknowledge it and switch; never change it silently yourself.\n" +
+    "3. Teach dynamically. Adapt each turn to the learner's last answer. If they struggle: simplify, offer a hint or a short model. If they succeed: reduce support and make it a little harder. Bring back recurring mistakes in fresh examples. Mix role-play, questions, sentence building and recall. One question or task at a time, then wait; never answer your own question unless they ask for help or need a model. Use Spanish for practice and examples, clear English for instructions, explanations and feedback (more Spanish as they grow more comfortable).\n" +
+    "4. Listen accurately. The learner's words reach you as text, often from speech recognition: never claim to have heard pronunciation, accent, stress or intonation. If a word looks like a recognition slip (e.g. «tía» for «día»), do not treat it as a language mistake; if it is unclear, ask them to repeat that part.\n" +
+    "5. Evaluate, then correct (in English). For every attempt: first say clearly whether it is right and acknowledge what they communicated or did well; then give the correct or more natural Spanish with the fix in **bold**, the reason in plain English, and ask them to retry or use it in a new sentence. Example — Learner: «Ayer voy al supermercado.» You: You're describing yesterday, so say «Ayer **fui** al supermercado.» «Fui» is the past form of «ir» for «I». Try the sentence again. Prioritise mistakes that change meaning, mistakes tied to the task and recurring ones: one or two corrections per turn, not every small slip. In accuracy exercises correct straight away; in a role-play keep the flow and group minor corrections after a short exchange. Tell apart a real error, a correct phrase that could sound more natural, and a valid regional variant (never mark those wrong).\n" +
+    "6. Retries. If the attempt was not right, kindly ask them to try again. After two misses on the same item, give a clue or a model answer they can use, then ask them to try once more.\n" +
+    "7. Voices. The app reads English and Spanish with different voices. Inside an English sentence, put every Spanish word or phrase in «guillemets» so it is read by the Spanish voice, e.g. The correct phrase is «Tengo hambre», which means I'm hungry. Never write language labels or routing notes.\n" +
+    "8. Check in. After about five to eight substantive answers, or at a natural milestone (the app will tell you when), briefly sum up progress and ask whether they want to continue, try something harder, or review / finish; ask sooner if they seem frustrated or confused. Then wait for the answer. When the whole task is complete: congratulate them, ask whether to continue or change, and if they want a change ask one or two short questions (topic? skill? easier or harder?) before starting.\n" +
+    "9. Measure through use. Repeating a model once is not mastery: check they can use it on their own in a fresh example, and bring back earlier corrections later to check recall. Give specific, proportionate praise (say what improved), not generic praise every time.\n" +
+    "10. Continuity and closing. Keep track of the goal, their level, what was practised, recurring mistakes and the next step. Use saved notes only when the app gives them; never invent memories or say progress was saved. When the learner wants to stop, close without a new exercise: a short summary in English of what they practised, one or two useful corrections with Spanish examples, and what to practise next.\n" +
+    "Be warm, patient and concise, so the learner spends more time practising than listening.\n" +
+    "At the very end of every reply add ONE tag for the app (hidden from the learner): [[✓]] if their last attempt was right, [[✗]] if it was not, [[★]] if the task is now complete, [[·]] if there was nothing to judge.";
+  const TASK_RULES_SHORT = "\n\nHow you teach (most important):\n" +
+    "- Find out the learner's goal first (one question at a time); if it is clear, start at once. Keep every reply on the CURRENT TASK; answer side questions briefly and come back. Switch only if they clearly ask for something else.\n" +
+    "- For each attempt: first say if it is right and what they did well; then one or two corrections: the right Spanish with the fix in **bold** and a short reason in English; then ask them to try again or use it in a new sentence. Don't correct small slips or speech-recognition slips; never comment on pronunciation (you only see text).\n" +
+    "- Not right: kindly ask them to try again. Two misses on the same item: give a clue or a model answer.\n" +
+    "- Right: specific praise, then a slightly harder item. One question at a time, then wait.\n" +
+    "- Inside English, put Spanish words in «guillemets» (e.g. Say «Tengo hambre»).\n" +
+    "- Task complete: congratulate, ask to continue or change; if change, ask what (topic, skill, easier or harder). Learner wants to stop: short summary in English (what they practised, one or two corrections, what next), no new exercise.\n" +
+    "- End every reply with ONE hidden tag: [[✓]] right, [[✗]] not right, [[★]] task complete, [[·]] nothing to judge.";
   function taskNote(short) {
-    const T = tCur && tCur.task; if (!T) return short ? "" : "\n\nCURRENT TASK: none yet. Follow what the learner asks; once they ask for an activity, that becomes the task.";
+    const T = tCur && tCur.task; if (!T) return short ? "" : "\n\nCURRENT TASK: none yet. Find out what the learner wants to practise (one question at a time), or start at once if they have said it.";
+    if (T.stop) return short ? "\n(The learner wants to stop: give the short closing summary in English: what they practised, one or two corrections with Spanish examples, what to practise next. No new exercise.)" : "\n\nCURRENT TASK: «" + T.t + "». The learner wants to STOP now: give the short closing summary in English (what they practised, one or two useful corrections with Spanish examples, what to practise next). No new exercise.";
     const st = T.done ? "COMPLETED. The learner is choosing whether to continue or change: follow their answer (if they want something else, ask what, briefly)." : T.more ? "continuing with more of the same." : "in progress.";
     const tr = T.done ? "" : " Misses on the current item so far: " + (T.tries || 0) + (T.tries >= 2 ? " (give a clue or a model answer now)." : ".");
-    return (short ? "\n(Task: «" + T.t + "» — " + st + tr + " Evaluate any attempt first, then correct politely. End with [[✓]], [[✗]], [[★]] or [[·]].)" : "\n\nCURRENT TASK (set by the learner): «" + T.t + "» — " + st + tr);
+    if (!T.done && (T.n || 0) - (T.lastCheck || 0) >= 6) T.checkNow = 1;
+    const ck = T.checkNow ? " CHECK IN NOW: after responding to this answer, briefly sum up progress and ask whether to continue, try something harder, or finish." : "";
+    const fx = (T.fixes || []).length && !T.done ? " Corrections made earlier (bring one back later to check recall): " + T.fixes.slice(-4).join("; ") + "." : "";
+    return (short ? "\n(Task: «" + T.t + "» — " + st + tr + ck + fx + " Evaluate the attempt first, then correct politely. End with [[✓]], [[✗]], [[★]] or [[·]].)" : "\n\nCURRENT TASK (set by the learner): «" + T.t + "» — " + st + tr + ck + fx);
   }
+  // Spanish in «guillemets» inside English goes to the Spanish voice
+  { const _tp = tagParts; tagParts = function (x) { if (/«[^»]{1,140}»/.test(x) && !isSpanish(x.replace(/«[^»]*»/g, " ") + " ")) { const out = []; x.split(/(«[^»]{1,140}»)/).forEach((p) => { if (!p.trim()) return; if (/^«/.test(p)) { const inner = p.slice(1, -1); if (isSpanish(inner + " ") || /[áéíóúñ¿¡]/i.test(inner)) out.push([inner, true]); else _tp(inner).forEach((q) => out.push(q)); } else _tp(p).forEach((q) => out.push(q)); }); return out; } return _tp(x); }; }
 '''
-rep("  function rules(ctx, compact) {", JS + "  function rules(ctx, compact) { return rules0(ctx, compact) + TASK_RULES + taskNote(false); }\n  function rules0(ctx, compact) {")
+rep("  function rules(ctx, compact) {", JS + "  function rules(ctx, compact) { return rules0(ctx, compact) + (compact ? TASK_RULES_SHORT : TASK_RULES_FULL) + taskNote(false); }\n  function rules0(ctx, compact) {")
 rep("\\n- The app corrects grammar separately, so keep talking about the topic.\\n", "\\n- When the learner answers your question or exercise, first say if it is right, then politely correct each mistake (**bold** fix + short reason).\\n")
 # the on-device chat keeps one session: the task goes with each message
 rep('''"Learner: " + lastU + "\\n" + steerNote(lastU, prevA0 && cleanLocal(prevA0.content))''', '''"Learner: " + lastU + "\\n" + steerNote(lastU, prevA0 && cleanLocal(prevA0.content)) + taskNote(true)''')
@@ -59,6 +86,15 @@ rep('''    const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' :
 rep("    const CO = turns.length > 0 && lastU.length < 300 ? convoCoach(lastU) : null;", "    const taskOn = !!(tCur && tCur.task && !tCur.task.done);\n    const CO = !taskOn && turns.length > 0 && lastU.length < 300 ? convoCoach(lastU) : null;")
 rep("    if (!pre && !(tCur && tCur.role) && lastU.length < 300", "    if (!taskOn && !pre && !(tCur && tCur.role) && lastU.length < 300")
 rep("        { const t0 = String(out).trim(); if (t0 && !/[.!?…»”\")*]\\s*$/.test(t0))", "        { { const tg = /\\[\\[\\s*(✓|✗|★|·|ok|no|done|-)\\s*\\]\\]/i.exec(String(out)); if (tg) { TASK_TAG = tg[0]; out = taskStrip(out); } } const t0 = String(out).trim(); if (t0 && !/[.!?…»”\")*]\\s*$/.test(t0))")
+# the built-in verb drills are for drills; "practise talking about my weekend in the past" is a conversation task for Profe
+rep("""    if (/\\b(practi[cs]e|practicar|practiquemos|practica|drill|quiz me|test me|ejercicios?)\\b/.test(q)) I = drVerbIn(text);""", """    const convo = /\\b(talk|talking|speak|speaking|conversation|conversa|conversar|hablar|write|writing|sentences?|frases?|about|sobre|story|historia|describ|role.?play)/.test(q);
+    if (!convo && /\\b(practi[cs]e|practicar|practiquemos|practica|drill|quiz me|test me|ejercicios?)\\b/.test(q)) I = drVerbIn(text);""")
+rep("""    if (!I && /\\b(practi[cs]e|practicar|practica|drill|quiz|test|ejercicio)/.test(q) && TENSES.some""", """    if (!I && !convo && /\\b(practi[cs]e|practicar|practica|drill|quiz|test|ejercicio)/.test(q) && TENSES.some""")
+# during a task the general "chat about it" steer would pull Profe off the task
+rep("""steerNote(lastU, prevA0 && cleanLocal(prevA0.content)) + taskNote(true)""", """((st) => (tCur && tCur.task && /^\\(Reply as Profe: respond to what the learner said by sharing/.test(st) ? "" : st))(steerNote(lastU, prevA0 && cleanLocal(prevA0.content))) + taskNote(true)""")
+# a repeated correction is normal in a task (the learner repeats the mistake): don't treat it as the model looping
+rep("        const weak = (o) => !tidyReply(cleanLocal(o), nth) || (prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));", "        const weak = (o) => !tidyReply(cleanLocal(o), nth) || (!(tCur && tCur.task) && prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));")
+rep("No greeting, no «¿en qué puedo ayudarte?».)\", 220, 0.6,", "No greeting, no «¿en qué puedo ayudarte?».)\" + taskNote(true), 220, 0.6,")
 # the small models' clean-up must not drop the tag
 rep("  function cleanLocal(t) {\n", "  function cleanLocal(t) { const m = /\\[\\[\\s*(✓|✗|★|·|ok|no|done|-)\\s*\\]\\]/i.exec(t || \"\"); const r = cleanLocal0(taskStrip(t)); if (m) TASK_TAG = m[0]; return r; }\n  function cleanLocal0(t) {\n")
 # the task, shown above the chat
