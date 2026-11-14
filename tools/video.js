@@ -10,11 +10,11 @@
     ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "Talk Español", "A real conversation ordering food, the way natives say it."],
     ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "Aprende Español", "Everyday situations acted out in Spanish."],
     ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "SaySpanish", "Real-life situations: what people actually say."],
-    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "nuttinhere", "Young street vendors in Mexico answer questions about their work."],
+    ["LdRsZ1adZWw", "entrevistas", "C1", "Joan Manuel Serrat: «Todo pasa muy deprisa»", "BBC News Mundo", "A sit-down interview with the Catalan singer-songwriter about time, memory and his career (first 4 minutes)."],
     ["WLXiu-qp8Lw", "entrevistas", "B1", "¿Es cara Barcelona?", "Easy Spanish", "People in Barcelona talk about the cost of living."],
-    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "Easy Spanish", "Locals say what they love and what they dislike about Madrid."],
+    ["XOlmCZFK5FA", "entrevistas", "C1", "Entrevista a Fito Páez", "BBC News Mundo", "The Argentine musician in conversation with BBC Mundo (first 4 minutes)."],
     ["ot5L3fIl0z0", "entrevistas", "B1", "¿Cuál es el mejor lugar para vivir?", "Easy Spanish", "Street interviews in Mexico: where people would like to live, and why."],
-    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "La Karencita", "Street interviews in Mexico about dating."],
+    ["09Apgxuk65I", "entrevistas", "B2", "Entrevista a Mon Laferte", "BBC News Mundo", "The Chilean singer talks with BBC Mundo in London about her music and life (first 4 minutes)."],
     ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "Stories in Spanish", "A news story read slowly for elementary learners."],
     ["nGX4VZk0d-w", "noticias", "B1", "Noticias en español lento (28 ago 2026)", "News in Slow Spanish", "World news, read slowly by native speakers."],
     ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "El Tiempo", "The week's most important news in three minutes."],
@@ -39,6 +39,7 @@
     ["6S243h-V3p4", "musica", "A2", "Quédate con lo sencillo (en vivo)", "Thiago Navarro Music", "Stay with what's simple, and with whoever adds to your life."],
     ["cEsp1dMTM1w", "musica", "A2", "Pasito a pasito", "Thiago Navarro Music", "Step by step: everything comes in its own time."],
     ["aR0GjIVIAdo", "musica", "A2", "Ámate tanto", "Thiago Navarro Music", "A song about loving yourself."],
+    ["FUHaycnjzKg", "musica", "B1", "Verano Rosa", "KAROL G, Feid", "The Colombian stars' summer hit from 2025, full of Medellín slang (official visualizer)."],
     ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Spanishland School", "A short conversation in Spanish about making plans with friends."],
     ["guadxMv8RI8", "podcasts", "A2", "Mi héroe, mi amigo (episodio 1)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
@@ -68,7 +69,7 @@
   function videosHub() {
     const F = (S.vf = S.vf || { c: "", l: "" }), ed = !!VP.edit, hid = vHid(), bad = vBad();
     const card = (v, mode) => { const d = (S.vid || {})[v.yt] || {}, n = (d.c || []).length;
-      const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d)].filter(Boolean).join(" · ") || "Your video";
+      const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d), { manual: "Captions", asr: "Auto captions", audio: "Captions from audio" }[d.cap] || ""].filter(Boolean).join(" · ") || "Your video";
       const body = '<span class="vthumb"><img src="' + vThumb(v.yt) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="vplay" aria-hidden="true">' + IC("play") + "</span>" + (d.w ? '<span class="vdone">' + IC("check") + " Watched</span>" : "") + '</span><span class="vtxt"><b>' + esc(v.t) + "</b><small>" + esc(meta) + (n ? " · " + n + " word" + (n > 1 ? "s" : "") + " caught" : "") + "</small></span>";
       const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
       return '<div class="vcw' + (act ? " has-act" : "") + '"><a class="vcard" href="#video-' + v.yt + '">' + body + "</a>" + act + "</div>"; };
@@ -116,14 +117,14 @@
   const vpPlay = () => { try { VP.p.playVideo(); } catch (e) {} };
   const vpPause = () => { try { VP.p.pauseVideo(); } catch (e) {} };
   const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-  function vpStop() { try { vcStop(); } catch (e) {} document.body.classList.remove("vpage-on"); clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
+  function vpStop() { try { vaStop(); } catch (e) {} try { vcStop(); } catch (e) {} VP.ytAd = undefined; document.body.classList.remove("vpage-on"); clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
   function videoPage(id) {
     vpStop(); const v = vFind(id) || (vAdd(id) && vFind(id)); if (!v) { app.innerHTML = '<div class="stack"><h1>Video not found</h1><a class="btn" href="#videos">All videos</a></div>'; return; }
     const d = vData(id); VP.id = id; VP.failed = false; VP.lastSt = -1; VP.ad = false; VP.secs = 0; VP.resumeAt = 0; document.body.classList.add("vpage-on"); VP.clip = v.clip || null; VP.dur = 0;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
-      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
+      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay sentence</button><button class="btn small" data-act="v-rate" aria-pressed="false" aria-label="Playback speed">Speed 1×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<p class="vad-chip small" id="vadchip" hidden role="status">Ad playing · the video and captions start right after it</p>' +
       vcHTML() +
@@ -140,25 +141,25 @@
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
       VP.p = new YT.Player("vplayer", { videoId: id, playerVars: Object.assign(v.clip ? { start: v.clip[0], end: v.clip[1] } : {}, { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] }),
-        events: { onReady: () => { vlive(); if (d.at && d.at > vpLo() + 5 && !d.w) VP.resumeAt = d.at - 2; }, // resumed once the video itself (not an ad) is playing
+        events: { onReady: () => { vlive(); vContinue(d); }, // always from 0:00 (or the clip start); "Continue from" is offered instead
           onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([100, 101, 150, 152].includes(c)) { vBad()[id] = c; save(); try { coachToast("This video can't play inside the app, so it's been taken off your Videos list."); } catch (x) {} } },
-          onStateChange: (e) => { vlive(); if (e.data === 0 && !vAd()) vWatched(id); if (e.data === 1 && VP.lastSt !== 1) vFrameTop(); VP.lastSt = e.data; } } });
+          onStateChange: (e) => { vlive(); if (e.data === 0 && !vAd()) { vWatched(id); try { if (VA.on) vaStop(); } catch (x) {} } if (e.data === 1 && VP.lastSt !== 1) vFrameTop(); VP.lastSt = e.data; } } });
       VP.tick = setInterval(() => {
         if (!VP.ready || VP.id !== id) return;
         const ad = vAd(); if (ad !== VP.ad) vAdState(ad); if (ad) return; // during an ad: nothing moves, nothing is saved or counted
         const t = vpT();
-        if (VP.resumeAt && VP.lastSt === 1) { const r = VP.resumeAt; VP.resumeAt = 0; if (r < vpHi() - 5) vpSeek(r); return; }
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
         if (t > (d.at || 0) + 5) { d.at = Math.floor(t); save(); }
         try { VP.dur = VP.p.getDuration() || VP.dur; } catch (e) {}
         if (VP.dur && (VP.secs || VP.dur >= 45)) { const len = vpHi() - vpLo(); if (Math.round(len) !== d.len) { d.len = Math.round(len); save(); } if (t > vpLo() + len * 0.85 && !d.w) vWatched(id); }
-        if (VP.clip && t > vpHi() + 0.5 && !VP.loop) { vpPause(); vpSeek(vpHi() - 0.6); }
+        if (VP.clip && t > vpHi() + 0.5 && !VP.loop) { vpPause(); vpSeek(vpHi() - 0.6); try { if (VA.on) vaStop(); } catch (x) {} }
       }, 250);
     });
   }
   // ads: YouTube reports another video, or a length that isn't the video's own (the Android app knows the real length)
   function vAd() {
     if (!VP.p || !VP.ready) return false;
+    if (VP.ytAd === true) return true;
     try { const vd = VP.p.getVideoData && VP.p.getVideoData(); if (vd && vd.video_id && vd.video_id !== VP.id) return true; } catch (e) {}
     try { const du = VP.p.getDuration(); if (VP.secs && du && Math.abs(du - VP.secs) > 2.5) return true; } catch (e) {}
     return false;
@@ -171,6 +172,7 @@
   }
   // play: bring the video's top edge to the top so the video, controls and caption window are all on screen
   function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
+  function vContinue(d) { const at = d.at || 0, el = document.querySelector(".vctl"); if (!el || d.w || at < vpLo() + 20 || at > vpHi() - 10) return; el.insertAdjacentHTML("beforeend", '<button class="btn small" data-act="v-cont" data-t="' + Math.max(0, at - 3) + '">Continue from ' + mmss(at) + "</button>"); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {
     const w = es.toLowerCase().trim().replace(/[¿?¡!.,;:]/g, ""); if (!w) return "";
@@ -209,8 +211,9 @@
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a || !/^(v-|vq$)/.test(a)) return;
     const id = VP.id, d = id ? vData(id) : null;
     if (a === "v-back5") vpSeek(vpT() - 5);
-    else if (a === "v-loop") { if (VP.loop) { VP.loop = null; t.setAttribute("aria-pressed", "false"); } else { const n = vpT(); VP.loop = { a: Math.max(0, n - 5), b: n + 0.2 }; vpSeek(VP.loop.a); vpPlay(); t.setAttribute("aria-pressed", "true"); } }
-    else if (a === "v-rate") { VP.rate = VP.rate === 1 ? 0.75 : 1; try { VP.p.setPlaybackRate(VP.rate); } catch (x) {} t.setAttribute("aria-pressed", String(VP.rate !== 1)); }
+    else if (a === "v-loop") { if (VP.loop) { VP.loop = null; t.setAttribute("aria-pressed", "false"); } else { const n = vpT(), c = VCAP.cues.length ? VCAP.cues[Math.max(0, vcFind(n))] : null; VP.loop = c && n >= c.s - 0.2 ? { a: Math.max(vpLo(), c.s - 0.15), b: c.e + 0.1 } : { a: Math.max(0, n - 5), b: n + 0.2 }; vpSeek(VP.loop.a); vpPlay(); t.setAttribute("aria-pressed", "true"); } }
+    else if (a === "v-rate") { VP.rate = VP.rate === 1 ? 0.75 : 1; try { VP.p.setPlaybackRate(VP.rate); } catch (x) {} t.setAttribute("aria-pressed", String(VP.rate !== 1)); t.textContent = "Speed " + (VP.rate === 1 ? "1×" : "0.75×"); }
+    else if (a === "v-cont") { const at = +t.dataset.t; t.remove(); vpSeek(at); vpPlay(); }
     else if (a === "v-catch") { vpPause(); const f = document.getElementById("vcatch"); f.hidden = false; f.dataset.t = Math.floor(vpT()); document.getElementById("vcat-t").textContent = "at " + mmss(vpT()); const i = document.getElementById("vcin"); i.value = ""; i.focus(); }
     else if (a === "v-catch-x") { document.getElementById("vcatch").hidden = true; vpPlay(); }
     else if (a === "v-seek") { vpSeek(+t.dataset.t - 1); vpPlay(); document.getElementById("vplayer") && document.querySelector(".vframe").scrollIntoView({ block: "start", behavior: "smooth" }); }

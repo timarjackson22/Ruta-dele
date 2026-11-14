@@ -50,7 +50,11 @@ const src = fs.readFileSync(__dirname + "/vcap.js", "utf8"); const CAPS = new Fu
   await p.evaluate(() => { const y = window.__yt.p; y.adId = null; y.dur = 300; y.t = 0; y.st = 1; }); await p.waitForTimeout(700);
   const L = await p.evaluate(() => window.__yt.log.splice(0));
   rec("Ad over: note goes, controls come back", await p.evaluate(() => document.getElementById("vadchip").hidden && [...document.querySelectorAll(".vctl .btn")].every((b) => !b.disabled)));
-  rec("…then it picks up where you left off (0:98)", L.some((x) => x[0] === "seek" && Math.abs(x[1] - 98) < 0.6), JSON.stringify(L));
+  rec("…then the video plays from 0:00: no jump to your last place", !L.some((x) => x[0] === "seek"), JSON.stringify(L));
+  const cb = await p.$('[data-act="v-cont"]'); rec("…and a 'Continue from 1:40' button is offered instead", !!cb && /Continue from 1:40/.test(await cb.textContent()));
+  await cb.click(); await p.waitForTimeout(200); const L2 = await p.evaluate(() => window.__yt.log.splice(0));
+  rec("…which jumps there when you tap it", L2.some((x) => x[0] === "seek" && Math.abs(x[1] - 97) < 0.6) && !(await p.$('[data-act="v-cont"]')), JSON.stringify(L2));
+  await p.evaluate(() => { window.__yt.p.t = 0; });
   await p.evaluate(() => { window.__yt.p.t = 4; window.__yt.p.st = 2; }); await p.waitForTimeout(500);
   rec("…and the captions follow the video", /^Está chévere/.test(await onTxt()), await onTxt());
   // ad recognised by length alone (same id, length doesn't match the video's 600 s)
