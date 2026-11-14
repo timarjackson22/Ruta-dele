@@ -71,7 +71,7 @@ img { max-width: 100% }
 <title>Ruta DELE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&family=Literata:ital,opsz,wght@0,7..72,400..800;1,7..72,400..600&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
 <style>
 /* Layout: sticky level bar, single reading column (max 980px), azulejo tile pattern as the one decorative motif */
 :root {
@@ -1778,9 +1778,40 @@ body.lplaying #litem .lprog { display: block }
 #litem .player .pmenu > #l-text, #litem .player .pmenu > #l-en, #litem .player .pmenu > #rh-btn { display: inline-flex; justify-content: center }
 #litem .player .pm-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600 }
 #litem .player .pm-row select { min-width: 84px }
+
+/* ===== type system: Inter for the interface, Literata for titles and reading ===== */
+:root:root { --body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif; --display: "Literata", Georgia, "Times New Roman", serif; --read-serif: "Literata", Georgia, serif }
+body { font-family: var(--body); font-optical-sizing: auto; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility }
+h1, h2, .ltitle, .ui-title h1 { font-family: var(--display); font-optical-sizing: auto; letter-spacing: -.005em }
+h1 { font-weight: 650 } h2 { font-weight: 620 }
+.vbs { row-gap: 6px !important; column-gap: 6px } /* verb badges keep room when Inter wraps them on small phones */
+/* ===== classic headline card: paper, mountains, earth, water ===== */
+:root { --par1: #f6efe2; --par2: #ece0c9; --ink-c: #2a2119; --rule: #b9a27a; --m1: #8a9bab; --m2: #6f8a6a; --e1: #b58e5e; --w1: #6e9cb4; --w2: #e9f2f6; --chip-c: #6b5636 }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --par1: #2b2620; --par2: #221e19; --ink-c: #f1e7d6; --rule: #7d6a4c; --m1: #4b5866; --m2: #3f5440; --e1: #6e5537; --w1: #355a6e; --w2: #8fb4c6; --chip-c: #d9c39c } }
+:root[data-theme="dark"] { --par1: #2b2620; --par2: #221e19; --ink-c: #f1e7d6; --rule: #7d6a4c; --m1: #4b5866; --m2: #3f5440; --e1: #6e5537; --w1: #355a6e; --w2: #8fb4c6; --chip-c: #d9c39c }
+.lhead { color: var(--ink-c); border-radius: 18px; padding: 16px 18px 64px 22px; border: 1px solid var(--rule);
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .32  0 0 0 0 .24  0 0 0 0 .15  0 0 0 .22 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"), radial-gradient(120% 90% at 0% 0%, color-mix(in srgb, var(--a) 10%, var(--par1)) 0%, var(--par1) 45%, var(--par2) 100%);
+  box-shadow: inset 0 0 0 4px var(--par1), inset 0 0 0 5px color-mix(in srgb, var(--rule) 55%, transparent), 0 12px 28px rgba(60, 40, 15, .14) }
+.lhead::before { width: 4px; background: linear-gradient(var(--a), color-mix(in srgb, var(--a) 40%, var(--rule))); opacity: .85 }
+.lh-ic { width: 32px; height: 32px; border-radius: 50%; background: transparent; color: var(--a); box-shadow: inset 0 0 0 1.5px currentColor }
+.lh-chip { background: transparent; color: var(--chip-c); border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent); border-radius: 4px; padding: 2px 7px; font-family: var(--body); font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase }
+.lh-opts { background: color-mix(in srgb, var(--par1) 80%, transparent); border-color: var(--rule); color: var(--ink-c) }
+.lhead .ltitle { font-family: var(--display); font-weight: 680; font-size: clamp(1.7rem, 7vw, 2.4rem); line-height: 1.12; letter-spacing: 0; margin: 14px 0 6px; font-variation-settings: "opsz" 60 }
+.lh-sub { color: color-mix(in srgb, var(--ink-c) 66%, transparent); font-family: var(--display); font-style: italic; font-size: 1rem; font-variation-settings: "opsz" 14 }
+.lh-deco { display: none }
+.lh-land { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 58px; z-index: 0; pointer-events: none; transition: height .45s cubic-bezier(.3, .8, .3, 1) }
+.lh-land .m1 { fill: var(--m1); opacity: .55 } .lh-land .m2 { fill: var(--m2); opacity: .75 } .lh-land .e1 { fill: var(--e1); opacity: .8 }
+.lh-land .w1 { fill: var(--w1); opacity: .9 } .lh-land .w2 { fill: none; stroke: var(--w2); stroke-width: 1; opacity: .7 }
+.lprog { background: color-mix(in srgb, var(--rule) 30%, transparent) }
+/* frozen strip: the title stays big enough to read; the landscape shrinks to the waterline */
+body.lplaying #litem .lhead { padding: 10px 16px 24px 20px; border-radius: 0 0 16px 16px }
+body.lplaying #litem .lhead .ltitle { font-size: clamp(1.3rem, 5.4vw, 1.6rem); line-height: 1.18; margin: 8px 0 0; -webkit-line-clamp: 2 }
+body.lplaying #litem .lh-land { height: 20px }
+body.lplaying #litem .lh-land .m1 { opacity: .3 }
+body.lplaying #litem .lprog { margin-top: 8px; position: relative; z-index: 1 }
 </style>
 
-<script>window.__BUILD = "202611141917";</script>
+<script>window.__BUILD = "202611142027";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4623,9 +4654,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return '<header class="lhead" id="lhead" style="--a:' + K[0] + '"><div class="lh-top"><span class="lh-ic" aria-hidden="true">' + ic(svg) + '</span><span class="lh-chips">' + chips.map((c) => '<span class="lh-chip">' + esc(c) + "</span>").join("") + "</span>" +
       (opts ? '<button class="lh-opts" data-act="lh-opts" aria-expanded="false" aria-controls="lopts">Options ' + ic('<path d="m6 9 6 6 6-6"/>') + "</button>" : "") + "</div>" +
       '<h1 class="ltitle"><span class="sent" data-pi="t">' + wrapWords(x.t) + "</span></h1>" + (sub ? '<p class="lh-sub">' + esc(sub) + "</p>" : "") +
-      '<div class="lprog" aria-hidden="true"><i id="lprog-i"></i></div><span class="lh-deco" aria-hidden="true">' + ic(svg) + "</span></header>" +
+      '<div class="lprog" aria-hidden="true"><i id="lprog-i"></i></div><svg class="lh-land" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path class="m1" d="M0 46 L28 32 L52 40 L86 16 L118 38 L150 26 L178 40 L214 12 L250 36 L284 24 L316 38 L352 20 L400 36 V70 H0Z"/><path class="m2" d="M0 54 C36 42 74 50 112 44 C160 36 198 52 248 47 C298 42 340 52 400 45 V70 H0Z"/><path class="e1" d="M0 58 C60 53 120 59 190 56 C260 53 330 59 400 56 V70 H0Z"/><rect class="w1" x="0" y="61" width="400" height="9"/><path class="w2" d="M0 63.5 q12 -2 24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0 t24 0"/></svg></header>' +
       (opts ? '<div class="lopts" id="lopts" hidden><div id="lopts-body">' + (note ? '<p class="small">' + esc(note) + "</p>" : "") + "</div></div>" : "");
   }
+  try { if (!UI.rf) { UI.rf = "book"; document.documentElement.dataset.rf = "book"; } } catch (e) {}
   function lhState() {
     const on = !!(PL.playing && document.getElementById("lhead"));
     if (on) { const h = document.querySelector("header.top"); document.documentElement.style.setProperty("--hdrH", Math.max(0, h ? Math.round(h.getBoundingClientRect().bottom) : 56) + "px"); }
@@ -8899,16 +8931,18 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const vcPref = () => (S.vcap = S.vcap || { en: false, hide: false });
   // YouTube's tags and markers are noise: [Música], (risas), ♪, >>, a leading dash
   const vcClean = (t) => String(t || "").replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ").replace(/[♪♫♬🎵🎶]/g, " ").replace(/>>+/g, " ").replace(/(^|\s)[-–—](?=\s)/g, " ").replace(/\s+/g, " ").trim();
+  // captions written in CAPITALS (common in songs) read as normal text: the words are looked up and translated, not taken for acronyms
+  const vcIsCaps = (t) => { const L = String(t).match(/\p{L}/gu) || [], U = L.filter((c) => c !== c.toLowerCase()).length; return L.length >= 6 && U / L.length > 0.75; };
   function vcDecode(s) { const ta = document.createElement("textarea"); ta.innerHTML = s; return ta.value; }
   // YouTube caption XML: srv1 (<text start dur>) or srv3 (<p t d> with word timings in <s t>)
   function vcParse(xml) {
     if (!xml) return [];
     const doc = new DOMParser().parseFromString(xml, "text/xml"), out = [];
-    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (txt) out.push({ s, e: s + d, text: txt }); });
+    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; let txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (vcIsCaps(txt)) txt = txt.toLowerCase(); if (txt) out.push({ s, e: s + d, text: txt }); });
     doc.querySelectorAll("body > p, p[t]").forEach((p) => {
       const s = (+p.getAttribute("t") || 0) / 1000, d = (+p.getAttribute("d") || 2000) / 1000, ss = p.querySelectorAll("s"); let words = null, txt;
-      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
-      else txt = vcClean(vcDecode(vcDecode(p.textContent || "")));
+      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); if (vcIsCaps(txt)) { words.forEach((x) => (x.w = x.w.toLowerCase())); txt = txt.toLowerCase(); } }
+      else { txt = vcClean(vcDecode(vcDecode(p.textContent || ""))); if (vcIsCaps(txt)) txt = txt.toLowerCase(); }
       if (txt && !(out.length && out[out.length - 1].s === s && out[out.length - 1].text === txt)) out.push({ s, e: s + d, text: txt, words });
     });
     out.sort((a, b) => a.s - b.s);
@@ -8954,7 +8988,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       else if ((gap >= 0.8 && cur.length >= 3) || gap >= 1.6) push();
       else if (cur.length >= 22) { let best = -1, bg = 0; for (let k = 6; k < cur.length - 2; k++) { const g = cur[k + 1].t - cur[k].t; if (g > bg) { bg = g; best = k; } } if (best < 0) best = cur.length - 2; const rest = cur.splice(best + 1); S.push(cur); cur = rest; }
     }
-    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
+    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw.slice() : vcPunct(raw); txt[0] = txt[0].replace(/^([¿¡"«]?)(\p{Ll})/u, (m, a, b) => a + b.toUpperCase()); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
     out.forEach((c, i) => { c.e = out[i + 1] ? out[i + 1].s : c.s + Math.max(2, c.words.length * 0.45); });
     if (en.length && kind !== "asr") out.forEach((c) => { const xs = en.filter((x) => x.s >= c.s - 0.3 && x.s < c.e - 0.3).map((x) => x.text); if (xs.length) c.en = xs.join(" "); });
     VCAP.addedP = !hasP;
@@ -9066,7 +9100,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const vcWord = (sp) => sp.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, "");
   function vcIsName(spans, i) {
     const w = vcWord(spans[i]); if (!/^\p{Lu}/u.test(w)) return false;
-    if (/^\p{Lu}{2,}$/u.test(w)) return true; // BBC, ONU
+    if (/^\p{Lu}{2,}$/u.test(w)) { const lw2 = w.toLowerCase(); let kn = false; try { kn = !!(TG[lw2] || lw2 in CFN || VSLANG[lw2] || lexIdx(lw2) >= 0 || vMorph(lw2)); } catch (e) {} if (!kn) return true; } // BBC, ONU (but not SOL in a shouted line)
     if (i > 0) return true; // capital in the middle of a sentence
     const lw = w.toLowerCase(); let known = false;
     try { known = !!(TG[lw] || lw in CFN || VSLANG[lw] || VSHORT[lw] || VJARGON[lw] || (S.vlex || {})[lw] || lexIdx(lw) >= 0 || vMorph(lw)); } catch (e) {}
@@ -9106,7 +9140,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     cands = cands.filter((x) => !/(diminutive|augmentative|superlative) of/i.test(x));
     const sl = VSLANG[lw]; if (sl) cands = cands.concat(String(sl[0]).split(/[;,]|\(/).map((x) => x.replace(/\)/g, "").trim()).filter(Boolean));
     const verb = verbAlso || /verb/.test((vLook(lw) || {}).pos || "");
-    for (const cand of cands) { if (/^little |^nice and |^very |^big /.test(cand)) continue; let ev = null; try { ev = cEvid(cand, enW, used, verb); } catch (e) {} if (ev && ev.full && ev.b - ev.a <= 3) { const sp = cSpan(enW, ev), nz = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (nz(sp).includes(nz(lw)) || nz(lw).includes(nz(sp))) continue; for (let z = ev.a; z <= ev.b; z++) used.add(z); return sp; } } // a translator that left the Spanish word in its English proves nothing
+    for (const cand of cands) { if (/^little |^nice and |^very |^big /.test(cand)) continue; let ev = null; try { ev = cEvid(cand, enW, used, verb); } catch (e) {} if (ev && ev.full && ev.b - ev.a <= 3) { const sp = cSpan(enW, ev), nz = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (nz(sp).includes(nz(lw)) || nz(lw).includes(nz(sp))) continue; if (m && m.how === "dim" && ev.a > 0 && /^(little|small|tiny|wee)$/.test(enW[ev.a - 1].l)) ev.a--; // un abracito: "little hug", as the sentence says
+        for (let z = ev.a; z <= ev.b; z++) used.add(z); return cSpan(enW, ev); } } // a translator that left the Spanish word in its English proves nothing
     return "";
   }
   function vcGloss(c, spans, k) {
@@ -10304,7 +10339,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611141917";
+  var BUILD = "202611142027";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
