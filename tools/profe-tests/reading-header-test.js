@@ -22,7 +22,7 @@ const SPEECH = () => { class U { constructor(t) { this.text = t; } } window.Spee
   // frozen while reading
   await p.click("#pl-play"); await p.waitForTimeout(1800); await p.evaluate(() => scrollBy(0, 500)); await p.waitForTimeout(900);
   const fr = await p.evaluate(() => { const h = document.getElementById("lhead"), hb = document.querySelector("header.top").getBoundingClientRect().bottom, r = h.getBoundingClientRect(); return { playing: document.body.classList.contains("lplaying"), top: Math.round(r.top - hb), fs: parseFloat(getComputedStyle(h.querySelector(".ltitle")).fontSize), prog: document.getElementById("lprog-i").style.width, sub: getComputedStyle(h.querySelector(".lh-sub")).display }; });
-  rec("Reading aloud: the card freezes under the top bar as a compact strip, title still large (≥20px)", fr.playing && Math.abs(fr.top) <= 2 && fr.fs >= 20 && fr.fs < 28 && fr.sub === "none", JSON.stringify(fr));
+  rec("Reading aloud: the card freezes under the top bar at full size (title and subtitle unchanged)", fr.playing && Math.abs(fr.top) <= 2 && fr.fs >= 27 && fr.sub !== "none", JSON.stringify(fr));
   rec("…with a progress line", parseInt(fr.prog) > 0, fr.prog);
   const under = await p.evaluate(() => { const h = document.getElementById("lhead").getBoundingClientRect(); const s = [...document.querySelectorAll("#ltext .sent")].find((x) => { const r = x.getBoundingClientRect(); return r.top < h.bottom && r.bottom > h.top; }); return !!s && getComputedStyle(document.getElementById("lhead")).zIndex >= 5; });
   rec("…the text slides underneath it", under);
