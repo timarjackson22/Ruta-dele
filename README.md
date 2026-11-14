@@ -24,3 +24,22 @@ Word ranking: FrequencyWords by Hermit Dave (CC BY-SA), via the spanish_data pro
 Example sentences in Verbos: Tatoeba (CC BY 2.0 FR).
 
 Noun ranking: FrequencyWords (OpenSubtitles) via spanish_data.
+
+## Development: keeping Profe's abilities current
+
+Profe can open any part of the app and drive lessons, playback and practice by voice or text ("Ok Profe, start my next lesson").
+What it can do comes from one registry, `tools/profe_registry.py` (actions, routes) plus `tools/profe_acts.json` (every on-screen
+button's voice status), built into the page and checked by `tools/profe_check.js` in the build and in CI (`.github/workflows/profe-check.yml`).
+
+Whenever you add, change, rename or remove a screen, route or on-screen action (`data-act`):
+1. Review its effect on Profe and hands-free use.
+2. Declare its voice status in the registry, in the same change: an action (with English and Spanish example commands, patterns,
+   the route or button it uses, how success is checked, and its test), or `pending` / `unsuitable` with the reason.
+3. Add or update the handler in `PVH` (`/home/claude/app/pvoice.js` → built into `index.html`). Handlers use the app's own routes
+   and buttons and must verify the result before Profe says it worked.
+4. Update the corpus `tools/profe-tests/sV.js` and the integration test `tools/profe-tests/sH.js`.
+5. Remove obsolete entries: the check fails on routes or buttons that no longer exist.
+6. Run `node tools/profe_check.js`, `sV.js`, `sH.js` and the baseline Profe suites (`sA`–`sL`).
+
+New actions are only exposed to Profe once they are in the registry and the checks pass. "What can you do?" and "What can I do here?"
+are generated from the registry, so they stay accurate. Design: `tools/PROFE_HANDSFREE_BRIEF.md`.
