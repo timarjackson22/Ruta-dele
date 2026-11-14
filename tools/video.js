@@ -1,55 +1,50 @@
   /* ===================== videos: watch Spanish and practise with it (tools/VIDEO_BRIEF.md) ===================== */
-  const VID_START = [
-    { yt: "2GrDFoMl978", t: "Citas a ciegas (Blind Dates)", ch: "Dreaming Spanish", lvl: "A2", note: "Gabriel, from Spain, joins a dating show and talks with three women he can't see.",
-      q: [["¿De dónde es Gabriel?", ["De España", "De México", "De Argentina"], 0], ["¿Qué hace María, la primera cita?", ["Es influencer", "Es médica", "Es profesora"], 0], ["¿Qué escritor le gusta a Sofía?", ["Gabriel García Márquez", "Pablo Neruda", "Jorge Luis Borges"], 0], ["¿Cómo termina la historia?", ["Sofía lo rechaza al final", "Gabriel y Sofía se casan", "Gabriel elige a María"], 0]] },
-    { yt: "rw-DW_YlfoI", t: "If you are a beginner, watch this", ch: "Spanish After Hours", lvl: "A1", note: "Everyday actions, sitting and reading, explained with simple objects; present and past.", q: [] },
-    { yt: "rqiOwOmYO80", t: "¿Cuál es tu nivel de español?", ch: "Dreaming Spanish", lvl: "A1–C1", note: "Four short clips that get harder, from superbeginner to advanced: see how far you follow.", q: [] },
-    { yt: "ot5L3fIl0z0", t: "¿Cuál es el mejor lugar para vivir?", ch: "Easy Spanish", lvl: "B1", note: "Street interviews in Mexico: where people would like to live, and why.",
-      q: [["Para elegir dónde vivir, ¿qué es importante para los entrevistados?", ["El precio y la seguridad", "Tener playa cerca", "Que haya muchos turistas"], 0], ["Si se fueran a vivir lejos, ¿qué extrañarían?", ["La familia, la comida y sus mascotas", "El tráfico", "El frío"], 0], ["¿Hace falta hablar el idioma del país, según ellos?", ["Ayuda, pero no es imprescindible", "Sí, es obligatorio", "No sirve para nada"], 0]] },
-  ];
+  const VID_START = [];
   // the library: short clips (4 minutes at most) of native speakers, by type and estimated level; IDs found by web search (tools/VIDEO_LIBRARY_BRIEF.md)
-  const VCATS = [["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"], ["historias", "Longer videos", "Más largos"]];
+  const VCATS = [["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"]];
   const VCL = Object.fromEntries(VCATS.map((c) => [c[0], c]));
   const VCLIP = 240;
   [
-    ["W0LLExzov2A", "dialogos", "A1", "En el restaurante", "", "A short, easy conversation in a restaurant: ordering, asking and paying."],
-    ["3DWcMCxBN24", "dialogos", "A1", "Conversaciones en el restaurante", "", "Several short restaurant conversations for beginners."],
-    ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "", "A real conversation ordering food, the way natives say it."],
-    ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "", "Everyday situations acted out in Spanish."],
-    ["-VxpA-9x0jc", "dialogos", "B1", "Diálogo en el restaurante (A2–B2)", "", "The same restaurant scene at rising levels: hear how the language grows."],
-    ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "", "Real-life situations: what people actually say."],
-    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "", "Young street vendors in Mexico answer questions about their work."],
+    ["W0LLExzov2A", "dialogos", "A1", "En el restaurante", "Language Freak", "A short, easy conversation in a restaurant: ordering, asking and paying."],
+    ["3DWcMCxBN24", "dialogos", "A1", "Conversaciones en el restaurante", "Español Rápido", "Several short restaurant conversations for beginners."],
+    ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "Talk Español", "A real conversation ordering food, the way natives say it."],
+    ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "Aprende Español", "Everyday situations acted out in Spanish."],
+    ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "SaySpanish", "Real-life situations: what people actually say."],
+    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "nuttinhere", "Young street vendors in Mexico answer questions about their work."],
     ["WLXiu-qp8Lw", "entrevistas", "B1", "¿Es cara Barcelona?", "Easy Spanish", "People in Barcelona talk about the cost of living."],
-    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "", "Locals say what they love and what they dislike about Madrid."],
-    ["qj-Je2c_80I", "entrevistas", "B1", "¿Barcelona o Madrid?", "", "Which is the better city? People take sides."],
-    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "", "Street interviews in Mexico about dating."],
-    ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "", "A news story read slowly for elementary learners."],
+    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "Easy Spanish", "Locals say what they love and what they dislike about Madrid."],
+    ["ot5L3fIl0z0", "entrevistas", "B1", "¿Cuál es el mejor lugar para vivir?", "Easy Spanish", "Street interviews in Mexico: where people would like to live, and why."],
+    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "La Karencita", "Street interviews in Mexico about dating."],
+    ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "Stories in Spanish", "A news story read slowly for elementary learners."],
     ["nGX4VZk0d-w", "noticias", "B1", "Noticias en español lento (28 ago 2026)", "News in Slow Spanish", "World news, read slowly by native speakers."],
-    ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "", "The week's most important news in three minutes."],
+    ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "El Tiempo", "The week's most important news in three minutes."],
     ["tjmp1fEk9d4", "noticias", "C1", "DW Noticias: huelga general en España", "DW Español", "News bulletin of 11 November 2026, led by Spain's first general strike in 14 years (first 4 minutes)."],
-    ["8YAynBZqX-c", "noticias", "C1", "Las noticias de la mañana (13 nov 2026)", "", "A US Spanish-language morning news programme (first 4 minutes)."],
-    ["cJiLacyJ5FY", "tiempo", "A2", "El clima en la Ciudad de México", "", "Today's and tomorrow's weather in Mexico City: partly cloudy."],
-    ["glKFJ74Htn4", "tiempo", "B1", "El clima del fin de semana en Panamá", "", "From extreme heat to rain: the weekend forecast for Panama."],
-    ["v2Ph5hBmqYA", "tiempo", "B1", "El tiempo en España para hoy", "", "Today's forecast for Spain."],
-    ["CCt77yWaOi8", "tiempo", "B1", "El tiempo en España: próximos 7 días", "", "Rain and temperatures for the week ahead."],
-    ["c0QdRE9PosE", "tiempo", "B2", "El tiempo a una semana vista", "", "Where it may rain, and orange-level warnings."],
-    ["Qks54-LEYDs", "deportes", "B1", "Resumen: Real Madrid 2-1 Barcelona", "", "Highlights and goals of the Clásico, with commentary."],
-    ["mRFd0x8cjUU", "deportes", "B1", "Resumen: Espanyol 1-2 Real Madrid", "", "Highlights and goals with commentary."],
-    ["A9msXwAxDGo", "deportes", "B2", "Luis García: «Podríamos haber hecho algún gol más»", "", "A coach's comments after the match."],
-    ["8czkkbTwNBA", "deportes", "C1", "Los goles del Clásico narrados por la radio", "", "The same goals called by three Spanish radio stations (RAC1, COPE, SER): fast, passionate Spanish."],
-    ["S7Fy2fWAC2Q", "deportes", "C1", "Simeone, rueda de prensa", "", "Diego Simeone's press conference after Espanyol 0-1 Atlético (first 4 minutes)."],
+    ["8YAynBZqX-c", "noticias", "C1", "Las noticias de la mañana (13 nov 2026)", "Noticias Telemundo", "A US Spanish-language morning news programme (first 4 minutes)."],
+    ["cJiLacyJ5FY", "tiempo", "A2", "El clima en la Ciudad de México", "adn Noticias", "Today's and tomorrow's weather in Mexico City: partly cloudy."],
+    ["glKFJ74Htn4", "tiempo", "B1", "El clima del fin de semana en Panamá", "TVN Noticias", "From extreme heat to rain: the weekend forecast for Panama."],
+    ["v2Ph5hBmqYA", "tiempo", "B1", "El tiempo en España para hoy", "tiempo.es", "Today's forecast for Spain."],
+    ["CCt77yWaOi8", "tiempo", "B1", "El tiempo en España: próximos 7 días", "Meteovigo", "Rain and temperatures for the week ahead."],
+    ["c0QdRE9PosE", "tiempo", "B2", "El tiempo a una semana vista", "Meteovigo", "Where it may rain, and orange-level warnings."],
+    ["Qks54-LEYDs", "deportes", "B1", "Resumen: Real Madrid 2-1 Barcelona", "Diario AS", "Highlights and goals of the Clásico, with commentary."],
+    ["mRFd0x8cjUU", "deportes", "B1", "Resumen: Espanyol 1-2 Real Madrid", "Diario AS", "Highlights and goals with commentary."],
+    ["A9msXwAxDGo", "deportes", "B2", "Luis García: «Podríamos haber hecho algún gol más»", "LaLiga", "A coach's comments after the match."],
+    ["8czkkbTwNBA", "deportes", "C1", "Los goles del Clásico narrados por la radio", "Mundo Deportivo", "The same goals called by three Spanish radio stations (RAC1, COPE, SER): fast, passionate Spanish."],
+    ["S7Fy2fWAC2Q", "deportes", "C1", "Simeone, rueda de prensa", "Diario AS", "Diego Simeone's press conference after Espanyol 0-1 Atlético (first 4 minutes)."],
     ["TiPRNqJnI_k", "musica", "A2", "Ojalá que llueva café", "Juan Luis Guerra", "A Dominican classic with clear, slow singing about life in the countryside."],
     ["kRt2sRyup6A", "musica", "B1", "La camisa negra", "Juanes", "Colombian rock-pop hit."],
-    ["O07zoqmdmrk", "musica", "B1", "La bicicleta", "Carlos Vives, Shakira", "Colombian vallenato-pop, full of places and Caribbean words."],
-    ["xYYz5RTqbEs", "musica", "B1", "Bailando", "Enrique Iglesias, Descemer Bueno, Gente de Zona", "Spanish-Cuban dance hit."],
+    ["-UV0QGLmYys", "musica", "B1", "La bicicleta", "Carlos Vives, Shakira", "Colombian vallenato-pop, full of places and Caribbean words."],
+    ["NUsoVlDFqZg", "musica", "B1", "Bailando", "Enrique Iglesias, Descemer Bueno, Gente de Zona", "Spanish-Cuban dance hit."],
     ["l3MLvpX-TLQ", "musica", "B2", "Patria", "Rubén Blades", "Panama's Rubén Blades sings about what homeland means."],
-    ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Españolistos", "A short conversation in Spanish about making plans with friends."],
+    ["i5neBtAgc-c", "musica", "A2", "Bonito, Bonito", "Thiago Navarro Music", "His most-watched song (37 million views): coffee, smiles and simple things. Thiago Navarro is a digital artist created with AI tools."],
+    ["6S243h-V3p4", "musica", "A2", "Quédate con lo sencillo (en vivo)", "Thiago Navarro Music", "Stay with what's simple, and with whoever adds to your life."],
+    ["cEsp1dMTM1w", "musica", "A2", "Pasito a pasito", "Thiago Navarro Music", "Step by step: everything comes in its own time."],
+    ["aR0GjIVIAdo", "musica", "A2", "Ámate tanto", "Thiago Navarro Music", "A song about loving yourself."],
+    ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Spanishland School", "A short conversation in Spanish about making plans with friends."],
     ["guadxMv8RI8", "podcasts", "A2", "Mi héroe, mi amigo (episodio 1)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
-    ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "Hoy Hablamos", "A podcast in Spanish from Spain for learners."],
-    ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Españolistos", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
+    ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "A Language Learning channel", "A podcast in Spanish from Spain for learners."],
+    ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Spanishland School", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
   ].forEach(([yt, cat, lvl, t, ch, note]) => VID_START.push({ yt, cat, lvl, t, ch, note, q: [], clip: [0, VCLIP] }));
-  VID_START.forEach((v) => { if (!v.cat) v.cat = "historias"; });
   const ytId = (s) => { const m = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(String(s || "")) || /^([\w-]{11})$/.exec(String(s || "").trim()); return m ? m[1] : null; };
   const vMine = () => (S.myv = S.myv || []);
   const vData = (id) => { S.vid = S.vid || {}; return (S.vid[id] = S.vid[id] || { c: [] }); };
@@ -75,7 +70,7 @@
     const card = (v, mode) => { const d = (S.vid || {})[v.yt] || {}, n = (d.c || []).length;
       const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d)].filter(Boolean).join(" · ") || "Your video";
       const body = '<span class="vthumb"><img src="' + vThumb(v.yt) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="vplay" aria-hidden="true">' + IC("play") + "</span>" + (d.w ? '<span class="vdone">' + IC("check") + " Watched</span>" : "") + '</span><span class="vtxt"><b>' + esc(v.t) + "</b><small>" + esc(meta) + (n ? " · " + n + " word" + (n > 1 ? "s" : "") + " caught" : "") + "</small></span>";
-      const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : mode === "bad" ? '<a class="btn small vrm" href="https://www.youtube.com/watch?v=' + v.yt + '" target="_blank" rel="noopener">YouTube</a>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
+      const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
       return '<div class="vcw' + (act ? " has-act" : "") + '"><a class="vcard" href="#video-' + v.yt + '">' + body + "</a>" + act + "</div>"; };
     const lvOk = (v) => !F.l || (v.lvl || "").toUpperCase().startsWith(F.l);
     const lib = VID_START.filter((v) => !hid[v.yt] && !bad[v.yt] && lvOk(v));
@@ -85,7 +80,7 @@
     if (!F.c) list = (mine.length ? '<h2 class="ghead">My videos</h2><div class="vgrid">' + mine.map((v) => card(v)).join("") + "</div>" : "") + VCATS.map(([c, en, es]) => { const xs = lib.filter((v) => v.cat === c); return xs.length ? '<h2 class="ghead">' + en + ' <span class="es">(' + es + ")</span></h2>" + '<div class="vgrid">' + xs.map((v) => card(v)).join("") + "</div>" : ""; }).join("");
     else if (F.c === "mine") list = mine.length ? '<div class="vgrid">' + mine.map((v) => card(v)).join("") + "</div>" : '<p class="muted">No videos of your own yet. Paste a YouTube link above.</p>';
     else { const xs = lib.filter((v) => v.cat === F.c); list = xs.length ? '<div class="vgrid">' + xs.map((v) => card(v)).join("") + "</div>" : '<p class="muted">Nothing here at this level. Try another level.</p>'; }
-    const nh = VID_START.filter((v) => hid[v.yt]).length, nb = Object.keys(bad).filter((id) => vFind(id)).length;
+    const nh = VID_START.filter((v) => hid[v.yt]).length;
     app.innerHTML = '<div class="ui-page">' + uiTitle("Videos", "Short clips of real Spanish: conversations, interviews, news, weather, sport, music and podcasts. Watch, then practise.", '<button class="btn small" data-act="v-edit" aria-pressed="' + ed + '">' + (ed ? "Done" : "Edit") + "</button>", "Ver y practicar") +
       '<form class="vadd" id="vadd"><label class="sr" for="vlink">YouTube link</label><input id="vlink" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Paste a YouTube link" autocomplete="off"><button class="btn primary" type="submit">Add</button></form>' +
       '<p class="gfoot" style="margin-top:6px">' + (/Android/i.test(navigator.userAgent) ? "Tip: in the YouTube app, tap Share › Ruta DELE to add a video here." : "Tip: in YouTube, tap Share › Copy link, then paste it here.") + ' <span id="vadd-msg" role="status"></span></p>' +
@@ -93,8 +88,7 @@
       '<div class="vchips" role="group" aria-label="Level">' + chip("l", "", "All levels") + ["A1", "A2", "B1", "B2", "C1"].map((l) => chip("l", l, l)).join("") + "</div>" +
       (ed ? '<p class="small muted vedit-note">Tap Remove to take a video off your list. Your own videos are deleted; library videos can be brought back.</p>' : "") + list +
       (nh ? '<details class="vmore"' + (VP.showHid ? " open" : "") + '><summary data-act="v-showhid">Removed videos (' + nh + ")</summary><div class=\"vgrid\">" + VID_START.filter((v) => hid[v.yt]).map((v) => card(v, "hidden")).join("") + "</div></details>" : "") +
-      (nb ? '<details class="vmore"><summary>Not playable in the app (' + nb + ')</summary><p class="small muted">YouTube refused to play these inside the app. They still open in YouTube.</p><div class="vgrid">' + Object.keys(bad).map(vFind).filter(Boolean).map((v) => card(v, "bad")).join("") + "</div></details>" : "") +
-      '<p class="gfoot">Clips play from YouTube inside the app, 4 minutes at most. Levels are estimates. Music videos: catch the words you hear; the app doesn\'t show lyrics.</p></div>';
+      '<p class="gfoot">Clips play from YouTube inside the app, 4 minutes at most; any video that can\'t play in the app is taken off the list. Levels are estimates. Captions come from YouTube.</p></div>';
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a) return;
@@ -122,13 +116,14 @@
   const vpPlay = () => { try { VP.p.playVideo(); } catch (e) {} };
   const vpPause = () => { try { VP.p.pauseVideo(); } catch (e) {} };
   const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-  function vpStop() { clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
+  function vpStop() { try { vcStop(); } catch (e) {} clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
   function videoPage(id) {
     vpStop(); const v = vFind(id) || (vAdd(id) && vFind(id)); if (!v) { app.innerHTML = '<div class="stack"><h1>Video not found</h1><a class="btn" href="#videos">All videos</a></div>'; return; }
-    const d = vData(id); VP.id = id; VP.failed = false; VP.clip = v.clip || null; VP.dur = 0;
+    const d = vData(id); VP.id = id; VP.failed = false; VP.framed = 0; VP.clip = v.clip || null; VP.dur = 0;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
+      vcHTML() +
       '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<section class="block"><div class="shead"><h2>Words you caught</h2><button class="btn small" data-act="v-deck"' + (d.c.length ? "" : " hidden") + ">" + IC("cards") + ' Add all to flashcards</button></div><ul class="vcaught" id="vcaught">' + vCaughtHTML(d) + "</ul></section>" +
@@ -140,12 +135,13 @@
     const vlive = () => { if (VP.ready) return; VP.ready = true; if (vBad()[id]) { delete vBad()[id]; save(); } clearTimeout(tmo); const sl = document.getElementById("vslow"); if (sl) sl.hidden = true; };
     // slow or silent player: keep it visible (it may still play) and offer YouTube underneath
     const tmo = setTimeout(() => { if (VP.id !== id || VP.ready) return; if (!window.YT || !window.YT.Player) vfail(0); else { const sl = document.getElementById("vslow"); if (sl) sl.hidden = false; } }, 10000);
+    vcLoad(id);
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
       VP.p = new YT.Player("vplayer", { videoId: id, playerVars: Object.assign(v.clip ? { start: v.clip[0], end: v.clip[1] } : {}, { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] }),
         events: { onReady: () => { vlive(); try { VP.dur = VP.p.getDuration() || 0; } catch (e) {} if (d.at && d.at > vpLo() + 5 && d.at < vpHi() - 5 && !d.w) vpSeek(d.at - 2); },
-          onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([101, 150, 152].includes(c)) { vBad()[id] = c; save(); } },
-          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); } } });
+          onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([100, 101, 150, 152].includes(c)) { vBad()[id] = c; save(); try { coachToast("This video can't play inside the app, so it's been taken off your Videos list."); } catch (x) {} } },
+          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); if (e.data === 1 && !VP.framed) { VP.framed = 1; vFrameTop(); } } } });
       VP.tick = setInterval(() => {
         if (!VP.ready || VP.id !== id) return; const t = vpT();
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
@@ -156,6 +152,8 @@
       }, 250);
     });
   }
+  // first play: bring the video to the top so the video and the caption window are both on screen
+  function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {
     const w = es.toLowerCase().trim().replace(/[¿?¡!.,;:]/g, ""); if (!w) return "";

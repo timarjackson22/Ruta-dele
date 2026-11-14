@@ -13,6 +13,7 @@ const MOCK = `(() => {
     getCurrentTime() { return this.t; }, getDuration() { return this.dur; },
     seekTo(t) { window.__yt.log.push(["seek", Math.round(t * 10) / 10]); this.t = t; },
     playVideo() { window.__yt.log.push(["play"]); this.st = 1; }, pauseVideo() { window.__yt.log.push(["pause"]); this.st = 2; },
+    getPlayerState() { return this.st; }, unloadModule(m) { window.__yt.log.push(["unload", m]); },
     setPlaybackRate(r) { window.__yt.log.push(["rate", r]); this.rate = r; },
     destroy() { this.destroyed = 1; window.__yt.log.push(["destroy"]); clearInterval(this._iv); },
     _end() { this.st = 0; this.o.events.onStateChange({ data: 0 }); }, _err(c) { this.o.events.onError({ data: c }); },
@@ -42,7 +43,9 @@ const MOCK = `(() => {
   await row.click(); await p.waitForTimeout(700);
   let s = await st(); const cards = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href")));
   const per = await p.$$eval("h2.ghead", (hs) => hs.map((h) => [h.textContent.replace(/\s*\(.*$/, ""), h.nextElementSibling.querySelectorAll(".vcard").length]));
-  rec("Library: at least 4 videos in each of the 7 types", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Music", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] >= 4) && cards.includes("#video-2GrDFoMl978"), JSON.stringify(per));
+  rec("Library: at least 4 videos in each of the 7 types", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Music", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] >= 4) && cards.includes("#video-WLXiu-qp8Lw"), JSON.stringify(per));
+  rec("Only videos that play in apps: the 4 not allowed are gone", !["2GrDFoMl978", "rqiOwOmYO80", "-VxpA-9x0jc", "4oay8Hwdpjc", "O07zoqmdmrk", "xYYz5RTqbEs"].some((i) => cards.includes("#video-" + i)));
+  rec("Music has Thiago Navarro's 4 most-viewed songs", ["i5neBtAgc-c", "6S243h-V3p4", "cEsp1dMTM1w", "aR0GjIVIAdo"].every((i) => cards.includes("#video-" + i)));
   rec("Videos list: menu shown, Practice tab lit, back to Practice", !s.tucked && s.tab === "practicar" && s.back === "Practice" && !s.wide, JSON.stringify(s));
   // paste a link
   await p.fill("#vlink", "hola que tal"); await p.click('#vadd button[type="submit"]'); await p.waitForTimeout(300);
@@ -55,10 +58,10 @@ const MOCK = `(() => {
     rec("Link form recognised: " + l.split("/")[3].slice(0, 12), /#video-ZZZZZZZZZZ\d$/.test(p.url()), p.url());
   }
   // starter video page
-  await go("video-2GrDFoMl978"); await p.waitForTimeout(600); s = await st();
+  await go("video-WLXiu-qp8Lw"); await p.waitForTimeout(600); s = await st();
   rec("Video page: menu tucked, Practice tab lit, back to Videos, fits the screen", s.tucked && s.tab === "practicar" && s.back === "Videos" && !s.wide, JSON.stringify(s));
   const made = await p.evaluate(() => window.__yt.made.at(-1));
-  rec("Player: right video, tells YouTube the site, Spanish captions on, inline", made.videoId === "2GrDFoMl978" && made.playerVars.origin === "http://localhost:8766" && made.playerVars.cc_load_policy === 1 && made.playerVars.cc_lang_pref === "es" && made.playerVars.playsinline === 1, JSON.stringify(made.playerVars));
+  rec("Player: right video, tells YouTube the site, Spanish captions on, inline", made.videoId === "WLXiu-qp8Lw" && made.playerVars.origin === "http://localhost:8766" && made.playerVars.cc_load_policy === 1 && made.playerVars.cc_lang_pref === "es" && made.playerVars.playsinline === 1, JSON.stringify(made.playerVars));
   const fr = await p.$eval(".vframe", (x) => { const r = x.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
   rec("Player is full width and 16:9", Math.abs(fr[0] / fr[1] - 16 / 9) < 0.03 && fr[0] > 340, fr.join("x"));
   // controls
@@ -92,11 +95,6 @@ const MOCK = `(() => {
   await p.evaluate(() => (window.__heard = "pero no")); await p.click('#vcaught li:first-child [data-act="v-shadow"]'); await p.waitForTimeout(5200);
   const sh2 = await p.$eval("#vcaught li:first-child", (x) => x.innerText); const pc = +(/(\d+)%/.exec(sh2) || [])[1];
   rec("…and a different phrase scores lower", pc < 100, sh2.replace(/\s+/g, " "));
-  // comprehension
-  const qs = await p.$$("ol.mc > li"); rec("4 comprehension questions for Blind Dates", qs.length === 4);
-  const right = ["De España", "Es influencer", "Gabriel García Márquez", "Sofía lo rechaza al final"];
-  for (let i = 0; i < 4; i++) { const opt = await p.$(`ol.mc > li:nth-child(${i + 1}) .opt:text-is("${i === 3 ? "Gabriel elige a María" : right[i]}")`); await opt.click(); await p.waitForTimeout(120); }
-  rec("Answers marked and scored", (await p.textContent("#vq-res")) === "3 / 4" && (await p.$$("ol.mc .opt.wrong")).length === 1 && (await p.$$("ol.mc .opt.right")).length === 4, await p.textContent("#vq-res"));
   // retell
   await p.fill("#vret", "En el vídeo Gabriel es de España. Él tiene una cita con tres mujeres. Yo tiene mucho interés en la historia porque es divertida, pero al final Sofía no quiere salir con él.");
   await p.click('[data-act="v-ret-check"]'); await p.waitForTimeout(300); const rr = await p.$eval("#vret-res", (x) => x.innerText.replace(/\s+/g, " "));
@@ -105,19 +103,18 @@ const MOCK = `(() => {
   rec("Retell, catches and answers are kept after reload", (await p.inputValue("#vret")).startsWith("En el vídeo") && (await p.$$("#vcaught li")).length === 2);
   await log(); await p.click('[data-act="v-ret-profe"]'); await p.waitForTimeout(900); L = await log();
   const tut = await p.evaluate(() => { const t = document.getElementById("tutor"); return t && !t.hidden ? t.innerText.replace(/\s+/g, " ") : ""; });
-  rec("Ask Profe: opens with the video and your summary, video paused", /Looking at: Video · Citas a ciegas/.test(tut) && /Citas a ciegas/.test(tut) && /Gabriel es de España/.test(tut) && L.some((x) => x[0] === "pause"), tut.slice(0, 160));
+  rec("Ask Profe: opens with the video and your summary, video paused", /Looking at: Video · ¿Es cara Barcelona\?/.test(tut) && /cara Barcelona/.test(tut) && /Gabriel es de España/.test(tut) && L.some((x) => x[0] === "pause"), tut.slice(0, 160));
   await p.evaluate(() => { const x = document.querySelector('#tutor [data-act="t-close"]'); x && x.click(); }); await p.waitForTimeout(400);
   // watched
   const before = Object.values((await S()).act || {}).reduce((a, b) => a + b, 0);
   await p.evaluate(() => window.__yt.p._end()); await p.waitForTimeout(400);
   const sv = await S(); const after = Object.values(sv.act || {}).reduce((a, b) => a + b, 0);
-  rec("Watching to the end marks it watched and gives points", sv.vid["2GrDFoMl978"].w > 0 && after - before === 5 && sv.tot.video === 1, "points +" + (after - before));
+  rec("Watching to the end marks it watched and gives points", sv.vid["WLXiu-qp8Lw"].w > 0 && after - before === 5 && sv.tot.video === 1, "points +" + (after - before));
   await p.evaluate(() => window.__yt.p._end()); await p.waitForTimeout(200); rec("…only once", Object.values((await S()).act).reduce((a, b) => a + b, 0) === after);
   await go("video-ot5L3fIl0z0"); await p.evaluate(() => { window.__yt.p.dur = 100; window.__yt.p.t = 90; }); await p.waitForTimeout(500);
   rec("Watching 85% also counts", ((await S()).vid["ot5L3fIl0z0"] || {}).w > 0);
-  rec("3 questions for Best place to live", (await p.$$("ol.mc > li")).length === 3);
   await log(); await go("videos"); L = await log(); rec("Leaving the page stops the player", L.some((x) => x[0] === "destroy"), JSON.stringify(L));
-  const wb = await p.$$eval(".vcard", (a) => a.filter((x) => /Watched/.test(x.innerText)).length); const cc = await p.$eval('.vcard[href="#video-2GrDFoMl978"]', (x) => x.innerText);
+  const wb = await p.$$eval(".vcard", (a) => a.filter((x) => /Watched/.test(x.innerText)).length); const cc = await p.$eval('.vcard[href="#video-WLXiu-qp8Lw"]', (x) => x.innerText);
   rec("List shows watched videos and words caught", wb === 2 && /2 words caught/.test(cc), cc.replace(/\s+/g, " "));
   await go("practicar"); rec("Practice row shows the count", /2 watched/.test(await p.$eval('a[href="#videos"]', (x) => x.innerText)));
   // library clips: 4 minutes at most
@@ -155,11 +152,11 @@ const MOCK = `(() => {
   rec("Remove from the video page", p.url().endsWith("#videos") && ((await S()).vhide || {})["v2Ph5hBmqYA"] > 0);
   await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(300);
   // blocked embed
-  await go("video-rw-DW_YlfoI"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
+  await go("video-CoIL9IsJXiA"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
   rec("Blocked embed: says why, with the code", /only allows it on YouTube \(code 150\)/.test(await p.textContent("#vfail p")));
-  rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=rw-DW_YlfoI");
+  rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=CoIL9IsJXiA");
   rec("…exercises still there", await p.isVisible("#vret"));
-  await go("videos"); rec("Unplayable video leaves the main list, listed separately", !(await p.$('.vgrid:not(.vmore .vgrid) .vcard[href="#video-rw-DW_YlfoI"]')) && /Not playable in the app \(1\)/.test(await p.textContent("body")));
+  await go("videos"); rec("Unplayable video leaves the list, with no separate section", !(await p.$('.vcard[href="#video-CoIL9IsJXiA"]')) && !/Not playable/.test(await p.textContent("body")));
   // shared from the YouTube app (Android share sheet)
   await p.goto("http://localhost:8766/?text=" + encodeURIComponent("Mira esto https://youtu.be/ShArEdViD01?si=abc")); await p.waitForTimeout(1300);
   mine = (await S()).myv || [];
@@ -172,19 +169,19 @@ const MOCK = `(() => {
   await p.click('[data-act="v-remove"]'); await p.waitForTimeout(700); rec("Remove my video", p.url().endsWith("#videos") && !((await S()).myv || []).some((v) => v.yt === "ShArEdViD01"));
   // player loads but never reports ready (seen on a phone): keep it visible, offer YouTube under it
   await p.evaluate(() => localStorage.setItem("x", 1)); await c.addInitScript(() => { window.__ytSilent = 1; });
-  const p4 = await c.newPage(); p4.on("pageerror", (x) => er.push(x.message)); await p4.goto("http://localhost:8766/#video-2GrDFoMl978"); await p4.waitForTimeout(11000);
+  const p4 = await c.newPage(); p4.on("pageerror", (x) => er.push(x.message)); await p4.goto("http://localhost:8766/#video-WLXiu-qp8Lw"); await p4.waitForTimeout(11000);
   rec("Silent player stays visible, with an Open in YouTube hint", !(await p4.isVisible("#vfail")) && (await p4.isVisible("#vslow")) && (await p4.$eval("#vplayer", (x) => getComputedStyle(x).visibility)) === "visible");
   await p4.evaluate(() => window.__yt.p.o.events.onStateChange({ data: 1 })); await p4.waitForTimeout(100);
   rec("…the hint goes once the video starts playing", !(await p4.isVisible("#vslow")));
   // player can't load at all (offline / blocked) → fallback after a wait
   await c.unroute("**/www.youtube.com/iframe_api"); await c.route("**/www.youtube.com/iframe_api", (r) => r.abort());
-  const p2 = await c.newPage(); p2.on("pageerror", (x) => er.push(x.message)); await p2.goto("http://localhost:8766/#video-2GrDFoMl978"); await p2.waitForTimeout(13000);
+  const p2 = await c.newPage(); p2.on("pageerror", (x) => er.push(x.message)); await p2.goto("http://localhost:8766/#video-WLXiu-qp8Lw"); await p2.waitForTimeout(13000);
   rec("No YouTube at all → Open in YouTube fallback", await p2.isVisible("#vfail"));
   // dark theme / small phone fit
   const p3 = await (await b.newContext({ ...devices["iPhone SE"], colorScheme: "dark", serviceWorkers: "block" })).newPage(); await p3.goto("http://localhost:8766/#videos"); await p3.waitForTimeout(900);
   rec("Small phone: list fits without sideways scroll", !(await p3.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)));
   await p.screenshot({ path: "/tmp/claude-0/-home-claude/d337dd92-af3a-59a5-8489-72aae6454dab/scratchpad/vid-list.png", fullPage: false });
-  await go("video-2GrDFoMl978"); await p.screenshot({ path: "/tmp/claude-0/-home-claude/d337dd92-af3a-59a5-8489-72aae6454dab/scratchpad/vid-page.png", fullPage: true });
+  await go("video-WLXiu-qp8Lw"); await p.screenshot({ path: "/tmp/claude-0/-home-claude/d337dd92-af3a-59a5-8489-72aae6454dab/scratchpad/vid-page.png", fullPage: true });
   rec("No script errors", !er.length, er.join(" | "));
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close();
 })();

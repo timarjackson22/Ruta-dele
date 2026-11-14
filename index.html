@@ -1662,11 +1662,42 @@ body.litem-on .tutor-fab { display: none !important }
 .vedit-note { margin: 10px 0 0 }
 .vpage-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0 }
 .vpage-act .btn { display: inline-flex; align-items: center; gap: 5px } .vpage-act .ic { width: 15px; height: 15px }
+/* caption window */
+.vcapw { margin-top: -2px }
+.vcap-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px }
+.vkey { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted) }
+.vkey i { width: 10px; height: 10px; border-radius: 3px; background: var(--vinf) }
+.vcap-tg { display: inline-flex; gap: 6px }
+.vcap-tg .btn[aria-pressed="true"] { background: color-mix(in srgb, var(--cobalt) 16%, var(--surface)); border-color: var(--cobalt) }
+:root { --vinf: #c2410c } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --vinf: #fb923c } } :root[data-theme="dark"] { --vinf: #fb923c }
+.vcap { position: relative; height: clamp(190px, calc(100svh - 56vw - 210px), 360px); overflow: hidden; overflow: clip; border-radius: 14px; border: 1px solid var(--line); background: var(--surface);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%) }
+.vcap.vcap-empty { height: auto; -webkit-mask-image: none; mask-image: none }
+.vcap-in { position: relative; padding: 0 14px; transition: transform .7s cubic-bezier(.22, .61, .36, 1); will-change: transform }
+.vcap-pad { height: 18% } .vcap-pad.end { height: 60% }
+.vcap-msg { margin: 0; padding: 14px 0; font-size: 14px; color: var(--muted) }
+.vcue { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 1.25em; opacity: .55; transition: opacity .4s }
+.vcue.on { opacity: 1 } .vcue.past { opacity: .28 }
+.vct { flex: 0 0 auto; margin-top: 2px; font: 600 11.5px/1 ui-monospace, monospace; padding: 4px 6px; border-radius: 6px; border: 0; background: color-mix(in srgb, var(--cobalt) 12%, transparent); color: var(--cobalt); cursor: pointer }
+.vcl { flex: 1; min-width: 0 }
+.ves { margin: 0; font-size: 18px; line-height: 1.45; color: var(--ink) }
+.ven { display: none; margin: 1px 0 0; font-size: 14.5px; line-height: 1.4; color: var(--muted) }
+.vcap.show-en .ven:not(:empty) { display: block }
+.vword { cursor: pointer; border-radius: 4px; transition: background .15s, color .15s }
+.vcue.on .vword.said:not(.vinf) { color: var(--ink) }
+.vcue.on .vword.now { background: color-mix(in srgb, var(--cobalt) 20%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cobalt) 20%, transparent) }
+.vword.vinf { color: var(--vinf); font-weight: 600; text-decoration: underline dotted; text-underline-offset: 3px }
+.vword.vinf-jargon { text-decoration-style: dashed }
+.vcap-listen { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-weight: 600; color: var(--muted); pointer-events: none }
+.vcap.hide-text .vcl { filter: blur(7px); user-select: none } .vcap.hide-text .vcl * { pointer-events: none }
+.vcap.hide-text .vcap-listen { display: flex }
+.vcap-note { margin: 6px 0 0 }
+.vinfo { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--vinf) 10%, transparent); border-left: 3px solid var(--vinf) }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 </style>
 
-<script>window.__BUILD = "202611140854";</script>
+<script>window.__BUILD = "202611141510";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -8438,57 +8469,52 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   });
 
   /* ===================== videos: watch Spanish and practise with it (tools/VIDEO_BRIEF.md) ===================== */
-  const VID_START = [
-    { yt: "2GrDFoMl978", t: "Citas a ciegas (Blind Dates)", ch: "Dreaming Spanish", lvl: "A2", note: "Gabriel, from Spain, joins a dating show and talks with three women he can't see.",
-      q: [["¿De dónde es Gabriel?", ["De España", "De México", "De Argentina"], 0], ["¿Qué hace María, la primera cita?", ["Es influencer", "Es médica", "Es profesora"], 0], ["¿Qué escritor le gusta a Sofía?", ["Gabriel García Márquez", "Pablo Neruda", "Jorge Luis Borges"], 0], ["¿Cómo termina la historia?", ["Sofía lo rechaza al final", "Gabriel y Sofía se casan", "Gabriel elige a María"], 0]] },
-    { yt: "rw-DW_YlfoI", t: "If you are a beginner, watch this", ch: "Spanish After Hours", lvl: "A1", note: "Everyday actions, sitting and reading, explained with simple objects; present and past.", q: [] },
-    { yt: "rqiOwOmYO80", t: "¿Cuál es tu nivel de español?", ch: "Dreaming Spanish", lvl: "A1–C1", note: "Four short clips that get harder, from superbeginner to advanced: see how far you follow.", q: [] },
-    { yt: "ot5L3fIl0z0", t: "¿Cuál es el mejor lugar para vivir?", ch: "Easy Spanish", lvl: "B1", note: "Street interviews in Mexico: where people would like to live, and why.",
-      q: [["Para elegir dónde vivir, ¿qué es importante para los entrevistados?", ["El precio y la seguridad", "Tener playa cerca", "Que haya muchos turistas"], 0], ["Si se fueran a vivir lejos, ¿qué extrañarían?", ["La familia, la comida y sus mascotas", "El tráfico", "El frío"], 0], ["¿Hace falta hablar el idioma del país, según ellos?", ["Ayuda, pero no es imprescindible", "Sí, es obligatorio", "No sirve para nada"], 0]] },
-  ];
+  const VID_START = [];
   // the library: short clips (4 minutes at most) of native speakers, by type and estimated level; IDs found by web search (tools/VIDEO_LIBRARY_BRIEF.md)
-  const VCATS = [["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"], ["historias", "Longer videos", "Más largos"]];
+  const VCATS = [["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"]];
   const VCL = Object.fromEntries(VCATS.map((c) => [c[0], c]));
   const VCLIP = 240;
   [
-    ["W0LLExzov2A", "dialogos", "A1", "En el restaurante", "", "A short, easy conversation in a restaurant: ordering, asking and paying."],
-    ["3DWcMCxBN24", "dialogos", "A1", "Conversaciones en el restaurante", "", "Several short restaurant conversations for beginners."],
-    ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "", "A real conversation ordering food, the way natives say it."],
-    ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "", "Everyday situations acted out in Spanish."],
-    ["-VxpA-9x0jc", "dialogos", "B1", "Diálogo en el restaurante (A2–B2)", "", "The same restaurant scene at rising levels: hear how the language grows."],
-    ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "", "Real-life situations: what people actually say."],
-    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "", "Young street vendors in Mexico answer questions about their work."],
+    ["W0LLExzov2A", "dialogos", "A1", "En el restaurante", "Language Freak", "A short, easy conversation in a restaurant: ordering, asking and paying."],
+    ["3DWcMCxBN24", "dialogos", "A1", "Conversaciones en el restaurante", "Español Rápido", "Several short restaurant conversations for beginners."],
+    ["cBgiQ2l8U2g", "dialogos", "A2", "Pedir comida como un nativo", "Talk Español", "A real conversation ordering food, the way natives say it."],
+    ["V_yTqrC-Zyk", "dialogos", "A2", "Situaciones cotidianas", "Aprende Español", "Everyday situations acted out in Spanish."],
+    ["YrTVB8lKutI", "dialogos", "B1", "Conversar en situaciones de la vida real", "SaySpanish", "Real-life situations: what people actually say."],
+    ["DOa9b3JeEiU", "entrevistas", "A2", "Entrevista a vendedores en la calle", "nuttinhere", "Young street vendors in Mexico answer questions about their work."],
     ["WLXiu-qp8Lw", "entrevistas", "B1", "¿Es cara Barcelona?", "Easy Spanish", "People in Barcelona talk about the cost of living."],
-    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "", "Locals say what they love and what they dislike about Madrid."],
-    ["qj-Je2c_80I", "entrevistas", "B1", "¿Barcelona o Madrid?", "", "Which is the better city? People take sides."],
-    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "", "Street interviews in Mexico about dating."],
-    ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "", "A news story read slowly for elementary learners."],
+    ["CoIL9IsJXiA", "entrevistas", "B1", "Lo que gusta y no gusta de Madrid", "Easy Spanish", "Locals say what they love and what they dislike about Madrid."],
+    ["ot5L3fIl0z0", "entrevistas", "B1", "¿Cuál es el mejor lugar para vivir?", "Easy Spanish", "Street interviews in Mexico: where people would like to live, and why."],
+    ["yOaxqV8Rzf0", "entrevistas", "B1", "Citas en México", "La Karencita", "Street interviews in Mexico about dating."],
+    ["yUrep19qE_A", "noticias", "A2", "Noticia lenta (nivel A2)", "Stories in Spanish", "A news story read slowly for elementary learners."],
     ["nGX4VZk0d-w", "noticias", "B1", "Noticias en español lento (28 ago 2026)", "News in Slow Spanish", "World news, read slowly by native speakers."],
-    ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "", "The week's most important news in three minutes."],
+    ["AGeGsqb7sZc", "noticias", "B2", "Noticias en 3 minutos", "El Tiempo", "The week's most important news in three minutes."],
     ["tjmp1fEk9d4", "noticias", "C1", "DW Noticias: huelga general en España", "DW Español", "News bulletin of 11 November 2026, led by Spain's first general strike in 14 years (first 4 minutes)."],
-    ["8YAynBZqX-c", "noticias", "C1", "Las noticias de la mañana (13 nov 2026)", "", "A US Spanish-language morning news programme (first 4 minutes)."],
-    ["cJiLacyJ5FY", "tiempo", "A2", "El clima en la Ciudad de México", "", "Today's and tomorrow's weather in Mexico City: partly cloudy."],
-    ["glKFJ74Htn4", "tiempo", "B1", "El clima del fin de semana en Panamá", "", "From extreme heat to rain: the weekend forecast for Panama."],
-    ["v2Ph5hBmqYA", "tiempo", "B1", "El tiempo en España para hoy", "", "Today's forecast for Spain."],
-    ["CCt77yWaOi8", "tiempo", "B1", "El tiempo en España: próximos 7 días", "", "Rain and temperatures for the week ahead."],
-    ["c0QdRE9PosE", "tiempo", "B2", "El tiempo a una semana vista", "", "Where it may rain, and orange-level warnings."],
-    ["Qks54-LEYDs", "deportes", "B1", "Resumen: Real Madrid 2-1 Barcelona", "", "Highlights and goals of the Clásico, with commentary."],
-    ["mRFd0x8cjUU", "deportes", "B1", "Resumen: Espanyol 1-2 Real Madrid", "", "Highlights and goals with commentary."],
-    ["A9msXwAxDGo", "deportes", "B2", "Luis García: «Podríamos haber hecho algún gol más»", "", "A coach's comments after the match."],
-    ["8czkkbTwNBA", "deportes", "C1", "Los goles del Clásico narrados por la radio", "", "The same goals called by three Spanish radio stations (RAC1, COPE, SER): fast, passionate Spanish."],
-    ["S7Fy2fWAC2Q", "deportes", "C1", "Simeone, rueda de prensa", "", "Diego Simeone's press conference after Espanyol 0-1 Atlético (first 4 minutes)."],
+    ["8YAynBZqX-c", "noticias", "C1", "Las noticias de la mañana (13 nov 2026)", "Noticias Telemundo", "A US Spanish-language morning news programme (first 4 minutes)."],
+    ["cJiLacyJ5FY", "tiempo", "A2", "El clima en la Ciudad de México", "adn Noticias", "Today's and tomorrow's weather in Mexico City: partly cloudy."],
+    ["glKFJ74Htn4", "tiempo", "B1", "El clima del fin de semana en Panamá", "TVN Noticias", "From extreme heat to rain: the weekend forecast for Panama."],
+    ["v2Ph5hBmqYA", "tiempo", "B1", "El tiempo en España para hoy", "tiempo.es", "Today's forecast for Spain."],
+    ["CCt77yWaOi8", "tiempo", "B1", "El tiempo en España: próximos 7 días", "Meteovigo", "Rain and temperatures for the week ahead."],
+    ["c0QdRE9PosE", "tiempo", "B2", "El tiempo a una semana vista", "Meteovigo", "Where it may rain, and orange-level warnings."],
+    ["Qks54-LEYDs", "deportes", "B1", "Resumen: Real Madrid 2-1 Barcelona", "Diario AS", "Highlights and goals of the Clásico, with commentary."],
+    ["mRFd0x8cjUU", "deportes", "B1", "Resumen: Espanyol 1-2 Real Madrid", "Diario AS", "Highlights and goals with commentary."],
+    ["A9msXwAxDGo", "deportes", "B2", "Luis García: «Podríamos haber hecho algún gol más»", "LaLiga", "A coach's comments after the match."],
+    ["8czkkbTwNBA", "deportes", "C1", "Los goles del Clásico narrados por la radio", "Mundo Deportivo", "The same goals called by three Spanish radio stations (RAC1, COPE, SER): fast, passionate Spanish."],
+    ["S7Fy2fWAC2Q", "deportes", "C1", "Simeone, rueda de prensa", "Diario AS", "Diego Simeone's press conference after Espanyol 0-1 Atlético (first 4 minutes)."],
     ["TiPRNqJnI_k", "musica", "A2", "Ojalá que llueva café", "Juan Luis Guerra", "A Dominican classic with clear, slow singing about life in the countryside."],
     ["kRt2sRyup6A", "musica", "B1", "La camisa negra", "Juanes", "Colombian rock-pop hit."],
-    ["O07zoqmdmrk", "musica", "B1", "La bicicleta", "Carlos Vives, Shakira", "Colombian vallenato-pop, full of places and Caribbean words."],
-    ["xYYz5RTqbEs", "musica", "B1", "Bailando", "Enrique Iglesias, Descemer Bueno, Gente de Zona", "Spanish-Cuban dance hit."],
+    ["-UV0QGLmYys", "musica", "B1", "La bicicleta", "Carlos Vives, Shakira", "Colombian vallenato-pop, full of places and Caribbean words."],
+    ["NUsoVlDFqZg", "musica", "B1", "Bailando", "Enrique Iglesias, Descemer Bueno, Gente de Zona", "Spanish-Cuban dance hit."],
     ["l3MLvpX-TLQ", "musica", "B2", "Patria", "Rubén Blades", "Panama's Rubén Blades sings about what homeland means."],
-    ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Españolistos", "A short conversation in Spanish about making plans with friends."],
+    ["i5neBtAgc-c", "musica", "A2", "Bonito, Bonito", "Thiago Navarro Music", "His most-watched song (37 million views): coffee, smiles and simple things. Thiago Navarro is a digital artist created with AI tools."],
+    ["6S243h-V3p4", "musica", "A2", "Quédate con lo sencillo (en vivo)", "Thiago Navarro Music", "Stay with what's simple, and with whoever adds to your life."],
+    ["cEsp1dMTM1w", "musica", "A2", "Pasito a pasito", "Thiago Navarro Music", "Step by step: everything comes in its own time."],
+    ["aR0GjIVIAdo", "musica", "A2", "Ámate tanto", "Thiago Navarro Music", "A song about loving yourself."],
+    ["3t_t8-5sz2k", "podcasts", "A2", "Planes con amigos", "Spanishland School", "A short conversation in Spanish about making plans with friends."],
     ["guadxMv8RI8", "podcasts", "A2", "Mi héroe, mi amigo (episodio 1)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
-    ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "Hoy Hablamos", "A podcast in Spanish from Spain for learners."],
-    ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Españolistos", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
+    ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "A Language Learning channel", "A podcast in Spanish from Spain for learners."],
+    ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Spanishland School", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
   ].forEach(([yt, cat, lvl, t, ch, note]) => VID_START.push({ yt, cat, lvl, t, ch, note, q: [], clip: [0, VCLIP] }));
-  VID_START.forEach((v) => { if (!v.cat) v.cat = "historias"; });
   const ytId = (s) => { const m = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(String(s || "")) || /^([\w-]{11})$/.exec(String(s || "").trim()); return m ? m[1] : null; };
   const vMine = () => (S.myv = S.myv || []);
   const vData = (id) => { S.vid = S.vid || {}; return (S.vid[id] = S.vid[id] || { c: [] }); };
@@ -8514,7 +8540,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const card = (v, mode) => { const d = (S.vid || {})[v.yt] || {}, n = (d.c || []).length;
       const meta = [mode === "all" && v.cat ? VCL[v.cat][1] : "", v.ch, v.lvl, vLenTxt(v, d)].filter(Boolean).join(" · ") || "Your video";
       const body = '<span class="vthumb"><img src="' + vThumb(v.yt) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'"><span class="vplay" aria-hidden="true">' + IC("play") + "</span>" + (d.w ? '<span class="vdone">' + IC("check") + " Watched</span>" : "") + '</span><span class="vtxt"><b>' + esc(v.t) + "</b><small>" + esc(meta) + (n ? " · " + n + " word" + (n > 1 ? "s" : "") + " caught" : "") + "</small></span>";
-      const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : mode === "bad" ? '<a class="btn small vrm" href="https://www.youtube.com/watch?v=' + v.yt + '" target="_blank" rel="noopener">YouTube</a>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
+      const act = mode === "hidden" ? '<button class="btn small vrm" data-act="v-restore" data-id="' + v.yt + '">Restore</button>' : ed ? '<button class="btn small vrm" data-act="v-rm" data-id="' + v.yt + '" aria-label="' + (v.mine ? "Delete " : "Remove ") + esc(v.t) + '">' + IC("cross") + (v.mine ? " Delete" : " Remove") + "</button>" : "";
       return '<div class="vcw' + (act ? " has-act" : "") + '"><a class="vcard" href="#video-' + v.yt + '">' + body + "</a>" + act + "</div>"; };
     const lvOk = (v) => !F.l || (v.lvl || "").toUpperCase().startsWith(F.l);
     const lib = VID_START.filter((v) => !hid[v.yt] && !bad[v.yt] && lvOk(v));
@@ -8524,7 +8550,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!F.c) list = (mine.length ? '<h2 class="ghead">My videos</h2><div class="vgrid">' + mine.map((v) => card(v)).join("") + "</div>" : "") + VCATS.map(([c, en, es]) => { const xs = lib.filter((v) => v.cat === c); return xs.length ? '<h2 class="ghead">' + en + ' <span class="es">(' + es + ")</span></h2>" + '<div class="vgrid">' + xs.map((v) => card(v)).join("") + "</div>" : ""; }).join("");
     else if (F.c === "mine") list = mine.length ? '<div class="vgrid">' + mine.map((v) => card(v)).join("") + "</div>" : '<p class="muted">No videos of your own yet. Paste a YouTube link above.</p>';
     else { const xs = lib.filter((v) => v.cat === F.c); list = xs.length ? '<div class="vgrid">' + xs.map((v) => card(v)).join("") + "</div>" : '<p class="muted">Nothing here at this level. Try another level.</p>'; }
-    const nh = VID_START.filter((v) => hid[v.yt]).length, nb = Object.keys(bad).filter((id) => vFind(id)).length;
+    const nh = VID_START.filter((v) => hid[v.yt]).length;
     app.innerHTML = '<div class="ui-page">' + uiTitle("Videos", "Short clips of real Spanish: conversations, interviews, news, weather, sport, music and podcasts. Watch, then practise.", '<button class="btn small" data-act="v-edit" aria-pressed="' + ed + '">' + (ed ? "Done" : "Edit") + "</button>", "Ver y practicar") +
       '<form class="vadd" id="vadd"><label class="sr" for="vlink">YouTube link</label><input id="vlink" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="Paste a YouTube link" autocomplete="off"><button class="btn primary" type="submit">Add</button></form>' +
       '<p class="gfoot" style="margin-top:6px">' + (/Android/i.test(navigator.userAgent) ? "Tip: in the YouTube app, tap Share › Ruta DELE to add a video here." : "Tip: in YouTube, tap Share › Copy link, then paste it here.") + ' <span id="vadd-msg" role="status"></span></p>' +
@@ -8532,8 +8558,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       '<div class="vchips" role="group" aria-label="Level">' + chip("l", "", "All levels") + ["A1", "A2", "B1", "B2", "C1"].map((l) => chip("l", l, l)).join("") + "</div>" +
       (ed ? '<p class="small muted vedit-note">Tap Remove to take a video off your list. Your own videos are deleted; library videos can be brought back.</p>' : "") + list +
       (nh ? '<details class="vmore"' + (VP.showHid ? " open" : "") + '><summary data-act="v-showhid">Removed videos (' + nh + ")</summary><div class=\"vgrid\">" + VID_START.filter((v) => hid[v.yt]).map((v) => card(v, "hidden")).join("") + "</div></details>" : "") +
-      (nb ? '<details class="vmore"><summary>Not playable in the app (' + nb + ')</summary><p class="small muted">YouTube refused to play these inside the app. They still open in YouTube.</p><div class="vgrid">' + Object.keys(bad).map(vFind).filter(Boolean).map((v) => card(v, "bad")).join("") + "</div></details>" : "") +
-      '<p class="gfoot">Clips play from YouTube inside the app, 4 minutes at most. Levels are estimates. Music videos: catch the words you hear; the app doesn\'t show lyrics.</p></div>';
+      '<p class="gfoot">Clips play from YouTube inside the app, 4 minutes at most; any video that can\'t play in the app is taken off the list. Levels are estimates. Captions come from YouTube.</p></div>';
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a) return;
@@ -8561,13 +8586,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   const vpPlay = () => { try { VP.p.playVideo(); } catch (e) {} };
   const vpPause = () => { try { VP.p.pauseVideo(); } catch (e) {} };
   const mmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
-  function vpStop() { clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
+  function vpStop() { try { vcStop(); } catch (e) {} clearInterval(VP.tick); VP.tick = null; VP.loop = null; try { VP.p && VP.p.destroy && VP.p.destroy(); } catch (e) {} VP.p = null; VP.ready = false; VP.id = null; }
   function videoPage(id) {
     vpStop(); const v = vFind(id) || (vAdd(id) && vFind(id)); if (!v) { app.innerHTML = '<div class="stack"><h1>Video not found</h1><a class="btn" href="#videos">All videos</a></div>'; return; }
-    const d = vData(id); VP.id = id; VP.failed = false; VP.clip = v.clip || null; VP.dur = 0;
+    const d = vData(id); VP.id = id; VP.failed = false; VP.framed = 0; VP.clip = v.clip || null; VP.dur = 0;
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
+      vcHTML() +
       '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay line</button><button class="btn small" data-act="v-rate" aria-pressed="false">0.75×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<section class="block"><div class="shead"><h2>Words you caught</h2><button class="btn small" data-act="v-deck"' + (d.c.length ? "" : " hidden") + ">" + IC("cards") + ' Add all to flashcards</button></div><ul class="vcaught" id="vcaught">' + vCaughtHTML(d) + "</ul></section>" +
@@ -8579,12 +8605,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const vlive = () => { if (VP.ready) return; VP.ready = true; if (vBad()[id]) { delete vBad()[id]; save(); } clearTimeout(tmo); const sl = document.getElementById("vslow"); if (sl) sl.hidden = true; };
     // slow or silent player: keep it visible (it may still play) and offer YouTube underneath
     const tmo = setTimeout(() => { if (VP.id !== id || VP.ready) return; if (!window.YT || !window.YT.Player) vfail(0); else { const sl = document.getElementById("vslow"); if (sl) sl.hidden = false; } }, 10000);
+    vcLoad(id);
     ytApi().then((YT) => {
       if (VP.id !== id || !document.getElementById("vplayer")) return;
       VP.p = new YT.Player("vplayer", { videoId: id, playerVars: Object.assign(v.clip ? { start: v.clip[0], end: v.clip[1] } : {}, { playsinline: 1, rel: 0, modestbranding: 1, cc_load_policy: 1, cc_lang_pref: "es", hl: "es", fs: 0, enablejsapi: 1, origin: location.origin, widget_referrer: location.href.split("#")[0] }),
         events: { onReady: () => { vlive(); try { VP.dur = VP.p.getDuration() || 0; } catch (e) {} if (d.at && d.at > vpLo() + 5 && d.at < vpHi() - 5 && !d.w) vpSeek(d.at - 2); },
-          onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([101, 150, 152].includes(c)) { vBad()[id] = c; save(); } },
-          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); } } });
+          onError: (e) => { clearTimeout(tmo); const c = e && e.data; vfail(c); if ([100, 101, 150, 152].includes(c)) { vBad()[id] = c; save(); try { coachToast("This video can't play inside the app, so it's been taken off your Videos list."); } catch (x) {} } },
+          onStateChange: (e) => { vlive(); if (e.data === 0) vWatched(id); if (e.data === 1 && !VP.framed) { VP.framed = 1; vFrameTop(); } } } });
       VP.tick = setInterval(() => {
         if (!VP.ready || VP.id !== id) return; const t = vpT();
         if (VP.loop && t >= VP.loop.b) vpSeek(VP.loop.a);
@@ -8595,6 +8622,8 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       }, 250);
     });
   }
+  // first play: bring the video to the top so the video and the caption window are both on screen
+  function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {
     const w = es.toLowerCase().trim().replace(/[¿?¡!.,;:]/g, ""); if (!w) return "";
@@ -8665,6 +8694,188 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function vCtx(id) { const v = vFind(id); if (!v) return null; const d = vData(id);
     return { label: "Video · " + v.t, lvl: /^[abc][12]/i.test(v.lvl || "") ? v.lvl.slice(0, 2).toLowerCase() : undefined,
       text: "The learner is watching the YouTube video «" + v.t + "»" + (v.ch ? " by " + v.ch : "") + (v.lvl ? " (level " + v.lvl + ")" : "") + (v.note ? ". About: " + v.note : "") + (VP.id === id && VP.ready ? ". Currently at " + mmss(vpT()) : "") + ".\nWords they caught: " + (d.c.map((c) => c.es + (c.en ? " (" + c.en + ")" : "")).join(", ") || "none yet") + (d.r ? "\nTheir retelling so far: " + d.r.slice(0, 1500) : "") + "\nYou can't see or hear the video; ask what they understood rather than inventing what happens in it." }; }
+  /* ---------- caption window under the video (tools/VIDEO_CAPTIONS_BRIEF.md) ---------- */
+  // informal Spanish: shortened forms of regular words, informal/slang words (with where they're used), and jargon
+  const VSHORT = { "pa": "para", "pa'": "para", "p'": "para", "pal": "para el", "pa'l": "para el", "palante": "para adelante", "pa'lante": "para adelante", "patrás": "para atrás", "pa'trás": "para atrás", "pacá": "para acá", "pa'cá": "para acá", "pallá": "para allá", "pa'llá": "para allá",
+    "na'": "nada", "ná": "nada", "naa": "nada", "to'": "todo", "tó": "todo", "toa": "toda", "toa'": "toda", "toos": "todos", "ta": "está", "'ta": "está", "tá": "está", "tás": "estás", "'tás": "estás", "toy": "estoy", "'toy": "estoy", "tamos": "estamos", "tamo": "estamos", "tamo'": "estamos", "taba": "estaba", "'taba": "estaba",
+    "vamo": "vamos", "vamo'": "vamos", "ma'": "más", "pue": "pues", "pue'": "pues", "pos": "pues", "nomás": "no más (just, only)", "namás": "nada más (just, only)", "usté": "usted", "verdá": "verdad", "mijo": "mi hijo (my son / dear)", "mija": "mi hija (my daughter / dear)", "m'hijo": "mi hijo", "m'hija": "mi hija", "onde": "donde", "ónde": "dónde", "pa'que": "para que", "pa'cer": "para hacer",
+    "porfa": "por favor", "peli": "película (film)", "pelis": "películas (films)", "finde": "fin de semana (weekend)", "profe": "profesor / profesora (teacher)", "cole": "colegio (school)", "bici": "bicicleta (bike)", "tele": "televisión (TV)", "compa": "compañero / compadre (pal)", "uni": "universidad (university)", "cumple": "cumpleaños (birthday)", "depa": "departamento (flat, Mexico)", "refri": "refrigerador (fridge)", "mates": "matemáticas (maths)", "insti": "instituto (secondary school, Spain)", "boli": "bolígrafo (pen)", "info": "información", "súper": "supermercado or 'super, very'", "seño": "señorita (miss, teacher)", "porfis": "por favor" };
+  const VSLANG = {
+    "chévere": ["great, cool", "Caribbean, Venezuela, Colombia, Panama"], "bacano": ["great, cool", "Colombia"], "bacana": ["great, cool", "Colombia"], "bacán": ["great, cool", "Chile, Peru, Colombia"],
+    "güey": ["dude, mate (among friends)", "Mexico"], "wey": ["dude, mate (among friends)", "Mexico"], "guey": ["dude, mate (among friends)", "Mexico"], "chido": ["cool", "Mexico"], "chida": ["cool", "Mexico"], "chidos": ["cool", "Mexico"], "neta": ["the truth; for real?", "Mexico"],
+    "chamba": ["work, job", "Mexico, Central America, Peru"], "chambear": ["to work", "Mexico, Central America"], "órale": ["come on! / OK! / wow!", "Mexico"], "ándale": ["come on, hurry up; that's it!", "Mexico"], "cuate": ["buddy", "Mexico"], "cuates": ["buddies", "Mexico"],
+    "morro": ["kid, young guy", "Mexico"], "morra": ["girl, young woman", "Mexico"], "chela": ["beer", "Mexico"], "chelas": ["beers", "Mexico"], "ahorita": ["right now, or in a little while", "Mexico, Central America, Caribbean"], "chafa": ["cheap, poor quality", "Mexico"], "gacho": ["bad, mean, ugly", "Mexico"],
+    "chamaco": ["kid", "Mexico, Central America"], "chamaca": ["girl, kid", "Mexico, Central America"], "chavo": ["guy, kid", "Mexico"], "chava": ["girl", "Mexico"], "carnal": ["brother, buddy", "Mexico"], "chingón": ["awesome (vulgar)", "Mexico"], "chingona": ["awesome (vulgar)", "Mexico"], "lana": ["money (Mexico); also 'wool'", "Mexico"],
+    "parce": ["friend, mate", "Colombia"], "parcero": ["friend, mate", "Colombia"], "parcera": ["friend, mate", "Colombia"], "berraco": ["tough, great; also angry", "Colombia"], "verraco": ["tough, great; also angry", "Colombia"], "berraca": ["tough, great; also angry", "Colombia"], "guayabo": ["hangover", "Colombia"], "rumba": ["party (also a dance)", "Colombia, Venezuela"], "man": ["guy (from English)", "Colombia, Venezuela"],
+    "chamo": ["kid, guy", "Venezuela"], "chama": ["girl", "Venezuela"], "chamos": ["guys, kids", "Venezuela"], "pana": ["buddy", "Venezuela, Panama, Ecuador, Caribbean"], "panas": ["buddies", "Venezuela, Panama, Ecuador, Caribbean"], "burda": ["a lot, very", "Venezuela"],
+    "xopá": ["what's up?", "Panama"], "chopá": ["what's up?", "Panama"], "fren": ["friend", "Panama"], "pelao": ["kid (short for pelado)", "Panama, Colombia"], "pelaíto": ["little kid", "Panama"], "vaina": ["thing, stuff, situation", "Panama, Colombia, Venezuela, Caribbean"], "vainas": ["things, stuff", "Panama, Colombia, Venezuela, Caribbean"], "chuleta": ["wow! damn! (surprise); also 'pork chop'", "Panama"], "mae": ["dude", "Costa Rica"], "tuanis": ["cool", "Costa Rica"],
+    "jeva": ["girlfriend", "Caribbean, Venezuela"], "jevo": ["boyfriend", "Caribbean, Venezuela"], "guagua": ["bus", "Caribbean, Canary Islands"],
+    "che": ["hey, mate", "Argentina, Uruguay"], "boludo": ["dude (friends); also 'idiot'", "Argentina"], "boluda": ["dude (friends); also 'idiot'", "Argentina"], "pibe": ["kid, guy", "Argentina"], "piba": ["girl", "Argentina, Spain"], "mina": ["girl, woman (also 'mine')", "Argentina"], "laburo": ["work, job", "Argentina, Uruguay"], "laburar": ["to work", "Argentina, Uruguay"], "guita": ["money", "Argentina"], "bondi": ["bus", "Argentina"], "quilombo": ["mess, chaos", "Argentina, Uruguay"], "copado": ["cool", "Argentina"], "posta": ["for real", "Argentina"], "bárbaro": ["great! (also 'barbaric')", "Argentina, Uruguay"],
+    "cachai": ["you know? / get it?", "Chile"], "po": ["filler, like 'then' (sí po = yeah)", "Chile"], "weón": ["dude (vulgar)", "Chile, Peru"], "huevón": ["dude; also 'idiot' (vulgar)", "Chile, Peru, Venezuela"],
+    "mola": ["it's cool", "Spain"], "molan": ["they're cool", "Spain"], "molar": ["to be cool", "Spain"], "mole": ["(that it) is cool", "Spain"], "guay": ["cool", "Spain"], "guays": ["cool", "Spain"], "flipar": ["to be amazed", "Spain"], "flipo": ["I'm amazed", "Spain"], "flipas": ["you're amazed / you're dreaming", "Spain"], "flipante": ["mind-blowing", "Spain"], "flipando": ["amazed", "Spain"],
+    "currar": ["to work", "Spain"], "curro": ["job, work", "Spain"], "curra": ["works", "Spain"], "chaval": ["kid, young guy", "Spain"], "chavala": ["girl", "Spain"], "chavales": ["kids", "Spain"], "colega": ["mate (also 'colleague')", "Spain"], "colegas": ["mates (also 'colleagues')", "Spain"], "majo": ["nice, friendly", "Spain"], "maja": ["nice, friendly", "Spain"],
+    "mogollón": ["loads, a lot", "Spain"], "cutre": ["shabby, tacky", "Spain"], "guiri": ["foreign tourist", "Spain"], "guiris": ["foreign tourists", "Spain"], "chulo": ["cool, pretty; also cocky", "Spain, Mexico"], "chula": ["cool, pretty; also cocky", "Spain, Mexico"], "tronco": ["mate, dude (also 'tree trunk')", "Spain"], "mazo": ["a lot, really (also 'mallet')", "Spain (Madrid)"], "bocata": ["sandwich", "Spain"], "tío": ["dude, guy (also 'uncle')", "Spain"], "tía": ["girl, mate (also 'aunt')", "Spain"],
+    "plata": ["money (also 'silver')", "Latin America"], "bro": ["bro (from English)", "everywhere"], "okey": ["OK (from English)", "everywhere"], "full": ["very, a lot (from English)", "Ecuador, Colombia, Venezuela"],
+  };
+  const VPHRASE = { "qué onda": ["what's up?", "Mexico, Central America"], "buena onda": ["good vibes; nice (person)", "Latin America"], "pura vida": ["great, all good; hi / thanks", "Costa Rica"], "en plan": ["like, kind of (filler)", "Spain"], "o sea": ["I mean, like (filler)", "everywhere"], "qué sopa": ["what's up?", "Panama"], "de una": ["sure, right away", "Colombia, Ecuador"], "qué más": ["how's it going?", "Colombia"], "a full": ["all out, at full speed", "Latin America"], "qué pedo": ["what's up? (vulgar)", "Mexico"] };
+  const VJARGON = { "golazo": "a great goal (football)", "remontada": "a comeback (sport)", "prórroga": "extra time (football, Spain)", "penalti": "penalty kick (football)", "penal": "penalty kick (football, Latin America)", "córner": "corner kick (football)", "pichichi": "top scorer of the league (football, Spain)", "colista": "team at the bottom of the table (sport)", "fichaje": "a signing, a transfer (sport)", "triplete": "three goals, or three titles (sport)", "var": "video referee (football)",
+    "borrasca": "a low-pressure storm system (weather)", "dana": "an isolated cold-air storm (weather, Spain)", "chubascos": "showers (weather)", "chubasco": "a shower (weather)", "anticiclón": "a high-pressure system (weather)", "isobaras": "isobars (weather maps)", "ciclogénesis": "rapid storm formation (weather)", "vaguada": "a trough of low pressure (weather)", "calima": "dust haze (weather)" };
+  const VFAM = new Set(["mi", "tu", "su", "mis", "tus", "sus", "el", "la", "los", "las", "un", "una", "nuestro", "nuestra", "vuestro", "vuestra", "del", "al"]);
+  // what kind of informal word is this? → {k: "short"|"slang"|"jargon", base, mean, where}
+  function vInformal(w, prev) {
+    const x = w.toLowerCase(); if (!x) return null;
+    if (VSHORT[x]) return { k: "short", base: VSHORT[x] };
+    if (VJARGON[x]) return { k: "jargon", mean: VJARGON[x] };
+    if (VSLANG[x]) { if ((x === "tío" || x === "tía") && VFAM.has(prev)) return null; return { k: "slang", mean: VSLANG[x][0], where: VSLANG[x][1] }; }
+    const tg = (y) => { try { return !!TG[y]; } catch (e) { return false; } };
+    if (tg(x)) return null;
+    let m;
+    if ((m = /^(.{2,})ao(s?)$/.exec(x)) && tg(m[1] + "ado" + m[2])) return { k: "short", base: m[1] + "ado" + m[2] };
+    if ((m = /^(.{2,})á(s?)$/.exec(x)) && tg(m[1] + "ada" + m[2])) return { k: "short", base: m[1] + "ada" + m[2] };
+    if ((m = /^(.{2,})ío(s?)$/.exec(x)) && tg(m[1] + "ido" + m[2])) return { k: "short", base: m[1] + "ido" + m[2] };
+    if ((m = /^(.+)'$/.exec(x))) { for (const end of ["s", "do", "da", "e"]) if (tg(m[1] + end)) return { k: "short", base: m[1] + end }; }
+    if ((m = /^'(.+)$/.exec(x))) { for (const st of ["es", "a"]) if (tg(st + m[1])) return { k: "short", base: st + m[1] }; }
+    return null;
+  }
+  const VCAP = { id: null, cues: [], kind: "", raf: 0, cur: -1, word: -1, raw: -1, t0: 0, n0: 0, resume: false, overlayOff: false };
+  const vcPref = () => (S.vcap = S.vcap || { en: false, hide: false });
+  function vcDecode(s) { const ta = document.createElement("textarea"); ta.innerHTML = s; return ta.value; }
+  // YouTube caption XML: srv1 (<text start dur>) or srv3 (<p t d> with word timings in <s t>)
+  function vcParse(xml) {
+    if (!xml) return [];
+    const doc = new DOMParser().parseFromString(xml, "text/xml"), out = [];
+    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcDecode(vcDecode(n.textContent || "")).replace(/\s+/g, " ").trim(); if (txt) out.push({ s, e: s + d, text: txt }); });
+    doc.querySelectorAll("body > p, p[t]").forEach((p) => {
+      const s = (+p.getAttribute("t") || 0) / 1000, d = (+p.getAttribute("d") || 2000) / 1000, ss = p.querySelectorAll("s"); let words = null, txt;
+      if (ss.length) { words = []; ss.forEach((x) => { const w = vcDecode(x.textContent || "").trim(); if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
+      else txt = vcDecode(vcDecode(p.textContent || "")).replace(/\s+/g, " ").trim();
+      if (txt && !(out.length && out[out.length - 1].s === s && out[out.length - 1].text === txt)) out.push({ s, e: s + d, text: txt, words });
+    });
+    out.sort((a, b) => a.s - b.s);
+    for (let i = 0; i < out.length - 1; i++) if (out[i].e > out[i + 1].s) out[i].e = out[i + 1].s; // automatic captions overlap: each line ends where the next begins
+    return out;
+  }
+  function vcPair(es, en) { // English line for each Spanish line: the English cue that starts closest (same track, so the timings match)
+    if (!en.length) return; let j = 0;
+    es.forEach((c) => { while (j < en.length - 1 && Math.abs(en[j + 1].s - c.s) <= Math.abs(en[j].s - c.s)) j++; if (Math.abs(en[j].s - c.s) < 1.2) c.en = en[j].text; });
+  }
+  const vcCache = new Map();
+  function vcLoad(id) {
+    VCAP.id = id; VCAP.cues = []; VCAP.cur = -1; VCAP.word = -1; VCAP.overlayOff = false;
+    const box = document.getElementById("vcapw"); if (!box) return;
+    if (!window.AndroidCap) { vcState("app"); return; }
+    let hit = vcCache.get(id); if (!hit) try { const j = localStorage.getItem("vcap:" + id); if (j) hit = JSON.parse(j); } catch (e) {}
+    if (hit) { vcGot(id, hit); return; }
+    vcState("loading");
+    const rid = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    window.__acap = window.__acap || { cbs: {}, ev(k, json, err) { const f = this.cbs[k]; delete this.cbs[k]; if (f) f(json, err); } };
+    window.__acap.cbs[rid] = (json, err) => {
+      if (VCAP.id !== id) return;
+      if (err || !json) { vcState("error", err); return; }
+      let r; try { r = JSON.parse(json); } catch (e) { vcState("error", "unreadable reply"); return; }
+      if (r.none) { vcState("none"); return; }
+      vcCache.set(id, r);
+      try { const keys = Object.keys(localStorage).filter((k) => k.startsWith("vcap:")); if (keys.length >= 8) localStorage.removeItem(keys[0]); localStorage.setItem("vcap:" + id, JSON.stringify(r)); } catch (e) {}
+      vcGot(id, r);
+    };
+    try { window.AndroidCap.fetch(rid, id); } catch (e) { vcState("error", String(e)); }
+  }
+  function vcGot(id, r) {
+    const es = vcParse(r.es), en = vcParse(r.en), v = vFind(id), hi = v && v.clip ? v.clip[1] : 1e9, lo = v && v.clip ? v.clip[0] : 0;
+    vcPair(es, en);
+    VCAP.cues = es.filter((c) => c.s < hi && c.e > lo); VCAP.kind = r.kind;
+    if (!VCAP.cues.length) { vcState("none"); return; }
+    vcRender(); vcStart();
+  }
+  function vcState(st, why) {
+    const w = document.getElementById("vcap"), n = document.getElementById("vcap-note"); if (!w) return;
+    const msg = { app: "The caption window works in the Ruta DELE app for Android. Here, YouTube's Spanish subtitles are shown on the video.", loading: "Loading the Spanish captions…", none: "This video has no Spanish captions on YouTube, so there's nothing to read along. Listen and catch words by ear.", error: "Couldn't load the captions" + (why ? " (" + String(why).slice(0, 80) + ")" : "") + "." }[st];
+    w.classList.add("vcap-empty"); w.querySelector("#vcap-in").innerHTML = '<p class="vcap-msg">' + esc(msg) + (st === "error" ? ' <button class="btn small" data-act="vc-retry">Try again</button>' : "") + "</p>";
+    if (n) n.textContent = ""; w.dataset.state = st;
+  }
+  function vcWords(text) { // Spanish line → tappable words, informal ones coloured
+    const toks = text.match(/[\p{L}\p{M}'’]+|[^\p{L}\p{M}'’]+/gu) || [], lower = toks.map((t) => t.toLowerCase().replace(/’/g, "'"));
+    let out = "", prev = "", wi = 0;
+    for (let i = 0; i < toks.length; i++) {
+      const t = toks[i]; if (!/\p{L}/u.test(t)) { out += esc(t); continue; }
+      const x = lower[i].replace(/^'+|'+$/g, ""); let inf = null;
+      const nx = lower.slice(i + 1).find((y) => /\p{L}/u.test(y));
+      if (nx && VPHRASE[lower[i] + " " + nx]) { const ph = lower[i] + " " + nx; inf = { k: "slang", mean: VPHRASE[ph][0], where: VPHRASE[ph][1], ph }; }
+      if (!inf) inf = vInformal(lower[i], prev) || vInformal(x, prev);
+      out += '<span class="vword' + (inf ? " vinf vinf-" + inf.k : "") + '" data-act="vc-w" data-wi="' + wi + '"' + (inf ? ' data-inf="' + esc(JSON.stringify(inf)) + '"' : "") + ">" + esc(t) + "</span>";
+      if (inf && inf.ph) { // the second word of a phrase gets the same colour and card
+        const j = toks.indexOf(toks.slice(i + 1).find((y) => /\p{L}/u.test(y)), i + 1); out += toks.slice(i + 1, j).map(esc).join(""); wi++;
+        out += '<span class="vword vinf vinf-slang" data-act="vc-w" data-wi="' + wi + '" data-inf="' + esc(JSON.stringify(inf)) + '">' + esc(toks[j]) + "</span>"; i = j;
+      }
+      prev = lower[i]; wi++;
+    }
+    return out;
+  }
+  function vcRender() {
+    const w = document.getElementById("vcap"); if (!w) return; const P = vcPref();
+    w.classList.remove("vcap-empty"); w.dataset.state = "ready"; w.classList.toggle("show-en", !!P.en); w.classList.toggle("hide-text", !!P.hide);
+    w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue" data-i="' + i + '"><button class="vct" data-act="vc-seek" data-t="' + c.s.toFixed(2) + '" aria-label="Play from ' + mmss(c.s) + '">' + mmss(c.s) + '</button><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div>';
+    const n = document.getElementById("vcap-note"); if (n) n.textContent = VCAP.kind === "asr" ? "YouTube's automatic Spanish captions: they can mishear a word now and then." : "The channel's own Spanish captions.";
+    VCAP.cur = -1; VCAP.word = -1; vcTick(true);
+  }
+  // the video's clock, smoothed between the player's updates so lines and words change on time
+  function vcNow() {
+    const raw = vpT(), now = performance.now(); let st = 2; try { st = VP.p.getPlayerState(); } catch (e) {}
+    if (raw !== VCAP.raw) { VCAP.raw = raw; VCAP.t0 = raw; VCAP.n0 = now; }
+    return st === 1 ? VCAP.t0 + Math.min(0.6, ((now - VCAP.n0) / 1000) * (VP.rate || 1)) : raw;
+  }
+  function vcStart() { cancelAnimationFrame(VCAP.raf); const loop = () => { if (!VCAP.cues.length || !document.getElementById("vcap")) return; vcTick(false); VCAP.raf = requestAnimationFrame(loop); }; VCAP.raf = requestAnimationFrame(loop); }
+  function vcStop() { cancelAnimationFrame(VCAP.raf); VCAP.raf = 0; VCAP.id = null; VCAP.cues = []; }
+  function vcFind(t) { const C = VCAP.cues; let lo = 0, hi = C.length - 1, k = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (C[m].s <= t + 0.05) { k = m; lo = m + 1; } else hi = m - 1; } return k; }
+  function vcTick(force) {
+    const w = document.getElementById("vcap"); if (!w || !VCAP.cues.length) return;
+    if (VP.ready && !VCAP.overlayOff) { try { VP.p.unloadModule && VP.p.unloadModule("captions"); } catch (e) {} VCAP.overlayOff = true; } // our window replaces the subtitles on the video
+    if (w.scrollTop) w.scrollTop = 0; // tapping inside can scroll the window itself; the glide does all the moving
+    const t = vcNow(), k = vcFind(t);
+    if (k !== VCAP.cur || force) {
+      const rows = w.querySelectorAll(".vcue");
+      rows.forEach((r, i) => { r.classList.toggle("on", i === k); r.classList.toggle("past", i < k); });
+      VCAP.cur = k; VCAP.word = -1;
+      const row = rows[Math.max(0, k)], inner = w.querySelector("#vcap-in");
+      if (row && inner) { const y = Math.max(0, row.offsetTop - w.clientHeight * 0.2); inner.style.transform = "translateY(" + -y + "px)"; }
+      if (vcPref().en) vcFillEn(k);
+    }
+    if (k < 0) return;
+    const c = VCAP.cues[k], row = w.querySelectorAll(".vcue")[k], spans = row ? row.querySelectorAll(".ves .vword") : []; if (!spans.length) return;
+    let wi;
+    if (c.words && c.words.length === spans.length) { wi = 0; for (let i = 0; i < c.words.length; i++) if (c.words[i].t <= t + 0.05) wi = i; }
+    else { const len = [...spans].map((s) => s.textContent.length + 1), tot = len.reduce((a, b) => a + b, 0), f = Math.min(1, Math.max(0, (t - c.s) / Math.max(0.5, (c.e - c.s) * 0.92))); let acc = 0; wi = spans.length - 1; for (let i = 0; i < len.length; i++) { acc += len[i]; if (acc / tot > f) { wi = i; break; } } }
+    if (wi !== VCAP.word) { spans.forEach((s, i) => { s.classList.toggle("now", i === wi); s.classList.toggle("said", i < wi); }); VCAP.word = wi; }
+  }
+  function vcFillEn(k) { // lines YouTube didn't translate: the app's translator, a few lines ahead
+    if (!window.__trEn) return;
+    for (let i = Math.max(0, k); i < Math.min(VCAP.cues.length, k + 4); i++) { const c = VCAP.cues[i]; if (c.en || c.enBusy) continue; c.enBusy = 1; const id = VCAP.id;
+      window.__trEn(c.text).then((en) => { c.enBusy = 0; if (!en || VCAP.id !== id) return; c.en = en; const p = document.querySelector('#vcap .vcue[data-i="' + i + '"] .ven'); if (p) p.textContent = en; }).catch(() => { c.enBusy = 0; }); }
+  }
+  function vcWordCard(span) {
+    const word = span.textContent.replace(/^['’]+|['’]+$/g, ""), inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null;
+    try { if (VP.p && VP.p.getPlayerState() === 1) { vpPause(); VCAP.resume = true; } } catch (e) {}
+    const lines = (() => { try { return wordLines(inf && inf.k === "short" ? inf.base.split(/[ (/]/)[0] : word); } catch (e) { return []; } })();
+    const what = !inf ? "" : inf.k === "short" ? '<p class="vinfo vinf-short"><b>Shortened form</b> of «' + esc(inf.base) + "». Informal speech: the end (or start) of the word is dropped.</p>" : inf.k === "jargon" ? '<p class="vinfo vinf-jargon"><b>Jargon:</b> ' + esc(inf.mean) + "</p>" : '<p class="vinfo vinf-slang"><b>Informal' + (inf.ph ? " expression «" + esc(inf.ph) + "»" : " word") + ":</b> " + esc(inf.mean) + (inf.where ? ' <span class="muted">· ' + esc(inf.where) + "</span>" : "") + "</p>";
+    VCAP.card = { w: inf && inf.ph ? inf.ph : word, en: inf ? (inf.k === "short" ? inf.base : inf.mean) : "", t: VCAP.cur >= 0 ? VCAP.cues[VCAP.cur].s : vpT() };
+    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : '<p class="muted">Not in the app\'s dictionary yet.</p>') +
+      '<div class="row" style="margin-top:10px"><button class="btn primary small" data-act="vc-catch">' + IC("pen") + " Catch it</button></div>");
+    if (!VCAP.card.en) { const txt = lines.join(" ").replace(/<[^>]+>/g, " "); VCAP.card.en = ((txt.match(/·\s*([^·]+?)\s*(?:\s(?:less common|#\d+).*)?$/m) || [])[1] || "").trim().slice(0, 60); }
+  }
+  function vcCloseCard() { const sh = document.getElementById("sheet"); if (sh) sh.hidden = true; if (VCAP.resume) { VCAP.resume = false; vpPlay(); } }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a || !/^vc-/.test(a)) return;
+    if (a === "vc-w") vcWordCard(t);
+    else if (a === "vc-close") vcCloseCard();
+    else if (a === "vc-catch") { const d = vData(VP.id), c = VCAP.card; if (c && !d.c.some((x) => x.es.toLowerCase() === c.w.toLowerCase())) { d.c.push({ t: Math.floor(c.t), es: c.w, en: c.en }); save(); try { actAdd(1); } catch (x) {} vRedraw(); } vcCloseCard(); try { coachToast("Caught «" + c.w + "»"); } catch (x) {} }
+    else if (a === "vc-seek") { vpSeek(+t.dataset.t); vpPlay(); VCAP.raw = -1; vcTick(true); }
+    else if (a === "vc-en") { const P = vcPref(); P.en = !P.en; save(); t.setAttribute("aria-pressed", String(P.en)); const w = document.getElementById("vcap"); if (w) w.classList.toggle("show-en", P.en); if (P.en) vcFillEn(VCAP.cur); VCAP.cur = -2; }
+    else if (a === "vc-hide") { const P = vcPref(); P.hide = !P.hide; save(); t.setAttribute("aria-pressed", String(P.hide)); const w = document.getElementById("vcap"); if (w) w.classList.toggle("hide-text", P.hide); }
+    else if (a === "vc-retry") { try { localStorage.removeItem("vcap:" + VP.id); } catch (x) {} vcCache.delete(VP.id); vcLoad(VP.id); }
+  });
+  function vcHTML() { const P = vcPref();
+    return '<section class="vcapw" id="vcapw" aria-label="Captions"><div class="vcap-head"><span class="vkey"><i aria-hidden="true"></i>Informal word</span><span class="vcap-tg"><button class="btn small" data-act="vc-en" aria-pressed="' + !!P.en + '">English</button><button class="btn small" data-act="vc-hide" aria-pressed="' + !!P.hide + '">Just listen</button></span></div>' +
+      '<div class="vcap" id="vcap"><div class="vcap-in" id="vcap-in"></div><div class="vcap-listen" aria-hidden="true">Listening mode: text hidden</div></div><p class="vcap-note small muted" id="vcap-note"></p></section>'; }
 
   /* ---------- shared from another app (Android share sheet) ---------- */
   try {
@@ -9604,7 +9815,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140854";
+  var BUILD = "202611141510";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
