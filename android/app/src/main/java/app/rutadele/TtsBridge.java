@@ -88,11 +88,20 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
         try { JSONObject o = qItems.getJSONObject(i); return o.optString("show", o.optString("es")) + " · " + o.optString("en"); } catch (Exception e) { return ""; }
     }
 
-    void setVoice(String name, String lang) {
+    /** Picks the voice for this language. Returns false when the phone has no voice for it: the caller then reports an
+     *  error instead of reading Spanish with an English voice (or the other way round). */
+    boolean setVoice(String name, String lang) {
+        String want = (lang == null || lang.isEmpty() ? "es-US" : lang);
+        String wl = want.substring(0, Math.min(2, want.length())).toLowerCase(Locale.ROOT);
         if (name != null && !name.isEmpty()) {
-            try { for (Voice v : tts.getVoices()) if (v.getName().equals(name)) { tts.setVoice(v); return; } } catch (Exception ignored) { }
+            try {
+                for (Voice v : tts.getVoices()) if (v.getName().equals(name) && v.getLocale().getLanguage().toLowerCase(Locale.ROOT).startsWith(wl)) { tts.setVoice(v); return true; }
+            } catch (Exception ignored) { }
         }
-        tts.setLanguage(Locale.forLanguageTag(lang == null || lang.isEmpty() ? "es-US" : lang));
+        int r = tts.setLanguage(Locale.forLanguageTag(want));
+        if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) return false;
+        try { Voice v = tts.getVoice(); if (v != null && !v.getLocale().getLanguage().toLowerCase(Locale.ROOT).startsWith(wl)) return false; } catch (Exception ignored) { }
+        return true;
     }
 
     /** Opens Android's text-to-speech settings, where more (and more natural) voices can be downloaded. */
@@ -162,7 +171,7 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
         main.post(() -> {
             if (!ready) { web.evaluateJavascript("window.__atts && __atts.ev('error','" + id.replaceAll("[^0-9]", "") + "')", null); return; }
             stopQueueSilently();
-            setVoice(voice, lang);
+            if (!setVoice(voice, lang)) { tts.stop(); web.evaluateJavascript("window.__atts && __atts.ev('error','" + id.replaceAll("[^0-9]", "") + "')", null); return; }
             tts.setSpeechRate(rate <= 0 ? 1f : rate);
             tts.setPitch(pitch <= 0 ? 1f : pitch);
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, new Bundle(), "u:" + id);
