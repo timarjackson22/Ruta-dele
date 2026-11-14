@@ -1495,9 +1495,18 @@ body.litem-on .tutor-fab { display: none !important }
 #litem .player #pl-rate { padding-left: 8px; padding-right: 4px; min-width: 0 }
 #litem .player .ppos { font-size: .85rem; white-space: nowrap }
 @media (max-width: 420px) { #litem .player .ppos { display: none } #litem .player .cue-sw { padding-left: 8px !important; padding-right: 10px !important } }
+
+/* ===== one sentence per line ===== */
+#ltext .story { gap: 1.6em }
+#ltext .para { display: flex; flex-direction: column; gap: 1.15em }
+#ltext .sl p { margin: 0 }
+#ltext .story .sl .en, #ltext .pod .sl .en { margin-top: 2px; font-size: .95rem; line-height: 1.45 }
+#ltext .pod .txt { display: flex; flex-direction: column; gap: 1em; font-size: 1.08rem; line-height: 1.6 }
+#ltext .pline.playing .txt { background: none; box-shadow: none }
+#ltext .story, #ltext .pod { padding-bottom: 30vh }
 </style>
 
-<script>window.__BUILD = "202611140033";</script>
+<script>window.__BUILD = "202611140049";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -4233,8 +4242,30 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const b = document.getElementById("pl-play");
     if (b) { b.innerHTML = PL.playing ? PAUSE : PLAY; b.setAttribute("aria-label", PL.playing ? "Pause" : "Play"); }
     const c = document.getElementById("pl-pos"); if (c) c.textContent = (PL.i + 1) + " / " + PL.items.length;
-    if (PL.playing && PL.follow) { const el = document.querySelector('#ltext [data-pi="' + PL.i + '"]'); if (el) { const r = el.getBoundingClientRect(); if (r.top < 90 || r.bottom > innerHeight - (UI.cues !== false ? 260 : 170)) followTo(el); } }
+    if (PL.playing) glStart();
+    if (PL.playing && PL.follow && !document.querySelector("#ltext .story, #ltext .pod")) { const el = document.querySelector('#ltext [data-pi="' + PL.i + '"]'); if (el) { const r = el.getBoundingClientRect(); if (r.top < 90 || r.bottom > innerHeight - (UI.cues !== false ? 260 : 170)) followTo(el); } }
     cueSync();
+  }
+  // the text glides up while it is read: the spoken word rises to about a third of the screen, never jumping
+  const GL = { on: false, y: null };
+  function glStart() { if (GL.on) return; GL.on = true; GL.y = null; requestAnimationFrame(glTick); }
+  function glTick() {
+    const box = document.querySelector("#ltext .story, #ltext .pod");
+    if (!PL.playing || !box || FOL.free || PL.follow === false || document.hidden) { GL.on = false; return; }
+    const onT = PL.cur && PL.cur === PL.tu;
+    const sent = onT ? null : document.querySelector('#ltext [data-pi="' + PL.i + '"]'), row = sent && sent.closest(".sl");
+    if (row) {
+      // a point that moves steadily through the sentence (and down to the next one) as the words are spoken
+      const ws = [...sent.querySelectorAll(".w")], k = ws.findIndex((w) => w.classList.contains("spk")), f = ws.length ? Math.max(0, k) / ws.length : 0;
+      const rr = row.getBoundingClientRect(), nx = row.nextElementSibling || (row.parentElement.nextElementSibling || {}).firstElementChild;
+      const span = nx && nx.getBoundingClientRect ? nx.getBoundingClientRect().top - rr.top : rr.height;
+      const want = innerHeight * 0.3, d = rr.top + span * f - want;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      if (GL.y == null || Math.abs(GL.y - scrollY) > 2) GL.y = scrollY; // you moved the page: carry on from there
+      const step = Math.max(-3, Math.min(d * 0.02, 3)); // gentle, speed-limited
+      if (Math.abs(d) > 0.5) { GL.y = Math.max(0, Math.min(max, GL.y + step)); window.scrollTo(0, GL.y); }
+    }
+    requestAnimationFrame(glTick);
   }
   // ---- translation cue tips ----
   const CUE = { w: null, k: -1 };
@@ -4651,9 +4682,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const hosts = x.hosts || ["A", "B"];
     const sent = (pair, sp) => { const k = PL.items.length; PL.items.push({ text: pair[0], en: pair[1], voice: isPod ? V2[sp] || V2[0] : V2[0], pitch: isPod && !V2[1] ? (sp ? 0.85 : 1.1) : 1 }); return '<span class="sent" data-pi="' + k + '">' + wrapWords(pair[0]) + "</span>"; };
     if (isPod) return '<div class="hosts">' + hosts.map((h, i) => '<span class="host"><span class="av ' + (i ? "d" : "a") + '" aria-hidden="true">' + esc(h[0]) + "</span><b>" + esc(h) + "</b></span>").join("") + '</div><div class="pod">' +
-      x.paras.map((p) => { const sp = p.sp || 0; return '<div class="pline"><span class="av ' + (sp ? "d" : "a") + '" aria-hidden="true">' + esc(hosts[sp][0]) + '</span><div class="ptxt"><b>' + esc(hosts[sp]) + '</b><p class="txt">' + p.s.map((s) => sent(s, sp)).join(" ") + '</p><p class="en">' + esc(p.s.map((s) => s[1]).join(" ")) + "</p></div></div>"; }).join("") + "</div>";
+      x.paras.map((p) => { const sp = p.sp || 0; return '<div class="pline"><span class="av ' + (sp ? "d" : "a") + '" aria-hidden="true">' + esc(hosts[sp][0]) + '</span><div class="ptxt"><b>' + esc(hosts[sp]) + '</b><div class="txt">' + p.s.map((s) => '<div class="sl"><p class="es">' + sent(s, sp) + '</p><p class="en">' + esc(s[1] || "") + "</p></div>").join("") + "</div></div></div>"; }).join("") + "</div>";
     if (isVerse) return '<div class="verse">' + x.paras.map((p) => '<div class="stanza' + (p.chorus ? " chorus" : "") + '">' + (p.chorus ? '<span class="clabel">Coro</span>' : "") + p.s.map((s) => '<div class="vl">' + sent(s, 0) + '<span class="en">' + esc(s[1]) + "</span></div>").join("") + "</div>").join("") + "</div>";
-    return '<div class="story">' + x.paras.map((p) => '<div class="para"><p>' + p.s.map((s) => sent(s, 0)).join(" ") + '</p><p class="en">' + esc(p.s.map((s) => s[1]).join(" ")) + "</p></div>").join("") + "</div>";
+    return '<div class="story">' + x.paras.map((p) => '<div class="para">' + p.s.map((s) => '<div class="sl"><p class="es">' + sent(s, 0) + '</p><p class="en">' + esc(s[1] || "") + "</p></div>").join("") + "</div>").join("") + "</div>";
   }
   function playerBar(x) {
     const song = x.cat === "song";
@@ -4681,7 +4712,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     app.innerHTML = '<div class="stack' + (hidden ? " hide-text" : "") + '" id="litem"><p class="crumbs"><a href="#' + (reading ? "leer" : "escuchar") + '">' + (reading ? "Leer" : "Escuchar") + '</a><span aria-hidden="true">›</span><span>' + esc(CATS[x.cat][1]) + " · " + lv.name + "</span></p>" +
       '<div><p class="eyebrow">' + esc(meta) + "</p><h1 class=\"ltitle\"><span class=\"sent\" data-pi=\"t\">" + wrapWords(x.t) + '</span></h1><p class="muted" style="font-size:1.1rem;margin-top:6px">' + esc(x.s) + (x.author ? " · " + esc(x.author) + (x.year ? " (" + esc(x.year) + ")" : "") : "") + "</p></div>" +
       (x.note ? '<p class="callout">' + esc(x.note) + (x.cat === "song" ? " The app reads the lyrics aloud. Turn on the rhythm for a simple " + esc(x.genre || "") + " percussion loop underneath." : "") + "</p>" : "") +
-      (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap “Show text” to read along.</p>' : "") +
+      (hidden ? '<p class="callout" id="hidden-note">The transcript is hidden so you can listen first. Press play, then tap ⋯ › “Show text” to read along.</p>' : "") +
       ((UI.lhint = (UI.lhint || 0) + 1) <= 3 ? '<p class="muted small lhint">Tap a word for its meaning · highlight any part of the text to see it in English' + (UI.cues !== false ? " · cue tips follow the voice word by word" : "") + "</p>" : "") +
       '<section class="block" id="ltext">' + body + "</section>" + playerBar(x) +
       '<section class="block"><div class="shead"><h2>Glosario</h2></div><div class="tbl"><table class="vocab"><tbody>' + x.gl.map((g) => '<tr><td class="en">' + esc(g[1]) + '</td><td class="sp">' + sayBtn(g[0]) + '</td><td class="es">' + esc(g[0]) + "</td></tr>").join("") + "</tbody></table></div></section>" +
@@ -7775,7 +7806,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   function paintEn(x) {
     if (CUR !== x) return;
-    document.querySelectorAll("#ltext .para").forEach((el, pi) => { const en = el.querySelector(".en"); if (en && x.paras[pi]) en.textContent = x.paras[pi].s.map((s) => s[1]).filter(Boolean).join(" "); });
+    document.querySelectorAll("#ltext .para").forEach((el, pi) => { if (!x.paras[pi]) return; el.querySelectorAll(".sl .en").forEach((en, si) => { const t = (x.paras[pi].s[si] || [])[1]; if (t) en.textContent = t; }); });
     const st = document.getElementById("my-trstat"); if (st) st.innerHTML = trStat(x);
   }
   const trDone = (x) => flatIdx(x).filter(([pi, si]) => x.paras[pi].s[si][1]).length;
@@ -8845,7 +8876,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140033";
+  var BUILD = "202611140049";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
