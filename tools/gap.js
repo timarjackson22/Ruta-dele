@@ -181,7 +181,6 @@
     document.body.classList.add("no-tabs");
     if (!QDR) { qdStart(); return; }
     if (QDR.i >= QDR.ex.length) { // the end
-      document.body.classList.remove("no-tabs");
       const perfect = QDR.miss === 0; if (!QDR.fin) { QDR.fin = 1; qBump("drills"); if (perfect) qBump("perfect"); actAdd(QDR.ok); }
       app.innerHTML = '<div class="stack drill"><div class="drend"><p class="dr-big">' + (perfect ? "⭐" : "🎉") + '</p><h1>' + (perfect ? "¡Perfecto!" : "¡Bien hecho!") + "</h1><p class=\"lead2\">" + QDR.ok + " of " + QDR.ex.length + " right first time · +" + QDR.ok + ' points</p><div class="row" style="justify-content:center"><a class="btn primary" href="#hoy">Today’s session</a><button class="btn" data-act="dr-again">Another drill</button></div></div></div>';
       return;
@@ -243,7 +242,7 @@
 
   /* ---------- progress page ---------- */
   function progView() {
-    document.body.classList.remove("no-tabs"); qCheck();
+    qCheck();
     const A = S.act || {}, F = frzSet(), st = streak(), days = [];
     const d = new Date(); d.setDate(d.getDate() - 34); for (let i = 0; i < 35; i++) { const k = dayKey(d); days.push([k, A[k] || 0, F.has(k), d.getDate()]); d.setDate(d.getDate() + 1); }
     const g = S.goal || 20, cal = '<div class="pcal">' + days.map(([k, v, f, n]) => '<span title="' + k + ": " + v + ' points" class="' + (f ? "frz" : v >= g ? "l3" : v >= 5 ? "l2" : v ? "l1" : "") + '">' + n + "</span>").join("") + "</div>";
