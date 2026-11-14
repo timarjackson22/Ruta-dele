@@ -277,6 +277,10 @@
 "voice": "pending",
 "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
 },
+"l-stream": {
+"voice": "pending",
+"why": "stream sound on/off: 'stream sound off' by voice could be added"
+},
 "l-text": {
 "voice": "pending",
 "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
