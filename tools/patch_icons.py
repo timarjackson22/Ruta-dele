@@ -52,6 +52,9 @@ P = {
  "check": '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 5-5"/>',
  "cross": '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
  "arrow": '<path d="M5 12h14M13 6l6 6-6 6"/>',
+ "play": '<path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/>',
+ "pause": '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+ "refresh": '<path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>',
  "hand": '<path d="M7 11V6a2 2 0 0 1 4 0v4M11 9V4a2 2 0 0 1 4 0v6M15 9a2 2 0 0 1 4 0v5a7 7 0 0 1-7 7h-1a7 7 0 0 1-5.4-2.6L3.3 15a2 2 0 0 1 3-2.6L7 13"/>',
 }
 EMO = {
@@ -60,7 +63,7 @@ EMO = {
  "⭐": "star", "🌟": "star", "🏅": "medal", "💯": "medal", "🏆": "trophy", "🎓": "graduation", "📝": "file", "📚": "library", "🌳": "tree", "🌱": "sprout", "🌿": "leaf",
  "🏔": "mountain", "🌋": "mountain", "🧠": "zap", "💾": "save", "📅": "calendar", "📂": "folder", "⏰": "alarm", "⏱": "timer", "⚠": "alert", "💡": "bulb",
  "✨": "sparkles", "🎉": "sparkles", "🙌": "sparkles", "👏": "sparkles", "🔁": "repeat", "🔀": "shuffle", "💼": "briefcase", "🌎": "globe", "🌍": "globe", "🌏": "globe",
- "📍": "pin", "↩": "back", "🏁": "flag", "🩹": "bandage", "🐢": "slow", "✅": "check", "❌": "cross", "👉": "arrow", "💪": "hand", "🤏": "hand", "😊": "sparkles", "👍": "check",
+ "📍": "pin", "↩": "back", "🏁": "flag", "🩹": "bandage", "🐢": "slow", "✅": "check", "❌": "cross", "👉": "arrow", "💪": "hand", "🤏": "hand", "😊": "sparkles", "👍": "check", "▶": "play", "⏸": "pause", "⏯": "play", "⟳": "refresh", "🔄": "refresh", "↻": "refresh",
 }
 JS = r'''
   /* ---------- one icon family (tools/ICON_BRIEF.md) ---------- */
@@ -104,6 +107,7 @@ CSS = r'''
 .pbadges > div.on > span:first-child { border-color: #e0a01a; color: #b97c00; background: color-mix(in srgb, #e0a01a 14%, var(--surface)); box-shadow: 0 2px 8px color-mix(in srgb, #e0a01a 30%, transparent) }
 .pbadges > div.on > span:first-child .ic { color: inherit }
 .pbadges > div { filter: none; opacity: .6 } .pbadges > div.on { opacity: 1 }
+.ic[data-ic="play"] { width: .95em; height: .95em; vertical-align: -0.12em }
 .dr-big .ic { width: 64px; height: 64px; color: var(--saffron) }
 '''
 k = s.rindex("</style>", 0, s.index("</head>")); s = s[:k] + CSS + s[k:]
