@@ -52,17 +52,18 @@
 
   /* ---------- speech recognition ---------- */
   if (window.AndroidSTT) {
-    var R = window.AndroidSTT, active = null;
+    var R = window.AndroidSTT, active = null, jsSid = 0;
     function alt(t, f) { var a = [{ transcript: t, confidence: 0.9 }]; a.isFinal = f; a.item = function (i) { return a[i]; }; return a; }
     function fire(r, list, idx) { list.item = function (i) { return list[i]; }; try { if (r.onresult) r.onresult({ results: list, resultIndex: idx }); } catch (e) {} }
     function SR() { this.lang = "es-US"; this.interimResults = false; this.continuous = false; this.maxAlternatives = 1; this.onresult = this.onerror = this.onend = this.onstart = this.onspeechend = this.onaudiostart = this.onsoundstart = null; this._final = []; }
-    SR.prototype.start = function () { if (active && active !== this) try { R.cancel(); } catch (e) {} active = this; this._final = []; R.start(this.lang || "es-US", !!this.interimResults, !!this.continuous); };
+    SR.prototype.start = function () { if (active && active !== this) try { R.cancel(); } catch (e) {} active = this; this._final = []; jsSid++; R.start(this.lang || "es-US", !!this.interimResults, !!this.continuous); };
     SR.prototype.stop = function () { R.stop(); };
     SR.prototype.abort = function () { R.cancel(); };
     SR.prototype.addEventListener = function (t, f) { this["on" + t] = f; };
     window.__astt = {
-      ev: function (type, a) {
+      ev: function (type, a, sid) {
         var r = active; if (!r) return;
+        if (sid != null && sid !== jsSid) return; // a late event from a session that was already replaced
         if (type === "start") { try { if (r.onstart) r.onstart({}); if (r.onaudiostart) r.onaudiostart({}); } catch (e) {} }
         else if (type === "partial") { var l = r._final.map(function (t) { return alt(t, true); }); l.push(alt(a, false)); fire(r, l, r._final.length); }
         else if (type === "final") { r._final.push(a); fire(r, r._final.map(function (t) { return alt(t, true); }), r._final.length - 1); }

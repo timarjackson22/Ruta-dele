@@ -9,13 +9,13 @@ def rep(a, b, n=1):
     assert s.count(a) == n, ("anchor", a[:90], s.count(a)); s = s.replace(a, b)
 JS = r'''
   /* ---------- the task Profe keeps to ---------- */
-  const TASK_RE = /\b(quiz me|test me|ask me|practi[cs]e|let'?s (do|practi[cs]e|talk|have|try|work|play|start)|role.?play|conversation|exercise|drill|help me (with|write|prepare|practi)|correct (my|this)|check my|i want to (learn|practi[cs]e|work on|improve|prepare)|teach me|give me (an? |some )?(exercise|question|sentence|task|quiz|practice)|go through|quiero (practicar|aprender|mejorar|repasar)|vamos a|hagamos|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i;
+  const TASK_RE = /\b(quiz me|test me|ask me|practi[cs]e|let'?s (do|practi[cs]e|talk|have|try|work|play|start)|role.?play|conversation|exercise|drill|help me (with|write|prepare|practi)|correct (my|this)|check my|i want to (learn|practi[cs]e|work on|improve|prepare)|teach me|give me (an? |some )?(exercise|question|sentence|task|quiz|practice)|go through|quiero (practicar|aprender|mejorar|repasar)|vamos a (practicar|hablar|repasar|estudiar|conversar|empezar|hacer (un|una|el|la) (ejercicio|juego|role|diálogo|dialogo|repaso)|jugar)|hagamos (un|una|el|la)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i;
   const YES_RE = /^\s*(s[ií]|yes|yeah|yep|ok(ay)?|vale|claro|dale|continue|continuar|continuemos|seguir|sigamos|sigue|more|m[aá]s|otra|another|again|let'?s go)\b/i;
   const STOP_RE = /^\s*(stop|let'?s stop|that'?s (all|enough)|i'?m done|finish|end( the)? (session|lesson|task)|terminar|terminamos|termina|basta|ya est[aá]|eso es todo|fin|chao|adi[oó]s|bye)\b/i;
   function taskTrack(text) {
     if (!tCur) return; const T = tCur.task;
     if (T && STOP_RE.test(text)) { T.stop = 1; return; }
-    const active = T && !T.done, esReq = /\b(vamos a|hagamos|quiero (practicar|aprender|mejorar|repasar)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i.test(text) && !/\b(quiz|test|practi[cs]e|teach|let'?s|exercise|role.?play)\b/i.test(text);
+    const active = T && !T.done, esReq = /\b(vamos a (practicar|hablar|repasar|estudiar|conversar)|hagamos (un|una)|quiero (practicar|aprender|mejorar|repasar)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i.test(text) && !/\b(quiz|test|practi[cs]e|teach|let'?s|exercise|role.?play)\b/i.test(text);
     // mid-task, a Spanish answer that happens to contain «vamos a…» is an answer, not a new task
     if (TASK_RE.test(text) && text.length > 6 && (!active || !esReq || /\b(cambiar|otra cosa|en vez|en lugar)\b/i.test(text))) { tCur.task = { t: text.trim().slice(0, 220), tries: 0, done: false, at: Date.now(), n: 0, fixes: [] }; return; }
     if (T && T.done && YES_RE.test(text)) { T.done = false; T.tries = 0; T.more = 1; T.lastCheck = T.n; return; }
@@ -30,7 +30,7 @@ JS = r'''
     if (/^(i said|no,? i said|dije|no,? dije|i meant|quise decir)\b/i.test(l)) return "fixheard";
     if (/^(help|hint|pista|ayuda|i don'?t know|no s[eé]|no entiendo|i don'?t understand|give me a (clue|hint))\b/i.test(l)) return "help";
     if (/\?\s*$/.test(x) || /^(what|how|why|when|where|which|who|can you|could you|is it|are|do|does|should|qu[eé] significa|c[oó]mo se dice|por qu[eé]|cu[aá]l)\b/i.test(l)) return "question";
-    if (/(\.\.\.|…|\b(y|and|pero|but|porque|because|que|de|el|la|un|una|con|para|en))\s*$/i.test(x) && x.split(/\s+/).length < 12) return "incomplete";
+    if (/(\.\.\.|…|\b(y|e|o|and|pero|but|porque|because|que|de|del|a|al|el|la|los|las|un|una|con|para|en|por|mi|tu|su|muy|the|to|of))\s*$/i.test(x) && x.split(/\s+/).length < 12) return "incomplete";
     return "answer";
   }
   const KIND_NOTE = {
@@ -125,10 +125,10 @@ rep("""    if (/\\b(practi[cs]e|practicar|practiquemos|practica|drill|quiz me|te
     if (!convo && /\\b(practi[cs]e|practicar|practiquemos|practica|drill|quiz me|test me|ejercicios?)\\b/.test(q)) I = drVerbIn(text);""")
 rep("""    if (!I && /\\b(practi[cs]e|practicar|practica|drill|quiz|test|ejercicio)/.test(q) && TENSES.some""", """    if (!I && !convo && /\\b(practi[cs]e|practicar|practica|drill|quiz|test|ejercicio)/.test(q) && TENSES.some""")
 # during a task the general "chat about it" steer would pull Profe off the task
-rep("""steerNote(lastU, prevA0 && cleanLocal(prevA0.content)) + taskNote(true)""", """((st) => (tCur && tCur.task && /^\\(Reply as Profe: respond to what the learner said by sharing/.test(st) ? "" : st))(steerNote(lastU, prevA0 && cleanLocal(prevA0.content))) + taskNote(true) + turnNote()""")
+rep("""steerNote(lastU, prevA0 && cleanLocal(prevA0.content)) + taskNote(true)""", """((st) => (((tCur && tCur.task) || turnKind(lastU) !== "answer") && /^\\(Reply as Profe: respond to what the learner said by sharing/.test(st) ? "" : st))(steerNote(lastU, prevA0 && cleanLocal(prevA0.content))) + taskNote(true) + turnNote()""")
 # a repeated correction is normal in a task (the learner repeats the mistake): don't treat it as the model looping
 rep("        const weak = (o) => !tidyReply(cleanLocal(o), nth) || (prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));", "        const weak = (o) => !tidyReply(cleanLocal(o), nth) || (!(tCur && tCur.task) && prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));")
-rep("No greeting, no «¿en qué puedo ayudarte?».)\", 220, 0.6,", "No greeting, no «¿en qué puedo ayudarte?».)\" + taskNote(true), 220, 0.6,")
+rep("No greeting, no «¿en qué puedo ayudarte?».)\", 220, 0.6,", "No greeting, no «¿en qué puedo ayudarte?».)\" + taskNote(true) + turnNote(), 220, 0.6,")
 rep("""    if (!CAN_MIC) return;
     SPK_GEN++;""", """    if (!CAN_MIC) return;
     try { speechCut(); } catch (e) {}

@@ -1565,7 +1565,7 @@ body.litem-on .tutor-fab { display: none !important }
 .t-task .ext { flex: 1; min-width: 0; display: flex; flex-direction: column } .t-task small { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em } .t-task b { font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 </style>
 
-<script>window.__BUILD = "202611140309";</script>
+<script>window.__BUILD = "202611140411";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6029,13 +6029,13 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   };
 
   /* ---------- the task Profe keeps to ---------- */
-  const TASK_RE = /\b(quiz me|test me|ask me|practi[cs]e|let'?s (do|practi[cs]e|talk|have|try|work|play|start)|role.?play|conversation|exercise|drill|help me (with|write|prepare|practi)|correct (my|this)|check my|i want to (learn|practi[cs]e|work on|improve|prepare)|teach me|give me (an? |some )?(exercise|question|sentence|task|quiz|practice)|go through|quiero (practicar|aprender|mejorar|repasar)|vamos a|hagamos|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i;
+  const TASK_RE = /\b(quiz me|test me|ask me|practi[cs]e|let'?s (do|practi[cs]e|talk|have|try|work|play|start)|role.?play|conversation|exercise|drill|help me (with|write|prepare|practi)|correct (my|this)|check my|i want to (learn|practi[cs]e|work on|improve|prepare)|teach me|give me (an? |some )?(exercise|question|sentence|task|quiz|practice)|go through|quiero (practicar|aprender|mejorar|repasar)|vamos a (practicar|hablar|repasar|estudiar|conversar|empezar|hacer (un|una|el|la) (ejercicio|juego|role|diálogo|dialogo|repaso)|jugar)|hagamos (un|una|el|la)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i;
   const YES_RE = /^\s*(s[ií]|yes|yeah|yep|ok(ay)?|vale|claro|dale|continue|continuar|continuemos|seguir|sigamos|sigue|more|m[aá]s|otra|another|again|let'?s go)\b/i;
   const STOP_RE = /^\s*(stop|let'?s stop|that'?s (all|enough)|i'?m done|finish|end( the)? (session|lesson|task)|terminar|terminamos|termina|basta|ya est[aá]|eso es todo|fin|chao|adi[oó]s|bye)\b/i;
   function taskTrack(text) {
     if (!tCur) return; const T = tCur.task;
     if (T && STOP_RE.test(text)) { T.stop = 1; return; }
-    const active = T && !T.done, esReq = /\b(vamos a|hagamos|quiero (practicar|aprender|mejorar|repasar)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i.test(text) && !/\b(quiz|test|practi[cs]e|teach|let'?s|exercise|role.?play)\b/i.test(text);
+    const active = T && !T.done, esReq = /\b(vamos a (practicar|hablar|repasar|estudiar|conversar)|hagamos (un|una)|quiero (practicar|aprender|mejorar|repasar)|pregúntame|preguntame|enséñame|ensename|corrige|ay[uú]dame a)\b/i.test(text) && !/\b(quiz|test|practi[cs]e|teach|let'?s|exercise|role.?play)\b/i.test(text);
     // mid-task, a Spanish answer that happens to contain «vamos a…» is an answer, not a new task
     if (TASK_RE.test(text) && text.length > 6 && (!active || !esReq || /\b(cambiar|otra cosa|en vez|en lugar)\b/i.test(text))) { tCur.task = { t: text.trim().slice(0, 220), tries: 0, done: false, at: Date.now(), n: 0, fixes: [] }; return; }
     if (T && T.done && YES_RE.test(text)) { T.done = false; T.tries = 0; T.more = 1; T.lastCheck = T.n; return; }
@@ -6048,13 +6048,15 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (!x) return "empty";
     if (/^(repeat|repite|rep[ií]telo|again please|otra vez,? por favor|say (that|it) again|what did you say|¿?c[oó]mo\??$|¿?qu[eé]\??$|pardon|sorry\?)/i.test(l)) return "repeat";
     if (/^(i said|no,? i said|dije|no,? dije|i meant|quise decir)\b/i.test(l)) return "fixheard";
+    if (/^(translate|in english|what does (that|it) mean|what does .{1,40} mean|qu[eé] significa|trad[uú]ce(lo)?|en ingl[eé]s)\b/i.test(l)) return "translate";
     if (/^(help|hint|pista|ayuda|i don'?t know|no s[eé]|no entiendo|i don'?t understand|give me a (clue|hint))\b/i.test(l)) return "help";
     if (/\?\s*$/.test(x) || /^(what|how|why|when|where|which|who|can you|could you|is it|are|do|does|should|qu[eé] significa|c[oó]mo se dice|por qu[eé]|cu[aá]l)\b/i.test(l)) return "question";
-    if (/(\.\.\.|…|\b(y|and|pero|but|porque|because|que|de|el|la|un|una|con|para|en))\s*$/i.test(x) && x.split(/\s+/).length < 12) return "incomplete";
+    if (/(\.\.\.|…|\b(y|e|o|and|pero|but|porque|because|que|de|del|a|al|el|la|los|las|un|una|con|para|en|por|mi|tu|su|muy|the|to|of))\s*$/i.test(x) && x.split(/\s+/).length < 12) return "incomplete";
     return "answer";
   }
   const KIND_NOTE = {
     repeat: "The learner asks you to repeat: repeat your last question or model briefly, nothing new.",
+    translate: "The learner asks for a translation: give the English of your last Spanish (or of what they ask about) briefly, then return to the exercise.",
     fixheard: "The learner is correcting what the app heard: accept their version and respond to it; do not count the misheard words as mistakes.",
     help: "The learner asks for help: give a hint or a short model for the pending exercise, then ask them to try.",
     question: "The learner is asking a question, not answering: answer it briefly first, then return to your pending exercise. Do not treat it as a Spanish attempt.",
@@ -6062,7 +6064,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   };
   const SPOKEN = { key: -1, heard: [] };
   function speechCut() { // the learner took the turn while Profe was still talking: remember what they actually heard
-    try { if (!tCur || !(CG.seg > 0)) return; const a = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c); if (a && !a.cut) a.cut = (SPOKEN.heard.join(" ") || "").slice(0, 400) || "(nothing yet)"; CG.seg = 0; } catch (e) {}
+    try { if (!tCur || !(CG.seg > 0)) return; const a = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c); if (a && !a.cut) { let part = ""; try { const ws = String(CG.segText || "").split(/\s+/), k = Math.floor(((performance.now() - CG.t0) / 1000) * 2.6 * (TS.prate || 1)); part = ws.slice(0, Math.max(0, Math.min(ws.length, k))).join(" "); } catch (e) {} a.cut = (SPOKEN.heard.concat(part ? [part + "…"] : []).join(" ") || "").slice(0, 400) || "(nothing yet)"; } CG.seg = 0; } catch (e) {}
   }
   function pendingQ() { const a = tCur && [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending); if (!a) return ""; const q = taskStrip(a.c).replace(/\*/g, "").split(/(?<=[.!?…])\s+|\n+/).filter((x) => /\?\s*$/.test(x)).pop(); return q ? q.trim().slice(0, 160) : ""; }
   function turnNote() {
@@ -6120,7 +6122,10 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     return (short ? "\n(Task: «" + T.t + "» — " + st + tr + ck + fx + " Evaluate the attempt first, then correct politely. End with [[✓]], [[✗]], [[★]] or [[·]].)" : "\n\nCURRENT TASK (set by the learner): «" + T.t + "» — " + st + tr + ck + fx);
   }
   // Spanish in «guillemets» inside English goes to the Spanish voice
-  { const _tp = tagParts; tagParts = function (x) { if (/«[^»]{1,140}»/.test(x) && !isSpanish(x.replace(/«[^»]*»/g, " ") + " ")) { const out = []; x.split(/(«[^»]{1,140}»)/).forEach((p) => { if (!p.trim()) return; if (/^«/.test(p)) { const inner = p.slice(1, -1); if (isSpanish(inner + " ") || /[áéíóúñ¿¡]/i.test(inner)) out.push([inner, true]); else _tp(inner).forEach((q) => out.push(q)); } else _tp(p).forEach((q) => out.push(q)); }); return out; } return _tp(x); }; }
+  const segTidy = (arr) => { const out = []; arr.forEach(([t, es]) => { t = String(t); if (!/[\p{L}\d]/u.test(t)) { if (out.length) out[out.length - 1][0] += t.trim(); return; } const lead = /^[\s,.;:!?…)»”]+/.exec(t); if (lead && out.length) { out[out.length - 1][0] += lead[0].trim(); t = t.slice(lead[0].length); } t = t.trim(); if (!t) return; const last = out[out.length - 1]; if (last && last[1] === es) last[0] += " " + t; else out.push([t, es]); }); return out; };
+  // outside «guillemets» in an English sentence: only clearly Spanish words go to the Spanish voice (not «use», «come», «red»)
+  const strictSplit = (t) => { const L = raLex(); return String(t).split(/(\s+)/).filter((w) => w !== "").map((w) => { const x = w.toLowerCase().replace(/[^a-záéíóúüñ]/g, ""); const es = !!x && (/[áéíóúñ¿¡]/i.test(w) || (x.length >= 3 && L.es.has(x) && !L.en.has(x) && !L.common.has(x))); return [w, es]; }).reduce((a, [w, es]) => { if (/^\s+$/.test(w)) { if (a.length) a[a.length - 1][0] += w; return a; } const last = a[a.length - 1]; if (last && last[1] === es) last[0] += w; else a.push([w, es]); return a; }, []); };
+  { const _tp = tagParts; tagParts = function (x) { if (/«[^»]{1,140}»/.test(x) && !isSpanish(x.replace(/«[^»]*»/g, " ") + " ")) { const out = []; x.split(/(«[^»]{1,140}»)/).forEach((p) => { if (!p.trim()) return; if (/^«/.test(p)) { const inner = p.slice(1, -1); if (isSpanish(inner + " ") || /[áéíóúñ¿¡]/i.test(inner)) out.push([inner, true]); else _tp(inner).forEach((q) => out.push(q)); } else strictSplit(p).forEach((q) => out.push(q)); }); return segTidy(out); } return segTidy(_tp(x)); }; }
   function rules(ctx, compact) { return rules0(ctx, compact) + (compact ? TASK_RULES_SHORT : TASK_RULES_FULL) + taskNote(false) + turnNote(); }
   function rules0(ctx, compact) {
     const lvl = learnerLevel(ctx).toUpperCase(), es = S.region === "es";
@@ -6355,7 +6360,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (/^(s[ií]|no|ok|okay|vale|claro|yes|dale|listo|bueno)$/.test(q)) return "👉 Write just the verb form.\n\n" + D.qt;
       // a verb form ("hubimos", "yo hube"), not a new question or a sentence
       if (!/\?/.test(text) && (nw === 1 || (nw === 2 && /^(yo|t[uú]|[eé]l|ella|usted|nosotros|nosotras|vosotros|ellos|ellas|ustedes)$/.test(q.split(" ")[0])))) return drGrade(D, q);
-      D.done = 1; return null; // the learner moved on to something else
+      if (!(/\?\s*$/.test(text) || ["question", "translate", "help", "repeat"].includes(turnKind(text)))) D.done = 1; return null; // the learner moved on to something else (a question doesn't end the drill)
     }
     if (D && D.done && /^(otra vez|otra|again|more|m[aá]s|another|s[ií]|ok|vale|dale|claro|yes)\b/.test(q) && nw <= 4) return drStart({ v: D.v, code: D.code, en: D.en }, q);
     let I = null;
@@ -6789,7 +6794,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   async function ask(turns, ctx, onText, signal) {
     const lastU = turns[turns.length - 1] ? turns[turns.length - 1].content : "";
-    if (TB === "native" || TB === "local") { try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(lastU); if (ex) { onText(ex); return ex; } }
+    if (TB === "native" || TB === "local") { try { if (!VI) await loadIndex(); } catch (e) {} let ex = expertAnswer(lastU); if (ex) { try { let q = tCur && tCur.task && !tCur.task.done && pendingQ(); if (!q && tCur && tCur.drill && !tCur.drill.done) { const la = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending && /\*\*\d+ \/ \d+\*\*/.test(m.c)); if (la) q = la.c.split("\n").filter((x) => /\*\*\d+ \/ \d+\*\*/.test(x)).pop(); } if (q && !ex.includes(q) && !/\*\*\d+ \/ \d+\*\*/.test(ex)) ex += "\n\n*Back to the exercise:* " + q; } catch (e) {} onText(ex); return ex; } }
     const taskOn = !!(tCur && tCur.task && !tCur.task.done);
     const CO = !taskOn && turns.length > 0 && lastU.length < 300 ? convoCoach(lastU) : null;
     if (CO && CO.stop) { EXPERT_LAST = CO.text; onText(CO.text); return CO.text; }
@@ -6833,14 +6838,14 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         const key = (tCur ? tCur.id : "x") + ":" + (TS.pname || "") + ":" + S.region + ":" + (TS.clvl || "auto");
         const sys = rules(small, true) + "\n\nYou are now talking with the learner. Answer their message below.";
         const prevA0 = turns.filter((t) => t.role === "assistant").slice(-1)[0];
-        const user = pageNote(lastU) + "Learner: " + lastU + "\n" + ((st) => (tCur && tCur.task && /^\(Reply as Profe: respond to what the learner said by sharing/.test(st) ? "" : st))(steerNote(lastU, prevA0 && cleanLocal(prevA0.content))) + taskNote(true) + turnNote() + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
+        const user = pageNote(lastU) + "Learner: " + lastU + "\n" + ((st) => (((tCur && tCur.task) || turnKind(lastU) !== "answer") && /^\(Reply as Profe: respond to what the learner said by sharing/.test(st) ? "" : st))(steerNote(lastU, prevA0 && cleanLocal(prevA0.content))) + taskNote(true) + turnNote() + (f && /conjug|verbo|verb|tiempo|tense|forma|form|¿cómo se dice|how do (i|you) say/i.test(lastU) ? "\n\n(" + f.replace(/^[^\n]*\n/, "").slice(0, 400) + ")" : "");
         out = await natChat(key, sys, user, 220, 0.35, () => onText("*Profe is writing…*"), signal, wait);
         // the small model sometimes repeats itself or answers with filler: tell it to move on, once
         const prevA = turns.filter((t) => t.role === "assistant").slice(-1)[0], nth = turns.filter((t) => t.role === "assistant").length;
         const weak = (o) => !tidyReply(cleanLocal(o), nth) || (!(tCur && tCur.task) && prevA && sameReply(cleanLocal(o), cleanLocal(prevA.content)));
         if (weak(out) && !(signal && signal.aborted)) {
           NAT.repeats = (NAT.repeats || 0) + 1;
-          out = await natChat(key, sys, "(That reply did not answer the learner. They said: «" + lastU.slice(0, 160) + "». Reply to exactly that: one short sentence about what they said, then one new question about it. No greeting, no «¿en qué puedo ayudarte?».)" + taskNote(true), 220, 0.6, () => onText("*Profe is writing…*"), signal, wait);
+          out = await natChat(key, sys, "(That reply did not answer the learner. They said: «" + lastU.slice(0, 160) + "». Reply to exactly that: one short sentence about what they said, then one new question about it. No greeting, no «¿en qué puedo ayudarte?».)" + taskNote(true) + turnNote(), 220, 0.6, () => onText("*Profe is writing…*"), signal, wait);
           if (weak(out)) { const off = prevA && sents(prevA.content).find((x) => /\?/.test(x) && /practic|practi[cs]e|conjug/i.test(x)), I = off && drVerbIn(off); out = (I && drStart(I, xnorm(lastU))) || followUp(lastU); }
         }
         { { const tg = /\[\[\s*(✓|✗|★|·|ok|no|done|-)\s*\]\]/i.exec(String(out)); if (tg) { TASK_TAG = tg[0]; out = taskStrip(out); } } const t0 = String(out).trim(); if (t0 && !/[.!?…»”")*]\s*$/.test(t0)) { const k = Math.max(t0.lastIndexOf(". "), t0.lastIndexOf("! "), t0.lastIndexOf("? "), t0.lastIndexOf("… ")); if (k > 20) out = t0.slice(0, k + 1); } }
@@ -6931,12 +6936,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     arm(12000); // time to start speaking
     uiVoice(); paintLive();
   }
-  function stopListening() { if (rec) try { rec.stop(); } catch (e) {} }
+  function stopListening() { if (rec) try { rec.stop(); } catch (e) {} if (listening) { listening = false; try { uiVoice(); } catch (e) {} } }
   const isSpanish = (s) => /[¿¡ñáéíóú]/i.test(s) || /\b(el|la|los|las|que|de|es|y|en|un|una|por|para|con|muy|bien|yo|tú|usted|qué|cómo|está|son|hola|gracias)\b/i.test(s) && !/\b(the|and|is|you|to|of|in English|means)\b/i.test(s);
   let SPK_GEN = 0;
   // what Profe says aloud: Spanish only (unless "Read English aloud" is on); italic text is treated as English
-  function forVoice(full) {
-    let t = taskStrip(full);
+  function forVoice(full) { /* PIPE_V1 */
+    let t = taskStrip(full).replace(/(^|[\s(\n])(?:EN|ES|English|Spanish|Ingl[eé]s|Espa[ñn]ol)\s*:\s*/g, "$1");
     if (TS.speakEn === false) t = t.replace(/(^|[^*])\*(?!\*)([^*\n]+)\*(?!\*)/g, "$1").replace(/\(([^()]*)\)/g, (m, x) => (isSpanish(x) ? m : ""));
     return t;
   }
@@ -6974,7 +6979,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   function cgStart(u, t) {
     const box = document.getElementById("t-msgs"); if (!box) return;
     const n = box.querySelectorAll(".tm").length; if (n !== CG.key) { CG.key = n; CG.done = 0; CG.free = false; SPOKEN.heard = []; }
-    CG.seg = t.length; CG.t0 = performance.now(); // it is spoken right away: the queue plays one at a time
+    CG.seg = t.length; CG.t0 = performance.now(); CG.segText = t; // it is spoken right away: the queue plays one at a time
     try { const P = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(u), "onend"); let h = null;
       Object.defineProperty(u, "onend", { configurable: true, get: () => h, set: (fn) => { h = function (e) { if (CG.seg) { CG.done += CG.seg; CG.seg = 0; CG.last = performance.now(); try { SPOKEN.heard.push(t); } catch (x) {} } return fn && fn.call(this, e); }; if (P && P.set) P.set.call(u, h); } }); } catch (e) {}
     if (!CG.on) { CG.on = true; CG.y = box.scrollTop; requestAnimationFrame(cgTick); }
@@ -6998,10 +7003,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
   }
   // scrolling the chat yourself stops the glide until the next reply
   ["touchmove", "wheel"].forEach((ev) => document.addEventListener(ev, (e) => { if (CG.on && e.target.closest && e.target.closest("#t-msgs")) CG.free = true; }, { passive: true }));
+  const VFAIL = {};
+  function voiceFail(es) { const k = es ? "es" : "en"; if (VFAIL[k]) return; VFAIL[k] = 1; try { coachToast("🔇 The " + (es ? "Spanish" : "English") + " voice isn’t available on this phone, so those parts were skipped. Choose or install one in Profe › History & settings › Voice."); } catch (e) {} }
   function profeUtter(t, es) {
     const all = (() => { try { return speechSynthesis.getVoices(); } catch (e) { return []; } })();
     const want = es ? TS.pvEs : TS.pvEn, v = want ? all.find((x) => x.name === want) : null;
-    const u = utter(t, es ? "es" : "en", (es ? 0.92 : 1) * (TS.prate || 1), v || undefined, TS.ppitch || 1); try { cgStart(u, t); } catch (e) {} return u;
+    const u = utter(t, es ? "es" : "en", (es ? 0.92 : 1) * (TS.prate || 1), v || undefined, TS.ppitch || 1); try { cgStart(u, t); } catch (e) {} try { const P0 = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(u), "onerror"); let h0 = null; Object.defineProperty(u, "onerror", { configurable: true, get: () => h0, set: (fn) => { h0 = function (ev) { if (ev && ev.error === "synthesis-failed") voiceFail(es); return fn && fn.call(this, ev); }; if (P0 && P0.set) P0.set.call(u, h0); } }); } catch (e) {} return u;
   }
   function speakMixed(text, onDone) {
     if (!canSpeak) { if (onDone) onDone(); return; }
@@ -7048,12 +7055,27 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const m = /\b(?:me llamo|mi nombre es|my name is|i'?m called|ll[aá]mame|call me)\s+([A-Za-zÁÉÍÓÚÑáéíóúñ]{2,20})/i.exec(String(t || ""));
     if (m && !/^(profe|un|una|el|la|yo|que|is)$/i.test(m[1])) { TS.lname = m[1].charAt(0).toUpperCase() + m[1].slice(1).toLowerCase(); tsave(); }
   }
+  function localTurn(text) {
+    if (!tCur || tBusy) return false; const l = text.toLowerCase().replace(/[.!?¡¿,]+/g, " ").replace(/\s+/g, " ").trim();
+    const slow = /^(slow(er)?( down)?( please)?|(please )?speak (more )?slow(ly|er)|too fast|m[aá]s despacio( por favor)?|m[aá]s lento( por favor)?|habla (m[aá]s )?(despacio|lento)( por favor)?)$/.test(l);
+    const again = /^(repeat( that| it)?( please)?|say (that|it) again( please)?|again please|repite( por favor)?|rep[ií]telo( por favor)?|otra vez,? por favor|c[oó]mo|perd[oó]n)$/.test(l.replace(/,/g, ""));
+    if (!slow && !again) return false;
+    const last = [...tCur.msgs].reverse().find((m) => m.r === "a" && m.c && !m.pending && !m.local);
+    if (!last) return false;
+    if (slow) { TS.prate = Math.max(0.6, Math.round(((TS.prate || 1) - 0.15) * 100) / 100); tsave(); }
+    const um = { r: "u", c: text, t: Date.now() }, am = { r: "a", c: slow ? "Vale, más despacio. *(Speed " + TS.prate.toFixed(2).replace(/0$/, "") + "×)*" : "Claro, otra vez:", t: Date.now(), local: 1 };
+    tCur.msgs.push(um, am); tCur.updated = Date.now(); try { tPush(tCur); } catch (e) {} tRender();
+    const q = pendingQ(), say = again && q && taskStrip(last.c).length > 220 ? q : taskStrip(last.c);
+    speakMixed(say, () => { try { autoAgain(); } catch (e) {} });
+    return true;
+  }
   async function tSend(text, byVoice) {
     try { learnName(text); } catch (e) {}
     lastVoice = !!byVoice;
     text = String(text || "").trim(); if (!text) return;
+    try { if (localTurn(text)) return; } catch (e) {}
     try { speechCut(); } catch (e) {}
-    if (tBusy && tCtl) { try { tCtl.abort(); } catch (e) {} for (let w = 0; w < 120 && tBusy; w++) await new Promise((r) => setTimeout(r, 50)); { const a = tCur && [...tCur.msgs].reverse().find((m) => m.r === "a"); if (a && !a.cut) a.cut = "—"; } }
+    if (tBusy && tCtl) { try { const pl = tCur && [...tCur.msgs].reverse().find((m) => m.r === "a" && m.pending); if (pl) pl.superseded = 1; } catch (e) {} SPK_GEN++; try { speechSynthesis.cancel(); } catch (e) {} try { tCtl.abort(); } catch (e) {} for (let w = 0; w < 120 && tBusy; w++) await new Promise((r) => setTimeout(r, 50)); { const a = tCur && [...tCur.msgs].reverse().find((m) => m.r === "a"); if (a && !a.cut) a.cut = "—"; } }
     if (tBusy) { const el = document.getElementById("t-live"); if (el) { el.hidden = false; el.textContent = "Profe is still answering your last message. Wait for it, or tap Stop and send again."; } return; }
     TB = resolveTB();
     if (!TB) { tView = "chat"; ensureSession(pageCtx().label, text); try { if (!VI) await loadIndex(); } catch (e) {} const ex = expertAnswer(text); tCur.msgs.push({ r: "u", c: text, t: Date.now() }, ex ? { r: "a", c: ex, t: Date.now(), x: 1 } : { r: "a", c: "", err: ERRS.unavailable, t: Date.now() }); tRender(); return; }
@@ -7072,10 +7094,12 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (e && e.code === "cancelled") live.c = e.text || live.c || "(stopped)";
       else { live.c = (e && e.text) || ""; live.err = e && e.code === "native" ? "The on-device AI couldn’t answer: " + (e.message || "unknown error") + ". Try again, or run “Test the AI” in History & settings." : ERRS[e && e.code] || (TB === "local" ? ERRS.local_failed + (e && e.message ? " (" + e.message + ")" : "") : ERRS.upstream_error); }
     }
+    if (live.superseded) { const real = String(live.c || "").split("\n").filter((x) => x.trim() && !/💡|useful word|\(stopped\)/i.test(x)).join(" ").trim(); if (!real) { const k = tCur.msgs.indexOf(live); if (k >= 0) tCur.msgs.splice(k, 1); } else live.c = live.c + "\n\n*(interrupted)*"; }
     tBusy = false; tCtl = null; tCur.updated = Date.now(); tPush(tCur); tRender();
     if (!(tCur && tCur.coached === um.c) && !(tCur && tCur.task && !tCur.task.done)) checkMsg(um);
     trReply(live);
-    if (spk) { if (live.c && !live.err) { spk.finish(live.c); if (voiceMode || lastVoice) afterSpeech(); } else { SPK_GEN++; } }
+    if (live.superseded) { /* a newer message took over: this reply is never spoken */ }
+    else if (spk) { if (live.c && !live.err) { spk.finish(live.c); if (voiceMode || lastVoice) afterSpeech(); } else { SPK_GEN++; } }
     else if ((voiceMode || lastVoice) && live.c && !live.err) { speakMixed(live.c, () => autoAgain()); afterSpeech(); }
     if (tCur.msgs.filter((m) => m.r === "u").length % 6 === 0) tRemember();
   }
@@ -7295,6 +7319,23 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if ((w === "la" || w === "una") && i + 1 < low.length && /^(agua|águila|alma|arma|hambre|área|aula|hacha|ala|ancla|arpa)$/.test(low[i + 1])) add(words[i], w === "la" ? "el" : "un", "«" + words[i + 1] + "» is feminine but starts with a stressed a, so it takes «" + (w === "la" ? "el" : "un") + "»: «" + (w === "la" ? "el " : "un ") + words[i + 1] + "».", i);
       // "estoy de acuerdo" (not "soy de acuerdo")
       if (w === "soy" && low[i + 1] === "de" && low[i + 2] === "acuerdo") add(words[i], "estoy", "The expression is «estoy de acuerdo».", i);
+
+      // PIPE_V1 D-rules. plural subject + «es»: «los niños es» → «son»
+      if (w === "es" && i >= 2 && /s$/.test(low[i - 1]) && /^(los|las|unos|unas|mis|tus|sus|nuestros|nuestras|estos|estas|esos|esas)$/.test(low[i - 2])) add(words[i], "son", "«" + words[i - 2] + " " + words[i - 1] + "» is plural, so the verb is plural too: «son».", i);
+      // adjective agreement after a noun: «una chica muy simpático» → «simpática»
+      if (/^(una|la|esta|esa|mi|tu|su)$/.test(w) && i + 2 < low.length && /a$/.test(low[i + 1]) && !/(ma|ta|pa)$/.test(low[i + 1])) { let j = i + 2; if (/^(muy|bastante|tan|más|poco)$/.test(low[j])) j++; const a = low[j]; if (a && /o$/.test(a) && TG[a] && /adj/.test(TG[a][1]) && TG[a.slice(0, -1) + "a"] && !(TG[low[i + 1]] && /verb/.test(TG[low[i + 1]][1]))) add(words[j], words[j].slice(0, -1) + "a", "«" + words[i + 1] + "» is feminine, so the adjective is too: «" + words[j].slice(0, -1) + "a».", j); }
+      if (/^(un|el|este|ese)$/.test(w) && i + 2 < low.length && /o$/.test(low[i + 1])) { let j = i + 2; if (/^(muy|bastante|tan|más|poco)$/.test(low[j])) j++; const a = low[j]; if (a && /a$/.test(a) && !/(ista|ita)$/.test(a) && TG[a] && /adj/.test(TG[a][1]) && TG[a.slice(0, -1) + "o"]) add(words[j], words[j].slice(0, -1) + "o", "«" + words[i + 1] + "» is masculine, so the adjective is too: «" + words[j].slice(0, -1) + "o».", j); }
+      // «ir a» + a conjugated verb: «voy a comí» → «voy a comer»
+      if (/^(voy|vas|va|vamos|van|vais|iba|ibas|íbamos|iban)$/.test(w) && low[i + 1] === "a" && i + 2 < low.length) { const n = low[i + 2], rd = verbReadings(n); if (rd.length && TG[n] && TG[n][1] === "verb" && !/(ar|er|ir)$/.test(n)) add(words[i + 2], rd[0].v, "After «" + words[i] + " a» the verb stays in the infinitive: «" + words[i] + " a " + rd[0].v + "».", i + 2); }
+      // a finished past time with the present: «ayer voy» → «ayer fui»
+      { const PASTX = /\b(ayer|anoche|anteayer|la semana pasada|el (año|mes|lunes|martes|miércoles|jueves|viernes|sábado|domingo) pasado|hace (dos|tres|unos|un|una) \w+)\b/i;
+        if (PASTX.test(text) && !/\b(que|si|cuando|mañana|siempre|todos los)\b/i.test(text) && !(i > 0 && /^(que|si)$/.test(low[i - 1]))) { const rd0 = verbReadings(w), rd = rd0.filter((r) => r.t === "pres"); if (rd.length && !rd0.some((r) => r.t === "pret" || r.t === "impf") && rd[0].R.pret && rd[0].R.pret[rd[0].pi] && !/^(es|son|está|hay|tengo|tiene)$/.test(w)) { const r = rd[0]; add(words[i], r.R.pret[r.pi], "«" + (PASTX.exec(text) || [""])[0] + "» is a finished time in the past, so use the preterite: «" + r.R.pret[r.pi] + "».", i); } } }
+      // «quiero que» + indicative → subjunctive: «quiero que tú vienes» → «vengas»
+      if (w === "que" && i > 0 && /^(quiero|quieres|quiere|queremos|quieren|espero|esperamos|necesito|prefiero|ojalá|ojala|pido|deseo)$/.test(low[i - 1])) { let j = i + 1; if (low[j] in FXP) j++; while (j < low.length && SKIP.test(low[j])) j++; const n = low[j]; if (n) { const rd = verbReadings(n); if (rd.length && rd.every((r) => r.t === "pres") && rd[0].R.subj && rd[0].R.subj[rd[0].pi] && rd[0].R.subj[rd[0].pi] !== n) { const r = rd[0]; add(words[j], r.R.subj[r.pi], "After «" + words[i - 1] + " que» (a wish about someone else) the verb goes in the subjunctive: «" + r.R.subj[r.pi] + "».", j); } } }
+      // «tengo treinta años viejo»: Spanish doesn't add «viejo»
+      if (/^(viej[oa]s?)$/.test(w) && low[i - 1] === "años" && /^(tengo|tienes|tiene|tenemos|tienen|tenía|tenías)$/.test(low[i - 3] || low[i - 2] || "")) add(words[i], "(leave it out)", "Age is just «" + words[i - 3] + " " + words[i - 2] + " años»: Spanish doesn't add «viejo».", i);
+      // «pienso de mi familia» → «pienso en» (thinking about); «¿qué piensas de…?» (an opinion) is right
+      if (/^(pienso|piensas|piensa|pensamos|piensan|pensé|pensaste|pensó)$/.test(w) && low[i + 1] === "de" && !/^(qu[eé])$/.test(low[i - 1] || "")) add(words[i + 1], "en", "To think about someone or something is «pensar en»: «" + words[i] + " en…».", i + 1);
     }
     return fixes;
   }
@@ -9120,7 +9161,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140309";
+  var BUILD = "202611140411";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;

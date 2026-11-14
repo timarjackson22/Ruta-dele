@@ -22,6 +22,8 @@ public class SttBridge {
     SpeechRecognizer rec;
     String lang = "es-US";
     boolean interim = true, continuous = false, active = false, pending = false, ended = true;
+    // each start() is a new session: late events from the previous one (a delayed end, an error from cancelling it) are ignored
+    int sid = 0; boolean stale = false;
     // the last words shown while speaking; some phones end a segment with "no match" instead of a result, so they are kept
     String lastPartial = "";
 
@@ -31,7 +33,8 @@ public class SttBridge {
 
     void js(String type, String arg) {
         String a = arg == null ? "null" : JSONObject.quote(arg);
-        main.post(() -> web.evaluateJavascript("window.__astt && __astt.ev('" + type + "'," + a + ")", null));
+        final int s = sid; // the session this event belongs to: the page ignores events from an older session
+        main.post(() -> web.evaluateJavascript("window.__astt && __astt.ev('" + type + "'," + a + "," + s + ")", null));
     }
 
     @JavascriptInterface
@@ -43,6 +46,8 @@ public class SttBridge {
             this.lang = lang == null || lang.isEmpty() ? "es-US" : lang;
             this.interim = interim;
             this.continuous = continuous;
+            sid++;
+            stale = !ended || rec != null; // a previous session may still report back: ignore it until this one is ready
             this.ended = false;
             if (!SpeechRecognizer.isRecognitionAvailable(act)) { js("error", "service-not-allowed"); end(); return; }
             if (!act.hasMic()) { pending = true; act.askMic(); return; }
@@ -62,17 +67,19 @@ public class SttBridge {
         if (rec == null) {
             rec = SpeechRecognizer.createSpeechRecognizer(act);
             rec.setRecognitionListener(new RecognitionListener() {
-                @Override public void onReadyForSpeech(Bundle b) { js("start", null); }
+                @Override public void onReadyForSpeech(Bundle b) { stale = false; js("start", null); }
                 @Override public void onBeginningOfSpeech() { }
                 @Override public void onRmsChanged(float v) { }
                 @Override public void onBufferReceived(byte[] b) { }
                 @Override public void onEndOfSpeech() { }
                 @Override public void onEvent(int t, Bundle b) { }
                 @Override public void onPartialResults(Bundle b) {
+                    if (stale) return;
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) { lastPartial = r.get(0); if (interim) js("partial", r.get(0)); }
                 }
                 @Override public void onResults(Bundle b) {
+                    if (stale) return;
                     ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                     if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
                     else if (!lastPartial.isEmpty()) js("final", lastPartial);
@@ -81,7 +88,7 @@ public class SttBridge {
                     else { active = false; end(); }
                 }
                 @Override public void onError(int e) {
-                    if (ended) return;
+                    if (ended || stale) return;
                     if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
                     if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
                     if (continuous && active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
@@ -94,6 +101,7 @@ public class SttBridge {
                 }
             });
         }
+        try { rec.cancel(); } catch (Exception ignored) { } // a recogniser still busy with the last session would refuse to start
         listenOnce();
     }
 
@@ -141,7 +149,8 @@ public class SttBridge {
             if (rec == null) return;
             active = false;
             rec.stopListening();
-            main.postDelayed(this::end, 2500);
+            final int my = sid;
+            main.postDelayed(() -> { if (sid == my) end(); }, 2500);
         });
     }
 
