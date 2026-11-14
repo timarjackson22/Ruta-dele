@@ -71,6 +71,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(llm, "AndroidLLM");
         web.addJavascriptInterface(trb, "AndroidTR");
         web.addJavascriptInterface(new AppBridge(this), "AndroidApp");
+        web.addJavascriptInterface(new CaptionBridge(web), "AndroidCap"); // Practice › Videos caption window
         ReminderReceiver.schedule(this); // keep the daily reminder set after updates
 
         bridgeJs = readAsset("bridge.js");

@@ -6,7 +6,8 @@ if "VID_START" in s: sys.exit("already patched")
 def rep(a, b, n=1):
     global s
     assert s.count(a) == n, ("anchor", a[:90], s.count(a)); s = s.replace(a, b)
-JS = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "video.js"), encoding="utf-8").read()
+_D = os.path.dirname(os.path.abspath(__file__))
+JS = open(os.path.join(_D, "video.js"), encoding="utf-8").read() + open(os.path.join(_D, "vcap.js"), encoding="utf-8").read()
 # module goes before the share handler, so a shared YouTube link is claimed first (it clears ?text= before the reading handler sees it)
 rep("  /* ---------- shared from another app (Android share sheet) ---------- */", JS + "\n  /* ---------- shared from another app (Android share sheet) ---------- */")
 # routes
@@ -87,6 +88,37 @@ CSS = r'''
 .vedit-note { margin: 10px 0 0 }
 .vpage-act { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0 }
 .vpage-act .btn { display: inline-flex; align-items: center; gap: 5px } .vpage-act .ic { width: 15px; height: 15px }
+/* caption window */
+.vcapw { margin-top: -2px }
+.vcap-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px }
+.vkey { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted) }
+.vkey i { width: 10px; height: 10px; border-radius: 3px; background: var(--vinf) }
+.vcap-tg { display: inline-flex; gap: 6px }
+.vcap-tg .btn[aria-pressed="true"] { background: color-mix(in srgb, var(--cobalt) 16%, var(--surface)); border-color: var(--cobalt) }
+:root { --vinf: #c2410c } @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --vinf: #fb923c } } :root[data-theme="dark"] { --vinf: #fb923c }
+.vcap { position: relative; height: clamp(190px, calc(100svh - 56vw - 210px), 360px); overflow: hidden; overflow: clip; border-radius: 14px; border: 1px solid var(--line); background: var(--surface);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%); mask-image: linear-gradient(to bottom, transparent 0, #000 18%, #000 82%, transparent 100%) }
+.vcap.vcap-empty { height: auto; -webkit-mask-image: none; mask-image: none }
+.vcap-in { position: relative; padding: 0 14px; transition: transform .7s cubic-bezier(.22, .61, .36, 1); will-change: transform }
+.vcap-pad { height: 18% } .vcap-pad.end { height: 60% }
+.vcap-msg { margin: 0; padding: 14px 0; font-size: 14px; color: var(--muted) }
+.vcue { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 1.25em; opacity: .55; transition: opacity .4s }
+.vcue.on { opacity: 1 } .vcue.past { opacity: .28 }
+.vct { flex: 0 0 auto; margin-top: 2px; font: 600 11.5px/1 ui-monospace, monospace; padding: 4px 6px; border-radius: 6px; border: 0; background: color-mix(in srgb, var(--cobalt) 12%, transparent); color: var(--cobalt); cursor: pointer }
+.vcl { flex: 1; min-width: 0 }
+.ves { margin: 0; font-size: 18px; line-height: 1.45; color: var(--ink) }
+.ven { display: none; margin: 1px 0 0; font-size: 14.5px; line-height: 1.4; color: var(--muted) }
+.vcap.show-en .ven:not(:empty) { display: block }
+.vword { cursor: pointer; border-radius: 4px; transition: background .15s, color .15s }
+.vcue.on .vword.said:not(.vinf) { color: var(--ink) }
+.vcue.on .vword.now { background: color-mix(in srgb, var(--cobalt) 20%, transparent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--cobalt) 20%, transparent) }
+.vword.vinf { color: var(--vinf); font-weight: 600; text-decoration: underline dotted; text-underline-offset: 3px }
+.vword.vinf-jargon { text-decoration-style: dashed }
+.vcap-listen { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-weight: 600; color: var(--muted); pointer-events: none }
+.vcap.hide-text .vcl { filter: blur(7px); user-select: none } .vcap.hide-text .vcl * { pointer-events: none }
+.vcap.hide-text .vcap-listen { display: flex }
+.vcap-note { margin: 6px 0 0 }
+.vinfo { margin: 8px 0; padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--vinf) 10%, transparent); border-left: 3px solid var(--vinf) }
 .lnk { border: 0; background: none; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; padding: 0 2px; cursor: pointer }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''
