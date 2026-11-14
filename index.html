@@ -1563,9 +1563,15 @@ body.litem-on .tutor-fab { display: none !important }
 
 .t-task { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--cobalt) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cobalt) 25%, var(--line)) }
 .t-task .ext { flex: 1; min-width: 0; display: flex; flex-direction: column } .t-task small { color: var(--muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .05em } .t-task b { font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+
+.lq-where { display: inline-block; margin-top: 8px; color: var(--cobalt); font-weight: 600; text-decoration: none }
+.mc li:has(.opt.wrong) .lq-where { padding: 6px 10px; border-radius: 10px; background: color-mix(in srgb, var(--cobalt) 10%, var(--surface)) }
+#ltext .sent.lq-hit { background: color-mix(in srgb, var(--good, #2a9d6b) 22%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good, #2a9d6b) 22%, transparent); border-radius: 4px; transition: background .3s }
+#lq-back { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(110px + env(safe-area-inset-bottom, 0px)); z-index: 30; padding: 10px 16px; border-radius: 999px; background: var(--ink); color: var(--bg); font-weight: 650; text-decoration: none; box-shadow: 0 6px 18px rgba(0,0,0,.25) }
+.mc li.lq-flash { animation: lqf 1.6s ease } @keyframes lqf { 0%, 60% { background: color-mix(in srgb, var(--saffron) 25%, transparent) } 100% { background: transparent } }
 </style>
 
-<script>window.__BUILD = "202611140411";</script>
+<script>window.__BUILD = "202611140505";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -2900,6 +2906,37 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       notesHTML(g.n) + exTable(g.e) + "</div>";
   }
 
+
+  /* ---------- comprehension: where in the text is the answer? ---------- */
+  function lqWhere(x, qi) {
+    const q = x.q[qi]; if (!q) return -1;
+    const stem = (w) => w.slice(0, Math.max(4, Math.min(6, w.length - 1)));
+    const toks = (t) => [...ptoks(t)].map(stem);
+    const A = toks(q[1][q[2]]), Q = toks(q[0]); let best = -1, bs = 0, k = 0;
+    x.paras.forEach((p) => p.s.forEach((sn) => { const S2 = new Set(toks(sn[0] + " " + (sn[1] || ""))); let sc = 0; A.forEach((w) => S2.has(w) && (sc += 2)); Q.forEach((w) => S2.has(w) && (sc += 1)); if (sc > bs) { bs = sc; best = k; } k++; }));
+    return bs >= 2 ? best : -1;
+  }
+  function lqLink(li, qi) {
+    if (!CUR || li.querySelector(".lq-where")) return;
+    const k = lqWhere(CUR, qi); if (k < 0) return;
+    li.insertAdjacentHTML("beforeend", '<a href="#" class="lq-where small" data-act="lq-where" data-k="' + k + '" data-q="' + qi + '">📍 See where the answer is in the text</a>');
+  }
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest('[data-act="lq-where"], [data-act="lq-back"]'); if (!a) return; e.preventDefault();
+    if (a.dataset.act === "lq-where") {
+      const el = document.querySelector('#ltext .sent[data-pi="' + a.dataset.k + '"]'); if (!el) return;
+      const box = document.getElementById("litem"); if (box && box.classList.contains("hide-text")) { box.classList.remove("hide-text"); const b = document.getElementById("l-text"); if (b) { b.textContent = "Hide text"; b.setAttribute("aria-pressed", "false"); } }
+      try { FOL.free = true; } catch (x) {}
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      document.querySelectorAll("#ltext .lq-hit").forEach((x) => x.classList.remove("lq-hit")); el.classList.add("lq-hit");
+      let bk = document.getElementById("lq-back"); if (!bk) { bk = document.createElement("a"); bk.id = "lq-back"; bk.href = "#"; bk.dataset.act = "lq-back"; document.body.appendChild(bk); }
+      bk.dataset.q = a.dataset.q; bk.textContent = "↩ Back to question " + (+a.dataset.q + 1); bk.hidden = false;
+    } else {
+      const li = document.querySelectorAll('.mc[data-scope="lq"] > li')[+a.dataset.q]; a.hidden = true;
+      if (li) { li.scrollIntoView({ block: "center", behavior: "smooth" }); li.classList.add("lq-flash"); setTimeout(() => li.classList.remove("lq-flash"), 1600); }
+    }
+  });
+  addEventListener("hashchange", () => { const b = document.getElementById("lq-back"); if (b) b.hidden = true; });
   function mcList(qs, scope) {
     return '<ol class="mc" data-scope="' + scope + '">' + qs.map((q, i) => '<li><p class="mq">' + blanks(q[0]) + '</p><div class="opts">' + q[1].map((o, j) => '<button class="opt" data-act="mc" data-q="' + i + '" data-o="' + j + '">' + esc(o) + "</button>").join("") + "</div></li>").join("") + "</ol>";
   }
@@ -5044,6 +5081,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       const btns = t.parentElement.querySelectorAll(".opt"); if (btns[0].disabled) return;
       btns.forEach((b, j) => { b.disabled = true; if (j === right) b.classList.add("right"); });
       if (oi !== right) t.classList.add("wrong");
+      try { lqLink(t.closest("li"), qi); } catch (e) {}
       if (list.querySelectorAll(".opt.right").length === CUR.q.length) {
         const score = CUR.q.length - list.querySelectorAll(".opt.wrong").length;
         const st = S.l[CUR.id] || {}; st.quiz = Math.max(st.quiz || 0, score); S.l[CUR.id] = st; save();
@@ -9161,7 +9199,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140411";
+  var BUILD = "202611140505";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
