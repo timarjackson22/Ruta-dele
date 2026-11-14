@@ -1521,7 +1521,7 @@ body.litem-on .tutor-fab { display: none !important }
 }
 </style>
 
-<script>window.__BUILD = "202611140056";</script>
+<script>window.__BUILD = "202611140106";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -3819,18 +3819,33 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     RA.i = from || 0; RA.on = true; RA.paused = false; document.body.classList.add("ra-on");
     raPlayer(); raPlay();
   }
+  // a point moves steadily through the part being read (and on to the next part); the page glides to keep it a third of the way down
+  const RG = { on: false, y: null };
+  function raGlide() { if (RG.on) return; RG.on = true; RG.y = null; requestAnimationFrame(raGTick); }
+  function raGTick() {
+    if (!RA.on || RA.paused || FOL.free || document.hidden || !RA.el || !RA.el.isConnected) { RG.on = false; return; }
+    const el = RA.el, rr = el.getBoundingClientRect(), nx = RA.q[RA.i + 1] && RA.q[RA.i + 1].el;
+    let span = rr.height; if (nx && nx.isConnected) { const t = nx.getBoundingClientRect().top - rr.top; if (t > 0 && t < innerHeight * 1.5) span = t; }
+    const f = Math.min(1, (performance.now() - RA.t0) / Math.max(600, RA.est * (RA.gf || 1)));
+    const d = rr.top + span * f - innerHeight * 0.3, max = document.documentElement.scrollHeight - innerHeight;
+    if (RG.y == null || Math.abs(RG.y - scrollY) > 2) RG.y = scrollY;
+    if (d < 0 && rr.top > 70) { requestAnimationFrame(raGTick); return; } // only glide up; go back only if the part being read has slipped off the top
+    if (Math.abs(d) > 0.5) { RG.y = Math.max(0, Math.min(max, RG.y + Math.max(-3, Math.min(d * 0.02, 3)))); window.scrollTo(0, RG.y); }
+    requestAnimationFrame(raGTick);
+  }
   function raPlay() {
     if (RA.lastRate !== RA.rate) { RA.q.forEach((it) => (it.secs = 0)); RA.lastRate = RA.rate; }
     const gen = ++RA.gen, item = RA.q[RA.i];
     if (!item) { raStop(); return; }
     if (RA.el) RA.el.classList.remove("ra-now");
     RA.el = item.el; item.el.classList.add("ra-now");
-    const r = item.el.getBoundingClientRect(); if (r.top < 120 || r.bottom > innerHeight - 170) followTo(item.el);
+    const r = item.el.getBoundingClientRect(); if (r.bottom < -innerHeight || r.top > 2 * innerHeight) followTo(item.el); // far away: go there first
+    RA.t0 = performance.now(); RA.est = (item.secs || (item.secs = raSecs(item))) * 1000; raGlide();
     raPlayerUI();
     let k = 0;
     const next = () => {
       if (gen !== RA.gen || !RA.on || RA.paused) return;
-      if (k >= item.segs.length) { RA.i++; setTimeout(() => { if (gen === RA.gen && RA.on && !RA.paused) raPlay(); }, 350); return; }
+      if (k >= item.segs.length) { try { const real = performance.now() - RA.t0; if (RA.est > 800 && real > 300) RA.gf = Math.min(2.5, Math.max(0.4, (RA.gf || 1) * 0.7 + (real / RA.est) * 0.3)); } catch (e) {} RA.i++; setTimeout(() => { if (gen === RA.gen && RA.on && !RA.paused) raPlay(); }, 350); return; }
       const sg = item.segs[k++], u = utter(sg.t, sg.es ? "es" : "en", (sg.es ? 0.8 : 1) * RA.rate);
       let moved = false; const go = () => { if (moved) return; moved = true; if (sg.after) setTimeout(next, sg.after); else next(); };
       u.onend = go; u.onerror = (e) => { if (e && e.error === "interrupted") return; go(); };
@@ -8893,7 +8908,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140056";
+  var BUILD = "202611140106";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
