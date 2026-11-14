@@ -189,7 +189,7 @@
       VCAP.cur = k; VCAP.word = -1;
       const row = rows[Math.max(0, k)], inner = w.querySelector("#vcap-in");
       if (row && inner) { const y = Math.max(0, row.offsetTop - w.clientHeight * (cueOn() ? 0.3 : 0.2)); inner.style.transform = "translateY(" + -y + "px)"; }
-      if (vcPref().en) vcFillEn(k);
+      if (vcPref().en || window.AndroidTR) vcFillEn(k); // the sentence's English is also Verbatim's context
     }
     if (k < 0) { const tp = document.getElementById("vtip"); if (tp) tp.hidden = true; return; }
     const c = VCAP.cues[k], row = w.querySelectorAll(".vcue")[k], spans = row ? row.querySelectorAll(".ves .vword") : []; if (!spans.length) return;
@@ -218,14 +218,56 @@
     try { known = !!(TG[lw] || lw in CFN || VSLANG[lw] || VSHORT[lw] || VJARGON[lw] || (S.vlex || {})[lw] || lexIdx(lw) >= 0 || vMorph(lw)); } catch (e) {}
     return !known; // at the start: a name only if it isn't an ordinary word
   }
-  function vcGloss(c, spans) {
-    if (c.gl && c.gl.length === spans.length) return;
-    c.gl = []; c.grp = [];
+  // meaning in context (tools/CONTEXT_MEANING_BRIEF.md): rules for common tricky words, judged on the words around them
+  const VCTX = [
+    [/^pegad(it)?[oa]s?$|^pegaditit[oa]s?$/, /bail|baile|perre|cuerpo|conmigo|contigo|junt|abraz|lent[oa]|cintura|piel|disco|pista|bachata|reggaet|salsa|cumbia/, (w) => (/s$/.test(w) ? "close together" : "close")],
+    [/^ric[oa]s?$/, /com(e|i|er|ida)|sab(e|or)|plato|caf[eé]|delicios|cocin|prob(a|ar)|postre|sopa|arroz|pan\b/, "tasty"],
+    [/^ric[oa]s?$/, /bail|cuerpo|mami|papi|beb[eé]|mueve|bes[oa]|piel|perre|cintura|boca/, "hot, sexy"],
+    [/^ric[oa]s?$/, /diner|plata|millon|pobre|lana|guita|fortuna/, "rich"],
+    [/^dur[oa]$/, /bail|perre|dale|suena|fiesta|rumba|party|darle|bajo/, "hard, all out"],
+    [/^tiempo$/, /llov|lluvi|sol\b|calor|fr[ií]o|grados|previsi|nubl|tormenta|clima|temperatura/, "weather"],
+    [/^partidos?$/, /\bgol|equipo|liga|jug|f[uú]tbol|ganar|perder|estadio|campeonato|mundial/, (w) => (/s$/.test(w) ? "matches" : "match")],
+    [/^partidos?$/, /pol[ií]tic|elecci|vot|gobierno|congreso|presidente/, (w) => (/s$/.test(w) ? "parties" : "party")],
+    [/^cuenta$/, /(me|te|se|nos) (di|dio|diste|dimos|dieron|doy|das|da|dan|damos) cuenta|darse cuenta|dando cuenta/, "realise"],
+    [/^cuenta$/, /pag(ar|o|a)|restaurante|mesa|camarero|mesero|propina/, "bill"],
+    [/^cuenta$/, /banco|ahorro|dinero|transfer/, "account"],
+    [/^guaguas?$/, /beb[eé]|llor|cuna|pañal|naci/, "baby"],
+    [/^pelad[oa]s?$/, /diner|plata|lana|sin un|bolsillo/, "broke"],
+    [/^pelad[oa]s?$/, /pelo|cabeza|calv/, "bald"],
+    [/^cog(e|er|es|emos|en|í|ió|ieron|imos)$/, /bus|autob[uú]s|taxi|metro|tren|avi[oó]n|camino|calle|vuelo/, "take"],
+    [/^copas?$/, /mundial|liga|final|equipo|campe[oó]n|ganar|trofeo/, (w) => (/s$/.test(w) ? "trophies" : "cup")],
+    [/^velas?$/, /cumplea|pastel|torta|tarta|soplar/, (w) => (/s$/.test(w) ? "candles" : "candle")],
+    [/^bancos?$/, /parque|sentad|plaza|sentar/, (w) => (/s$/.test(w) ? "benches" : "bench")],
+    [/^corriente$/, /\bluz\b|el[eé]ctric|enchuf|r[ií]o/, "current"],
+    [/^mon[oa]s?$/, /qu[eé] mon[oa]|muy mon[oa]|tan mon[oa]/, "cute"],
+  ];
+  function vcCtxRule(lw, near) { for (const [re, ctx, en] of VCTX) if (re.test(lw) && ctx.test(near)) return typeof en === "function" ? en(lw) : en; return ""; }
+  function vcEvidence(lw, enW, used) { // the meaning that the sentence's English actually uses
+    let cands = []; try { cands = cCands(lw).slice(); } catch (e) {}
+    const bases = []; const m = vMorph(lw); if (m && m.base) bases.push(m.base);
+    cands.forEach((x) => { const d = String(x).match(/(?:diminutive|augmentative|superlative|endearing form|affectionate form) of ([a-záéíóúüñ]+)/i); if (d) bases.push(d[1].toLowerCase()); });
+    let verbAlso = false;
+    bases.slice().forEach((b0) => { const pm = b0.match(/^(.+)(ad|id)[oa]s?$/); if (pm) { bases.push(pm[1] + (pm[2] === "ad" ? "ar" : "er"), pm[1] + "ir"); verbAlso = true; } });
+    bases.forEach((b0) => { try { cands = cands.concat(cCands(b0)); } catch (e) {} });
+    cands = cands.filter((x) => !/(diminutive|augmentative|superlative) of/i.test(x));
+    const sl = VSLANG[lw]; if (sl) cands = cands.concat(String(sl[0]).split(/[;,]|\(/).map((x) => x.replace(/\)/g, "").trim()).filter(Boolean));
+    const verb = verbAlso || /verb/.test((vLook(lw) || {}).pos || "");
+    for (const cand of cands) { if (/^little |^nice and |^very |^big /.test(cand)) continue; let ev = null; try { ev = cEvid(cand, enW, used, verb); } catch (e) {} if (ev && ev.full && ev.b - ev.a <= 3) { const sp = cSpan(enW, ev), nz = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (nz(sp).includes(nz(lw)) || nz(lw).includes(nz(sp))) continue; for (let z = ev.a; z <= ev.b; z++) used.add(z); return sp; } } // a translator that left the Spanish word in its English proves nothing
+    return "";
+  }
+  function vcGloss(c, spans, k) {
+    const key = spans.length + ":" + (c.en ? 1 : 0); if (c.gl && c.glk === key) return;
+    c.glk = key; c.gl = []; c.grp = []; c.ctx = [];
+    const ki = VCAP.cues.indexOf(c), near = [VCAP.cues[ki - 1], c, VCAP.cues[ki + 1]].filter(Boolean).map((x) => x.text).join(" ").toLowerCase();
+    const enW = c.en ? cEnWords(c.en) : [], used = new Set();
     for (let i = 0; i < spans.length; i++) {
+      const lw0 = vcWord(spans[i]).toLowerCase(), inf0 = spans[i].dataset.inf ? JSON.parse(spans[i].dataset.inf) : null;
+      const rule = vcCtxRule(lw0, near); if (rule) { c.gl[i] = rule; c.ctx[i] = "words"; continue; }
       if (!spans[i].dataset.inf && vcIsName(spans, i)) {
         if (i > 0 && c.grp[i - 1] != null && !/[,.;:!?]/.test(spans[i - 1].nextSibling ? spans[i - 1].nextSibling.textContent || "" : "")) { c.grp[i] = c.grp[i - 1]; c.gl[i] = ""; c.gl[c.grp[i]] += " " + vcWord(spans[i]); continue; }
         c.grp[i] = i; c.gl[i] = vcWord(spans[i]); continue;
       }
+      if (enW.length > 2 && !VLITTLE.test(lw0) && !(inf0 && inf0.k === "short") && !(inf0 && inf0.ph)) { const ev = vcEvidence(lw0, enW, used); if (ev) { c.gl[i] = ev; c.ctx[i] = "sentence"; continue; } }
       c.gl[i] = vcGl(spans[i]);
     }
   }
@@ -246,15 +288,18 @@
   function vcFillEn(k) { // lines YouTube didn't translate: the app's translator, a few lines ahead
     if (!window.__trEn) return;
     for (let i = Math.max(0, k); i < Math.min(VCAP.cues.length, k + 4); i++) { const c = VCAP.cues[i]; if (c.en || c.enBusy) continue; c.enBusy = 1; const id = VCAP.id;
-      window.__trEn(c.text).then((en) => { c.enBusy = 0; if (!en || VCAP.id !== id) return; c.en = en; const p = document.querySelector('#vcap .vcue[data-i="' + i + '"] .ven'); if (p) p.textContent = en; }).catch(() => { c.enBusy = 0; }); }
+      window.__trEn(c.text).then((en) => { c.enBusy = 0; if (!en || VCAP.id !== id) return; c.en = en; if (i === VCAP.cur) VCAP.word = -1; const p = document.querySelector('#vcap .vcue[data-i="' + i + '"] .ven'); if (p) p.textContent = en; }).catch(() => { c.enBusy = 0; }); }
   }
   function vcWordCard(span) {
     const word = span.textContent.replace(/^['’]+|['’]+$/g, ""), inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null;
+    let here = "", how = ""; try { const row = span.closest(".vcue"), c = VCAP.cues[+row.dataset.i], sp = [...row.querySelectorAll(".ves .vword")], i = sp.indexOf(span); vcGloss(c, sp); if (c.ctx[i]) { here = c.gl[i]; how = c.ctx[i]; } } catch (e) {}
     try { if (VP.p && VP.p.getPlayerState() === 1) { vpPause(); VCAP.resume = true; } } catch (e) {}
     const lines = (() => { try { return wordLines(inf && inf.k === "short" ? inf.base.split(/[ (/]/)[0] : word); } catch (e) { return []; } })();
     const what = !inf ? "" : inf.k === "short" ? '<p class="vinfo vinf-short"><b>Shortened form</b> of «' + esc(inf.base) + "». Informal speech: the end (or start) of the word is dropped.</p>" : inf.k === "jargon" ? '<p class="vinfo vinf-jargon"><b>Jargon:</b> ' + esc(inf.mean) + "</p>" : '<p class="vinfo vinf-slang"><b>Informal' + (inf.ph ? " expression «" + esc(inf.ph) + "»" : " word") + ":</b> " + esc(inf.mean) + (inf.where ? ' <span class="muted">· ' + esc(inf.where) + "</span>" : "") + "</p>";
     VCAP.card = { w: inf && inf.ph ? inf.ph : word, en: inf ? (inf.k === "short" ? inf.base : inf.mean) : "", t: VCAP.cur >= 0 ? VCAP.cues[VCAP.cur].s : vpT() };
-    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' + what + (lines.length ? lines.join("") : inf ? "" : (S.vlex || {})[word.toLowerCase()] && S.vlex[word.toLowerCase()].en ? '<p class="vinfo"><b>Heard in your videos:</b> ' + esc(S.vlex[word.toLowerCase()].en) + ' <span class="muted small">(app translation)</span></p>' : '<p class="muted">Not in the app\'s dictionary. It will be translated when the word check runs.</p>') +
+    if (here) VCAP.card.en = here;
+    openSheet('<div class="row" style="justify-content:space-between"><span class="sw" lang="es">' + esc(VCAP.card.w) + '</span><button class="btn small" data-act="vc-close">Close</button></div>' +
+      (here ? '<p class="vinfo vhere"><b>Here:</b> ' + esc(here) + ' <span class="muted small">· ' + (how === "sentence" ? "from the sentence" : "from the words around it") + "</span></p>" + (lines.length ? '<p class="small muted" style="margin:6px 0 0">Other meanings:</p>' : "") : "") + what + (lines.length ? lines.join("") : inf ? "" : (S.vlex || {})[word.toLowerCase()] && S.vlex[word.toLowerCase()].en ? '<p class="vinfo"><b>Heard in your videos:</b> ' + esc(S.vlex[word.toLowerCase()].en) + ' <span class="muted small">(app translation)</span></p>' : '<p class="muted">Not in the app\'s dictionary. It will be translated when the word check runs.</p>') +
       '<div class="row" style="margin-top:10px"><button class="btn primary small" data-act="vc-catch">' + IC("pen") + " Catch it</button></div>");
     if (!VCAP.card.en) { const txt = lines.join(" ").replace(/<[^>]+>/g, " "); VCAP.card.en = ((txt.match(/·\s*([^·]+?)\s*(?:\s(?:less common|#\d+).*)?$/m) || [])[1] || "").trim().slice(0, 60); }
   }
@@ -282,6 +327,8 @@
   const VSUF = [["ititos", "dim", 1], ["ititas", "dim", 1], ["itito", "dim"], ["itita", "dim"], ["iticos", "dim", 1], ["itico", "dim"], ["itica", "dim"], ["ecitos", "dim", 1], ["ecitas", "dim", 1], ["ecito", "dim"], ["ecita", "dim"], ["citos", "dim", 1], ["citas", "dim", 1], ["cito", "dim"], ["cita", "dim"],
     ["itos", "dim", 1], ["itas", "dim", 1], ["ito", "dim"], ["ita", "dim"], ["icos", "dim", 1], ["icas", "dim", 1], ["ico", "dim"], ["ica", "dim"], ["illos", "dim", 1], ["illas", "dim", 1], ["illo", "dim"], ["illa", "dim"], ["ines", "dim", 1], ["ín", "dim"], ["ina", "dim"],
     ["ísimos", "sup", 1], ["ísimas", "sup", 1], ["ísimo", "sup"], ["ísima", "sup"], ["otes", "aug", 1], ["otas", "aug", 1], ["ote", "aug"], ["ota", "aug"], ["ones", "aug", 1], ["onas", "aug", 1], ["ón", "aug"], ["ona", "aug"], ["azos", "aug", 1], ["azas", "aug", 1], ["azo", "aug"], ["aza", "aug"]];
+  const VPP = { stick: "stuck", hit: "hit", glue: "glued", get: "got", hold: "held", hide: "hidden", tie: "tied", lie: "lying", sit: "sitting", hang: "hung", keep: "kept", shut: "shut", close: "closed", break: "broken", fall: "fallen", sleep: "asleep", put: "put", make: "made", tear: "torn", wear: "worn", freeze: "frozen", bite: "bitten", catch: "caught", feel: "felt", lose: "lost", leave: "left", fit: "fitted", bring: "brought", think: "thought", buy: "bought", teach: "taught", fight: "fought", find: "found", forget: "forgotten", choose: "chosen", grow: "grown", know: "known", see: "seen", take: "taken", give: "given", write: "written", drive: "driven", eat: "eaten", go: "gone", do: "done", run: "run", swim: "swum", sing: "sung", drink: "drunk", ring: "rung", begin: "begun", spend: "spent", send: "sent", build: "built", bend: "bent", light: "lit", shine: "shone", shoot: "shot", spin: "spun", stand: "standing", tell: "told", sell: "sold", win: "won", hurt: "hurt", cut: "cut", set: "set", let: "let" };
+  const vPP = (v) => { const w = String(v).replace(/^to /, "").split(/[ ,;]/)[0]; if (VPP[w]) return VPP[w]; if (/e$/.test(w)) return w + "d"; if (/[^aeiou]y$/.test(w)) return w.slice(0, -1) + "ied"; if (/[^aeiou][aeiou][bdgmnpt]$/.test(w) && w.length <= 4) return w + w.slice(-1) + "ed"; return w + "ed"; };
   const VSUF_EN = { dim: "small or affectionate", sup: "very", aug: "big or intense" };
   function vLook(c) { // a known word's first meaning and kind, without breaking anything down
     let tg = null; try { tg = TG[c] || null; } catch (e) {}
@@ -290,7 +337,7 @@
     const l = lines[0] || "", pos = (tg && tg[1]) || (l.match(/class="tag">([^<]+)</) || [])[1] || "";
     let g = tg ? tg[2] : l.replace(/<span class="pill[^>]*>.*?<\/span>/g, "").replace(/<span class="tag">.*?<\/span>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").split("·").slice(1).join("·");
     g = cueOne(String(g).split(/;/)[0].replace(/\s*\(.*?\)\s*/g, " ").replace(/^(an? )?(inflection|form|plural|feminine|masculine) of [^:]*:\s*/i, "").trim());
-    return g ? { w: c, g, pos } : null;
+    return g ? { w: c, g, pos, g0: String(tg ? tg[2] : "").split(/[;,]/)[0] } : null;
   }
   const vAccents = (s) => { const out = [s]; for (let i = s.length - 1, n = 0; i >= 0 && n < 3; i--) { const k = "aeiou".indexOf(s[i]); if (k >= 0) { out.push(s.slice(0, i) + "áéíóú"[k] + s.slice(i + 1)); n++; } } return out; };
   const vPlural = (e) => e.replace(/\b(\w+)$/, (m) => (/(s|x|sh|ch)$/.test(m) ? m + "es" : /[^aeiou]y$/.test(m) ? m.slice(0, -1) + "ies" : m + "s"));
@@ -327,11 +374,12 @@
     }
     if (!best) return VDIM[w] ? { en: VDIM[w], base: null, how: "dim", suf: null } : null;
     const { L, how, pl } = best, g = L.g.replace(/^(an?|the) /i, "");
-    const adj = (/adj|adv/.test(L.pos) && VADJ_EN.test(g.split(/[ ,]/)[0])) || (/adv/.test(L.pos));
+    const part = /(ad|id)[oa]s?$/.test(best.base) && !/noun/.test(L.pos); // pegado, callado: a state, not a thing
+    const adj = part || (/adj|adv/.test(L.pos) && VADJ_EN.test(g.split(/[ ,]/)[0])) || (/adv/.test(L.pos));
     let en;
     if (how === "sup") en = "very " + g;
     else if (how === "aug") en = (adj ? "really " : "big ") + g;
-    else en = adj ? "nice and " + g : "little " + g;
+    else en = part ? "really " + (/verb/.test(L.pos) || /^to /.test(L.g0 || "") ? vPP(g) : g) : adj ? "nice and " + g : "little " + g;
     if (pl && !adj) en = vPlural(en);
     if (VDIM[w]) en = VDIM[w];
     return { en, base: best.base, baseEn: g, how, suf: "-" + best.suf };
