@@ -7,7 +7,7 @@ const MOCK = `(() => {
     const self = this; window.__yt.made.push(o); window.__yt.p = this; this.o = o; this.t = 0; this.rate = 1; this.st = -1; this.dur = 300; this.destroyed = 0;
     const node = typeof el === "string" ? document.getElementById(el) : el; const f = document.createElement("iframe"); f.id = node.id; f.src = (o.host || "https://www.youtube.com") + "/embed/" + o.videoId; node.replaceWith(f);
     this._iv = setInterval(() => { if (self.st === 1) self.t += 0.1 * self.rate; }, 100);
-    setTimeout(() => o.events && o.events.onReady && o.events.onReady({ target: self }), 50);
+    if (!window.__ytSilent) setTimeout(() => o.events && o.events.onReady && o.events.onReady({ target: self }), 50);
   }
   Player.prototype = {
     getCurrentTime() { return this.t; }, getDuration() { return this.dur; },
@@ -57,7 +57,7 @@ const MOCK = `(() => {
   await go("video-2GrDFoMl978"); await p.waitForTimeout(600); s = await st();
   rec("Video page: menu tucked, Practice tab lit, back to Videos, fits the screen", s.tucked && s.tab === "practicar" && s.back === "Videos" && !s.wide, JSON.stringify(s));
   const made = await p.evaluate(() => window.__yt.made.at(-1));
-  rec("Player: right video, nocookie host, Spanish captions on, inline", made.videoId === "2GrDFoMl978" && /nocookie/.test(made.host) && made.playerVars.cc_load_policy === 1 && made.playerVars.cc_lang_pref === "es" && made.playerVars.playsinline === 1, JSON.stringify(made.playerVars));
+  rec("Player: right video, tells YouTube the site, Spanish captions on, inline", made.videoId === "2GrDFoMl978" && made.playerVars.origin === "http://localhost:8766" && made.playerVars.cc_load_policy === 1 && made.playerVars.cc_lang_pref === "es" && made.playerVars.playsinline === 1, JSON.stringify(made.playerVars));
   const fr = await p.$eval(".vframe", (x) => { const r = x.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
   rec("Player is full width and 16:9", Math.abs(fr[0] / fr[1] - 16 / 9) < 0.03 && fr[0] > 340, fr.join("x"));
   // controls
@@ -121,6 +121,7 @@ const MOCK = `(() => {
   await go("practicar"); rec("Practice row shows the count", /2 watched/.test(await p.$eval('a[href="#videos"]', (x) => x.innerText)));
   // blocked embed
   await go("video-rw-DW_YlfoI"); await p.evaluate(() => window.__yt.p._err(150)); await p.waitForTimeout(200);
+  rec("Blocked embed: says why, with the code", /only allows it on YouTube \(code 150\)/.test(await p.textContent("#vfail p")));
   rec("Blocked embed: says so and offers Open in YouTube", (await p.isVisible("#vfail")) && (await p.getAttribute('#vfail a', "href")) === "https://www.youtube.com/watch?v=rw-DW_YlfoI");
   rec("…exercises still there", await p.isVisible("#vret"));
   // shared from the YouTube app (Android share sheet)
@@ -133,6 +134,12 @@ const MOCK = `(() => {
   await go("video-ShArEdViD01"); p.once("dialog", (d) => d.accept("Mi vídeo compartido")); await p.click('[data-act="v-rename"]'); await p.waitForTimeout(500);
   rec("Rename my video", (await p.textContent("#app h1")) === "Mi vídeo compartido");
   await p.click('[data-act="v-remove"]'); await p.waitForTimeout(700); rec("Remove my video", p.url().endsWith("#videos") && !((await S()).myv || []).some((v) => v.yt === "ShArEdViD01"));
+  // player loads but never reports ready (seen on a phone): keep it visible, offer YouTube under it
+  await p.evaluate(() => localStorage.setItem("x", 1)); await c.addInitScript(() => { window.__ytSilent = 1; });
+  const p4 = await c.newPage(); p4.on("pageerror", (x) => er.push(x.message)); await p4.goto("http://localhost:8766/#video-2GrDFoMl978"); await p4.waitForTimeout(11000);
+  rec("Silent player stays visible, with an Open in YouTube hint", !(await p4.isVisible("#vfail")) && (await p4.isVisible("#vslow")) && (await p4.$eval("#vplayer", (x) => getComputedStyle(x).visibility)) === "visible");
+  await p4.evaluate(() => window.__yt.p.o.events.onStateChange({ data: 1 })); await p4.waitForTimeout(100);
+  rec("…the hint goes once the video starts playing", !(await p4.isVisible("#vslow")));
   // player can't load at all (offline / blocked) → fallback after a wait
   await c.unroute("**/www.youtube.com/iframe_api"); await c.route("**/www.youtube.com/iframe_api", (r) => r.abort());
   const p2 = await c.newPage(); p2.on("pageerror", (x) => er.push(x.message)); await p2.goto("http://localhost:8766/#video-2GrDFoMl978"); await p2.waitForTimeout(13000);

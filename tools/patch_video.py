@@ -72,6 +72,7 @@ CSS = r'''
 .vsk .qbar { display: block; height: 8px; border-radius: 99px; background: var(--line); overflow: hidden }
 .vsk .qbar i { display: block; height: 100%; background: var(--cobalt); border-radius: 99px }
 .vfix { margin: 0; padding-left: 18px }
+.vslow { margin: -4px 0 0; color: var(--muted) } .vslow[hidden] { display: none }
 @media (max-width: 560px) { .vgrid { grid-template-columns: 1fr; gap: 10px } .vcard { display: flex; align-items: stretch } .vthumb { flex: 0 0 132px; aspect-ratio: 16/9; align-self: center; margin: 8px 0 8px 8px; border-radius: 10px; overflow: hidden } .vplay { width: 32px; height: 32px } .vplay .ic { width: 15px; height: 15px } .vdone { left: 4px; bottom: 4px; font-size: 11px; padding: 2px 6px } .vtxt { padding: 10px 12px; align-self: center } .vtxt b { font-size: 14.5px } }
 '''
 k = s.rindex("</style>", 0, s.index("</head>")); s = s[:k] + CSS + s[k:]
