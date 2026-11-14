@@ -1552,9 +1552,17 @@ body.litem-on .tutor-fab { display: none !important }
 .btn, .pbtn, .exopt, .drtile, .kcard, .hoysteps a { transition: transform .12s ease, background-color .15s, border-color .15s } .btn:active, .exopt:active, .drtile:active { transform: scale(.97) }
 :focus-visible { outline: 3px solid color-mix(in srgb, var(--cobalt) 60%, transparent); outline-offset: 2px }
 @media (prefers-reduced-motion: reduce) { .drfb { animation: none } }
+
+/* ===== Profe chat: no tab bar while chatting ===== */
+@media (max-width: 820px) {
+  html body.tutor-open .tabbar { transform: translateY(calc(100% + 30px)); opacity: 0; pointer-events: none }
+  html body.tutor-open .tutor { bottom: 0 !important; padding-bottom: env(safe-area-inset-bottom, 0px) !important }
+  html body.tutor-open #tabpeek { display: none !important }
+}
+.t-enbtn { font-weight: 700; letter-spacing: .04em } .t-enbtn[aria-pressed="true"] { background: var(--cobalt); color: var(--on-cobalt); border-color: transparent }
 </style>
 
-<script>window.__BUILD = "202611140113";</script>
+<script>window.__BUILD = "202611140208";</script>
 </head>
 <body>
 <div id="liquid-bg" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -6848,20 +6856,49 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
       if (!playing) play();
     };
     return {
-      feed(full) { if (!canSpeak || gen !== SPK_GEN) return; const t = plainForSpeech(forVoice(full)).replace(/\n+/g, ". "); const m = t.slice(said).match(/^[\s\S]*[.!?…](?=\s|$)/); if (m) { push(m[0]); said += m[0].length; } },
+      feed(full) { if (!canSpeak || gen !== SPK_GEN) return; { const tp = document.getElementById("tutor"); if (tp && tp.hidden) { SPK_GEN++; return; } } const t = plainForSpeech(forVoice(full)).replace(/\n+/g, ". "); const m = t.slice(said).match(/^[\s\S]*[.!?…](?=\s|$)/); if (m) { push(m[0]); said += m[0].length; } },
       finish(full) { if (!canSpeak) { ended = true; called = true; if (onAllDone) onAllDone(); return; } const t = plainForSpeech(forVoice(full || "")).replace(/\n+/g, ". "); if (t.length > said) push(t.slice(said)); said = t.length;
         if (!any && !q.length && !playing) { const all = plainForSpeech(String(full || "")).replace(/\n+/g, ". "); if (all.trim()) { push.all = true; push(all); push.all = false; } } // nothing in Spanish: read it in English rather than stay silent
         ended = true; setTimeout(() => { if (!called && gen === SPK_GEN) { playing = false; q.length = 0; done(); } }, 6000 + t.length * 120); done(); },
       gen,
     };
   }
+  const CG = { on: false, y: 0, key: -1, done: 0, seg: 0, t0: 0, free: false };
+  function cgStart(u, t) {
+    const box = document.getElementById("t-msgs"); if (!box) return;
+    const n = box.querySelectorAll(".tm").length; if (n !== CG.key) { CG.key = n; CG.done = 0; CG.free = false; }
+    CG.seg = t.length; CG.t0 = performance.now(); // it is spoken right away: the queue plays one at a time
+    try { const P = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(u), "onend"); let h = null;
+      Object.defineProperty(u, "onend", { configurable: true, get: () => h, set: (fn) => { h = function (e) { if (CG.seg) { CG.done += CG.seg; CG.seg = 0; CG.last = performance.now(); } return fn && fn.call(this, e); }; if (P && P.set) P.set.call(u, h); } }); } catch (e) {}
+    if (!CG.on) { CG.on = true; CG.y = box.scrollTop; requestAnimationFrame(cgTick); }
+  }
+  function cgTick() {
+    const box = document.getElementById("t-msgs"), tp = document.getElementById("tutor");
+    const now = performance.now(), busy = (CG.seg > 0 && now - CG.t0 < (CG.seg / (11 * (TS.prate || 1))) * 2500 + 4000) || now - (CG.last || 0) < 1200;
+    if (!box || !tp || tp.hidden || !busy) { CG.on = false; return; }
+    if (!CG.free) {
+      const bs = box.querySelectorAll(".tm.a"), b = bs[bs.length - 1];
+      if (b) {
+        const total = Math.max(1, (b.querySelector(".tb") || b).textContent.length), cps = 13 * (TS.prate || 1);
+        const f = Math.min(1, (CG.done + Math.min(CG.seg, ((performance.now() - CG.t0) / 1000) * cps)) / total);
+        const top = b.offsetTop - box.offsetTop, want = Math.max(0, top - 10 + Math.max(0, b.offsetHeight - box.clientHeight * 0.55) * f);
+        const maxY = box.scrollHeight - box.clientHeight, goal = Math.min(maxY, want);
+        if (Math.abs(box.scrollTop - CG.y) > 3) CG.y = box.scrollTop;
+        const d = goal - CG.y; if (Math.abs(d) > 0.5) { CG.y += Math.max(-8, Math.min(d * (d > 0 ? 0.05 : 0.12), 4)); box.scrollTop = CG.y; }
+      }
+    }
+    requestAnimationFrame(cgTick);
+  }
+  // scrolling the chat yourself stops the glide until the next reply
+  ["touchmove", "wheel"].forEach((ev) => document.addEventListener(ev, (e) => { if (CG.on && e.target.closest && e.target.closest("#t-msgs")) CG.free = true; }, { passive: true }));
   function profeUtter(t, es) {
     const all = (() => { try { return speechSynthesis.getVoices(); } catch (e) { return []; } })();
     const want = es ? TS.pvEs : TS.pvEn, v = want ? all.find((x) => x.name === want) : null;
-    return utter(t, es ? "es" : "en", (es ? 0.92 : 1) * (TS.prate || 1), v || undefined, TS.ppitch || 1);
+    const u = utter(t, es ? "es" : "en", (es ? 0.92 : 1) * (TS.prate || 1), v || undefined, TS.ppitch || 1); try { cgStart(u, t); } catch (e) {} return u;
   }
   function speakMixed(text, onDone) {
     if (!canSpeak) { if (onDone) onDone(); return; }
+    { const tp = document.getElementById("tutor"); if (tp && tp.hidden && !document.getElementById("litem") && !(typeof PR !== "undefined" && PR)) { if (onDone) onDone(); return; } }
     try { speechSynthesis.cancel(); } catch (e) {}
     const clean = plainForSpeech(forVoice(text)).replace(/\n+/g, ". ");
     const parts = (clean.match(/[^.!?¿¡]*[¿¡]?[^.!?]*[.!?]+|[^.!?]+$/g) || [clean]).map((s) => s.trim()).filter(Boolean);
@@ -7266,7 +7303,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const body = m.pending && !m.c ? '<p class="muted">Thinking…</p>' : md(m.c || "").replace(/<p>((?:(?!<\/p>)[\s\S])*)<\/p>/g, (all, inner) => { const txt = inner.replace(/<[^>]+>/g, ""); return txt && !isSpanish(txt) && !/<em>/.test(inner) && /[a-z]/i.test(txt) ? '<p class="en-line"><em>' + inner + "</em></p>" : all; });
     return '<div class="tm a">' + pAvatar() + '<div class="tb">' + body + (m.err ? '<p class="terr">' + esc(m.err) + "</p>" : "") + (m.en && !TS.noEnLine ? '<p class="t-en" lang="en"><span class="t-enl">EN</span>' + (m.en === "…" ? '<span class="muted">translating…</span>' : esc(m.en).replace(/\n/g, "<br>")) + "</p>" : "") + (!m.pending && m.c ? '<button class="say" data-act="t-say" data-i="' + i + '" aria-label="Read this reply aloud">' + ICON + "</button>" : "") + "</div></div>";
   }
-  function tPaintLast() { const box = document.getElementById("t-msgs"); if (!box || !tCur) return; const last = box.lastElementChild, m = tCur.msgs[tCur.msgs.length - 1]; if (last && m) { last.outerHTML = bubble(m, tCur.msgs.length - 1); box.scrollTop = box.scrollHeight; } }
+  function tPaintLast() { const box = document.getElementById("t-msgs"); if (!box || !tCur) return; const last = box.lastElementChild, m = tCur.msgs[tCur.msgs.length - 1]; if (last && m) { last.outerHTML = bubble(m, tCur.msgs.length - 1); if (CG.on) box.scrollTop = CG.y; else box.scrollTop = box.scrollHeight; } }
   const MIC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4"/></svg>';
   function engineLabel() { return TB === "claude" ? "Claude" : TB === "api" ? "Claude (API key)" : TB === "local" || TB === "native" ? "AI on this phone" : "Practice mode"; }
   function practiceHTML() {
@@ -7371,7 +7408,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     const ctx = pageCtx();
     const tabs = [["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");
     const R = window.__tRet, back = R ? '<button type="button" class="tret" data-act="t-ret" aria-label="' + (R.kind === "q" ? "Back to question " + R.n : "Back to the lesson") + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 19c0-6-4-10-10-10H4M8.5 4.5 4 9l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + "<span>" + (R.kind === "q" ? "Q" + R.n : "Lesson") + "</span></button>" : "";
-    const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
+    const head = back + '<div class="th"><div><b>' + esc(pName()) + '</b><span class="muted small"> · ' + esc(engineLabel()) + '</span></div><span class="row"><button class="btn small t-enbtn" data-act="t-en" aria-pressed="' + !TS.noEnLine + '" title="English under Profe’s Spanish">EN</button><button class="btn small" data-act="t-new">New chat</button><button class="btn small" data-act="t-close" aria-label="Close tutor">✕</button></span><div class="row ttabs">' + tabs + "</div></div>";
     let body;
     if (tView === "hist") body = settingsHTML();
     else if (tView === "practice") body = practiceHTML();
@@ -7386,7 +7423,7 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
         '<form class="tform" id="t-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="t-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="t-input">Message Profe</label><textarea id="t-input" rows="1" placeholder="Escribe aquí…"></textarea>' + (tBusy ? '<button class="btn" type="button" data-act="t-stop">Stop</button>' : '<button class="btn primary" type="submit">Send</button>') + "</form>";
     }
     pan.innerHTML = head + body;
-    const box = document.getElementById("t-msgs"); if (box) box.scrollTop = box.scrollHeight;
+    const box = document.getElementById("t-msgs"); if (box) box.scrollTop = CG.on ? CG.y : box.scrollHeight;
     const f = document.getElementById("t-form"); if (f) f.addEventListener("submit", (e) => { e.preventDefault(); const i = document.getElementById("t-input"); const v = i.value; i.value = ""; tSend(v); });
     const ti = document.getElementById("t-input"); if (ti) ti.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); f.requestSubmit ? f.requestSubmit() : f.dispatchEvent(new Event("submit")); } });
     const pf = document.getElementById("pr-form"); if (pf) pf.addEventListener("submit", (e) => { e.preventDefault(); const i = document.getElementById("pr-input"); const v = i.value.trim(); i.value = ""; if (v) prAnswer(v); });
@@ -7447,7 +7484,9 @@ const VOICE = {"roleplays":[{"id":"rp-a1-01","lvl":"a1","t":"En la cafetería","
     if (act === "t-open") tOpen();
     else if (act === "t-ask") tOpen(t.dataset.p);
     else if (act === "t-ret") { const R = window.__tRet; window.__tRet = null; const c = document.querySelector('#tutor [data-act="t-close"]'); if (c) c.click(); setTimeout(() => { const el = R && R.kind === "q" ? document.getElementById("runner") : null; if (el) el.scrollIntoView({ block: "start" }); }, 60); }
-    else if (act === "t-close") { window.__tRet = null; voiceMode = false; stopListening(); document.getElementById("tutor").hidden = true; document.body.classList.remove("tutor-open"); }
+    else if (act === "t-en") { TS.noEnLine = !TS.noEnLine; tsave(); tRender();
+      if (!TS.noEnLine && tCur) (async () => { for (const m of tCur.msgs.slice(-12)) { if (m.r === "a" && m.en == null) { try { await trReply(m); } catch (x) {} } } })(); }
+    else if (act === "t-close") { SPK_GEN++; try { speechSynthesis.cancel(); } catch (x) {} CG.on = false; AG++; window.__tRet = null; voiceMode = false; stopListening(); document.getElementById("tutor").hidden = true; document.body.classList.remove("tutor-open"); }
     else if (act === "t-tab") { tView = t.dataset.v; tRender(); }
     else if (act === "t-chip") tSend(t.dataset.p);
     else if (act === "t-new" && window.AndroidLLM && window.AndroidLLM.resetChat) { try { window.AndroidLLM.resetChat(); } catch (x) {} }
@@ -8971,7 +9010,7 @@ if (navigator.storage && navigator.storage.persist) { navigator.storage.persist(
 <script>
 /* update check: the Android app and installed web app can keep an old page in memory; check for a newer build when the app comes to the front */
 (function () {
-  var BUILD = "202611140113";
+  var BUILD = "202611140208";
   window.__BUILD = BUILD;
   function fresh(v) { location.replace(location.pathname + "?v=" + v + location.hash); } // a new address: no cache can answer with the old page
   window.__updFresh = fresh;
