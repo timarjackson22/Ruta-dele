@@ -1,4 +1,4 @@
-const CACHE = "ruta-dele-v128";
+const CACHE = "ruta-dele-v129";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png"].concat(["verbdata/verbs-d-0.json", "verbdata/verbs-d-1.json", "verbdata/verbs-d-10.json", "verbdata/verbs-d-11.json", "verbdata/verbs-d-12.json", "verbdata/verbs-d-13.json", "verbdata/verbs-d-14.json", "verbdata/verbs-d-15.json", "verbdata/verbs-d-16.json", "verbdata/verbs-d-2.json", "verbdata/verbs-d-3.json", "verbdata/verbs-d-4.json", "verbdata/verbs-d-5.json", "verbdata/verbs-d-6.json", "verbdata/verbs-d-7.json", "verbdata/verbs-d-8.json", "verbdata/verbs-d-9.json", "verbdata/verbs-index.json"].concat(["gramdata/adjetivos.json", "gramdata/adverbios.json", "gramdata/articulos.json", "gramdata/conectores.json", "gramdata/conjunciones.json", "gramdata/determinantes.json", "gramdata/interjecciones.json", "gramdata/numerales.json", "gramdata/preposiciones.json", "gramdata/pronombres.json", "gramdata/reflexivos.json", "gramdata/sustantivos.json", "examdata/a1.json"]));
 
 self.addEventListener("install", (e) => {
