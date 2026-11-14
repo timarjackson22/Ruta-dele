@@ -204,8 +204,9 @@
     const inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null, w = span.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, ""), lw = w.toLowerCase();
     if (inf) return inf.k === "short" ? (cueOne(cueGloss(inf.base.split(/[ (]/)[0])) || inf.base) + " (" + inf.base.split(" (")[0] + ")" : String(inf.mean).split(/[;(]/)[0].trim();
     if (VLITTLE.test(lw) || !lw) return "";
-    const vl = (S.vlex || {})[lw]; if (vl && vl.en) return cueOne(vl.en) || vl.en;
-    try { return cueOne(cueGloss(w)); } catch (e) { return ""; }
+    let g = ""; try { g = cueOne(cueGloss(w)); } catch (e) {} // dictionary and word breakdown first
+    if (g) return g;
+    const vl = (S.vlex || {})[lw]; return vl && vl.en ? cueOne(vl.en) || vl.en : ""; // the translator's guess only for words nothing else knows
   }
   // names are said back as written (Marta, BBC); a name of several words (Joan Manuel Serrat) is one bubble
   const vcWord = (sp) => sp.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, "");
