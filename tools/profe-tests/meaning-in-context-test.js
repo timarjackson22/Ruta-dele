@@ -3,7 +3,7 @@ const { chromium, devices } = require("playwright"); const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
 const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const L = [[0, "Ven, bailemos pegaditos toda la noche.", "Come on, let's dance close together all night."], [4, "Este café está muy rico.", "This coffee is very tasty."], [8, "Hoy el tiempo está loco.", "Today the weather is crazy."],
-  [12, "La etiqueta está pegadita a la caja.", "The label is stuck to the box."], [16, "No me di cuenta de nada.", "I didn't realize anything."], [20, "Fuimos al parque y nos sentamos en un banco.", "We went to the park and sat on a bench."], [24, "Mi mami baila tan rico.", "My babe dances so hot."], [28, "Y ya está.", "And that's it."]];
+  [12, "La etiqueta está pegadita a la caja.", "The label is stuck to the box."], [16, "No me di cuenta de nada.", "I didn't realize anything."], [20, "Fuimos al parque y nos sentamos en un banco.", "We went to the park and sat on a bench."], [24, "Mi mami baila tan rico.", "My babe dances so hot."], [28, "DAME UN ABRACITO, MI AMOR.", "GIVE ME A LITTLE HUG, MY LOVE."], [32, "La BBC habla de Panamá.", "The BBC talks about Panama."], [36, "Y ya está.", "And that's it."]];
 const X = (k) => '<?xml version="1.0" encoding="utf-8" ?><transcript>' + L.map((l, i) => '<text start="' + l[0] + '" dur="4">' + l[k] + "</text>").join("") + "</transcript>";
 const ASR = '<?xml version="1.0" encoding="utf-8" ?><transcript><text start="0" dur="3">hace mucho tiempo que no te veo</text><text start="4" dur="3">el partido terminó con un gol</text><text start="8" dur="3">vale vale</text></transcript>';
 const TR = { "Hace mucho tiempo que no te veo.": "I haven't seen you in a long time.", "El partido terminó con un gol.": "The match ended with a goal." };
@@ -32,6 +32,10 @@ const TR = { "Hace mucho tiempo que no te veo.": "I haven't seen you in a long t
   await check(2, 8, "tiempo", /^weather$/i, "tiempo: the sentence's English says weather → «weather» (no rule needed)");
   await check(4, 16, "cuenta", /realis|realiz/, "darse cuenta → realise");
   await check(5, 20, "banco", /bench/, "banco in a park → bench (from the sentence)");
+  const capLine = await p.evaluate(() => document.querySelectorAll("#vcap .vcue")[7].querySelector(".ves").textContent);
+  rec("A caption in CAPITALS is shown as a normal sentence", capLine === "Dame un abracito, mi amor.", capLine);
+  await check(7, 28, "abracito", /little hug/, "…and Verbatim translates its words (abracito → little hug), not echoes them");
+  await check(8, 32, "BBC", /^BBC$/, "A real acronym in a normal sentence stays a name (BBC)");
   rec("Verbatim never shows a label or 'little stuck'", !(await p.evaluate(() => document.getElementById("vtip").textContent)).match(/diminutive|little stuck/));
   // card
   await p.evaluate(() => { window.__yt.p.t = 1; }); await p.waitForTimeout(400);

@@ -45,16 +45,18 @@
   const vcPref = () => (S.vcap = S.vcap || { en: false, hide: false });
   // YouTube's tags and markers are noise: [Música], (risas), ♪, >>, a leading dash
   const vcClean = (t) => String(t || "").replace(/\[[^\]]*\]|\([^)]*\)|<[^>]*>/g, " ").replace(/[♪♫♬🎵🎶]/g, " ").replace(/>>+/g, " ").replace(/(^|\s)[-–—](?=\s)/g, " ").replace(/\s+/g, " ").trim();
+  // captions written in CAPITALS (common in songs) read as normal text: the words are looked up and translated, not taken for acronyms
+  const vcIsCaps = (t) => { const L = String(t).match(/\p{L}/gu) || [], U = L.filter((c) => c !== c.toLowerCase()).length; return L.length >= 6 && U / L.length > 0.75; };
   function vcDecode(s) { const ta = document.createElement("textarea"); ta.innerHTML = s; return ta.value; }
   // YouTube caption XML: srv1 (<text start dur>) or srv3 (<p t d> with word timings in <s t>)
   function vcParse(xml) {
     if (!xml) return [];
     const doc = new DOMParser().parseFromString(xml, "text/xml"), out = [];
-    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; const txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (txt) out.push({ s, e: s + d, text: txt }); });
+    doc.querySelectorAll("text").forEach((n) => { const s = +n.getAttribute("start") || 0, d = +n.getAttribute("dur") || 2; let txt = vcClean(vcDecode(vcDecode(n.textContent || ""))); if (vcIsCaps(txt)) txt = txt.toLowerCase(); if (txt) out.push({ s, e: s + d, text: txt }); });
     doc.querySelectorAll("body > p, p[t]").forEach((p) => {
       const s = (+p.getAttribute("t") || 0) / 1000, d = (+p.getAttribute("d") || 2000) / 1000, ss = p.querySelectorAll("s"); let words = null, txt;
-      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); }
-      else txt = vcClean(vcDecode(vcDecode(p.textContent || "")));
+      if (ss.length) { words = []; let inTag = false; ss.forEach((x) => { const raw = vcDecode(x.textContent || "").trim(); if (/^[\[(]/.test(raw)) inTag = true; const w = inTag ? "" : vcClean(raw); if (/[\])]$/.test(raw)) inTag = false; if (w) words.push({ t: s + (+x.getAttribute("t") || 0) / 1000, w }); }); txt = words.map((x) => x.w).join(" "); if (vcIsCaps(txt)) { words.forEach((x) => (x.w = x.w.toLowerCase())); txt = txt.toLowerCase(); } }
+      else { txt = vcClean(vcDecode(vcDecode(p.textContent || ""))); if (vcIsCaps(txt)) txt = txt.toLowerCase(); }
       if (txt && !(out.length && out[out.length - 1].s === s && out[out.length - 1].text === txt)) out.push({ s, e: s + d, text: txt, words });
     });
     out.sort((a, b) => a.s - b.s);
@@ -100,7 +102,7 @@
       else if ((gap >= 0.8 && cur.length >= 3) || gap >= 1.6) push();
       else if (cur.length >= 22) { let best = -1, bg = 0; for (let k = 6; k < cur.length - 2; k++) { const g = cur[k + 1].t - cur[k].t; if (g > bg) { bg = g; best = k; } } if (best < 0) best = cur.length - 2; const rest = cur.splice(best + 1); S.push(cur); cur = rest; }
     }
-    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw : vcPunct(raw); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
+    const out = S.map((ws) => { const raw = ws.map((x) => x.w), txt = hasP ? raw.slice() : vcPunct(raw); txt[0] = txt[0].replace(/^([¿¡"«]?)(\p{Ll})/u, (m, a, b) => a + b.toUpperCase()); return { s: ws[0].t, words: ws.map((x, i) => ({ t: x.t, w: txt[i] })), text: txt.join(" ") }; });
     out.forEach((c, i) => { c.e = out[i + 1] ? out[i + 1].s : c.s + Math.max(2, c.words.length * 0.45); });
     if (en.length && kind !== "asr") out.forEach((c) => { const xs = en.filter((x) => x.s >= c.s - 0.3 && x.s < c.e - 0.3).map((x) => x.text); if (xs.length) c.en = xs.join(" "); });
     VCAP.addedP = !hasP;
@@ -212,7 +214,7 @@
   const vcWord = (sp) => sp.textContent.replace(/^[¿¡'’]+|[^\p{L}']+$/gu, "");
   function vcIsName(spans, i) {
     const w = vcWord(spans[i]); if (!/^\p{Lu}/u.test(w)) return false;
-    if (/^\p{Lu}{2,}$/u.test(w)) return true; // BBC, ONU
+    if (/^\p{Lu}{2,}$/u.test(w)) { const lw2 = w.toLowerCase(); let kn = false; try { kn = !!(TG[lw2] || lw2 in CFN || VSLANG[lw2] || lexIdx(lw2) >= 0 || vMorph(lw2)); } catch (e) {} if (!kn) return true; } // BBC, ONU (but not SOL in a shouted line)
     if (i > 0) return true; // capital in the middle of a sentence
     const lw = w.toLowerCase(); let known = false;
     try { known = !!(TG[lw] || lw in CFN || VSLANG[lw] || VSHORT[lw] || VJARGON[lw] || (S.vlex || {})[lw] || lexIdx(lw) >= 0 || vMorph(lw)); } catch (e) {}
@@ -252,7 +254,8 @@
     cands = cands.filter((x) => !/(diminutive|augmentative|superlative) of/i.test(x));
     const sl = VSLANG[lw]; if (sl) cands = cands.concat(String(sl[0]).split(/[;,]|\(/).map((x) => x.replace(/\)/g, "").trim()).filter(Boolean));
     const verb = verbAlso || /verb/.test((vLook(lw) || {}).pos || "");
-    for (const cand of cands) { if (/^little |^nice and |^very |^big /.test(cand)) continue; let ev = null; try { ev = cEvid(cand, enW, used, verb); } catch (e) {} if (ev && ev.full && ev.b - ev.a <= 3) { const sp = cSpan(enW, ev), nz = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (nz(sp).includes(nz(lw)) || nz(lw).includes(nz(sp))) continue; for (let z = ev.a; z <= ev.b; z++) used.add(z); return sp; } } // a translator that left the Spanish word in its English proves nothing
+    for (const cand of cands) { if (/^little |^nice and |^very |^big /.test(cand)) continue; let ev = null; try { ev = cEvid(cand, enW, used, verb); } catch (e) {} if (ev && ev.full && ev.b - ev.a <= 3) { const sp = cSpan(enW, ev), nz = (x) => x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); if (nz(sp).includes(nz(lw)) || nz(lw).includes(nz(sp))) continue; if (m && m.how === "dim" && ev.a > 0 && /^(little|small|tiny|wee)$/.test(enW[ev.a - 1].l)) ev.a--; // un abracito: "little hug", as the sentence says
+        for (let z = ev.a; z <= ev.b; z++) used.add(z); return cSpan(enW, ev); } } // a translator that left the Spanish word in its English proves nothing
     return "";
   }
   function vcGloss(c, spans, k) {
