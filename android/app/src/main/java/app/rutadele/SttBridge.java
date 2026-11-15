@@ -98,7 +98,7 @@ public class SttBridge {
             @Override public void onError(int e) {
                 if (!mine() || ended) return;
                 // the microphone or the service is still held (by the wake listener a moment ago, or a session ending): try again, up to 3 times
-                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_AUDIO) && !ready && active && tries < 3) {
+                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_AUDIO || e == 11 /* server disconnected: S24, first start after a new recogniser */) && !ready && active && tries < 3) {
                     tries++; js("note", "retry " + tries + " after error " + e);
                     main.postDelayed(() -> { if (sid == my && active) begin(); }, 300L * tries);
                     return;

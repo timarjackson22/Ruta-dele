@@ -28,6 +28,8 @@
       s = s.replace(/\b(bee|v|ve)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "b" + (/uno|one|1/.test(n) ? "1" : "2"));
       s = s.replace(/\b(see|sea|si)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "c" + (/uno|one|1/.test(n) ? "1" : "2"));
     }
+    // S24 log 02:35–02:37 (English recognition): «level A1 a flashcards», «level A1 of flashcards», «the verbs the verbs list», «verbose»
+    s = s.replace(/\bverbose\b/g, "verbs").replace(/\b(\w+(?: \w+){0,2}) \1\b/g, "$1").replace(/\b(a1|a2|b1|b2|c1|c2) (a|of|the|de|del) (?=(flashcards|cards|vocabulary|vocab|words|word list|units?|lessons?)\b)/g, "$1 ");
     s = s.replace(/\b(a|be|b|ce|c|se)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => ({ a: "a", be: "b", b: "b", ce: "c", c: "c", se: "c" }[l]) + (/uno|one|1/.test(n) ? "1" : "2"));
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema)\s+(number|numero|no|nr)\s+/g, "$1 ");
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema|number|numero|question|pregunta)\s+([a-z]+)\b/g, (m, x, n) => (PV_NUM[n] ? x + " " + PV_NUM[n] : m));
@@ -81,6 +83,9 @@
     }
     // the first word lost after the wake beep (S24 log): «me to flash cards» = «take me to flashcards»
     if (/^(me )?to (the |my )?\S/.test(s) && !/^take /.test(s)) { const m2 = pvMatch("take me to " + s.replace(/^(me )?to /, ""), c); if (m2) { pvLog("start cut off; read as «take me to " + s.replace(/^(me )?to /, "") + "»"); return m2; } }
+    // an instruction with small extra words ("of", "a", "the") said in passing: try once without them
+    if (!pvMatch.loose && /^(open|take me to|go to|show( me)?|abre|llevame( al| a)?|ve a|ir a)\b/.test(s) && s.split(" ").length >= 3) { const s3 = s.replace(/\b(a|an|of|the|my|el|la|los|las|de|del|mi|mis)\b/g, " ").replace(/\s+/g, " ").trim();
+      if (s3 !== s) { pvMatch.loose = 1; let m3 = null; try { m3 = pvMatch(s3, c); } finally { pvMatch.loose = 0; } if (m3) { pvLog("read without small words as «" + s3 + "»"); return m3; } } }
     return null;
   }
 
@@ -340,6 +345,7 @@
     HF.engaged = true; pvLog("heard «" + text + "»");
     if (HF.lesson && pvCtx().runner) { if (pvRoute(text, "hf")) return; if (pvAnswer(text, "hf")) return; }
     if (pvRoute(text, "hf")) return;
+    if (/^(open|take me to|go to|show me|abre|llevame|ve a|ir a)\b/.test(pvNorm(text))) { pvReply("I heard “" + text.replace(/^\s*(ok(ay)?|oye)\s+prof(e)?\s*/i, "") + "”, but I couldn't find that screen. Try “open flashcards”, “open the verbs”, or “what can I do here”.", "hf", { listen: 1 }); return; }
     // not a command: it's for Profe (a question, Spanish practice); the panel opens and the voice chat continues hands-free
     PV.skip = 1; tOpen(); tSend(text, true);
   }
