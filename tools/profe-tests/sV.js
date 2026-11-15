@@ -7,7 +7,7 @@ const C = { home: {}, mc: { unit: true, runner: true, "runner-mc": true, "runner
 const CORPUS = [
   // navigation, English
   ["open my lessons", "home", "nav.course"], ["Open my lessons.", "home", "nav.course"], ["show me the course", "home", "nav.course"], ["go to lessons", "home", "nav.course"], ["take me to my lessons please", "home", "nav.course"],
-  ["go home", "home", "nav.home"], ["open today", "home", "nav.home"], ["home screen", "home", "nav.home"],
+  ["go home", "home", "nav.home"], ["Okay profe, puedes llevarme al menú del app", "home", "nav.home"], ["open the main menu", "home", "nav.home"], ["llévame al inicio", "home", "nav.home"], ["open today", "home", "nav.home"], ["home screen", "home", "nav.home"],
   ["open A2", "home", "nav.level"], ["go to level B1", "home", "nav.level"], ["open a two", "home", "nav.level"], ["level c1", "home", "nav.level"],
   ["open unit 3", "home", "nav.unit"], ["go to lesson five of A1", "home", "nav.unit"], ["open unit three", "home", "nav.unit"],
   ["continue where I left off", "home", "lesson.continue"], ["resume my lesson", "home", "lesson.continue"], ["keep going", "home", "lesson.continue"], ["continue", "home", "lesson.continue"], ["pick up where I left off", "home", "lesson.continue"],

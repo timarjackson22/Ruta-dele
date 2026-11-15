@@ -825,6 +825,14 @@
 "voice": "unsuitable",
 "why": "undo a removed video (tap toast)"
 },
+"va-online": {
+"voice": "pending",
+"why": "redo captions with Google online"
+},
+"va-phone": {
+"voice": "pending",
+"why": "redo captions on the phone"
+},
 "va-redo": {
 "voice": "unsuitable",
 "why": "redo audio captions"

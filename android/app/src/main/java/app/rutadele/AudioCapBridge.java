@@ -57,8 +57,14 @@ public class AudioCapBridge {
     public boolean available() { return Build.VERSION.SDK_INT >= 33 && SpeechRecognizer.isRecognitionAvailable(a); }
 
     @JavascriptInterface
-    public void start(String language) {
+    public void start(String language) { startMode(language, "phone"); }
+
+    /** mode "online": Google's online recogniser (often more accurate for fast or noisy speech); "phone": on-device when available */
+    @JavascriptInterface
+    public void startMode(String language, String mode) {
+        final boolean online = "online".equals(mode);
         main.post(() -> {
+            if (!running) skipOnDevice = online;
             if (!available()) { ev("state", "error:This needs Android 13 or newer with speech recognition."); return; }
             if (running) { ev("state", "listening"); return; }
             if (language != null && language.matches("es(-[A-Z]{2})?")) lang = language;
@@ -150,7 +156,8 @@ public class AudioCapBridge {
                 .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
                 .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
                 .putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, RATE)
-                .putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_AUDIO_SOURCE);
+                .putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_AUDIO_SOURCE)
+                .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
         try { sr.startListening(i); } catch (Exception e) { ev("state", "error:" + e.getMessage()); end(); }
     }
 
