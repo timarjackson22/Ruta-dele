@@ -462,6 +462,10 @@
 "voice": "unsuitable",
 "why": "shows mic diagnostics"
 },
+"pv-model-dl": {
+"voice": "pending",
+"why": "download Spanish speech recognition: could be offered by voice"
+},
 "pv-try": {
 "voice": "unsuitable",
 "why": "pronunciation of a word: tap targets"
