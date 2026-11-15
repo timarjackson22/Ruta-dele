@@ -51,6 +51,50 @@ public class CaptionBridge {
         });
     }
 
+    /** other uploads of the same song (for borrowing their captions): YouTube's public search page, no key.
+     *  Result: __acap.ev(id, json, err), json = [{id, t, ch, secs}] (up to 10) */
+    @JavascriptInterface
+    public void search(final String id, final String query) {
+        ex.execute(() -> {
+            try { reply(id, searchRun(query).toString(), null); }
+            catch (Exception e) { reply(id, null, e.getClass().getSimpleName() + ": " + e.getMessage()); }
+        });
+    }
+
+    JSONArray searchRun(String q) throws Exception {
+        String url = "https://www.youtube.com/results?hl=es&search_query=" + java.net.URLEncoder.encode(q, "UTF-8");
+        String page = httpUa(url, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36");
+        if (page.contains("action=\"https://consent.youtube.com/s\"")) {
+            Matcher m = Pattern.compile("name=\"v\" value=\"(.*?)\"").matcher(page);
+            if (m.find()) { cookie = "CONSENT=YES+" + m.group(1); page = httpUa(url, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"); }
+        }
+        JSONArray out = new JSONArray(); java.util.HashSet<String> seen = new java.util.HashSet<>();
+        Matcher v = Pattern.compile("\"videoRenderer\":\\{\"videoId\":\"([\\w-]{11})\"").matcher(page);
+        while (v.find() && out.length() < 10) {
+            String vid = v.group(1); if (!seen.add(vid)) continue;
+            String chunk = page.substring(v.end(), Math.min(page.length(), v.end() + 6000));
+            int next = chunk.indexOf("\"videoRenderer\""); if (next > 0) chunk = chunk.substring(0, next);
+            Matcher t = Pattern.compile("\"title\":\\{\"runs\":\\[\\{\"text\":\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(chunk);
+            Matcher l = Pattern.compile("\"lengthText\":\\{.*?\"simpleText\":\"([0-9:]+)\"").matcher(chunk);
+            Matcher c = Pattern.compile("\"ownerText\":\\{\"runs\":\\[\\{\"text\":\"((?:[^\"\\\\]|\\\\.)*)\"").matcher(chunk);
+            int secs = 0; if (l.find()) for (String part : l.group(1).split(":")) secs = secs * 60 + Integer.parseInt(part);
+            JSONObject o = new JSONObject().put("id", vid).put("secs", secs);
+            if (t.find()) o.put("t", unq(t.group(1))); if (c.find()) o.put("ch", unq(c.group(1)));
+            out.put(o);
+        }
+        if (out.length() == 0) throw new IOException(page.contains("g-recaptcha") ? "YouTube asked to confirm you're not a robot" : "no results found");
+        return out;
+    }
+    static String unq(String s) { try { return new JSONArray("[\"" + s + "\"]").getString(0); } catch (Exception e) { return s; } }
+    String httpUa(String url, String ua) throws IOException {
+        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+        c.setConnectTimeout(15000); c.setReadTimeout(20000); c.setRequestProperty("User-Agent", ua); c.setRequestProperty("Accept-Language", "es,en;q=0.8");
+        if (!cookie.isEmpty()) c.setRequestProperty("Cookie", cookie);
+        int code = c.getResponseCode(); if (code >= 400) { c.disconnect(); throw new IOException("HTTP " + code); }
+        try (InputStream in = c.getInputStream()) { ByteArrayOutputStream b = new ByteArrayOutputStream(); byte[] buf = new byte[16384]; int n; while ((n = in.read(buf)) > 0) b.write(buf, 0, n); return b.toString("UTF-8"); }
+        finally { c.disconnect(); }
+    }
+
     void reply(String id, String json, String err) {
         final String code = "window.__acap && __acap.ev(" + JSONObject.quote(id) + "," + JSONObject.quote(json == null ? "" : json) + "," + JSONObject.quote(err == null ? "" : err) + ")";
         main.post(() -> web.evaluateJavascript(code, null));

@@ -54,7 +54,7 @@
     if (type === "level") { const x = +text || 0; VA.levels++; if (!VP.ad) VA.peak = Math.max(VA.peak || 0, x); return; }
     if (type === "state" && /^engine:/.test(text)) { VA.engine = text.slice(7); return; }
     if (type === "state") {
-      if (text === "listening" && VA.sync) { VA.on = true; vaBanner("Listening to the singing to line up the lyrics (up to a minute)…"); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} }
+      if (text === "listening" && VA.sync) { VA.on = true; vaBanner("Syncing: the video plays from the start while the app listens to the singing (up to a minute)…"); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} }
       else if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
       else if (text === "asking") vaBanner("Android will ask to record: choose Start (the app only listens to its own video).");
       else if (text === "stopped") { VA.on = false; vaFinish(); }
@@ -150,27 +150,66 @@
   function vlPut(id, x) { try { localStorage.setItem(vlKey(id), JSON.stringify(x)); } catch (e) {} }
   // is this a song? the library's music, or a video whose title/channel says so
   function vlMusic(id) { const v = vFind(id) || {}; return v.cat === "musica" || /\b(official (music )?video|video oficial|videoclip|lyrics?|letra|ft\.|feat\.|vevo|music)\b/i.test((v.t || "") + " " + (v.ch || "")); }
-  function vlQuery(id) { const v = vFind(id) || {};
-    const track = String(v.t || "").replace(/\((?:en vivo|live|official[^)]*|video oficial|videoclip|lyrics?|letra|audio)\)/gi, "").replace(/\s*[-–|].*$/, "").replace(/\s+/g, " ").trim();
-    const artist = String(v.ch || "").split(/,|&| y | ft\.| feat\./i)[0].replace(/\b(music|vevo|official)\b/gi, "").replace(/\s+/g, " ").trim();
-    return { track, artist }; }
+  // what to search for: the library knows song and artist; a video you added only has YouTube's title ("Artist - Song (Official Video)") and channel ("ArtistVEVO")
+  const vlJunk = (t) => String(t || "").replace(/[\(\[][^\)\]]*(?:en vivo|live|official|oficial|video|videoclip|lyrics?|letra|audio|visualizer|visualiser|hd|4k|remaster|explicit)[^\)\]]*[\)\]]/gi, "").replace(/\b(?:official (?:music )?video|video oficial|videoclip oficial|lyric video|con letra|letra|lyrics)\b/gi, "").replace(/\s+(?:ft\.?|feat\.?|featuring|con)\s.*$/i, "").replace(/["“”«»]/g, "").replace(/\s+/g, " ").replace(/^[\s\-–|:]+|[\s\-–|:]+$/g, "").trim();
+  const vlArtist = (a) => String(a || "").replace(/vevo$/i, "").replace(/\s*-\s*topic$/i, "").replace(/\b(?:music|official|oficial|tv|records|channel)\b/gi, "").split(/,|&| y | x | ft\.| feat\./i)[0].replace(/([a-z])([A-Z])/g, "$1 $2").replace(/\s+/g, " ").trim();
+  function vlQueries(id) { const v = vFind(id) || {}, T = String(v.t || ""), ch = vlArtist(v.ch), out = [];
+    const add = (track, artist) => { track = vlJunk(track); artist = vlArtist(artist); if (track && track.toLowerCase() !== artist.toLowerCase() && !out.some((q) => q.track.toLowerCase() === track.toLowerCase() && q.artist.toLowerCase() === artist.toLowerCase())) out.push({ track, artist }); };
+    const parts = T.split(/\s+[-–—|]\s+/).map(vlJunk).filter(Boolean);
+    if (!v.mine) add(T.split(/\s+[-–—|]\s+/)[0], v.ch);
+    const lo = (x) => String(x).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""), ci = ch ? parts.findIndex((x) => lo(vlArtist(x)) === lo(ch) || lo(x).includes(lo(ch))) : -1;
+    if (parts.length >= 2 && ci >= 0) add(parts[ci === 0 ? 1 : 0], parts[ci]);
+    if (parts.length >= 2) { add(parts[1], parts[0]); add(parts[0], parts[1]); if (ch) { add(parts[1], ch); add(parts[0], ch); } }
+    else add(T, ch);
+    return out.slice(0, 4); }
+  const vlQuery = (id) => vlQueries(id)[0] || { track: "", artist: "" };
   function vlParse(lrc) { const out = []; String(lrc || "").split("\n").forEach((ln) => { const m = ln.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.*)$/); if (m && m[3].trim()) out.push({ t: +m[1] * 60 + +m[2], text: m[3].trim() }); }); return out; }
   // the closest recording to this video: synced lyrics, length nearest the video's
   async function vlFetch(id) {
-    const q = vlQuery(id); if (!q.track) return null;
+    const Q = vlQueries(id); if (!Q.length) return null; const v = vFind(id) || {};
     const L = VP.secs || VP.dur || 0, get = async (p) => { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 7000); const r = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(p), { signal: ac.signal, headers: { "Lrclib-Client": "RutaDELE (https://github.com/timarjackson22/Ruta-dele)" } }); clearTimeout(tm); return r.ok ? r.json() : []; };
-    let rows = []; try { rows = await get({ track_name: q.track, artist_name: q.artist }); if (!rows.some((x) => x.syncedLyrics)) rows = rows.concat(await get({ q: q.track + " " + q.artist })); } catch (e) { pvl("lyrics lookup failed: " + e); return null; }
-    const ok = rows.filter((x) => x.syncedLyrics && vlParse(x.syncedLyrics).length > 4); if (!ok.length) return null;
+    const good = (rows, strict) => rows.filter((x) => x.syncedLyrics && vlParse(x.syncedLyrics).length > 4 && (!strict || !L || Math.abs((x.duration || 0) - L) < 30));
+    let ok = [];
+    try {
+      for (const q of Q) { ok = good(await get(q.artist ? { track_name: q.track, artist_name: q.artist } : { track_name: q.track }), !!v.mine); if (ok.length) break; }
+      if (!ok.length) ok = good(await get({ q: (Q[0].track + " " + Q[0].artist).trim() }), true); // last try: the words anywhere, but only a recording of the video's length
+    } catch (e) { pvl("lyrics lookup failed: " + e); return null; }
+    if (!ok.length) return null;
     ok.sort((a, b) => (L ? Math.abs(a.duration - L) - Math.abs(b.duration - L) : 0));
     const best = ok[0], lines = vlParse(best.syncedLyrics);
     // a music video is often longer than the record (an intro): first guess, the extra length if the song would otherwise start before the music
     const extra = L && best.duration ? L - best.duration : 0, off = extra > 2 && extra < 40 && lines[0].t < 3 ? Math.round(extra * 10) / 10 : 0;
     return { src: best.id, track: best.trackName, artist: best.artistName, dur: best.duration, lines, off, guessed: !!off || Math.abs(extra) > 2, at: Date.now() };
   }
+  // no lyrics in LRCLIB: borrow the captions of another upload of the same song (a fan "letra" video often has captions typed by a person). Android app only.
+  function vlAndroid(fn, arg) { return new Promise((res) => { if (!window.AndroidCap || !window.AndroidCap[fn]) return res(null); const rid = "l" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    window.__acap = window.__acap || { cbs: {}, ev(k, json, err) { const f = this.cbs[k]; delete this.cbs[k]; if (f) f(json, err); } };
+    const tm = setTimeout(() => { delete window.__acap.cbs[rid]; res(null); }, 20000); window.__acap.cbs[rid] = (json, err) => { clearTimeout(tm); try { res(err || !json ? null : JSON.parse(json)); } catch (e) { res(null); } };
+    try { window.AndroidCap[fn](rid, arg); } catch (e) { clearTimeout(tm); res(null); } }); }
+  async function vlBorrow(id) {
+    if (!window.AndroidCap || !window.AndroidCap.search) return null;
+    const v = vFind(id) || {}, q = vlQuery(id), L = VP.secs || VP.dur || 0; if (!q.track) return null;
+    // the title's parts ("Song", "Artist"): an upload of the same song has every word of one part and at least half of the other's
+    const parts = (v.mine ? String(v.t || "").split(/\s+[-–—|]\s+/).map(vlJunk).filter(Boolean) : [q.track, q.artist].filter(Boolean)).map(vlNorm).filter((x) => x.length);
+    const same = (t) => { const w = vlNorm(t || ""); return parts.some((a, i) => a.every((x) => w.includes(x)) && parts.every((b, k) => k === i || b.filter((x) => w.includes(x)).length * 2 >= b.length)); };
+    const rows = await vlAndroid("search", (v.mine ? vlJunk(String(v.t || "").replace(/\s+[-–—|]\s+/g, " ")) : q.track + " " + q.artist) + " letra"); if (!Array.isArray(rows)) { pvl("borrow: search failed"); return null; }
+    const cands = rows.filter((r) => r.id !== id && (!L || !r.secs || Math.abs(r.secs - L) <= 15) && same(r.t)).slice(0, 4);
+    pvl("borrow: " + rows.length + " results, " + cands.length + " of the same song and length");
+    for (const c of cands) {
+      const r = await vlAndroid("fetch", c.id);
+      if (!r || r.kind !== "manual" || !r.es) continue;
+      const lines = vcParse(r.es).map((x) => ({ t: x.s, text: vcClean ? vcClean(x.text) : x.text })).filter((x) => x.text && /\p{L}/u.test(x.text));
+      if (lines.length < 6) continue;
+      pvl("borrow: using the captions of " + c.id + " «" + (c.t || "") + "»");
+      const extra = L && r.secs ? L - +r.secs : 0;
+      return { src: "yt:" + c.id, from: "yt", track: q.track, artist: q.artist, dur: +r.secs || 0, lines, off: 0, guessed: Math.abs(extra) > 2, at: Date.now() };
+    }
+    return null;
+  }
   const pvl = (x) => { try { window.__pvLog && window.__pvLog("lyrics " + x); } catch (e) {} };
   async function vlTry(id) {
     let x = vlGet(id);
-    if (!x) { x = await vlFetch(id); if (x) vlPut(id, x); }
+    if (!x) { x = await vlFetch(id); if (!x && VCAP.id === id) x = await vlBorrow(id); if (x) vlPut(id, x); }
     if (!x || VCAP.id !== id) { pvl(x ? "page changed" : "none found for " + JSON.stringify(vlQuery(id))); return false; }
     pvl("using LRCLIB #" + x.src + " " + x.artist + " – " + x.track + " (offset " + x.off + "s)");
     vlShow(id, x); return true;
@@ -179,21 +218,26 @@
     const L = x.lines, xml = "<transcript>" + L.map((l, i) => { const s = l.t + (x.off || 0), e = L[i + 1] ? L[i + 1].t + (x.off || 0) : s + 4; return '<text start="' + Math.max(0, s).toFixed(2) + '" dur="' + Math.max(0.6, e - s).toFixed(2) + '">' + esc(l.text) + "</text>"; }).join("") + "</transcript>";
     vcGot(id, { kind: "lyrics", es: xml, en: "", secs: VP.secs || 0 });
   }
+  // the note under the lyrics: where they come from, and one button that lines them up with the video
+  function vlNote() { const x = vlGet(VCAP.id) || {}, failed = VL.failed === VCAP.id, auto = vaOk() && !failed;
+    const src = x.from === "yt" ? "Lyrics from another YouTube upload of this song" : "Song lyrics" + (x.artist ? ": " + x.artist + " – " + x.track : "");
+    const btn = VL.sync ? '<span class="vlnow">Syncing…</span>' : auto ? '<button class="btn small primary" data-act="vl-auto">' + (x.synced ? "Sync again" : "Sync with the video") + "</button>" : '<button class="btn small primary" data-act="vl-tap">Tap when the singing starts</button>';
+    return esc(src + (x.synced ? " · synced ✓" : "")) + ' <span class="vlsync">' + btn + '<button class="lnk" data-act="vl-off">Wrong song?</button></span> '; }
   function vlNudge(d) { const id = VCAP.id, x = vlGet(id); if (!x) return; x.off = Math.round(((x.off || 0) + d) * 10) / 10; x.guessed = false; vlPut(id, x); const keep = VCAP.cur; vlShow(id, x); vlSaid("Lyrics " + (d > 0 ? "later" : "earlier") + " · offset " + x.off.toFixed(1) + " s"); }
   // tap when you hear the first sung line: that line starts now
-  function vlTapFirst() { const id = VCAP.id, x = vlGet(id); if (!x) return; const t = vpT(); x.off = Math.round((t - x.lines[0].t - 0.3) * 10) / 10; x.guessed = false; vlPut(id, x); vlShow(id, x); vlSaid("Synced: the first line starts at " + Math.max(0, t - 0.3).toFixed(1) + " s"); }
+  function vlTapFirst() { const id = VCAP.id, x = vlGet(id); if (!x) return; const t = vpT(); x.off = Math.round((t - x.lines[0].t - 0.3) * 10) / 10; x.guessed = false; x.synced = true; vlPut(id, x); vlShow(id, x); vlSaid("Synced: the first line starts at " + Math.max(0, t - 0.3).toFixed(1) + " s"); }
   function vlSaid(m) { try { coachToast("🎵 " + m); } catch (e) {} }
   // automatic sync: listen to a little of the sound, match what is heard to the lyrics, set the offset from the agreeing matches
   const vlNorm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ ]/g, " ").split(/\s+/).filter((w) => w.length > 2);
-  function vlSyncStart() { const x = vlGet(VCAP.id); if (!x || !vaOk()) return; VL.sync = { id: VCAP.id, hits: [], t0: Date.now() }; VA.sync = true; vaStart(); vlSaid("Listening for the singing to line up the lyrics…"); setTimeout(() => { if (VL.sync && Date.now() - VL.sync.t0 >= 75000) vlSyncEnd(false); }, 76000); }
+  function vlSyncStart() { const x = vlGet(VCAP.id); if (!x || !vaOk()) return; VL.sync = { id: VCAP.id, hits: [], t0: Date.now() }; VL.failed = null; VA.sync = true; vaStart(); vlShow(VCAP.id, x);  setTimeout(() => { if (VL.sync && Date.now() - VL.sync.t0 >= 75000) vlSyncEnd(false); }, 76000); }
   function vlSyncHit(text, s) {
     const S2 = VL.sync; if (!S2) return; const x = vlGet(S2.id); if (!x) return; const hw = vlNorm(text); if (hw.length < 2) return;
     let best = -1, bs = 0; x.lines.forEach((l, i) => { const lw = vlNorm(l.text); if (!lw.length) return; const set = new Set(lw); const k = hw.filter((w) => set.has(w)).length / Math.max(3, Math.min(hw.length, lw.length)); if (k > bs) { bs = k; best = i; } });
     if (best < 0 || bs < 0.5) return; S2.hits.push(s - x.lines[best].t); pvl("sync hit «" + text + "» ≈ line " + (best + 1) + " → " + (s - x.lines[best].t).toFixed(1) + "s");
     const H = S2.hits.slice().sort((a, b) => a - b), med = H[Math.floor(H.length / 2)], agree = H.filter((h) => Math.abs(h - med) < 1.5).length;
-    if (agree >= 2) { x.off = Math.round(med * 10) / 10; x.guessed = false; vlPut(S2.id, x); vlSyncEnd(true); }
+    if (agree >= 2) { x.off = Math.round(med * 10) / 10; x.guessed = false; x.synced = true; vlPut(S2.id, x); vlSyncEnd(true); }
   }
-  function vlSyncEnd(ok) { const S2 = VL.sync; VL.sync = null; VA.sync = false; VA.id = null; VA.on = false; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} try { vaBanner(""); } catch (e) {} const x = S2 && vlGet(S2.id); if (ok && x && VCAP.id === S2.id) { vlShow(S2.id, x); vlSaid("Lyrics lined up with the video (offset " + x.off.toFixed(1) + " s)."); } else if (!ok) vlSaid("Couldn't line the lyrics up from the sound. Use “Tap at the first line”."); }
+  function vlSyncEnd(ok) { const S2 = VL.sync; VL.sync = null; VA.sync = false; VA.id = null; VA.on = false; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} try { vaBanner(""); } catch (e) {} const x = S2 && vlGet(S2.id); if (ok && x && VCAP.id === S2.id) { vlShow(S2.id, x); vlSaid("Lyrics lined up with the video (offset " + x.off.toFixed(1) + " s)."); } else if (!ok) { VL.failed = S2 && S2.id; if (S2 && VCAP.id === S2.id && x) vlShow(S2.id, x); vlSaid("Couldn't hear enough of the singing to sync. Tap the button when the singing starts."); } }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act^=vl-]"), a = t && t.dataset.act; if (!a) return;
     if (a === "vl-early") vlNudge(-0.5); else if (a === "vl-late") vlNudge(0.5); else if (a === "vl-tap") vlTapFirst(); else if (a === "vl-auto") vlSyncStart(); else if (a === "vl-off") { const id = VCAP.id; try { localStorage.setItem("lrc-off:" + id, "1"); } catch (x) {} VL.tried[id] = 1; vcLoad(id); } });
   const vlOff = (id) => { try { return localStorage.getItem("lrc-off:" + id) === "1"; } catch (e) { return false; } };

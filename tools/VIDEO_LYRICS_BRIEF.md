@@ -25,14 +25,30 @@ A video counts as a song when its category is Music, or when its title or channe
 - English comes from the existing translation.
 - Source note: "The song's lyrics (LRCLIB: artist – title), timed to the recording."
 
+## Videos you add
+YouTube titles look like "Artist - Song (Official Video)" and channels like "ArtistVEVO". The app:
+- removes the extras: Official Video, Letra, Lyrics, Visualizer, ft. …
+- cleans channel names: VEVO, "- Topic", Official, Music
+- tries both orders of the title's parts, putting first the part that matches the channel
+- for videos you added, only accepts a recording within 30 s of the video's length
+
+## Borrowed captions (Android app)
+When LRCLIB has no lyrics for the song:
+1. YouTube's public search (no key) is run for "song artist letra".
+2. Only uploads of the same song (all words of one title part, at least half of the other's) and within 15 s of the video's length are considered.
+3. The first one with captions typed by a person is used, with the same one-button sync.
+
+The search parsing was checked on real YouTube results on 14 Nov 2026.
+
 ## Sync
-- **−½ s / +½ s:** the offset is saved per video.
-- **Tap at the first line:** that line starts now.
-- **Auto-sync from the sound** (Android app):
+Since 14 Nov 2026, **one button: "Sync with the video"**. The nudge and tap buttons were removed as too technical.
+- **Sync with the video** (Android app):
   - Records the video's sound for up to 75 s and fuzzy-matches each recognised phrase to a lyric line (at least 50% of the words in common).
   - Once two matches agree within 1.5 s, the offset is set to their median and recording stops.
   - Nothing heard is saved as captions.
-- **Use YouTube/audio captions instead:** remembered per video.
+- If the sync hears nothing, the button becomes **"Tap when the singing starts"**.
+- After a sync, the note says "synced ✓" and the button reads "Sync again".
+- **Wrong song?** switches to the YouTube or audio captions; this is remembered per video.
 
 ## Tests
 `tools/profe-tests/vlyrics-test.js` (20 checks, LRCLIB mocked):
