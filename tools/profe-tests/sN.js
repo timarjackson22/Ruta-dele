@@ -74,6 +74,12 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   // reminders list respects quiet hours and per-day cap
   const rl = await p.evaluate(() => { const P = window.__plan, A = P.state().active; A.profile.remind.on = true; A.profile.remind.quietFrom = "21:30"; A.profile.remind.quietTo = "07:30"; A.profile.remind.maxPerDay = 2; const L = P.reminders(A); const perDay = {}; L.forEach((r) => { const k = new Date(r.at).toDateString(); perDay[k] = (perDay[k] || 0) + 1; }); return { n: L.length, max: Math.max(0, ...Object.values(perDay)), quiet: L.filter((r) => { const h = new Date(r.at).getHours() * 60 + new Date(r.at).getMinutes(); return h >= 1290 || h < 450; }).length }; });
   rec("Reminder list: some reminders, at most 2 a day, none in quiet hours", rl.n > 0 && rl.max <= 2 && rl.quiet === 0, JSON.stringify(rl));
+  // Progress › Exam preparation: completion, adherence and readiness shown separately; no readiness claim without evidence
+  await p.evaluate(() => { location.hash = "#progreso"; }); await H.wait(400); await p.click('[data-act="pg-tab"][data-v="exam"]'); await H.wait(300);
+  const xp = await p.evaluate(() => document.getElementById("app").innerText);
+  rec("Exam preparation tab: target/date/booking, time & adherence, coverage, skills, readiness (not enough evidence), mocks, mistakes, revision", /DELE B1/.test(xp) && /Provisional/.test(xp) && /Adherence/.test(xp) && /Remaining workload/.test(xp) && /Content coverage/.test(xp) && /Not enough evidence/.test(xp) && /Mock exams/.test(xp) && /Recurring mistakes/.test(xp) && /Revision due/.test(xp) && /not a measure of how ready/.test(xp), xp.slice(0, 600));
+  const xp2 = await p.evaluate(() => { const S = window.__plan.S(), k = "b1-1"; S.ex = S.ex || {}; S.ex[k] = { lectura: { sc: 18, d: 1 }, auditiva: { sc: 17, d: 1 }, escritura: { sc: 16, d: 1 }, oral: { sc: 19, d: 1 } }; window.__plan.pg.tab = "exam"; window.__plan.progress(); return document.getElementById("app").innerText; }).catch((e) => "ERR " + e.message);
+  rec("With one paper per skill: a readiness range with uncertainty and no guarantee", /Readiness estimate/.test(xp2) && /–/.test(xp2) && /not a prediction/.test(xp2) && /estimate/.test(xp2), xp2.slice(0, 900));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); process.exit(R.every(Boolean) ? 0 : 1);

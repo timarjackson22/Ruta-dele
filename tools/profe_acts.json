@@ -417,6 +417,10 @@
   "voice": "complete",
   "why": "pronunciation check is itself voice-driven"
  },
+ "pg-tab": {
+  "voice": "pending",
+  "why": "switch Progress tabs by voice"
+ },
  "pl-about": {
   "voice": "unsuitable",
   "why": "explanation sheet"

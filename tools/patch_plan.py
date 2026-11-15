@@ -6,6 +6,13 @@ js = open("tools/plan.js", encoding="utf-8").read().rstrip() + "\n"
 if "/* ==PLAN==" in s:
     i = s.index("  /* ==PLAN=="); j = s.index("/* ==/PLAN== */", i) + len("/* ==/PLAN== */\n")
     s = s[:i] + js + s[j:]
+    if "PG.tab === \"exam\"" not in s:  # stage 2: Progress › Exam preparation tab
+        a = "  function progView() {\n    qCheck();\n"; assert s.count(a) == 1
+        s = s.replace(a, a + "    const pgTabs = '<div class=\"vchips pgtabs\" role=\"tablist\"><button class=\"vchip\" role=\"tab\" data-act=\"pg-tab\" data-v=\"overview\" aria-selected=\"' + (PG.tab !== \"exam\") + '\" aria-pressed=\"' + (PG.tab !== \"exam\") + '\">Overview</button><button class=\"vchip\" role=\"tab\" data-act=\"pg-tab\" data-v=\"exam\" aria-selected=\"' + (PG.tab === \"exam\") + '\" aria-pressed=\"' + (PG.tab === \"exam\") + '\">Exam preparation</button></div>';\n    if (PG.tab === \"exam\") { app.innerHTML = '<div class=\"stack prog\"><div><p class=\"eyebrow\">Your progress</p><h1>Progreso</h1></div>' + pgTabs + exPrepHTML() + '</div>'; return; }\n")
+        a = """\n    app.innerHTML = '<div class="stack prog"><div><p class="eyebrow">Your progress</p><h1>Progreso</h1></div>' +"""; assert s.count(a) == 1
+        s = s.replace(a, a + " pgTabs +")
+        a = "/* ===== study plan (M4) ===== */"; s = s.replace(a, a + "\n.pgtabs { margin: 4px 0 8px } .xpgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px } .xpgrid > div { display: flex; flex-direction: column } .xpgrid small { color: var(--muted) } .xpgrid b { font-size: 1.2rem }\n.xprow { display: flex; justify-content: space-between; margin: 8px 0 3px } .xpskills { list-style: none; padding: 0; margin: 0 } .xpskills li { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 0; border-bottom: 1px solid var(--line) } .xpskills small { color: var(--muted) } .xpskills .btn { justify-self: start } .xplist { margin: 4px 0 8px; padding-left: 18px }", 1)
+        print("progress tabs wired")
     open(P, "w", encoding="utf-8").write(s); print("plan block updated"); sys.exit()
 def rep(a, b, n=1):
     global s

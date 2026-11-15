@@ -390,7 +390,7 @@
   }
   document.addEventListener("change", (e) => { const t = e.target; if (!t.dataset || !t.dataset.pf || location.hash !== "#plan") return; const D = plDraft(); plSetPath(D, t.dataset.pf, t.type === "checkbox" ? t.checked : t.value); plSaveDraft(D); if (/^(exam\.booked|target|current)$/.test(t.dataset.pf) || /^avail\./.test(t.dataset.pf)) planPage(); else { const b = document.querySelector('[data-act="pl-review"]'), v = plValidate(D); if (b) b.disabled = !!(v.missing.length || v.err.length); } });
   document.addEventListener("click", (e) => {
-    const t = e.target.closest && e.target.closest("[data-act]"); if (!t) return; const a = t.dataset.act; if (!/^pl-/.test(a)) return;
+    const t = e.target.closest && e.target.closest("[data-act]"); if (!t) return; const a = t.dataset.act; if (!/^(pl|pg)-/.test(a)) return;
     const D = plDraft(), A = plActive();
     if (a === "pl-view") { PLUI.view = t.dataset.v; PLUI.day = null; if (location.hash !== "#plan") location.hash = "#plan"; else planPage(); }
     else if (a === "pl-day") { PLUI.day = t.dataset.v || null; PLUI.view = "agenda"; planPage(); }
@@ -410,6 +410,7 @@
     else if (a === "pl-part") { const s = A && A.sessions.find((x) => x.id === t.dataset.id); const m = prompt("How many minutes did you do? (of " + (s ? s.min : "?") + ")", s ? Math.round(s.min / 2) : 15); if (m != null) { plMark(t.dataset.id, "partial", m); planPage(); } }
     else if (a === "pl-move") { const s = A && A.sessions.find((x) => x.id === t.dataset.id); if (!s) return; const day = prompt("Move to which day? (YYYY-MM-DD)", s.date); if (!day) return; const tm = prompt("At what time? (HH:MM, inside your free time)", s.start); if (!tm) return; const err = plMove(s.id, day, tm); if (err) alert(err); planPage(); }
     else if (a === "pl-about") plAbout();
+    else if (a === "pg-tab") { PG.tab = t.dataset.v; progView(); }
     else if (a === "pl-profe") { try { tOpen(); } catch (x) {} setTimeout(() => planChatStart(), 150); }
   });
   // ---- Profe's guided setup: one question at a time, answers with several details, corrections, pause/resume ----
@@ -601,5 +602,46 @@
     pcSay(msg, origin);
     PLUI.view = "agenda"; setTimeout(() => { try { if (origin !== "hf") { const tc = document.querySelector('#tutor [data-act="t-close"]'); if (tc && window.innerWidth < 820) tc.click(); } location.hash = "#plan"; if (location.hash === "#plan") planPage(); } catch (e) {} }, 1200);
   }
-  window.__plan = { chatOn: planChatOn, chatStart: planChatStart, chatTurn: planChatTurn, page: planPage, ui: PLUI, blank: plBlank, state: plState, validate: plValidate, generate: plGenerate, commit: plCommit, status: plStatus, mark: plMark, move: plMove, start: plStart, reminders: plReminderList, diff: plDiff, epoch: plEpoch, inventory: plInventory };
+  // ---- Progress › Exam preparation (brief §16): completion, adherence and readiness kept separate ----
+  const PG = { tab: "overview" };
+  function exPrepHTML() {
+    plState(); const A = plActive(), st = plStatus(), p = A ? A.profile : plDraft(), lv = p.target || (/^(a1|a2|b1|b2|c1|c2)$/.test(curLevel()) ? curLevel() : "a1");
+    const SKN = { lectura: "Reading", auditiva: "Listening", escritura: "Writing", oral: "Speaking" }, SKI = { lectura: "📖", auditiva: "🎧", escritura: "✍️", oral: "🗣️" };
+    let h = "";
+    // target, date, booking
+    h += '<section class="block"><h2>Target</h2>' + (A || p.target ? '<p><b>DELE ' + lv.toUpperCase() + "</b>" + (p.exam.date ? " · " + plDate(p.exam.date).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) + " · " + Math.max(0, Math.ceil((plDate(p.exam.date) - plDate(plToday())) / 864e5)) + " days" : " · no date yet") + ' <span class="plchip ' + (p.exam.booked ? "ok" : "muted") + '">' + (p.exam.booked ? "Booked" : p.exam.date ? "Provisional" : "Not set") + "</span></p>" : "<p>No target yet.</p>") +
+      (A ? "" : '<p><a class="btn small primary" href="#plan">Create a study plan</a> to track planned time and adherence.</p>') + "</section>";
+    // planned vs completed time and adherence (doing what was scheduled) — not the same as readiness
+    if (A) { const due = A.sessions.filter((s) => s.kind !== "buffer" && (s.date < plToday() || (s.date === plToday() && plMin(s.start) + s.min <= new Date().getHours() * 60 + new Date().getMinutes())));
+      const doneN = due.filter((s) => s.status === "done").length, partN = due.filter((s) => s.status === "partial").length, adh = due.length ? Math.round(100 * (doneN + partN * 0.5) / due.length) : null;
+      const left = A.sessions.filter((s) => s.date >= plToday() && s.status !== "done"), leftMin = left.reduce((n, s) => n + s.min, 0), totMin = A.sessions.reduce((n, s) => n + s.min, 0), doneMin = A.sessions.reduce((n, s) => n + (s.status === "done" ? s.min : s.doneMin || 0), 0);
+      h += '<section class="block"><h2>Time and adherence</h2><div class="xpgrid"><div><small>Planned so far</small><b>' + Math.round(st.overall.plan / 6) / 10 + ' h</b></div><div><small>Done</small><b>' + Math.round(st.overall.done / 6) / 10 + " h</b></div><div><small>Adherence</small><b>" + (adh == null ? "—" : adh + "%") + '</b><small>' + (adh == null ? "nothing due yet" : doneN + " done, " + partN + " partly, of " + due.length + " due") + "</small></div><div><small>Remaining workload</small><b>" + Math.round(leftMin / 6) / 10 + " h</b><small>" + left.length + " sessions</small></div></div>" +
+        '<span class="qbar" aria-label="Plan progress"><i style="width:' + Math.round(100 * doneMin / Math.max(1, totMin)) + '%"></i></span><p class="small muted">Adherence is how much of the scheduled work you did. It is not a measure of how ready you are.</p>' +
+        (A.feas && A.feas.short > 0 ? '<p class="plwarn">The plan is about ' + Math.round(A.feas.short / 60) + ' h short of everything left. <a href="#plan">Adjust the plan</a></p>' : "") + "</section>"; }
+    // coverage: what's done in the app toward the target
+    const inv = plInventory(Object.assign({}, p, { target: lv })), unitsTot = PL_LV.slice(1, PL_LV.indexOf(lv) + 1).reduce((n, l) => n + (LV[l] ? LV[l].units.length : 0), 0), unitsLeft = inv.units.length, gTot = GUIDES.filter((g) => PL_LV.indexOf(g.lvl) <= PL_LV.indexOf(lv)).length, gLeft = inv.guides.length;
+    const N = EXREADY[lv] || 0, papersDone = [...Array(N)].reduce((n, _, i) => n + exTotals(lv, i + 1).done, 0);
+    const cov = [["Lessons up to " + lv.toUpperCase(), unitsTot - unitsLeft, unitsTot, "#curso"], ["Grammar guides practised", gTot - gLeft, gTot, "#guias"], ["DELE " + lv.toUpperCase() + " papers done", papersDone, N * 4, "#" + lv + "-examenes"]];
+    h += '<section class="block"><h2>Content coverage</h2>' + cov.map(([n, a, b, href]) => '<p class="xprow"><a href="' + href + '">' + n + '</a><span>' + a + " / " + b + '</span></p><span class="qbar"><i style="width:' + Math.round(100 * a / Math.max(1, b)) + '%"></i></span>').join("") + '<p class="small muted">Activity completion: what you have worked through, not how well.</p></section>';
+    // skills from timed papers at the target level
+    const sk = EXORDER.map((k) => { const v = []; for (let n = 1; n <= N; n++) { const R = exRes(lv, n)[k]; if (R && R.sc != null) v.push([R.d || 0, R.sc, n]); } v.sort((a, b) => a[0] - b[0]); const last = v.slice(-3); return { k, n: v.length, avg: last.length ? last.reduce((t, x) => t + x[1], 0) / last.length : null, est: k === "escritura" || k === "oral" }; });
+    h += '<section class="block"><h2>Skills (DELE ' + lv.toUpperCase() + ' papers, out of 25)</h2><ul class="xpskills">' + sk.map((s) => { const weak = s.avg != null && s.avg < 15, n1 = (() => { for (let n = 1; n <= N; n++) if (!exRes(lv, n)[s.k]) return n; return 0; })();
+      return "<li><span>" + SKI[s.k] + " " + SKN[s.k] + "</span><b>" + (s.avg == null ? "—" : Math.round(s.avg * 10) / 10) + '</b><small>' + (s.n ? "from " + s.n + " paper" + (s.n > 1 ? "s" : "") + (s.est ? " · scored by an estimate, not an examiner" : "") : "no timed paper yet") + "</small>" + (weak || !s.n ? (n1 ? '<a class="btn small" href="#' + lv + "-examen-" + n1 + "-" + s.k + '">' + (s.n ? "Practise" : "Try one") + "</a>" : "") : "") + "</li>"; }).join("") + "</ul></section>";
+    // readiness estimate with uncertainty, never a guarantee
+    const have = sk.every((s) => s.avg != null), nMin = Math.min(...sk.map((s) => s.n));
+    if (have) { const g1 = sk[0].avg + sk[2].avg, g2 = sk[1].avg + sk[3].avg, u = nMin < 2 ? 6 : nMin < 4 ? 4 : 3, lo1 = g1 - u, lo2 = g2 - u, hi1 = g1 + u, hi2 = g2 + u;
+      const verdict = lo1 >= 30 && lo2 >= 30 ? ["Likely above the pass line", "ok"] : hi1 < 30 || hi2 < 30 ? ["Below the pass line for now", "warn"] : ["Around the pass line", "warn"];
+      h += '<section class="block"><h2>Readiness estimate</h2><p><span class="plchip ' + verdict[1] + '">' + verdict[0] + '</span></p><p class="small">Group 1 (reading + writing): about ' + Math.round(lo1) + "–" + Math.round(hi1) + " of 50 · Group 2 (listening + speaking): about " + Math.round(lo2) + "–" + Math.round(hi2) + ' of 50. DELE needs at least 30 in each group.</p><p class="small muted">Based on your last ' + nMin + "+ paper(s) per skill; writing and speaking are estimates. Wide ranges mean little evidence. This is a guide, not a prediction of your result.</p></section>"; }
+    else h += '<section class="block"><h2>Readiness estimate</h2><p class="muted">Not enough evidence yet: do at least one timed paper of each skill at ' + lv.toUpperCase() + ".</p></section>";
+    // mocks
+    const mocks = [...Array(N)].map((_, i) => [i + 1, exTotals(lv, i + 1)]).filter(([, T]) => T.done);
+    h += '<section class="block"><h2>Mock exams</h2>' + (mocks.length ? '<ul class="xplist">' + mocks.map(([n, T]) => '<li><a href="#' + lv + "-examen-" + n + '">Exam ' + n + "</a> · " + (T.all ? Math.round(T.tot) + "/100 · " + (T.pass ? "pass line reached" : "below the pass line") : T.done + "/4 papers") + "</li>").join("") + "</ul>" : '<p class="muted">No mock yet.</p>') + "</section>";
+    // recurring mistakes and revision due
+    const M = (S.mist || []).slice().sort((a, b) => (b.n || 0) - (a.n || 0)), rec = M.filter((m) => (m.n || 0) >= 2).slice(0, 5), byKey = {}; M.forEach((m) => (byKey[m.key] = (byKey[m.key] || 0) + 1));
+    const top = Object.entries(byKey).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    h += '<section class="block"><h2>Recurring mistakes</h2>' + (top.length ? '<ul class="xplist">' + top.map(([k, n]) => '<li><a href="#' + esc(k) + '">' + esc(typeof srcLabel === "function" ? srcLabel(k) : k) + "</a> · " + n + " to fix</li>").join("") + "</ul>" + (rec.length ? '<p class="small">' + rec.length + " question" + (rec.length > 1 ? "s" : "") + " missed more than once.</p>" : "") + '<a class="btn small" href="#errores">Fix my mistakes</a>' : '<p class="muted">None recorded.</p>') +
+      '<h2>Revision due</h2><p>' + dueCount() + ' flashcards due · <a href="#repaso">Review</a></p></section>';
+    return h;
+  }
+  window.__plan = { exPrep: exPrepHTML, pg: PG, S: () => S, progress: () => progView(), chatOn: planChatOn, chatStart: planChatStart, chatTurn: planChatTurn, page: planPage, ui: PLUI, blank: plBlank, state: plState, validate: plValidate, generate: plGenerate, commit: plCommit, status: plStatus, mark: plMark, move: plMove, start: plStart, reminders: plReminderList, diff: plDiff, epoch: plEpoch, inventory: plInventory };
   /* ==/PLAN== */
