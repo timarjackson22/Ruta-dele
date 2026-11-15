@@ -10,6 +10,7 @@ const CORPUS = [
   ["review my mistakes", "home", "review.mistakes"], ["quiz me on the ones i missed", "home", "review.mistakes"], ["repasa mis errores", "home", "review.mistakes"],
   ["play the food vocabulary", "home", "vocab.drill"], ["practise my family words", "home", "vocab.drill"], ["léeme las palabras de viajes", "home", "vocab.drill"], ["repasa el vocabulario de la comida", "home", "vocab.drill"],
   ["play the video", "home", "video.play"], ["watch the video", "video", "video.play"], ["pon el video", "video", "video.play"],
+  ["play a video", "home", "media.pick"], ["play a song", "home", "media.pick"], ["play some music", "home", "media.pick"], ["surprise me with a song", "home", "media.pick"], ["pon una canción", "home", "media.pick"], ["quiero ver un video", "home", "media.pick"], ["play something", "home", "media.pick"],
   ["go back 10 seconds", "video", "video.seek"], ["rewind", "video", "video.seek"], ["skip forward 30 seconds", "video", "video.seek"], ["adelanta treinta segundos", "video", "video.seek"],
   ["replay that sentence", "video", "video.replay"], ["say that again", "video", "video.replay"], ["repite la frase", "video", "video.replay"],
   ["stop the lesson", "home", "lesson.stop"], ["stop the video", "home", "lesson.stop"], ["deja el ejercicio", "home", "lesson.stop"],
@@ -99,6 +100,27 @@ const HELD4 = [["rewind 15 seconds", "video", "video.seek"], ["jump ahead twenty
   ["let's do my travel words", "home", "vocab.drill"], ["can we go over my mistakes", "home", "review.mistakes"], ["take me back to the video", "home", "ctx.return"], ["I'm done for today", "home", "session.end"],
   ["one more time", "vdrill", "drill.repeat"], ["skip this one", "vdrill", "drill.next"], ["slow down please", "vdrill", "drill.slower"], ["otra vez más despacio", "vdrill", "drill.repeat"], ["quit the quiz", "home", "lesson.stop"],
   ["repite la frase", "video", "video.replay"], ["play it from the start", "video", "video.play"], ["that's enough for now", "home", "session.end"], ["let's practise ordering a coffee", "home", "practise.convo"], ["what did I get wrong", "home", "review.mistakes"]];
+// HELD-OUT 5: the S24 logs of 15 Nov 2026 03:00–03:05 («Select a video», «Play a song», «What is on this b****») and permutations of
+// "play/select something" and "what's on the screen", written before media.pick existed (first measured 6/33)
+const HELD5 = [
+  ["Select a video", "home", "media.pick"], ["Play a video", "home", "media.pick"], ["Play a song", "home", "media.pick"], ["put on a song", "home", "media.pick"],
+  ["play some music", "home", "media.pick"], ["I want to watch a video", "home", "media.pick"], ["can you play a song for me", "home", "media.pick"], ["choose a video for me", "home", "media.pick"],
+  ["play a random video", "home", "media.pick"], ["pon una canción", "home", "media.pick"], ["pon un video", "home", "media.pick"], ["quiero ver un video", "home", "media.pick"],
+  ["show me the songs", "home", "media.pick"], ["play a podcast", "home", "media.pick"], ["play me a story", "home", "media.pick"], ["play an A2 video", "home", "media.pick"],
+  ["play the first song", "home", "media.pick"], ["find me a music video", "home", "media.pick"], ["ponme música", "home", "media.pick"], ["surprise me with a song", "home", "media.pick"],
+  ["what is on this screen", "home", "profe.explain"], ["what am I looking at", "home", "profe.explain"], ["what's on this page", "home", "profe.explain"], ["qué hay en esta pantalla", "home", "profe.explain"], ["tell me what's on the screen", "home", "profe.explain"],
+  ["play a video", "video", "media.pick"] /* labelled video.play when written; media.pick plays the video on screen (sM checks it) */, ["play the song", "paused", "play.resume"],
+  ["I like to play the guitar", "home", null], ["my favourite song is about love", "home", null], ["vi un video ayer", "tutor", null], ["the video was funny", "home", null], ["canté una canción", "tutor", null], ["what is on the table", "tutor", null],
+];
+// HELD-OUT 6: written after media.pick and never tuned on when first measured (20/25; the 5 misses fell through to the clarifying question, none to a wrong action)
+const HELD6 = [
+  ["could you put on a video", "home", "media.pick"], ["play me some songs", "home", "media.pick"], ["I'd like to listen to a song", "home", "media.pick"], ["find a B1 video", "home", "media.pick"],
+  ["show me a video about food", "home", "media.pick"], ["let's watch something", "home", "media.pick"], ["play a poem", "home", "media.pick"], ["read me a story", "home", "media.pick"],
+  ["give me a podcast to listen to", "home", "media.pick"], ["play another song", "home", "media.pick"], ["pick a song for me", "home", "media.pick"], ["play the news", "home", "media.pick"],
+  ["quiero escuchar una canción", "home", "media.pick"], ["ponme un vídeo de A2", "home", "media.pick"], ["escoge una canción", "home", "media.pick"], ["vamos a ver un video", "home", "media.pick"],
+  ["what's on my screen", "home", "profe.explain"], ["what is this page", "home", "profe.explain"], ["describe the screen", "home", "profe.explain"], ["qué estoy viendo", "home", "profe.explain"],
+  ["I watched a video about Panama", "tutor", null], ["me gusta esa canción", "tutor", null], ["can you sing", "home", null], ["what's on TV tonight", "tutor", null], ["play is a verb", "home", null],
+];
 // HELD-OUT 2: a second fresh set, written after the first held-out fixes (measures whether the fixes generalise).
 const HELD2 = [
   ["let me see my progress", "home", "nav.progress"], ["can you open the reading section", "home", "nav.read"], ["I want to go to the guides", "home", "nav.guides"], ["llévame al curso", "home", "nav.course"], ["vamos a la sección de vídeos", "home", "nav.videos"],
@@ -130,7 +152,7 @@ const HELD2 = [
   const h2ok = h2.filter((r) => r[2] === r[3]).length, h2bad = h2.filter((r) => r[2] === null && r[3]), h2wrong = h2.filter((r) => r[2] && r[3] && r[2] !== r[3]);
   h2.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("HELD-OUT-2 MISS [" + c + "] «" + t + "» expected " + e + " got " + g));
   console.log("INFO Held-out 2 (first measured 33/40 = 83% before its general fixes): " + h2ok + "/" + h2.length + " (" + ((h2ok / h2.length) * 100).toFixed(0) + "%) · conversation taken as a command: " + h2bad.length + " · wrong action: " + h2wrong.length);
-  for (const [name, set] of [["Real phone transcripts (0/11 before their fixes)", REAL], ["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
+  for (const [name, set] of [["Real phone transcripts (0/11 before their fixes)", REAL], ["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4], ["Held-out 5 (first measured 6/33 = 18% before media.pick and its patterns)", HELD5], ["Held-out 6 (first measured 20/25 = 80%, untuned)", HELD6]]) {
     const hr = await p.evaluate(([corpus, C]) => corpus.map(([t, c, e]) => { const base = { unit: false, runner: false, "runner-mc": false, "runner-text": false, "runner-fb": false, "runner-open": false, guide: false, playing: false, paused: false, player: false, tutor: false, drill: false, video: false, vdrill: false }; return [t, c, e, window.__pv.match(t, Object.assign(base, C[c]))]; }), [set, C]);
     hr.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("MISS (" + name.split(" (")[0] + ") [" + c + "] «" + t + "» expected " + e + " got " + g));
     console.log("INFO " + name + ": " + hr.filter((r) => r[2] === r[3]).length + "/" + hr.length); }

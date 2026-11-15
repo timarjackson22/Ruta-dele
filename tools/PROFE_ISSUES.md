@@ -20,6 +20,12 @@ honouring cancel). Suites: `sA` interruptions/timing (run at 3 TTS speeds), `sB`
 | 11 | Interruption context | Interrupt mid-sentence | Profe told what was heard | "(nothing yet)" when cut during the first sentence | only finished utterances were counted | estimate of the words already spoken in the current utterance added | sC C1 ✓ |
 | 12 | Corrections (rule layer) | 15 typical learner errors | caught, no false alarms | 7/15 caught; "¡Excelente frase!" praise given to wrong sentences | missing rules | rules for plural ser, adjective agreement, «ir a» + conjugated verb, past time + present, «quiero que» + indicative, «pensar de», «años viejo» | sD 14/15, 0/14 false ✓ |
 | 13 | Task detection | "Nosotros vamos a la playa ayer" | treated as an answer | started a new "task" (matched «vamos a») and skipped correction | over-broad pattern | Spanish task phrases need an activity verb («vamos a practicar…») | sD ✓ |
+| 14 | Hands-free commands (S24 log 15 Nov 03:00) | «Select a video», «Play a song», «play some music» | the right list opens and Profe asks which one | not understood (held-out 5: 6/33) | no action for "a video / a song / something" | `media.pick`: opens Videos or Listening (filtered by kind and level) and asks «Which one? A, B or C»; a position, part of a title, "any" or "more" answers it (`pvChoose`); "play something" asks which kind | sM ✓, held-out 5 33/33, held-out 6 25/25 (20/25 untuned) |
+| 15 | Clarifying questions | «of video» (first word lost to the beep), «select the lessons» | Profe asks what you meant | went to the chat or did nothing | unmatched app instructions had no fallback | `pvClarify`: an instruction with an app noun (or a short noun-only phrase after "Ok Profe") gets "Did you mean one…, two…, three…?" built from the registry's closest examples; the number or the option's words run it | sM ✓ |
+| 16 | Mic handoff | capture fails "aborted" before the mic opens, then is retried 400 ms later | nothing else takes the mic in between | the wake listener could restart in the gap (S24 03:04:28, 03:05:02) | `hfBusy` was false during the retry gap | `HF.hold` for 1.5 s in both retry paths (hands-free capture and the panel mic) | sM ✓ |
+| 17 | Command language (old APK, one language) | English commands after one Spanish capture | English stays English | Spanish recogniser turned English into garble that kept it in Spanish («verano Rosa on the speech») | the language followed any capture that looked Spanish | only an understood command sets it; English words in anything else switch back to English | sM ✓ |
+| 18 | Corrections | «Si tendría dinero, viajaría» | «si tuviera» | praised: "Nice use of the conditional" | no si + conditional rule | rule (skips «si» = whether: «me preguntó si podría») + false friend «embarazado» → «avergonzado» | sE 17/20 pass (E4-v3 «tendríamos» missing from the verb index) |
+| 19 | Task stop | "Let's stop here" during a practice task | Profe's closing summary | session.end ran (sC C4 failed before tonight) | the voice command took it first | with a task running in the chat, session.end / hf.stop go to Profe | sC 10/10 ✓ |
 
 ## Latency (measured in the harness; phone audio/recogniser/AI times are simulated and excluded)
 - Mic tap → playback stop request: 0–1 ms in the page. The real Android audio stop adds the Java main-thread hop and the engine flush (not measurable here).
@@ -31,3 +37,9 @@ honouring cancel). Suites: `sA` interruptions/timing (run at 3 TTS speeds), `sB`
 - Real audio: voice identity, actual playback timing and interruption latency on the device (no audio output or Android device in this environment).
 - The real on-device model's answers (correction quality beyond the app's rule layer) — the model was simulated.
 - Web-browser speech (Chrome's own speechSynthesis queue) and streamed speech while generating (used by the Claude/WebGPU engines).
+
+## Real-phone status (15 Nov 2026, 03:00–03:05 logs)
+The phone ran an older APK: no `multiLang` (commands captured in es-US only) and no native retry on error 11 (every first capture after "Ok Profe" failed and was retried by the page). Both are in the APK built from `ec4a70e`; install it, then recheck with Copy log.
+
+## Note for the build
+`tools/pvoice.js` is now the source for the voice layer: `python3 tools/sync_profe.py index.html <old pvoice snapshot>` puts it and the registry into index.html. If you rebuild from `/home/claude/app/pvoice.js`, copy `tools/pvoice.js` there first.

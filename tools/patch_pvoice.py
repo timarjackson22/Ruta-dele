@@ -28,7 +28,7 @@ rep('''    if (!CAN_MIC) return;
 rep('''    rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; }''',
 '''    rec.onerror = (e) => { listening = false; if (heard && /no-speech|aborted|network/.test(e.error)) { uiVoice(); return; }
       if (/aborted|busy|audio-capture/.test(e.error) && rec === me && !done) { done = true; clearTimeout(quiet);
-        if (!opts._retry) { try { pvLog("mic " + e.error + ": trying again"); } catch (x) {} setTimeout(() => { if (!listening) listen0(onFinal, Object.assign({}, opts, { _retry: 1 })); }, 400); return; }
+        if (!opts._retry) { try { pvLog("mic " + e.error + ": trying again"); HF.hold = Date.now() + 1500; } catch (x) {} setTimeout(() => { if (!listening) listen0(onFinal, Object.assign({}, opts, { _retry: 1 })); }, 400); return; }
         liveText = "The microphone is busy: another app or feature may be using it. Tap the mic to try again (Profe › History & settings › Mic diagnostics shows details)."; paintLive(); uiVoice(); return; }''')
 # hands-free: when the panel's follow-up listening ends in silence, go back to waiting for "Ok Profe"
 rep('''      if (t && !done) { done = true; listening = false; try { me.abort(); } catch (e) {} uiVoice(); liveText = ""; paintLive(); onFinal(t); }

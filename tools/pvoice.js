@@ -223,10 +223,13 @@
     if (PV.clar && now < PV.clar.until) { const q = PV.clar; PV.clar = null;
       if (/^(answer|my answer|its my answer|respuesta|es mi respuesta|mi respuesta|la respuesta)$/.test(s)) { pvAnswer(q.raw, origin); return true; }
       if (PV_YES.test(s) || q.a.re.some((re) => re.test(s)) || /^(command|go back|do it|comando)$/.test(s)) { pvExec(q.a, q.s, origin); return true; } }
+    if (PV.choice && now < PV.choice.until) { const r = pvChoose(raw, s, c, origin); if (r) return true; }
     if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
     const m = pvMatch(raw, c);
-    if (!m) return pvSeqTry(raw, origin);
+    if (!m) return pvSeqTry(raw, origin) || pvClarify(raw, s, c, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
+    // a practice task is running in the chat: "let's stop here" goes to Profe, which closes the task with a short summary (sC C4)
+    if (origin !== "hf" && /^(session\.end|hf\.stop)$/.test(m.a.id) && typeof tCur !== "undefined" && tCur && tCur.task && !tCur.task.done && !tCur.task.stop && document.body.classList.contains("tutor-open")) return false;
     if (origin !== "hf" && m.a.id === "hf.stop" && !engaged && !(typeof listening !== "undefined" && listening) && !hfSpeaking() && !DR.on) return false; // "gracias" in a chat is just thanks
     // command or answer? a bare Spanish word while a question waits for an answer is the answer, or we ask
     if (m.a.bare && pvAnswerCtx(c) && pvSpanishish(raw) && !/^q\.(check|show|skip)$/.test(m.a.id) && m.s.split(" ").length <= 2) {
@@ -292,7 +295,7 @@
   const hfStatus = () => { try { return String(window.AndroidWake.status()); } catch (e) { return ""; } };
   const hfMode = () => { if (!window.AndroidWake) return CAN_MIC ? "tap" : null; const st = hfStatus(); HF.online = st === "online" && !!TS.hfOnline; return st === "ok" || st === "no-mic" || HF.online ? "wake" : CAN_MIC ? "tap" : null; };
   function hfSpeaking() { try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; } }
-  function hfBusy() { return (typeof listening !== "undefined" && listening) || !!HF.rec || (typeof tBusy !== "undefined" && tBusy) || hfSpeaking() || HF.saying || !!(typeof EX !== "undefined" && EX && EX.recT != null) || !!(typeof VA !== "undefined" && VA && VA.on); }
+  function hfBusy() { return Date.now() < (HF.hold || 0) || (typeof listening !== "undefined" && listening) || !!HF.rec || (typeof tBusy !== "undefined" && tBusy) || hfSpeaking() || HF.saying || !!(typeof EX !== "undefined" && EX && EX.recT != null) || !!(typeof VA !== "undefined" && VA && VA.on); }
   function hfState() { if (!HF.on) return "off"; if (HF.paused) return "paused"; if ((typeof listening !== "undefined" && listening) || HF.rec) return "listening"; if (typeof tBusy !== "undefined" && tBusy) return "thinking"; if (hfSpeaking() || HF.saying) return "speaking"; return HF.mode === "wake" ? (HF.eng === "on" ? "wake" : "starting") : "tap"; }
   const HF_LABEL = { off: "", paused: "Paused", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", wake: "Say “Ok Profe”", starting: "Say “Ok Profe”", tap: "Tap to talk" };
   function hfPaint() {
@@ -334,6 +337,7 @@
   function hfWoke(cmd) {
     if (Date.now() - HF.lastWake < 2500 || HF.engaged) return; // one activation, one acknowledgement
     HF.lastWake = Date.now(); HF.wokeN = (HF.wokeN || 0) + 1; hfWakeStop(); HF.engaged = true; pvLog("woke «" + cmd + "»");
+    PV.choice = null; // a new "Ok Profe" is a new request: an earlier "which one?" no longer waits for an answer
     hfStopOthers();
     if (cmd && cmd.split(" ").length >= 1 && pvNorm(cmd)) { hfHandle(cmd); return; }
     // a short beep FIRST, then the mic (S24, v164: starting the beep after the mic opened silenced the recogniser, so every capture came back empty).
@@ -343,6 +347,9 @@
   }
   function hfHandle(text) {
     HF.engaged = true; pvLog("heard «" + text + "»");
+    // which language to listen for next: an understood command sets it; English words in anything else switch back to English
+    { let ok = false; try { ok = !!pvMatch(text, pvCtx()); } catch (e) {} const en = /\b(the|my|to|me|open|go|take|play|show|can|you|please|what|select|this|on|a)\b/i.test(text), es = !en && isSpanish(text + " ");
+      if (ok) HF.cmdEs = es; else if (en) HF.cmdEs = false; }
     if (HF.lesson && pvCtx().runner) { if (pvRoute(text, "hf")) return; if (pvAnswer(text, "hf")) return; }
     if (pvRoute(text, "hf")) return;
     if (/^(open|take me to|go to|show me|abre|llevame|ve a|ir a)\b/.test(pvNorm(text))) { pvReply("I heard “" + text.replace(/^\s*(ok(ay)?|oye)\s+prof(e)?\s*/i, "") + "”, but I couldn't find that screen. Try “open flashcards”, “open the verbs”, or “what can I do here”.", "hf", { listen: 1 }); return; }
@@ -367,13 +374,13 @@
     const r = new SR(); HF.rec = r; r.lang = o.lesson || HF.lesson || (typeof DR !== "undefined" && DR.on) ? sttLang() : hfCmdLang(); r.interimResults = true; r.continuous = !IS_IOS;
     try { if (window.AndroidSTT && window.AndroidSTT.setBias && !(o.lesson || HF.lesson)) window.AndroidSTT.setBias(JSON.stringify(PV_BIAS)); } catch (e) {}
     let live = "", fin = "", end = false, retried = !!o.retried; const t0 = Date.now();
-    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint(); if (t) { try { HF.cmdEs = isSpanish(t + " ") && !/\b(the|my|to|me|open|go|take|play|show)\b/i.test(t); } catch (e) {} } pvLog("capture [" + r.lang + "] → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
+    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint();  pvLog("capture [" + r.lang + "] → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
     r._fin = finish;
     r.onresult = (e) => { if (end) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; } fin = f.trim(); live = (f + im).trim();
       clearTimeout(r._s); clearTimeout(r._q); r._q = setTimeout(() => finish(live), hfWaitFor(live, fin && !im.trim(), o)); const l = document.getElementById("t-live"); if (l) { l.hidden = false; l.textContent = live; } };
     r.onaudiostart = () => { r._ready = 1; }; r.onspeechstart = () => { r._got = 1; };
     r.onerror = (e) => { r._err = e && e.error; pvLog("capture error " + r._err); if (/not-allowed|service-not-allowed/.test(r._err)) { hfNotice("no-mic"); hfEnable(false); } };
-    r.onend = () => { if (end) return; if (!live && /aborted|busy/.test(r._err || "") && !retried && Date.now() - t0 < 1500) { end = true; if (HF.rec === r) HF.rec = null; setTimeout(() => hfCapture(done, Object.assign({}, o, { retried: true })), 400); return; } finish(live || fin); };
+    r.onend = () => { if (end) return; if (!live && /aborted|busy/.test(r._err || "") && !retried && Date.now() - t0 < 1500) { end = true; HF.hold = Date.now() + 1500; if (HF.rec === r) HF.rec = null; setTimeout(() => hfCapture(done, Object.assign({}, o, { retried: true })), 400); return; } finish(live || fin); };
     r._s = setTimeout(() => finish(null), o.startMs || 7000);
     try { r.start(); } catch (e) { finish(null); }
     hfPaint();
@@ -569,7 +576,7 @@
     "drill.slower": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.rate = Math.max(0.55, DR.rate - 0.2); DR.gap = Math.min(6, DR.gap + 1); DR.i = DR.last == null ? DR.i : DR.last; drStep("Slower."); return { ok: true, own: 1 }; },
     "drill.faster": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.rate = Math.min(1.4, DR.rate + 0.2); DR.gap = Math.max(2, DR.gap - 1); DR.i = (DR.last == null ? DR.i : DR.last) + 1; drStep("Faster."); return { ok: true, own: 1 }; },
     "video.play": async (s) => {
-      if (!(typeof VP !== "undefined" && VP.p && pvQ("#vplayer, .vframe, #vp"))) return { ok: false, say: "There's no video on this screen. Say “open videos” to choose one." };
+      if (!(typeof VP !== "undefined" && VP.p && pvQ("#vplayer, .vframe, #vp"))) return PVH["media.pick"]("play a video", Object.assign(pvCtx(), { video: false })); // none on screen: open the list and ask which one
       if (/(start|beginning|top|principio|inicio)$/.test(s || "")) vpSeek(vpLo()); vpPlay(); const ok = await pvUntil(() => VP.p.getPlayerState && VP.p.getPlayerState() === 1, 2500);
       return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "The video didn't start. Tap play on the video once; after that I can control it." };
     },
@@ -643,3 +650,114 @@
   HF.cmdEs = false;
   function hfCmdLang() { const es = sttLang(), en = "en-US"; if (window.AndroidSTT && window.AndroidSTT.multiLang) return (HF.cmdEs ? es + "|" + en : en + "|" + es); /* an older app gets one language */ return HF.cmdEs ? es : en; }
   const PV_BIAS = ["Ok Profe", "flashcards", "word list", "vocabulary", "level A1", "level A2", "level B1", "level B2", "level C1", "level C2", "verbs", "grammar", "lesson", "next lesson", "unit", "video", "pause", "play", "go back", "go back ten seconds", "review", "my mistakes", "quiz me", "food", "travel", "family", "work", "stop", "next word", "repeat", "slower", "end the session", "abre", "siguiente", "repite", "más despacio"];
+  // ---- "play a video / a song": the right list opens, then Profe asks which one (S24 log, 15 Nov 2026: «Select a video», «Play a song») ----
+  // kinds: videos (the Videos page, with its Music filter) and the listening texts (songs, podcasts, stories, poems, news)
+  const PV_MKIND = [[/\bmusic videos?\b|videos? musicales?/, "video", "music"], [/\b(songs?|music|canciones|cancion|musica)\b/, "song"], [/\b(podcasts?)\b/, "podcast"], [/\b(stories|story|historias?|cuentos?)\b/, "story"], [/\b(poems?|poemas?)\b/, "poem"], [/\b(news|noticias)\b/, "news"], [/\b(videos?|clips?)\b/, "video"]];
+  const PV_MNAME = { video: ["video", "videos"], song: ["song", "songs"], podcast: ["podcast", "podcasts"], story: ["story", "stories"], poem: ["poem", "poems"], news: ["news story", "news stories"] };
+  const PV_ANY = /\b(random|any|anything|any one|whatever|surprise|you choose|you pick|your choice|dont mind|doesnt matter|al azar|cualquier|cualquiera|sorprendeme|lo que sea|elige tu|escoge tu)\b/;
+  const pvTitleOf = (a) => ((a.querySelector("b") || a).textContent || "").replace(/\s+/g, " ").trim();
+  async function pvMediaList(kind, sub, lv) {
+    if (kind === "video") {
+      const r = await pvGo("videos", "Videos"); if (!r.ok && !/already/.test(r.say)) return null;
+      await pvUntil(() => document.querySelector('main a.vcard[href^="#video-"]'), 2000);
+      const chip = (k, re) => [...document.querySelectorAll('[data-act="v-f"]')].find((b) => (!k || b.dataset.k === k) && re.test(b.textContent.trim()));
+      const c = chip("c", sub === "music" ? /^(music|música)$/i : /^all$/i); if (c && c.getAttribute("aria-pressed") !== "true") { c.click(); await pvWait(250); }
+      const l = lv ? [...document.querySelectorAll('[data-act="v-f"]')].find((b) => b.textContent.trim().toUpperCase() === lv.toUpperCase()) : chip(null, /^all levels$/i); if (l && l.getAttribute("aria-pressed") !== "true") { l.click(); await pvWait(250); }
+      return [...document.querySelectorAll('main a.vcard[href^="#video-"]')].filter((a) => a.offsetParent !== null).map((a) => ({ h: a.getAttribute("href").slice(1), t: pvTitleOf(a), kind }));
+    }
+    const r = await pvGo("escuchar", "Listening"); if (!r.ok && !/already/.test(r.say)) return null;
+    await pvUntil(() => document.querySelector("main a.lcard2"), 2000);
+    const cf = document.querySelector('[data-act="l-cf"][data-v="' + kind + '"]'); if (cf && cf.getAttribute("aria-pressed") !== "true") { cf.click(); await pvWait(250); }
+    const lf = [...document.querySelectorAll('[data-act="l-lf"]')].find((b) => lv ? b.textContent.trim().toUpperCase() === lv.toUpperCase() : /^all levels$/i.test(b.textContent.trim())); if (lf && lf.getAttribute("aria-pressed") !== "true") { lf.click(); await pvWait(250); }
+    const pre = { song: "#song-", poem: "#poem-", news: "#news-", podcast: "#podcast", story: "#" }[kind];
+    return [...document.querySelectorAll("main a.lcard2")].filter((a) => a.offsetParent !== null && (a.getAttribute("href") || "").startsWith(pre) && (kind !== "story" || /^#(story|historia)-/.test(a.getAttribute("href")))).map((a) => ({ h: a.getAttribute("href").slice(1), t: pvTitleOf(a), kind }));
+  }
+  // open one item and start it; success is checked on the player itself
+  async function pvMediaPlay(it) {
+    const r = await pvGo(it.h, "«" + it.t + "»"); if (!r.ok && !/already/.test(r.say)) return { ok: false, say: "I couldn't open «" + it.t + "»." };
+    try { coachToast("▶ " + it.t); } catch (e) {}
+    if (it.kind === "video") {
+      const ready = await pvUntil(() => typeof VP !== "undefined" && VP.p && VP.ready, 8000);
+      if (ready) { try { vpPlay(); } catch (e) {} if (await pvUntil(() => VP.p.getPlayerState && VP.p.getPlayerState() === 1, 3000)) return { ok: true, say: "", end: 1 }; }
+      return { ok: true, say: "Here's «" + it.t + "». Tap play on the video once; after that I can pause it, rewind it or play it again for you." };
+    }
+    const has = await pvUntil(() => document.getElementById("pl-play"), 3000);
+    if (has && !(typeof PL !== "undefined" && PL.playing)) pvClick("l-play");
+    if (has && await pvUntil(() => typeof PL !== "undefined" && PL.playing, 2500)) return { ok: true, say: "", end: 1 };
+    return { ok: !!has, say: has ? "Here's «" + it.t + "». Tap play to start it." : "I opened «" + it.t + "» but couldn't find its player." };
+  }
+  const pvOptsSay = (items) => items.length === 1 ? "«" + items[0].t + "»" : items.slice(0, -1).map((x) => "«" + x.t + "»").join(", ") + " or «" + items[items.length - 1].t + "»";
+  Object.assign(PVH, {
+    "media.pick": async (s, c) => {
+      let kind = null, sub = null; for (const [re, k, x] of PV_MKIND) if (re.test(s)) { kind = k; sub = x || null; break; }
+      const lv = pvLv(s), any = PV_ANY.test(s), ord = /\b(first|second|third|last|primer|primera|primero|segunda|segundo|tercera|tercero|ultima|ultimo)\b/.test(s) ? pvOrd(s) : null;
+      c = c || pvCtx();
+      // something on screen already: "play a video" on a video page plays it; "play the song" on a paused song resumes it
+      if ((!kind || kind === "video") && c.video && !lv && !any && ord == null && !sub) return PVH["video.play"](s, c);
+      if (kind && kind !== "video" && (c.paused || c.playing) && pvQ("#pl-play") && !lv && !any && ord == null && new RegExp("^#" + ({ song: "song", poem: "poem", news: "news", podcast: "podcast", story: "(story|historia)" }[kind]) + "-").test(location.hash)) return PVH["play.resume"](s, c);
+      if (!kind) { // "play something", "surprise me": which kind?
+        if (any || /^surprise|^sorprendeme/.test(s)) { const pool = ["song", "video", "story", "podcast"]; kind = pvPick(pool); }
+        else { PV.choice = { kinds: 1, until: Date.now() + 30000 }; return { ok: true, say: "Sure. A video, a song, a podcast or a story?" }; }
+      }
+      const items = await pvMediaList(kind, sub, lv); const nm = PV_MNAME[kind] || ["item", "items"], what = (sub === "music" ? "music " : "") + nm[1] + (lv ? " for " + lv.toUpperCase() : "");
+      if (!items) return { ok: false, say: "I couldn't open the " + what + "." };
+      if (!items.length) return { ok: false, say: "There are no " + what + " yet." + (lv ? " Try another level, or say “any " + nm[0] + "”." : "") };
+      if (any) return pvMediaPlay(pvPick(items));
+      if (ord != null) { const it = ord === 3 && /last|ultim/.test(s) ? items[items.length - 1] : items[Math.min(ord, items.length - 1)]; return pvMediaPlay(it); }
+      if (items.length === 1) return pvMediaPlay(items[0]);
+      const top = items.slice(0, 3); PV.choice = { items, top, kind, page: location.hash.slice(1), until: Date.now() + 30000 };
+      return { ok: true, say: "Here are the " + what + ". Which one? " + pvOptsSay(top) + ". Say “the first”, “the second”, a title, or “any”.", keep: 1 };
+    },
+  });
+  // the answer to a question Profe asked ("Which one?", "Did you mean…?"): a position, a title, "any", yes / no
+  function pvChoose(raw, s, c, origin) {
+    const q = PV.choice; if (!q) return false;
+    if (q.page && location.hash.slice(1) !== q.page) { PV.choice = null; return false; } // the learner left the list
+    const num = { one: 0, uno: 0, una: 0, "1": 0, two: 1, dos: 1, "2": 1, three: 2, tres: 2, "3": 2, four: 3, cuatro: 3, "4": 3 };
+    let t = s; for (let k = 0; k < 3; k++) t = t.replace(/^(the|la|el|number|numero|option|opcion|play|pon|i want|quiero|lets do|do|go with|i choose|elijo|i think|creo que)\s+/, "");
+    t = t.replace(/\s+(one|please|por favor)$/, "").trim(); const isN = (x) => Object.prototype.hasOwnProperty.call(num, x);
+    if (PV_NO.test(s) || /^(none|neither|nothing|ninguno|ninguna|nada|forget it|never mind|olvidalo)$/.test(s)) { PV.choice = null; pvReply("Okay.", origin); return true; }
+    if (q.kinds) { for (const [re, k] of PV_MKIND) if (re.test(s)) { PV.choice = null; pvExec(PVR.actions.find((a) => a.id === "media.pick"), "play a " + (k === "news" ? "news story" : k), origin); return true; } PV.choice = null; return false; }
+    let pick = null;
+    if (q.acts) { // "Did you mean…": 1, 2, 3, or the option's own words
+      const i = isN(t) ? num[t] : /^(first|primera|primero)$/.test(t) ? 0 : /^(second|segunda|segundo)$/.test(t) ? 1 : /^(third|tercera|tercero)$/.test(t) ? 2 : (PV_YES.test(s) && q.acts.length === 1 ? 0 : -1);
+      let j = i; if (j < 0) { let bs = 0; q.acts.forEach((o, k) => { const sc = pvSim(pvNorm(o.ex), s); if (sc > bs) { bs = sc; j = k; } }); if (bs < 0.7) j = -1; }
+      if (j >= 0 && q.acts[j]) { PV.choice = null; pvExec(q.acts[j].a, pvNorm(q.acts[j].ex), origin); return true; }
+      PV.choice = null; return false; // something else: handled as a new request
+    }
+    const L = q.top || q.items;
+    if (PV_ANY.test(s)) pick = pvPick(q.items);
+    else if (isN(t)) pick = L[num[t]];
+    else if (/^(first|primera|primero|first one|that one|esa|ese|yes|si|ok|okay|sure|vale|dale)$/.test(t) || PV_YES.test(s)) pick = L[0];
+    else if (/^(second|segunda|segundo)$/.test(t)) pick = L[1];
+    else if (/^(third|tercera|tercero)$/.test(t)) pick = L[2];
+    else if (/^(last|ultima|ultimo|the last one)$/.test(t)) pick = L[L.length - 1];
+    else { let bs = 0; q.items.forEach((it) => { const n = pvNorm(it.t), sc = Math.max(pvSim(n, t), n.includes(t) && t.length >= 4 ? 0.9 : 0); if (sc > bs) { bs = sc; pick = it; } }); if (bs < 0.55) pick = null; }
+    if (/^(more|other|others|other ones|something else|show me more|more options|otros|otras|mas|otra cosa)$/.test(t) && q.items.length > 3) { const off = (q.off || 0) + 3; const top = q.items.slice(off, off + 3); if (top.length) { PV.choice = Object.assign({}, q, { top, off, until: Date.now() + 30000 }); pvReply(pvOptsSay(top) + "? Say “the first”, “the second” or a title.", origin, { listen: 1 }); return true; } }
+    if (!pick) { if (pvMatch(raw, c)) { PV.choice = null; return false; } // a different command: do that instead
+      if (q.tries) { PV.choice = null; return false; } q.tries = 1; q.until = Date.now() + 30000; pvReply("Sorry, which one? " + pvOptsSay(L) + ". Or say “any”.", origin, { listen: 1 }); return true; }
+    PV.choice = null; pvExec({ id: "media.play", purpose: "play" }, pick, origin, false, pick); return true;
+  }
+  PVH["media.play"] = (it) => pvMediaPlay(it);
+  // not a known command but clearly meant for the app ("select a video", «of video» after the wake beep cut the first word):
+  // ask with the closest things Profe can do, instead of guessing or handing an app instruction to the chat
+  const PV_APPN = /\b(videos?|clips?|songs?|music|podcasts?|stor(y|ies)|poems?|news|lessons?|units?|levels?|flashcards|cards|words?|word list|vocabulary|vocab|verbs?|grammar|guides?|exams?|tests?|quiz|questions?|mistakes|progress|settings|reading|listening|writing|course|canciones|cancion|musica|leccion(es)?|unidad(es)?|nivel(es)?|palabras|vocabulario|verbos|gramatica|examen(es)?|preguntas|errores|lectura)\b/;
+  const PV_ACTV = /^(play|open|show|select|choose|pick|find|start|go|take|put|watch|listen|read|review|quiz|test|practi[cs]e|load|bring|get|give|search|look for|i want|i need|pon|ponme|abre|muestrame|ensename|busca|elige|escoge|empieza|lee|reproduce|llevame|quiero|dame|ve)\b/;
+  function pvClarify(raw, s, c, origin) {
+    if (!s || s.length > 80) return false;
+    const n = s.split(" ").length, noun = PV_APPN.test(s), verb = PV_ACTV.test(s);
+    if (!noun || !(verb || (origin === "hf" && n <= 3))) return false;
+    if (origin === "chat" && !verb) return false;
+    if (c.drill || c["runner-text"]) return false; // an answer to a question on screen, not an instruction
+    const sc = []; for (const a of PVR.actions) { if (a.voice !== "complete" || (a.when && !pvWhen(a.when, c)) || /^(hf\.|meta\.|q\.|session\.)/.test(a.id) || (a.id === "video.play" && !c.video)) continue;
+      let best = 0, ex = a.en[0]; (a.en || []).concat(a.es || []).forEach((e) => { const v = pvSim(pvNorm(e), s); if (v > best) { best = v; ex = e; } });
+      const nm = s.match(PV_APPN); if (nm && (a.en.concat(a.es).join(" ") + " " + a.purpose).toLowerCase().includes(nm[0].replace(/s$/, ""))) best += 0.15;
+      sc.push({ a, ex, v: best }); }
+    sc.sort((x, y) => y.v - x.v); const top = sc.filter((x) => x.v >= 0.35).slice(0, 3);
+    if (!top.length) return false;
+    PV.choice = { acts: top, until: Date.now() + 30000 }; pvLog("clarify «" + s + "» → " + top.map((x) => x.a.id).join(", "));
+    const opts = top.map((x, i) => (top.length > 1 ? ["one", "two", "three"][i] + ", " : "") + "“" + x.ex + "”");
+    pvReply("I want to get this right" + (origin === "hf" ? ": I heard “" + raw.replace(/^\s*(ok(ay)?|oye|hey)?\s*prof(e)?\s*,?\s*/i, "").trim() + "”" : "") + ". Did you mean " + (top.length === 1 ? opts[0] + "? Say yes, or say it another way." : opts.slice(0, -1).join("; ") + "; or " + opts[opts.length - 1] + "? Say the number, or say it another way."), origin, { listen: 1 });
+    return true;
+  }
+  window.__pv.choice = () => PV.choice; window.__pv.clarify = (t) => { const c = pvCtx(); return pvClarify(t, pvNorm(t), c, "test") ? PV.choice : null; };
