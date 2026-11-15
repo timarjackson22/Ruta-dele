@@ -4,7 +4,7 @@
 Wiktionary has only about 250 Panamanian entries. This list adds the slang and expressions people in Panama actually use, each with a plain English meaning, a register and, for many, an example.
 
 ## Content
-`tools/panama_words.json` holds 160 entries, each `[term, English, register, colour, example, variants]`.
+`tools/panama_words.json` holds 155 entries (27 expressions, 56 with an example), each `[term, English, register, colour, example, variants]`.
 - **Register:**
   - `col`: colloquial
   - `slg`: street slang
