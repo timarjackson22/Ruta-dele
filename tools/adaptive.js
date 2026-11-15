@@ -77,7 +77,7 @@
     });
     const n = L.length || 1;
     try { LISTEN.filter((x) => x.lvl === lv).forEach((x) => x.paras.forEach((p, pi) => (p.s || []).forEach((s2, si) => {
-      const es = s2[0], en = s2[1], w = String(es || "").split(/\s+/).length; if (!es || !en || w < 4 || w > 16 || /[«»"“]/.test(es) || (pi + si) % 3) return;
+      const es = s2[0], en = s2[1], w = String(es || "").split(/\s+/).length; if (!es || !en || w < 4 || w > 16 || /[«»"“]/.test(es) || !/^[¿¡A-ZÁÉÍÓÚÑ]/.test(es) || !/[.?!]$/.test(es.trim()) || (pi + si) % 3) return;
       out.push({ id: lv + "-x-" + x.id + "-" + pi + "-" + si, dir: "es-en", src: es, ans: [en], topic: null, ui: Math.floor(n / 2), from: x.t }); }))); } catch (e) {}
     out.forEach((it) => { const es = it.dir === "en-es" ? it.ans[0] : it.src; it.tags = adTags(es); if (it.topic) it.tags.push(it.topic); it.tags.push("d:" + it.dir); it.len = adToks(es).length; });
     return (AD_BANK[lv] = out);
@@ -393,7 +393,7 @@
     adHistSave();
   }
   function adNext(first) {
-    if (!PR) return; const lv = PR.lv; if (!first) adHistPush(); PR.att = []; PR.view = null;
+    if (!PR) return; const lv = PR.lv; if (!first) adHistPush(); PR.att = []; PR.view = null; PR.um = null;
     PR.it = PR.kind === "tr" ? adPickTr(lv) : adPickCj(lv); PR.tries = 0; PR.fb = null; PR.over = false; PR.ask = null; if (!first) PR.note = PR.note2 || ""; PR.note2 = "";
     PR.recent.push(PR.it.id); if (PR.kind === "cj") PR.recent.push("v-" + PR.it.v); if (PR.recent.length > 40) PR.recent.splice(0, PR.recent.length - 40);
     tRender(); adAsk();
@@ -416,6 +416,7 @@
     window.__sttOver = null; if (!PR || !PR.it) return; const s = String(said || "").trim(); if (!s) return;
     if (PR.ask) { if (AD_YES.test(s) || AD_NEW.test(s)) return adNew(true); if (AD_NO.test(s)) return adNew(false); }
     if (AD_NEW.test(s)) return adNew(true);
+    if (/^(end( the)? (session|practice)|stop( the)? (practice|session)|that'?s all|i'?m done|terminar|termina( la sesi[oó]n)?|basta)$/i.test(s)) return adEnd();
     if (/^(back|go back|previous( question)?|atr[aá]s|anterior)$/i.test(s)) return adBack();
     if (PR.over) { if (AD_SKIP.test(s) || AD_YES.test(s)) return adNext(); }
     else if (AD_SHOW.test(s)) return adFinish(false, null, true);
@@ -506,7 +507,9 @@
   function adHTML() {
     const it = PR.it, st = adSt(PR.kind, PR.lv); if (!it) return '<div class="tscroll"><p class="muted">Loading…</p></div>';
     const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";
-    let h = '<div class="tscroll adwrap"><div class="row" style="justify-content:space-between"><button class="btn small" data-act="pr-exit">‹ All practice</button><span class="small muted">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " first try</span></div>";
+    const PT = [["vocab", "Vocabulary by voice"], ["trans", "Sentence translation"], ["conj", "Conjugation"], ["rp", "Role-plays"], ["sp", "DELE speaking tasks"]], cur = PR.kind === "tr" ? "trans" : "conj";
+    let h = '<div class="adtop"><label class="sr" for="t-prsel">Switch practice</label><select id="t-prsel" class="prsel adsel-sw">' + PT.map(([v, n]) => '<option value="' + v + '"' + (v === cur ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="ad-end">End session</button></div>';
+    h += '<div class="tscroll adwrap"><p class="small muted adstat">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " right first time</p>";
     h += "<h3>" + title + "</h3>";
     if (PR.hist.length) h += '<div class="adhist">' + PR.hist.map((x, k) => adHistCard(x, k)).join("") + '</div><p class="adnow small muted" id="ad-now">Now</p>';
     if (st.focus) { const f = st.fstreak || 0; h += '<p class="adfocus small"><b>Practising:</b> ' + esc(adLabel(st.focus)) + ' <span class="addots" aria-label="' + f + " of " + AD_MASTER + ' right first time in a row">' + Array.from({ length: AD_MASTER }, (_, i) => (i < f ? "●" : "○")).join("") + "</span></p>"; }
@@ -533,6 +536,14 @@
       x.att.map((a, i) => '<p class="small">' + (x.att.length > 1 ? "Try " + (i + 1) + ": " : "You: ") + "«" + esc(a.said) + "»" + (a.lines && a.lines.length && a.lines[0] !== "✓" ? '<br><span class="muted">' + a.lines.map((l) => esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")).join("<br>") + "</span>" : a.lines && a.lines[0] === "✓" ? " ✓" : "") + "</p>").join("") +
       '<p class="adans">✓ ' + (x.diff || esc(x.model)) + "</p>" + (x.notes || []).map((n) => '<p class="small muted">' + esc(n) + "</p>").join("") + "</div>";
   }
+  // ending: a short summary in the chat, history cleared, back to the list of practices
+  function adEnd() {
+    if (!PR) return; const done = PR.done, first = PR.first, kind = PR.kind, st = adSt(PR.kind, PR.lv);
+    try { stopListening(); } catch (e) {} window.__sttOver = null; adHistEnd();
+    try { logMsg("a", "Session ended: " + done + " done, " + first + " right first time." + (st.focus ? " Next time we'll pick up with " + adLabel(st.focus) + "." : "")); } catch (e) {}
+    PR = null; tCur = null; TS.prType = ""; tView = "practice"; tRender();
+    try { coachToast((kind === "tr" ? "Translation" : "Conjugation") + " session ended · " + done + " done, " + first + " first try"); } catch (e) {}
+  }
   function adBack() { if (!PR || !PR.hist.length) return; PR.view = PR.view == null ? PR.hist.length - 1 : Math.max(0, PR.view - 1); tRender(); }
   function adFwd() {
     if (!PR) return;
@@ -542,5 +553,5 @@
   // after each render: show the question you're looking at (the current one, or the one ‹ Back selected)
   function adScroll() { const box = document.querySelector("#tutor .adwrap"); if (!box || !PR) return; const el = PR.view != null ? document.getElementById("adh-" + PR.view) : document.getElementById("ad-now");
     if (el) { const top = el.offsetTop - box.offsetTop - 8; box.scrollTop = PR.view != null ? top : Math.max(top, 0); } }
-  window.__ad = { bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, enLang: adEnLang, back: () => adBack(), fwd: () => adFwd(), render: () => tRender(), label: adLabel, key: adMainKey };
+  window.__ad = { bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, end: () => adEnd(), enLang: adEnLang, back: () => adBack(), fwd: () => adFwd(), render: () => tRender(), label: adLabel, key: adMainKey };
   /* ==/ADAPTIVE== */

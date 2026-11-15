@@ -1004,5 +1004,9 @@
  "v-play": {
   "voice": "complete",
   "why": "play / pause: «play the video», «pause»"
+ },
+ "ad-end": {
+  "voice": "complete",
+  "why": "«end the session» / «stop» in the drill"
  }
 }

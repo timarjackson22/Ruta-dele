@@ -16,7 +16,7 @@ const lrc = L.map(([t, x]) => "[" + String(Math.floor(t / 60)).padStart(2, "0") 
     rec(name + ": lyrics fetched without a CORS preflight", pre === 0, String(pre));
     const note = await p.textContent("#vcap-note");
     rec(name + ": one sync button that works here: “Tap when the singing starts”", !!(await p.$('[data-act="vl-tap"]')) && !(await p.$('[data-act="vl-auto"]')), note);
-    await p.evaluate(() => { window.__yt.p.t = 15.0; window.__yt.p.st = 2; }); await p.click('[data-act="vl-tap"]'); await p.waitForTimeout(300);
+    await p.evaluate(() => { window.__yt.p.t = 15.0; window.__yt.p.st = 2; }); await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vl-tap"]'); await p.waitForTimeout(300);
     const off = await p.evaluate(() => JSON.parse(localStorage.getItem("lrc:TiPRNqJnI_k")).off);
     rec(name + ": tapping sets the timing (offset 2.2 s)", Math.abs(off - 2.2) <= 0.15, String(off));
     const tips = []; for (let t = 14.8; t < 17.5; t += 0.25) { await p.evaluate((t) => { window.__yt.p.t = t; window.__yt.p.st = 2; }, t); await p.waitForTimeout(140); const x = await p.evaluate(() => { const v = document.getElementById("vtip"); return v && !v.hidden ? v.textContent : null; }); if (x && tips[tips.length - 1] !== x) tips.push(x); }

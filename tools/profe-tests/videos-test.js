@@ -69,8 +69,9 @@ const MOCK = `(() => {
   await p.evaluate(() => window.__yt.p.playVideo()); await T(20); await log();
   await p.click('[data-act="v-back5"]'); let L = await log(); rec("Back 5 s", L.some((x) => x[0] === "seek" && Math.abs(x[1] - 15) < 0.3), JSON.stringify(L));
   await T(30); await p.click('[data-act="v-loop"]'); L = await log();
-  rec("Replay: back to the start of the previous line (or ~8 s without captions) and plays", L.some((x) => x[0] === "seek" && x[1] > 21 && x[1] < 25.5) && L.some((x) => x[0] === "play"), JSON.stringify(L));
-  await T(31); await p.waitForTimeout(500); L = await log(); rec("Replay: plays on (no loop)", !L.some((x) => x[0] === "seek"), JSON.stringify(L));
+  rec("Replay: back to the start of the previous line (or ~8 s without captions), plays, and stays on", L.some((x) => x[0] === "seek" && x[1] > 21 && x[1] < 25.5) && L.some((x) => x[0] === "play") && (await p.getAttribute('[data-act="v-loop"]', "aria-pressed")) === "true", JSON.stringify(L));
+  await T(30.5); await p.waitForTimeout(500); L = await log(); rec("Replay: loops back to the start when the lines end", L.some((x) => x[0] === "seek" && x[1] > 21 && x[1] < 25.5), JSON.stringify(L));
+  await p.click('[data-act="v-loop"]'); await T(31); await p.waitForTimeout(500); L = await log(); rec("Replay: off stops the loop", !L.some((x) => x[0] === "seek"), JSON.stringify(L));
   await p.evaluate(() => document.getElementById("vbar").classList.add("more"));
   await p.click('[data-act="v-rate"]'); L = await log(); rec("Speed 0.75×", L.some((x) => x[0] === "rate" && x[1] === 0.75));
   await p.click('[data-act="v-rate"]'); L = await log(); rec("Speed back to 1×", L.some((x) => x[0] === "rate" && x[1] === 1));

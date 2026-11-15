@@ -40,31 +40,31 @@ const CAPS = { "TiPRNqJnI_k": { lang: "es", kind: "asr", es: ASR, en: "", secs: 
   rec("One caption per sung line (lines are not merged)", ls[2] === "Tercera línea con café y campo");
   rec("Searched LRCLIB by title and artist", Q[0] && Q[0].track_name === "Ojalá que llueva café" && Q[0].artist_name === "Juan Luis Guerra", JSON.stringify(Q[0]));
   const note = await p.textContent("#vcap-note");
-  rec("Source shown simply, with ONE sync button (no nudge or tap buttons)", /Song lyrics: Juan Luis Guerra – Ojalá que llueva café/.test(note) && (await p.$$('#vcap-note .vlsync .btn')).length === 1 && !!(await p.$('[data-act="vl-auto"]')) && !(await p.$('[data-act="vl-late"]')) && !(await p.$('[data-act="vl-tap"]')), note);
+  rec("Source shown simply, with ONE sync button (no nudge or tap buttons)", /Song lyrics: Juan Luis Guerra – Ojalá que llueva café/.test(note) && (await p.$$('#vmenu-x [data-act="vl-auto"]')).length === 1 && !!(await p.$('[data-act="vl-auto"]')) && !(await p.$('[data-act="vl-late"]')) && !(await p.$('[data-act="vl-tap"]')), note);
   const sv = await p.evaluate(() => JSON.parse(localStorage.getItem("lrc:TiPRNqJnI_k")));
   rec("The recording whose length matches the video is chosen (299 s for a 300 s video, synced)", sv && sv.src === 2 && sv.off === 0, sv && sv.src + " off " + sv.off);
   await T(20.5, 2); await p.waitForTimeout(250); rec("At 0:20.5 the third line is current", (await onTxt()) === "Tercera línea con café y campo", await onTxt());
   await T(19.6, 2); await p.waitForTimeout(250); rec("Just before 0:19.8 it's still the second line", (await onTxt()) === "Segunda línea que se canta", await onTxt());
   // one press: auto-sync from the sound
-  await p.click('[data-act="vl-auto"]'); await p.waitForTimeout(400);
-  rec("Sync: records the video's sound, the lyrics stay on screen, the button says Syncing…", (await p.evaluate(() => window.__audCalls.some((x) => x[0] === "start"))) && (await lines()).length === 6 && /Syncing/.test(await p.textContent("#vabar")) && /Syncing…/.test(await p.textContent("#vcap-note")));
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vl-auto"]'); await p.waitForTimeout(400);
+  rec("Sync: records the video's sound, the lyrics stay on screen, the button says Syncing…", (await p.evaluate(() => window.__audCalls.some((x) => x[0] === "start"))) && (await lines()).length === 6 && /Syncing/.test(await p.textContent("#vabar")) && /Syncing…/.test(await p.textContent("#vmenu-x")));
   const say = async (t0, t1, fin) => { await T(t0, 1); await p.evaluate(() => window.__aaud.ev("partial", "algo")); await T(t1, 1); await p.evaluate((x) => window.__aaud.ev("final", x), fin); await p.waitForTimeout(120); };
   await say(16.7, 18.5, "primera linea de la cancion"); await say(20.2, 22, "segunda linea que se canta");
   const off3 = (await p.evaluate(() => JSON.parse(localStorage.getItem("lrc:TiPRNqJnI_k")))).off;
   rec("Two heard lines that agree set the offset (≈3 s) and listening stops by itself", Math.abs(off3 - 3) <= 0.6 && (await p.evaluate(() => window.__audCalls.some((x) => x[0] === "stop"))) && !(await p.$("#vabar")), off3 + " " + JSON.stringify(await p.evaluate(() => window.__audCalls)));
   await T(19.4, 2); await p.waitForTimeout(250);
   rec("…the lyrics now follow the song (0:19.4 → second line, sung at 0:19.0)", (await onTxt()) === "Segunda línea que se canta", await onTxt());
-  rec("…the note says synced ✓ and the button becomes “Sync again”", /synced ✓/.test(await p.textContent("#vcap-note")) && /Sync again/.test(await p.textContent("#vcap-note")));
+  rec("…the note says synced ✓ and the button becomes “Sync again”", /synced ✓/.test(await p.textContent("#vcap-note")) && /Sync lyrics again/.test(await p.textContent("#vmenu-x")));
   rec("…no audio captions were saved from the singing", !(await p.evaluate(() => Object.keys(localStorage).find((k) => /^va/.test(k) && /TiPRNqJnI_k/.test(k)))));
   const nq = Q.length; await go("video-TiPRNqJnI_k");
   rec("Reopening: saved lyrics and sync used, no new search", Q.length === nq && (await lines()).length === 6 && Math.abs((await p.evaluate(() => JSON.parse(localStorage.getItem("lrc:TiPRNqJnI_k")).off)) - off3) < 0.01);
-  await p.click('[data-act="vl-auto"]'); await p.waitForTimeout(400); await p.click('[data-act="va-stop"]'); await p.waitForTimeout(400);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vl-auto"]'); await p.waitForTimeout(400); await p.click('[data-act="va-stop"]'); await p.waitForTimeout(400);
   rec("Sync that hears nothing: offers one button, “Tap when the singing starts”", !!(await p.$('[data-act="vl-tap"]')) && !(await p.$('[data-act="vl-auto"]')), await p.textContent("#vcap-note"));
-  await T(15.0, 2); await p.click('[data-act="vl-tap"]'); await p.waitForTimeout(250);
+  await T(15.0, 2); await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vl-tap"]'); await p.waitForTimeout(250);
   const off2 = (await p.evaluate(() => JSON.parse(localStorage.getItem("lrc:TiPRNqJnI_k")))).off;
   rec("…tapping at 0:15 sets the first line there (offset 2.2 s)", Math.abs(off2 - 2.2) <= 0.15, String(off2));
   // use YouTube's captions instead
-  await p.click('[data-act="vl-off"]'); await p.waitForTimeout(800);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vl-off"]'); await p.waitForTimeout(800);
   rec("“Wrong song?”: back to YouTube's automatic captions", /automatic Spanish captions/.test(await p.textContent("#vcap-note")) && !(await p.$('[data-act="vl-tap"]')), await p.textContent("#vcap-note"));
   // 2. a song with no captions on YouTube: lyrics instead of the "no captions" message; intro guessed from the length
   await go("video-kRt2sRyup6A"); await p.waitForTimeout(500);

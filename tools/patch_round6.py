@@ -75,3 +75,4 @@ rep("""  document.addEventListener("submit", (e) => {
 rep(""".vcatch { background: var(--surface);""", """.vsec > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px } .vsec > summary::-webkit-details-marker { display: none } .vsec > summary::after { content: "▾"; margin-left: auto; transition: transform .2s; color: var(--muted) } .vsec:not([open]) > summary::after { transform: rotate(-90deg) } .vsec-n { font-size: 12px; font-weight: 600; color: var(--muted); background: var(--surface-2, rgba(0,0,0,.05)); border-radius: 999px; padding: 1px 8px }
 .vcatch { background: var(--surface);""")
 open(P, "w", encoding="utf-8").write(s); print("video ok")
+# (16:33) End session + practice switcher in the drill header: wired directly in index.html; see tools/adaptive.js adEnd()
