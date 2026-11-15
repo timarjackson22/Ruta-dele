@@ -15,8 +15,35 @@ rep('''  function route() {\n''', '''  // the release number comes from the publ
     const a = document.getElementById("ver-apk");
     if (a) try { const v = JSON.parse(window.AndroidApp.version() || "{}"); if (v.name) a.textContent = "Android app " + v.name + (v.updated ? " · installed or updated " + new Date(v.updated).toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }) : ""); } catch (e) {}
   }
-  addEventListener("hashchange", () => { if (location.hash === "#ajustes") setTimeout(verFill, 30); });
-  setTimeout(() => { if (location.hash === "#ajustes") verFill(); }, 400);
+  // the Android app: is a newer version published? (GitHub's public release info; checked at start, at most every 4 hours, and in Settings)
+  const APK_URL = "https://github.com/timarjackson22/Ruta-dele/releases/download/apk/ruta-dele.apk";
+  function apkMine() { try { return JSON.parse(window.AndroidApp.version() || "{}"); } catch (e) { return {}; } }
+  function apkCheck(force) {
+    if (!(window.AndroidApp && window.AndroidApp.version)) return;
+    let last = 0; try { last = +localStorage.getItem("ruta-apk-chk") || 0; } catch (e) {}
+    if (!force && Date.now() - last < 4 * 3600e3) { apkShow(); return; }
+    fetch("https://api.github.com/repos/timarjackson22/Ruta-dele/releases/tags/apk", { cache: "no-store" }).then((r) => r.json()).then((j) => {
+      const a = (j.assets || []).find((x) => /\.apk$/.test(x.name)); if (!a) return;
+      try { localStorage.setItem("ruta-apk-chk", String(Date.now())); localStorage.setItem("ruta-apk-pub", a.updated_at); } catch (e) {}
+      apkShow();
+    }).catch(() => {});
+  }
+  // newer when the published app was built more than 10 minutes after this one was installed
+  function apkNewer() { let pub = ""; try { pub = localStorage.getItem("ruta-apk-pub") || ""; } catch (e) {} const mine = apkMine(); return pub && mine.updated && Date.parse(pub) > mine.updated + 10 * 60e3 ? pub : ""; }
+  function apkShow() {
+    const pub = apkNewer(), when = pub ? new Date(pub).toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }) : "";
+    const v = document.getElementById("ver-apk"); if (v && pub && !document.getElementById("ver-apk-up")) v.insertAdjacentHTML("afterend", '<p class="small" id="ver-apk-up" style="margin:6px 0 0"><b>A newer Android app is ready</b> (' + esc(when) + '). <a class="btn small primary" href="' + APK_URL + '" target="_blank" rel="noopener">Download update</a></p>');
+    let dis = ""; try { dis = localStorage.getItem("ruta-apk-dis") || ""; } catch (e) {}
+    let b = document.getElementById("apk-upd");
+    if (!pub || dis === pub) { if (b) b.remove(); return; }
+    if (!b) { b = document.createElement("div"); b.id = "apk-upd"; b.setAttribute("role", "status"); document.body.appendChild(b); }
+    b.innerHTML = '<span>📲 A new version of the Ruta DELE app is ready (' + esc(when) + ').</span> <a class="btn small primary" href="' + APK_URL + '" target="_blank" rel="noopener">Download</a> <button class="btn small" data-act="apk-later" aria-label="Remind me later">Later</button>';
+  }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="apk-later"]'); if (!t) return; try { localStorage.setItem("ruta-apk-dis", apkNewer()); } catch (x) {} const b = document.getElementById("apk-upd"); if (b) b.remove(); });
+  setTimeout(() => apkCheck(false), 2500); document.addEventListener("visibilitychange", () => { if (!document.hidden) apkCheck(false); });
+  addEventListener("hashchange", () => { if (location.hash === "#ajustes") setTimeout(() => { verFill(); apkCheck(true); }, 30); });
+  setTimeout(() => { if (location.hash === "#ajustes") { verFill(); apkCheck(true); } }, 400);
   function route() {\n''')
+rep("</head>", '''<style>#apk-upd{position:fixed;left:12px;right:12px;bottom:calc(var(--tabh,64px) + 78px + env(safe-area-inset-bottom));z-index:70;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:var(--surface,#fff);border:1px solid var(--line,#ddd);box-shadow:0 6px 22px rgba(0,0,0,.16);font-size:.9rem}#apk-upd span{flex:1 1 180px}</style></head>''')
 open(p, "w", encoding="utf-8").write(s)
 print("version ok")
