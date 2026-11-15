@@ -1,0 +1,30 @@
+name: vosk-model
+# Hosts the free offline Spanish speech model (Vosk, Apache 2.0) as a release asset the app downloads when "Ok Profe" is switched on,
+# and reports which wake words the model knows. tools/PROFE_WAKE_BRIEF.md
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "upload the model to the 'vosk' release (yes/no)"
+        default: "no"
+permissions:
+  contents: write
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -e
+          curl -sSL -o es.zip https://alphacephei.com/vosk/models/vosk-model-small-es-0.42.zip
+          ls -l es.zip; sha256sum es.zip
+          unzip -q es.zip; ls vosk-model-small-es-0.42 vosk-model-small-es-0.42/graph || true
+          W=$(find vosk-model-small-es-0.42 -name words.txt | head -1); echo "words file: $W ($(wc -l < $W) words)"
+          for w in ok okey oye hola profe profesor profesora ey hey vale bueno oiga; do printf "%-10s " $w; grep -qx "$w [0-9]*" $W && echo yes || echo NO; done
+          curl -s https://repo.maven.apache.org/maven2/com/alphacephei/vosk-android/maven-metadata.xml | grep -o "<version>[^<]*" | tail -3
+          curl -s https://repo.maven.apache.org/maven2/net/java/dev/jna/jna/maven-metadata.xml | grep -o "<release>[^<]*"
+      - if: ${{ github.event.inputs.publish == 'yes' }}
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          mv es.zip vosk-model-small-es.zip
+          gh release view vosk -R ${{ github.repository }} >/dev/null 2>&1 || gh release create vosk -R ${{ github.repository }} --title "Offline speech model for Ok Profe" --notes "Vosk small Spanish model (Apache 2.0, alphacephei.com/vosk). Downloaded by the Android app when hands-free Ok Profe is switched on." --prerelease
+          gh release upload vosk vosk-model-small-es.zip -R ${{ github.repository }} --clobber
