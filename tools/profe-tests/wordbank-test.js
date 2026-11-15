@@ -33,6 +33,8 @@ const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const
   const vc = await p.evaluate(() => [...document.querySelectorAll("#vcap .vword.vinf")].map((x) => x.textContent + "|" + (JSON.parse(x.dataset.inf || "{}").ph || "")));
   rec("Video captions: «parar bola» (Panama…) coloured as one expression", vc.includes("pares|parar bola") && vc.includes("bola|parar bola"), JSON.stringify(vc));
   rec("…common words are not coloured as slang (jefe, pilas, pata)", !vc.some((x) => /^(jefe|con|mi|ayer)\|$/.test(x)), JSON.stringify(vc));
+  const tips = []; for (let t = 3.0; t < 9; t += 0.25) { await p.evaluate((t) => { window.__yt.p.t = t; window.__yt.p.st = 2; }, t); await p.waitForTimeout(140); const tp = await p.evaluate(() => { const x = document.getElementById("vtip"); if (!x || x.hidden) return null; const k = x.dataset.k.split(":"); const w = document.querySelectorAll("#vcap .vcue")[+k[0]].querySelectorAll(".ves .vword")[+k[1]]; return (w ? w.textContent : "?") + "=" + x.textContent; }); if (tp && tips[tips.length - 1] !== tp) tips.push(tp); }
+  rec("Verbatim on song/video captions: one bubble for the whole expression (metí la pata → mess up; ponerte las pilas → get one's act together)", tips.some((x) => /^metí=.*(mess up|screw up)/.test(x)) && tips.some((x) => /^ponerte=.*act together|socks/.test(x)) && tips.filter((x) => /^(la|pata)=/.test(x)).every((x) => /mess up/.test(x)) && !tips.some((x) => /leg|paw|foot/.test(x)), JSON.stringify(tips));
   await p.click('#vcap .vword >> text=pares'); await p.waitForTimeout(300);
   const sheet = await p.textContent("#sheet");
   rec("Tapping it: the card explains the expression and where it's used", /parar bola/.test(sheet) && /Panama/.test(sheet), sheet.slice(0, 300));

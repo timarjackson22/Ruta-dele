@@ -44,6 +44,15 @@ rep('''      if (nx && VPHRASE[lower[i] + " " + nx]) { const ph = lower[i] + " "
           while (j < toks.length && left > 0) { if (/\\p{L}/u.test(toks[j])) { out += '<span class="vword vinf vinf-slang" data-act="vc-w" data-wi="' + wi + '" data-inf="' + esc(JSON.stringify(inf)) + '">' + esc(toks[j]) + "</span>"; wi++; left--; } else out += esc(toks[j]); j++; }
           i = j - 1; prev = ws[ws.length - 1]; continue; } }''')
 
+# video and song captions, Verbatim bubbles: an expression gets one bubble with its meaning ("echo de menos" → to miss), like a name does
+rep('''    const key = spans.length + ":" + (c.en ? 1 : 0); if (c.gl && c.glk === key) return;
+    c.glk = key; c.gl = []; c.grp = []; c.ctx = [];''', '''    const key = spans.length + ":" + (c.en ? 1 : 0) + (XP ? ":x" : ""); if (c.gl && c.glk === key) return;
+    c.glk = key; c.gl = []; c.grp = []; c.ctx = [];
+    try { if (XP) { const ws = spans.map((s) => vcWord(s).toLowerCase().replace(/’/g, "'"));
+      for (const m of xpFind(ws.join(" "))) { if (m.n < 2 || m.a + m.n > spans.length) continue; const inf = spans[m.a].dataset.inf ? JSON.parse(spans[m.a].dataset.inf) : null;
+        c.gl[m.a] = inf && inf.ph ? inf.mean : xpFirst(m.e[2]); c.ctx[m.a] = "phrase"; c.grp[m.a] = m.a; for (let q = m.a + 1; q < m.a + m.n; q++) { c.grp[q] = m.a; c.gl[q] = ""; } } } } catch (e) {}''')
+rep('''      const lw0 = vcWord(spans[i]).toLowerCase(), inf0 = spans[i].dataset.inf ? JSON.parse(spans[i].dataset.inf) : null;''', '''      if (c.ctx[i] === "phrase" || (c.grp[i] != null && c.gl[i] === "")) continue; // part of an expression: its bubble is already set
+      const lw0 = vcWord(spans[i]).toLowerCase(), inf0 = spans[i].dataset.inf ? JSON.parse(spans[i].dataset.inf) : null;''')
 # word cards (reading and videos): the expression the word is part of, and informal/regional meanings
 rep('''      (lines.length ? lines.join("") : '<p class="muted">No dictionary entry for this form.</p>') +''',
     '''      xpLines(word, it && it.text) + (lines.length ? lines.join("") : '<p class="muted">No dictionary entry for this form.</p>') +''')
