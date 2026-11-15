@@ -140,6 +140,13 @@ const INIT = () => {
   await p.click('[data-act="ex-mic"][data-t="1"]'); await W(100); await sr("say", "hay muchos restaurantes", true); await sr("say", "y me gusta mucho", false); await W(50);
   await p.click('[data-act="ex-mic"][data-t="1"]'); await W(300);
   rec("Speaking: speaking again adds to the answer, no repeats", (await box(1)) === "vivo en el barrio de El Cangrejo cerca del parque hay muchos restaurantes y me gusta mucho", await box(1));
+  // Samsung: after a pause the recogniser starts a new phrase without ever confirming the last one
+  await p.evaluate(() => (window.__srMode.finalOnStop = false));
+  await p.click('[data-act="ex-mic"][data-t="0"]'); await W(100);
+  await sr("say", "me gusta mucho mi ciudad", false); await W(1400); await sr("say", "hay playas", false); await W(80); await sr("say", "hay playas muy bonitas", false); await W(80);
+  await p.click('[data-act="ex-mic"][data-t="0"]'); await W(400);
+  rec("Samsung pauses: the phrase before the pause is kept (not replaced by the next one)", /me gusta mucho mi ciudad hay playas muy bonitas$/.test(await box(0)), await box(0));
+  await p.evaluate(() => (window.__srMode.finalOnStop = true));
   // a recogniser that never reports back after Stop
   await p.evaluate(() => (window.__srMode.hang = true));
   await p.click('[data-act="ex-mic"][data-t="0"]'); await W(100); await sr("say", "me llamo Timar", false); await W(50);
@@ -267,7 +274,7 @@ const INIT = () => {
   // no Spanish pack: says why and carries on live
   await ra.evaluate(() => { location.hash = "a1-examen-12-oral"; window.__AR.fail = "no-lang"; }); await ra.waitForTimeout(500); await ra.click('[data-act="ex-start"][data-free="1"]'); await ra.waitForTimeout(200);
   await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(400);
-  rec("No offline Spanish pack: says where to get it and carries on with live words", /Offline speech recognition/.test(await ra.textContent("#app")) && (await ra.evaluate(() => !!window.__sr())), await ra.textContent("#ex-live-0"));
+  rec("No offline Spanish pack: says where to get it and carries on with live words", /offline Spanish speech pack/.test(await ra.textContent("#app")) && (await ra.evaluate(() => !!window.__sr())), await ra.textContent("#ex-live-0"));
   rec("No script errors (record mode)", !ra.er.length, ra.er.join(" | "));
 
   // ---------- G. iPhone: one phrase per session ----------
