@@ -29,8 +29,14 @@
     if (!vaOk()) return;
     VA.id = VP.id; VA.cues = []; VA.seg = null; VA.live = ""; VA.peak = 0; VA.levels = 0; VA.engine = "";
     vaBanner("Asking Android for permission to record the video's sound…");
-    try { window.AndroidAud.start(S.region === "es" ? "es-ES" : "es-US"); } catch (e) { vaBanner("Couldn't start: " + e, true); }
+    const mode = vaMode(); VA.mode = mode;
+    try { const L = S.region === "es" ? "es-ES" : "es-US"; if (window.AndroidAud.startMode) window.AndroidAud.startMode(L, mode); else window.AndroidAud.start(L); } catch (e) { vaBanner("Couldn't start: " + e, true); }
   }
+  // which recogniser makes captions from the sound: on the phone (offline) or Google online (often catches more words)
+  const vaMode = () => { try { return localStorage.getItem("ruta-va-mode") || "phone"; } catch (e) { return "phone"; } };
+  function vaRedoOnline() { try { localStorage.setItem("ruta-va-mode", "online"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
+  function vaRedoPhone() { try { localStorage.setItem("ruta-va-mode", "phone"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="va-online"],[data-act="va-phone"]'); if (!t) return; if (t.dataset.act === "va-online") vaRedoOnline(); else vaRedoPhone(); });
   function vaStop(save2) { if (!VA.on && !VA.id) return; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} if (save2 !== false) vaFinish(); VA.on = false; }
   function vaBanner(msg, err) {
     let b = document.getElementById("vabar"); const host = document.getElementById("vcapw"); if (!host) return;
@@ -65,10 +71,11 @@
   function vaShowLive() { const inn = document.getElementById("vcap-in"); if (!inn) return; let l = document.getElementById("valive"); if (!VA.live) { if (l) l.remove(); return; } if (!l) { inn.insertAdjacentHTML("beforeend", '<p class="valive" id="valive" aria-live="polite"></p>'); l = document.getElementById("valive"); } l.textContent = VA.live + " …"; }
   function vaFinish() {
     const id = VA.id; if (!id) return; VA.on = false;
-    if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); setTimeout(() => vaBanner(""), 5000); if (VP.id === id) vWordCheck(id); }
+    if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); { const b = document.getElementById("vabar"); if (b) b.insertAdjacentHTML("beforeend", VA.mode === "online" ? ' <button class="btn small" data-act="va-phone">Redo on the phone (offline)</button>' : ' <button class="btn small" data-act="va-online">Missed words? Redo with Google online</button>'); } setTimeout(() => { const b = document.getElementById("vabar"); if (b && !b.querySelector("[data-act=va-online],[data-act=va-phone]")) vaBanner(""); }, 5000); if (VP.id === id) vWordCheck(id); }
     else if (VA.levels > 4 && (VA.peak || 0) < 0.003) vaBanner("The video's sound didn't reach the app: Android passed it silence. Turn the media volume up (not muted), start again and choose Start on Android's prompt. If it still happens, this phone doesn't allow the app to record its own video sound.", true);
     else if (!(window.AndroidApp && window.AndroidApp.version)) vaBanner("The sound reached the app but no Spanish speech was recognised. Your Android app is an older version: update it (Settings › App shows the version; download the latest from the Ruta DELE page) — the new one uses Google's speech service, which works with Samsung phones.", true);
     else vaBanner("The sound reached the app but no Spanish speech was recognised" + (VA.engine ? " (" + (VA.engine === "on-device" ? "on-device recogniser" : VA.engine === "google" ? "Google speech service" : "phone's speech service") + ")" : "") + ". Music makes it harder: try a spoken video. It helps if Spanish is one of your voice languages: Google app › your profile picture › Settings › Voice › Languages.", true);
+    if (!VA.cues.length && VA.levels > 4 && (VA.peak || 0) >= 0.003) { const b = document.getElementById("vabar"); if (b && !b.querySelector("[data-act^=va-]")) b.insertAdjacentHTML("beforeend", VA.mode === "online" ? "" : ' <button class="btn small primary" data-act="va-online">Try Google online</button>'); }
     VA.id = null;
   }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (a === "va-start") vaStart(); else if (a === "va-stop") vaStop(); else if (a === "va-redo") { try { localStorage.removeItem(vaKey(VP.id)); } catch (x) {} vaStart(); } else if (a === "v-report") vReport(); else if (a === "v-copyrep") { const ta = document.getElementById("vrep"); try { navigator.clipboard.writeText(ta.value); t.textContent = "Copied"; } catch (x) { ta.select(); document.execCommand("copy"); t.textContent = "Copied"; } } });
