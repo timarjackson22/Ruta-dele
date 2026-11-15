@@ -22,9 +22,9 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const c1 = await p.evaluate(() => window.__prPool("c1"));
   rec("C1 vocabulary pool is a different (C1) set", c1 && c1.n > 100 && c1.sample.join() !== (pool || {}).sample.join(), JSON.stringify(c1 && c1.sample));
   // conjugation: A1 present tense, common verbs only
-  await p.selectOption("#t-prsel", "conj"); await p.waitForFunction(() => window.__prItems(), null, { timeout: 8000 }).catch(() => {});
-  const cj = await p.evaluate(() => window.__prItems());
-  rec("A1 conjugation: present tense only, from the 40 most common verbs", cj && cj.every((x) => x.t === "pres") && cj.length === 10, JSON.stringify(cj));
+  await p.selectOption("#t-prsel", "conj"); await p.waitForFunction(() => window.__ad && window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
+  const cj = await p.evaluate(() => { const top = new Set(window.__ad.pool("a1")); return { n: top.size, items: Array.from({ length: 20 }, () => window.__ad.pickCj("a1")).map((x) => ({ v: x.v, t: x.t, top: top.has(x.v) })) }; });
+  rec("A1 conjugation: present tense only, from the 40 most common verbs", cj.n <= 40 && cj.items.every((x) => x.t === "pres" && x.top), JSON.stringify(cj));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
   console.log(R.every(Boolean) ? "ALL " + R.length + " PASS" : R.filter((x) => !x).length + " FAILED of " + R.length);

@@ -7,6 +7,8 @@ const C = { home: {}, exam: { exam: true }, qdrill: { qdrill: true }, mc: { unit
   video: { video: true }, videoplay: { video: true, playing: true }, vdrill: { vdrill: true } };
 const CORPUS = [
   // media, word lists, mistakes, sessions (PROFE_EVAL_BRIEF stage 1)
+  ["practise translation", "home", "practise.translate"], ["let's do some sentence translations", "home", "practise.translate"], ["translation practice", "home", "practise.translate"], ["vamos a practicar traducción", "home", "practise.translate"], ["traducir frases", "home", "practise.translate"],
+  ["practise conjugation", "home", "practise.conj"], ["let's do a conjugation drill", "home", "practise.conj"], ["vamos a practicar la conjugación", "home", "practise.conj"],
   ["review my mistakes", "home", "review.mistakes"], ["quiz me on the ones i missed", "home", "review.mistakes"], ["repasa mis errores", "home", "review.mistakes"],
   ["play the food vocabulary", "home", "vocab.drill"], ["practise my family words", "home", "vocab.drill"], ["léeme las palabras de viajes", "home", "vocab.drill"], ["repasa el vocabulario de la comida", "home", "vocab.drill"],
   ["play the video", "home", "video.play"], ["watch the video", "video", "video.play"], ["pon el video", "video", "video.play"],

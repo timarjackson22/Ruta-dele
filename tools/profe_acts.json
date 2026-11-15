@@ -976,5 +976,21 @@
  "pr-type": {
   "voice": "complete",
   "why": "Profe's practice-type picker (role-plays / speaking tasks list)"
+ },
+ "ad-new": {
+  "voice": "complete",
+  "why": "adaptive practice: «something new» / «yes» / «no» by voice"
+ },
+ "ad-next": {
+  "voice": "complete",
+  "why": "adaptive practice: «next» by voice"
+ },
+ "ad-show": {
+  "voice": "complete",
+  "why": "adaptive practice: «show me the answer» / «no sé» by voice"
+ },
+ "ad-skip": {
+  "voice": "complete",
+  "why": "adaptive practice: «skip» by voice"
  }
 }

@@ -150,6 +150,8 @@
     "nav.guide": (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return { ok: false, say: "Which topic?" }; return pvGo("guia-" + t, "the guide: " + (GUIDES.find((g) => g.id === t) || { en: t }).en); },
     "practise.topic": async (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return { ok: false, say: "Which topic would you like to practise?" }; const g = GUIDES.find((x) => x.id === t), r = await pvGo("guia-" + t, "the guide: " + (g ? g.en : t)); if (!r.ok) return r;
       return pvAskProfe("Let's practise " + (g ? g.en : t) + ". Give me one short exercise at my level, then wait for my answer and correct it."); },
+    "practise.translate": async () => { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); prGo("trans"); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.kind === "tr" && !!PR.it, 4000); return { ok, say: ok ? "" : "I couldn't start the translation practice.", own: ok ? 1 : 0 }; },
+    "practise.conj": async () => { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); prGo("conj"); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.kind === "cj" && !!PR.it, 4000); return { ok, say: ok ? "" : "I couldn't start the conjugation drill.", own: ok ? 1 : 0 }; },
     "practise.convo": async () => { tOpen(); tView = "practice"; tRender(); return { ok: await pvUntil(() => document.body.classList.contains("tutor-open"), 800), say: "Pick a role-play, or just start talking in Spanish." }; },
     "nav.words": () => pvGo("palabras", "the word lists"),
     "nav.vocab": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-vocab", "the " + pvLvName(lv) + " vocabulary"); },
