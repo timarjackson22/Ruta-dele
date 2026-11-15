@@ -166,8 +166,8 @@ slang_in = sorted(((t, n, W[t][1][:50]) for t, n in tc.items() if t in W and W[t
 common = set()
 for i, e in enumerate(lex["L"]):
     if i < lex["nf"]: common.update(l.lower() for l in e[0].split(", "))
-heads = {p[0].lower().split()[0] for p in P}; heads |= {h[:-2] for h in heads if h.endswith("se")}
-fo = {k: v for k, v in FORMS.items() if not old(k) and (v in common or v in heads) and re.fullmatch(r"[a-záéíóúüñ]+", k)}
+heads = {p[0].lower().split()[0] for p in P if p[1] == "verb"}; heads |= {h[:-2] for h in heads if h.endswith("se")}
+fo = {k: v for k, v in FORMS.items() if ((not old(k) and v in common) or v in heads) and re.fullmatch(r"[a-záéíóúüñ]+", k)}
 open(os.path.join(OUT, "es-forms.json"), "w").write(json.dumps(fo, ensure_ascii=False, separators=(",", ":")))
 stats["forms_total"] = len(FORMS); stats["forms_new"] = len(fo)
 rep = {"entries": stats["entries"], "phrases_kept": len(P), "labelled_words_kept": len(W), "size_mb": round(len(js) / 1e6, 2),
