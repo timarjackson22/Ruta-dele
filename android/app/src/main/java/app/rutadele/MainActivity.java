@@ -181,7 +181,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
-        if (code == REQ_MIC) stt.onPermission(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
+        if (code == REQ_MIC) { boolean ok = res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED; stt.onPermission(ok); if (wake != null) wake.onPermission(ok); }
         if (code == AudioCapBridge.REQ_MIC2 && aud != null) aud.onMic(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
     }
 

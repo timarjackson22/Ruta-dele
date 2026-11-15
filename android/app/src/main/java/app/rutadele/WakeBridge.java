@@ -42,15 +42,28 @@ public class WakeBridge {
 
     static boolean onDevice(MainActivity a) { return Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(a); }
 
+    boolean online = false, pendingMic = false;
+    void onPermission(boolean ok) { if (!pendingMic) return; pendingMic = false; if (ok) { on = true; errs = 0; gen++; listen(); } else ev("state", "no-mic"); }
+    /** ok: on-device listening; online: only an online recogniser (Google's or the phone's) is available, used if the learner allows it */
     @JavascriptInterface
-    public String status() { return !onDevice(a) ? "no-ondevice" : !a.hasMic() ? "no-mic" : "ok"; }
+    public String status() { return !a.hasMic() ? "no-mic" : onDevice(a) ? "ok" : (Recog.hasGoogle(a) || SpeechRecognizer.isRecognitionAvailable(a)) ? "online" : "no-ondevice"; }
 
     @JavascriptInterface
-    public void start(final String language) {
+    public String info() { return Recog.info(a); }
+
+    /** start, allowing an online recogniser when the phone has no on-device one (the learner agreed in Settings) */
+    @JavascriptInterface
+    public void startOnline(final String language) { begin(language, true); }
+
+    @JavascriptInterface
+    public void start(final String language) { begin(language, false); }
+
+    void begin(final String language, final boolean allowOnline) {
         main.post(() -> {
+            if (!on) online = allowOnline;
             lang = language == null || language.isEmpty() ? "es-US" : language;
-            if (!onDevice(a)) { ev("state", "no-ondevice"); return; }
-            if (!a.hasMic()) { ev("state", "no-mic"); return; }
+            if (!onDevice(a) && !online) { ev("state", "no-ondevice"); return; }
+            if (!a.hasMic()) { pendingMic = true; a.askMic(); return; } // ask; onPermission() carries on
             if (on) return;
             on = true; errs = 0; gen++;
             listen();
@@ -74,7 +87,9 @@ public class WakeBridge {
     void listen() {
         if (!on) return;
         if (sr == null) {
-            sr = SpeechRecognizer.createOnDeviceSpeechRecognizer(a);
+            Object[] rc = Recog.create(a, online);
+            if (rc == null) { halt(); ev("state", "no-ondevice"); return; }
+            sr = (SpeechRecognizer) rc[0]; ev("state", "engine:" + rc[1]);
             sr.setRecognitionListener(new RecognitionListener() {
                 String best(Bundle b) { ArrayList<String> r = b == null ? null : b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); return r == null || r.isEmpty() ? "" : r.get(0); }
                 @Override public void onReadyForSpeech(Bundle b) { errs = 0; }

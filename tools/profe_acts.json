@@ -208,6 +208,10 @@
 "voice": "pending",
 "why": "guide player controls: pause/resume by voice planned"
 },
+"hf-online": {
+"voice": "unsuitable",
+"why": "privacy consent must be given by touch"
+},
 "hf-tap": {
 "voice": "unsuitable",
 "why": "the tap-to-talk button of hands-free itself"
@@ -219,6 +223,10 @@
 "jump": {
 "voice": "unsuitable",
 "why": "in-page jump links"
+},
+"l-amb": {
+"voice": "pending",
+"why": "background sound (stream / birds / off): by voice could be added"
 },
 "l-cf": {
 "voice": "unsuitable",
@@ -276,10 +284,6 @@
 "l-sent": {
 "voice": "pending",
 "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
-},
-"l-stream": {
-"voice": "pending",
-"why": "stream sound on/off: 'stream sound off' by voice could be added"
 },
 "l-text": {
 "voice": "pending",

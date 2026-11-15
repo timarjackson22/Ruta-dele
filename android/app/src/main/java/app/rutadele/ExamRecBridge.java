@@ -52,7 +52,8 @@ public class ExamRecBridge {
         main.post(() -> web.evaluateJavascript("window.__arec && __arec.ev('" + type + "'," + t + ")", null));
     }
 
-    static boolean onDevice(MainActivity a) { return Build.VERSION.SDK_INT >= 33 && SpeechRecognizer.isOnDeviceRecognitionAvailable(a); }
+    // a recogniser that can read recorded audio: on-device, or Google's service (Android 13+)
+    static boolean onDevice(MainActivity a) { return Build.VERSION.SDK_INT >= 33 && (Recog.onDevice(a) || Recog.hasGoogle(a)); }
 
     @JavascriptInterface
     public String status() { return !onDevice(a) ? "no-ondevice" : !a.hasMic() ? "no-mic" : "ok"; }
@@ -96,7 +97,7 @@ public class ExamRecBridge {
 
     void recognise(ParcelFileDescriptor src, final int g) {
         try { if (sr != null) sr.destroy(); } catch (Exception ignored) { }
-        sr = SpeechRecognizer.createOnDeviceSpeechRecognizer(a);
+        Object[] rc = Recog.create(a, true); if (rc == null) { failed = true; return; } sr = (SpeechRecognizer) rc[0];
         sr.setRecognitionListener(new RecognitionListener() {
             String best(Bundle b) { ArrayList<String> r = b == null ? null : b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); return r == null || r.isEmpty() ? "" : r.get(0); }
             void add(String s) { if (s.isEmpty()) return; if (words.length() > 0) words.append(' '); words.append(s); }
