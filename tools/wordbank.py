@@ -63,6 +63,7 @@ with op(SRC, "rt", encoding="utf-8") as f:
         for s in e.get("senses", []) or []:
             for fo in (s.get("form_of") or []) + (s.get("alt_of") or []):
                 if fo.get("word") and " " not in w: FORMS.setdefault(w.lower(), fo["word"].lower())
+                if s.get("form_of"): UNL.add(w.lower())  # also a plain form of another word (tía = feminine of tío): not informal by itself
             if s.get("form_of") or s.get("alt_of"): continue
             nsense += 1
             gl = s.get("glosses") or []
@@ -161,7 +162,12 @@ def hits(keys):
 old_phr = [e[0].lower() for e in lex["L"] if " " in e[0] and "," not in e[0]]
 ho, fo = hits(old_phr); hn, fn_ = hits([p[0].lower() for p in P])
 slang_in = sorted(((t, n, W[t][1][:50]) for t, n in tc.items() if t in W and W[t][5]), key=lambda x: -x[1])[:60]
-fo = {k: v for k, v in FORMS.items() if not old(k)}
+# forms the app can't work out itself, for the words people actually meet (the app dictionary's common part, and the first word of every expression)
+common = set()
+for i, e in enumerate(lex["L"]):
+    if i < lex["nf"]: common.update(l.lower() for l in e[0].split(", "))
+heads = {p[0].lower().split()[0] for p in P}; heads |= {h[:-2] for h in heads if h.endswith("se")}
+fo = {k: v for k, v in FORMS.items() if not old(k) and (v in common or v in heads) and re.fullmatch(r"[a-záéíóúüñ]+", k)}
 open(os.path.join(OUT, "es-forms.json"), "w").write(json.dumps(fo, ensure_ascii=False, separators=(",", ":")))
 stats["forms_total"] = len(FORMS); stats["forms_new"] = len(fo)
 rep = {"entries": stats["entries"], "phrases_kept": len(P), "labelled_words_kept": len(W), "size_mb": round(len(js) / 1e6, 2),
