@@ -37,7 +37,8 @@
   function vaRedoOnline() { try { localStorage.setItem("ruta-va-mode", "online"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
   function vaRedoPhone() { try { localStorage.setItem("ruta-va-mode", "phone"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="va-online"],[data-act="va-phone"]'); if (!t) return; if (t.dataset.act === "va-online") vaRedoOnline(); else vaRedoPhone(); });
-  function vaStop(save2) { if (!VA.on && !VA.id) return; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} if (save2 !== false) vaFinish(); VA.on = false; }
+  function vaStop(save2) { if (!VA.on && !VA.id) return;
+    try { const st = (new Error().stack || "").split("\n").slice(2, 4).map((x) => x.trim().replace(/^at /, "").replace(/\(.*\)/, "").trim()).join(" < "); window.__pvLog && window.__pvLog("video-audio stop asked by the app: " + st + " · video at " + (typeof vpT === "function" ? Math.round(vpT()) : "?") + "s"); } catch (e) {} try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} if (save2 !== false) vaFinish(); VA.on = false; }
   function vaBanner(msg, err) {
     let b = document.getElementById("vabar"); const host = document.getElementById("vcapw"); if (!host) return;
     if (!b) { host.insertAdjacentHTML("afterbegin", '<p class="vabar small" id="vabar" role="status"></p>'); b = document.getElementById("vabar"); }
