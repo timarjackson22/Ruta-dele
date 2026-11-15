@@ -329,8 +329,10 @@
     HF.lastWake = Date.now(); HF.wokeN = (HF.wokeN || 0) + 1; hfWakeStop(); HF.engaged = true; pvLog("woke «" + cmd + "»");
     hfStopOthers();
     if (cmd && cmd.split(" ").length >= 1 && pvNorm(cmd)) { hfHandle(cmd); return; }
-    // the mic opens first and the beep plays while it starts: people talk right after "Ok Profe", and the first word was being lost (S24 log)
-    hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); hfBeep();
+    // a short beep FIRST, then the mic (S24, v164: starting the beep after the mic opened silenced the recogniser, so every capture came back empty).
+    // The first word lost to the beep is covered by reading «me to …» as «take me to …».
+    // 150 ms also lets the wake listener release the microphone before the recogniser takes it
+    hfBeep(); setTimeout(() => { if (!HF.engaged || HF.rec) return; hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); }, 150);
   }
   function hfHandle(text) {
     HF.engaged = true; pvLog("heard «" + text + "»");
@@ -356,10 +358,11 @@
     hfStopOthers(); try { speechCut(); } catch (e) {} try { speechSynthesis.cancel(); } catch (e) {}
     const r = new SR(); HF.rec = r; r.lang = sttLang(); r.interimResults = true; r.continuous = !IS_IOS;
     let live = "", fin = "", end = false, retried = !!o.retried; const t0 = Date.now();
-    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint(); pvLog("capture → " + (t ? "«" + t + "»" : "nothing")); done(t && t.trim() ? t.trim() : null); };
+    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint(); pvLog("capture → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
     r._fin = finish;
     r.onresult = (e) => { if (end) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; } fin = f.trim(); live = (f + im).trim();
       clearTimeout(r._s); clearTimeout(r._q); r._q = setTimeout(() => finish(live), hfWaitFor(live, fin && !im.trim(), o)); const l = document.getElementById("t-live"); if (l) { l.hidden = false; l.textContent = live; } };
+    r.onaudiostart = () => { r._ready = 1; }; r.onspeechstart = () => { r._got = 1; };
     r.onerror = (e) => { r._err = e && e.error; pvLog("capture error " + r._err); if (/not-allowed|service-not-allowed/.test(r._err)) { hfNotice("no-mic"); hfEnable(false); } };
     r.onend = () => { if (end) return; if (!live && /aborted|busy/.test(r._err || "") && !retried && Date.now() - t0 < 1500) { end = true; if (HF.rec === r) HF.rec = null; setTimeout(() => hfCapture(done, Object.assign({}, o, { retried: true })), 400); return; } finish(live || fin); };
     r._s = setTimeout(() => finish(null), o.startMs || 7000);
@@ -378,7 +381,8 @@
   function hfSaySeq(segs, done) { const gen = ++SPK_GEN; try { speechSynthesis.cancel(); } catch (e) {} let k = 0;
     const next = () => { if (gen !== SPK_GEN) return; if (k >= segs.length) { done(); return; } const [t, es] = segs[k++]; let u; try { u = profeUtter(t, es); } catch (e) { next(); return; } let moved = false; const go = () => { if (moved) return; moved = true; next(); }; u.onend = u.onerror = go; try { speechSynthesis.speak(u); } catch (e) { go(); } };
     next(); }
-  function hfBeep() { try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = hfBeep.c || (hfBeep.c = new C()), o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.06; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.12); } catch (e) {} }
+  // short (80 ms), and the audio output is released straight after, so it can't hold the audio focus while the recogniser listens
+  function hfBeep() { try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = hfBeep.c || (hfBeep.c = new C()); if (c.state === "suspended" && c.resume) c.resume(); const o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.06; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.08); o.onended = () => { try { c.suspend && c.suspend(); } catch (e) {} }; } catch (e) {} }
   const hfOnText = () => HF.mode === "wake" ? "Hands-free is on. Say “Ok Profe” whenever you need me." : "Hands-free is on. Tap the Profe pill and speak; I'll keep listening for follow-ups.";
   const PV_MODEL = { installed: "downloaded", downloading: "downloading…", available: "not downloaded yet", unsupported: "not available on this phone", unknown: "unknown" };
   function pvModelPaint() { const el = document.getElementById("pv-model"); if (!el) return; const st = HF.dl && /^progress:/.test(HF.dl) ? "downloading " + HF.dl.slice(9) + "%" : HF.dl === "scheduled" ? "download scheduled" : PV_MODEL[HF.model] || "checking…"; el.textContent = st; const row = el.closest(".pvrow"); if (row) { const ok = HF.model === "installed" ? true : HF.model && HF.model !== "unsupported" && !/^progress/.test(HF.dl || "") ? false : null; row.className = "pvrow " + (ok === true ? "ok" : ok === false ? "warn" : ""); row.querySelector(".pvi").textContent = ok === true ? "✓" : ok === false ? "!" : "•"; }
