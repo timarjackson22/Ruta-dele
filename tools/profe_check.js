@@ -22,7 +22,8 @@ const appActs = new Set([...s.matchAll(/data-act="([a-z0-9-]+)"/g)].map((x) => x
   .concat([...s.matchAll(/\b(?:a|act) === "([a-z][a-z0-9]*-[a-z0-9-]+)"/g)].map((x) => x[1])));
 // ---- handlers ----
 const hs = s.indexOf("const PVH = {"), he = s.indexOf("\n  };", hs), hsrc = s.slice(hs, he);
-const handlers = new Set([...hsrc.matchAll(/^\s{4}"([a-z]+\.[a-z]+)":|, "([a-z]+\.[a-z]+)":/gm)].map((x) => x[1] || x[2]));
+let hsrc2 = hsrc; { let i = 0; while ((i = s.indexOf("Object.assign(PVH, {", i)) >= 0) { const e = s.indexOf("\n  });", i); hsrc2 += s.slice(i, e); i = e; } } // handlers added later in blocks
+const handlers = new Set([...hsrc2.matchAll(/^\s{4}"([a-z]+\.[a-z]+)":|, "([a-z]+\.[a-z]+)":/gm)].map((x) => x[1] || x[2]));
 const TPL = { OPEN: "x?", LV: "a1", ORD: "a", TOPIC: "x", GCAT: "x", PAPER: "x" };
 const tests = new Set(fs.readdirSync(path.join(__dirname, "profe-tests")).map((f) => f.replace(/\.js$/, "")));
 const ids = new Set();

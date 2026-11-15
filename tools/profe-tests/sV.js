@@ -3,8 +3,22 @@
 // Target: ≥97% correct and no answer or conversation ever taken as navigation.
 const { chromium, devices } = require("playwright");
 const C = { home: {}, mc: { unit: true, runner: true, "runner-mc": true, "runner-open": true }, text: { unit: true, runner: true, "runner-text": true, "runner-open": true }, fb: { unit: true, runner: true, "runner-fb": true },
-  play: { playing: true, player: true }, paused: { paused: true, player: true }, tutor: { tutor: true }, unit: { unit: true, guide: true }, guide: { guide: true } };
+  play: { playing: true, player: true }, paused: { paused: true, player: true }, tutor: { tutor: true }, unit: { unit: true, guide: true }, guide: { guide: true },
+  video: { video: true }, videoplay: { video: true, playing: true }, vdrill: { vdrill: true } };
 const CORPUS = [
+  // media, word lists, mistakes, sessions (PROFE_EVAL_BRIEF stage 1)
+  ["review my mistakes", "home", "review.mistakes"], ["quiz me on the ones i missed", "home", "review.mistakes"], ["repasa mis errores", "home", "review.mistakes"],
+  ["play the food vocabulary", "home", "vocab.drill"], ["practise my family words", "home", "vocab.drill"], ["léeme las palabras de viajes", "home", "vocab.drill"], ["repasa el vocabulario de la comida", "home", "vocab.drill"],
+  ["play the video", "home", "video.play"], ["watch the video", "video", "video.play"], ["pon el video", "video", "video.play"],
+  ["go back 10 seconds", "video", "video.seek"], ["rewind", "video", "video.seek"], ["skip forward 30 seconds", "video", "video.seek"], ["adelanta treinta segundos", "video", "video.seek"],
+  ["replay that sentence", "video", "video.replay"], ["say that again", "video", "video.replay"], ["repite la frase", "video", "video.replay"],
+  ["stop the lesson", "home", "lesson.stop"], ["stop the video", "home", "lesson.stop"], ["deja el ejercicio", "home", "lesson.stop"],
+  ["go back to where we were", "home", "ctx.return"], ["back to the video", "home", "ctx.return"], ["vuelve a donde estábamos", "home", "ctx.return"],
+  ["end the session", "home", "session.end"], ["that's all for today", "home", "session.end"], ["terminemos por hoy", "home", "session.end"],
+  ["next word", "vdrill", "drill.next"], ["siguiente", "vdrill", "drill.next"], ["previous word", "vdrill", "drill.prev"], ["la anterior", "vdrill", "drill.prev"],
+  ["repeat the last word more slowly", "vdrill", "drill.repeat"], ["again", "vdrill", "drill.repeat"], ["repítela más despacio", "vdrill", "drill.repeat"],
+  ["slower please", "vdrill", "drill.slower"], ["más despacio", "vdrill", "drill.slower"], ["faster", "vdrill", "drill.faster"], ["más rápido", "vdrill", "drill.faster"],
+  ["pause that", "videoplay", "play.pause"], ["start it", "unit", "lesson.quiz"], ["practise ordering food with me", "home", "practise.convo"],
   // navigation, English
   ["open my lessons", "home", "nav.course"], ["Open my lessons.", "home", "nav.course"], ["show me the course", "home", "nav.course"], ["go to lessons", "home", "nav.course"], ["take me to my lessons please", "home", "nav.course"],
   ["go home", "home", "nav.home"], ["Okay profe, puedes llevarme al menú del app", "home", "nav.home"], ["open the main menu", "home", "nav.home"], ["llévame al inicio", "home", "nav.home"], ["open today", "home", "nav.home"], ["home screen", "home", "nav.home"],
@@ -69,6 +83,15 @@ const HELD = [
   ["speed up", "play", "play.faster"], ["what does that mean", "home", "profe.explain"], ["no entiendo", "home", "profe.explain"], ["one more example", "home", "profe.example"], ["say that again", "tutor", "profe.repeat"],
   ["never mind", "home", "hf.stop"], ["olvídalo", "home", "hf.stop"], ["what are my options", "home", "meta.here"], ["me gustaría ir al cine el sábado", "tutor", null], ["can you help me with my homework", "home", null],
 ];
+// HELD-OUT 3: the instructions in the learner's own brief (tools/PROFE_EVAL_BRIEF.md). Before stage 1: 1/9.
+const HELD3 = [["Play the video in this lesson.", "video", "video.play"], ["Pause that.", "videoplay", "play.pause"], ["Go back ten seconds.", "video", "video.seek"], ["Play my food vocabulary list.", "home", "vocab.drill"],
+  ["Read each Spanish word, give me the English meaning, and leave time for me to repeat.", "home", "vocab.drill"], ["Repeat the last word more slowly.", "vdrill", "drill.repeat"], ["Explain that in English.", "tutor", "profe.explain"],
+  ["Quiz me on the words I got wrong.", "home", "review.mistakes"], ["Go back to where we were.", "home", "ctx.return"]];
+// HELD-OUT 4: fresh phrasings written after stage 1 and never tuned on (first measured below, kept as written)
+const HELD4 = [["rewind 15 seconds", "video", "video.seek"], ["jump ahead twenty seconds", "video", "video.seek"], ["go back a bit", "video", "video.seek"], ["read me the family vocabulary", "home", "vocab.drill"],
+  ["let's do my travel words", "home", "vocab.drill"], ["can we go over my mistakes", "home", "review.mistakes"], ["take me back to the video", "home", "ctx.return"], ["I'm done for today", "home", "session.end"],
+  ["one more time", "vdrill", "drill.repeat"], ["skip this one", "vdrill", "drill.next"], ["slow down please", "vdrill", "drill.slower"], ["otra vez más despacio", "vdrill", "drill.repeat"], ["quit the quiz", "home", "lesson.stop"],
+  ["repite la frase", "video", "video.replay"], ["play it from the start", "video", "video.play"], ["that's enough for now", "home", "session.end"], ["let's practise ordering a coffee", "home", "practise.convo"], ["what did I get wrong", "home", "review.mistakes"]];
 // HELD-OUT 2: a second fresh set, written after the first held-out fixes (measures whether the fixes generalise).
 const HELD2 = [
   ["let me see my progress", "home", "nav.progress"], ["can you open the reading section", "home", "nav.read"], ["I want to go to the guides", "home", "nav.guides"], ["llévame al curso", "home", "nav.course"], ["vamos a la sección de vídeos", "home", "nav.videos"],
@@ -100,5 +123,9 @@ const HELD2 = [
   const h2ok = h2.filter((r) => r[2] === r[3]).length, h2bad = h2.filter((r) => r[2] === null && r[3]), h2wrong = h2.filter((r) => r[2] && r[3] && r[2] !== r[3]);
   h2.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("HELD-OUT-2 MISS [" + c + "] «" + t + "» expected " + e + " got " + g));
   console.log("INFO Held-out 2 (first measured 33/40 = 83% before its general fixes): " + h2ok + "/" + h2.length + " (" + ((h2ok / h2.length) * 100).toFixed(0) + "%) · conversation taken as a command: " + h2bad.length + " · wrong action: " + h2wrong.length);
+  for (const [name, set] of [["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
+    const hr = await p.evaluate(([corpus, C]) => corpus.map(([t, c, e]) => { const base = { unit: false, runner: false, "runner-mc": false, "runner-text": false, "runner-fb": false, "runner-open": false, guide: false, playing: false, paused: false, player: false, tutor: false, drill: false, video: false, vdrill: false }; return [t, c, e, window.__pv.match(t, Object.assign(base, C[c]))]; }), [set, C]);
+    hr.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("MISS (" + name.split(" (")[0] + ") [" + c + "] «" + t + "» expected " + e + " got " + g));
+    console.log("INFO " + name + ": " + hr.filter((r) => r[2] === r[3]).length + "/" + hr.length); }
   await b.close();
 })();
