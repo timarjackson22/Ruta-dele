@@ -132,6 +132,7 @@ CSS = r'''
 .vcap-listen { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; font-weight: 600; color: var(--muted); pointer-events: none }
 .vcap.hide-text .vcl { filter: blur(7px); user-select: none } .vcap.hide-text .vcl * { pointer-events: none }
 .vcap.hide-text .vcap-listen { display: flex }
+.vctl { flex-wrap: nowrap !important; gap: 8px } .vctl .btn { white-space: nowrap; flex: 0 1 auto }
 .vcap-note { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center }
 .vlsync { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; margin-top: 4px }
 .vlsync b { font-weight: 600; color: var(--ink, inherit) }

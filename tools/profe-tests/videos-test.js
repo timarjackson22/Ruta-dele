@@ -25,6 +25,7 @@ const MOCK = `(() => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.route("**/www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: MOCK }));
   await c.route("**/www.youtube.com/oembed**", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify({ title: "Mi rutina de la mañana", author_name: "Canal Prueba" }) }));
+  await c.route("**/lrclib.net/**", (r) => r.fulfill({ contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: "[]" }));
   await c.route("**/i.ytimg.com/**", (r) => r.fulfill({ status: 404, body: "" }));
   await c.addInitScript(() => {
     window.__heard = "perro";
@@ -73,8 +74,10 @@ const MOCK = `(() => {
   await p.click('[data-act="v-loop"]'); await T(31); await p.waitForTimeout(500); L = await log(); rec("Replay line: off stops the loop", !L.some((x) => x[0] === "seek"), JSON.stringify(L));
   await p.click('[data-act="v-rate"]'); L = await log(); rec("Speed 0.75×", L.some((x) => x[0] === "rate" && x[1] === 0.75));
   await p.click('[data-act="v-rate"]'); L = await log(); rec("Speed back to 1×", L.some((x) => x[0] === "rate" && x[1] === 1));
-  // catch a word
-  await T(42.3); await p.click('[data-act="v-catch"]'); await p.waitForTimeout(200); L = await log();
+  // catch a word (the button row was removed to free space; the form is still opened from code paths and cards)
+  rec("No 'Catch a word' or 'Continue from' row under the player", !(await p.$('.vctl [data-act="v-catch"]')) && !(await p.$('[data-act="v-cont"]')));
+  const openCatch = () => p.evaluate(() => { const b = document.createElement("button"); b.dataset.act = "v-catch"; b.hidden = true; document.body.appendChild(b); b.click(); b.remove(); });
+  await T(42.3); await openCatch(); await p.waitForTimeout(200); L = await log();
   rec("Catch a word pauses and shows the moment", L.some((x) => x[0] === "pause") && (await p.isVisible("#vcatch")) && /0:42/.test(await p.textContent("#vcat-t")));
   await p.fill("#vcin", "perro"); await p.waitForTimeout(150); const mean = await p.textContent("#vcat-mean");
   rec("Meaning shown from the dictionary as you type", /dog/i.test(mean), mean);
@@ -82,7 +85,7 @@ const MOCK = `(() => {
   const items = await p.$$eval("#vcaught li", (a) => a.map((x) => x.innerText.replace(/\s+/g, " ")));
   rec("Caught word listed with time and meaning, video resumes", items.length === 1 && /0:42/.test(items[0]) && /perro/.test(items[0]) && /dog/i.test(items[0]) && L.some((x) => x[0] === "play"), items[0]);
   await T(80); await log(); await p.click('#vcaught [data-act="v-seek"]'); L = await log(); rec("Tap the time to jump back to that moment", L.some((x) => x[0] === "seek" && Math.abs(x[1] - 41) < 0.3), JSON.stringify(L));
-  await p.click('[data-act="v-catch"]'); await p.fill("#vcin", "la cita"); await p.click('#vcatch button[type="submit"]'); await p.waitForTimeout(200);
+  await openCatch(); await p.fill("#vcin", "la cita"); await p.click('#vcatch button[type="submit"]'); await p.waitForTimeout(200);
   await p.click('[data-act="v-deck"]'); await p.waitForTimeout(300);
   const deck = await p.evaluate(() => (JSON.parse(localStorage.getItem("ruta-dele-srs-v1")).decks || []).find((d) => d.name === "Videos"));
   rec("Add all to flashcards → 'Videos' deck", deck && deck.w.length === 2 && deck.w[0].es === "perro" && /dog/i.test(deck.w[0].en), JSON.stringify(deck && deck.w));

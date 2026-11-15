@@ -1,7 +1,7 @@
 // Video audit (tools/VIDEO_AUDIT_BRIEF.md): cleanup, captions from the audio, word check, Words › Informal, start at 0, replay sentence, library
 const { chromium, devices } = require("playwright"); const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
-const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
+const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const X = (lines) => '<?xml version="1.0" encoding="utf-8" ?><transcript>' + lines.map(([s, d, t]) => '<text start="' + s + '" dur="' + d + '">' + t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</text>").join("") + "</transcript>";
 const CAPS = {
   // YouTube automatic captions full of tags, an unknown slang word and a name mid-sentence
@@ -78,10 +78,10 @@ const CAPS = {
   await p.evaluate(() => { const S = JSON.parse(localStorage.getItem("ruta-dele-v1")); S.vid["WLXiu-qp8Lw"].at = 100; S.vid["WLXiu-qp8Lw"].w = 0; localStorage.setItem("ruta-dele-v1", JSON.stringify(S)); });
   await p.goto("http://localhost:8766/?r=2#video-WLXiu-qp8Lw"); await p.waitForTimeout(1400);
   const L1 = await p.evaluate(() => window.__yt.log.splice(0));
-  rec("Opening a video: it starts at 0:00 (no automatic jump)", !L1.some((x) => x[0] === "seek") && /Continue from 1:40/.test(await p.textContent(".vctl")), JSON.stringify(L1));
+  rec("Opening a video: it starts at 0:00 (no automatic jump)", !L1.some((x) => x[0] === "seek") && !/Continue from/.test(await p.textContent(".vctl")), JSON.stringify(L1));
   await T(9.0, 2); await p.waitForTimeout(300); await p.evaluate(() => window.__yt.log.splice(0)); await p.click('[data-act="v-loop"]'); await p.waitForTimeout(200);
   const L2 = await p.evaluate(() => window.__yt.log.splice(0)), cur = await p.evaluate(() => document.querySelector("#vcap .vcue.on .ves").textContent);
-  rec("Replay sentence: loops the sentence being said", /Replay sentence/.test(await p.textContent('[data-act="v-loop"]')) && L2.some((x) => x[0] === "seek" && Math.abs(x[1] - 8.05) < 0.3), cur + " " + JSON.stringify(L2));
+  rec("Replay sentence: loops the sentence being said", /Replay sentence/.test(await p.getAttribute('[data-act="v-loop"]', 'aria-label')) && L2.some((x) => x[0] === "seek" && Math.abs(x[1] - 8.05) < 0.3), cur + " " + JSON.stringify(L2));
   await p.click('[data-act="v-loop"]'); await p.click('[data-act="v-rate"]'); rec("Speed button says the speed", (await p.textContent('[data-act="v-rate"]')) === "Speed 0.75×"); await p.click('[data-act="v-rate"]');
   // playback report
   await p.click('[data-act="v-report"]'); await p.waitForTimeout(300); const rep = await p.inputValue("#vrep");
