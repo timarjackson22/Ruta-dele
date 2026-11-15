@@ -1,4 +1,32 @@
 {
+ "ad-back": {
+  "voice": "complete",
+  "why": "adaptive practice: «back» / «atrás» by voice"
+ },
+ "ad-end": {
+  "voice": "complete",
+  "why": "«end the session» / «stop» in the drill"
+ },
+ "ad-fwd": {
+  "voice": "complete",
+  "why": "adaptive practice: «next» / «siguiente» by voice"
+ },
+ "ad-new": {
+  "voice": "complete",
+  "why": "adaptive practice: «something new» / «yes» / «no» by voice"
+ },
+ "ad-next": {
+  "voice": "complete",
+  "why": "adaptive practice: «next» by voice"
+ },
+ "ad-show": {
+  "voice": "complete",
+  "why": "adaptive practice: «show me the answer» / «no sé» by voice"
+ },
+ "ad-skip": {
+  "voice": "complete",
+  "why": "adaptive practice: «skip» by voice"
+ },
  "apk-later": {
   "voice": "unsuitable",
   "why": "dismiss the app-update banner"
@@ -7,9 +35,17 @@
   "voice": "unsuitable",
   "why": "read-aloud 'back to my place' button"
  },
+ "badge-info": {
+  "voice": "unsuitable",
+  "why": "shows what a badge earned today means (tap target)"
+ },
  "bk-save": {
   "voice": "unsuitable",
   "why": "bookmark save"
+ },
+ "cst-st": {
+  "voice": "complete",
+  "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"
  },
  "cue-add": {
   "voice": "unsuitable",
@@ -365,11 +401,85 @@
   "voice": "complete",
   "why": "pronunciation check is itself voice-driven"
  },
+ "pl-about": {
+  "voice": "unsuitable",
+  "why": "explanation sheet"
+ },
+ "pl-catchup": {
+  "voice": "pending",
+  "why": "catch up by voice: say 'change my study plan' for now"
+ },
+ "pl-copy": {
+  "voice": "unsuitable",
+  "why": "form editing: copy one day's windows"
+ },
+ "pl-day": {
+  "voice": "unsuitable",
+  "why": "calendar navigation: tap a day"
+ },
+ "pl-done": {
+  "voice": "pending",
+  "why": "mark a session done by voice"
+ },
+ "pl-gen": {
+  "voice": "unsuitable",
+  "why": "form: create the plan (Profe's setup does this after you say yes)"
+ },
+ "pl-mo": {
+  "voice": "unsuitable",
+  "why": "calendar navigation: previous/next month"
+ },
  "pl-more": {
   "voice": "pending",
   "why": "reading player details (sentence jumps); pause/resume/speed/English are covered"
  },
+ "pl-move": {
+  "voice": "pending",
+  "why": "move a session by voice"
+ },
+ "pl-oadd": {
+  "voice": "unsuitable",
+  "why": "form editing: add unavailable dates (Profe's setup covers this by voice)"
+ },
+ "pl-odel": {
+  "voice": "unsuitable",
+  "why": "form editing: remove unavailable dates"
+ },
+ "pl-part": {
+  "voice": "pending",
+  "why": "record partial minutes by voice"
+ },
  "pl-play": "play.pause",
+ "pl-profe": "plan.setup",
+ "pl-replan": {
+  "voice": "pending",
+  "why": "replan by voice: say 'change my study plan' (plan.setup) for now"
+ },
+ "pl-review": {
+  "voice": "unsuitable",
+  "why": "form: review step (Profe's setup reads the summary aloud instead)"
+ },
+ "pl-start": {
+  "voice": "pending",
+  "why": "start a specific session by voice; 'open my study plan' then tap"
+ },
+ "pl-undo": {
+  "voice": "unsuitable",
+  "why": "undo marking a session"
+ },
+ "pl-view": "nav.plan",
+ "pl-wadd": {
+  "voice": "unsuitable",
+  "why": "form editing: add a time window (Profe's setup covers this by voice)"
+ },
+ "pl-wdel": {
+  "voice": "unsuitable",
+  "why": "form editing: remove a time window"
+ },
+ "pl-wk": {
+  "voice": "unsuitable",
+  "why": "calendar navigation: previous/next week"
+ },
  "play-dlg": {
   "voice": "unsuitable",
   "why": "dialogue play buttons"
@@ -413,6 +523,10 @@
  "pr-sp": {
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"
+ },
+ "pr-type": {
+  "voice": "complete",
+  "why": "Profe's practice-type picker (role-plays / speaking tasks list)"
  },
  "pr-vocab": {
   "voice": "complete",
@@ -741,6 +855,10 @@
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
  },
+ "v-play": {
+  "voice": "complete",
+  "why": "play / pause: «play the video», «pause»"
+ },
  "v-rate": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
@@ -969,44 +1087,8 @@
   "voice": "unsuitable",
   "why": "writing tasks need typing"
  },
- "cst-st": {
-  "voice": "complete",
-  "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"
- },
- "pr-type": {
-  "voice": "complete",
-  "why": "Profe's practice-type picker (role-plays / speaking tasks list)"
- },
- "ad-new": {
-  "voice": "complete",
-  "why": "adaptive practice: «something new» / «yes» / «no» by voice"
- },
- "ad-next": {
-  "voice": "complete",
-  "why": "adaptive practice: «next» by voice"
- },
- "ad-show": {
-  "voice": "complete",
-  "why": "adaptive practice: «show me the answer» / «no sé» by voice"
- },
- "ad-skip": {
-  "voice": "complete",
-  "why": "adaptive practice: «skip» by voice"
- },
- "ad-back": {
-  "voice": "complete",
-  "why": "adaptive practice: «back» / «atrás» by voice"
- },
- "ad-fwd": {
-  "voice": "complete",
-  "why": "adaptive practice: «next» / «siguiente» by voice"
- },
- "v-play": {
-  "voice": "complete",
-  "why": "play / pause: «play the video», «pause»"
- },
- "ad-end": {
-  "voice": "complete",
-  "why": "«end the session» / «stop» in the drill"
+ "wod-save": {
+  "voice": "unsuitable",
+  "why": "save the word of the day (a tap target on Home)"
  }
 }

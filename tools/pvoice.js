@@ -156,7 +156,8 @@
     "nav.words": () => pvGo("palabras", "the word lists"),
     "nav.vocab": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-vocab", "the " + pvLvName(lv) + " vocabulary"); },
     "nav.cards": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-cards", "the " + pvLvName(lv) + " flashcards"); },
-    "nav.review": () => pvGo("repaso", "Review"), "nav.mistakes": () => pvGo("errores", "your mistakes"), "nav.progress": () => pvGo("progreso", "your progress"), "nav.settings": () => pvGo("ajustes", "Settings"),
+    "nav.review": () => pvGo("repaso", "Review"), "nav.mistakes": () => pvGo("errores", "your mistakes"), "nav.progress": () => pvGo("progreso", "your progress"), "nav.plan": () => pvGo("plan", "your study plan"),
+    "plan.setup": async () => { const o = PV.org || "chat"; if (o !== "hf") { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); } planChatStart(o === "voice" && !document.body.classList.contains("tutor-open") ? "hf" : o); return { ok: planChatOn(), own: 1, say: "" }; }, "nav.settings": () => pvGo("ajustes", "Settings"),
     "nav.exams": () => pvGo("examenes", "the full exams"),
     "nav.exam": (s) => { const here = /^#(a1|a2|b1|b2|c1|c2)-examen-(\d+)/.exec(location.hash) || [], lv = pvLv(s) || here[1] || "a1", n = pvN(s) || (here[2] ? +here[2] : 0), paper = pvFind(s, PV_PAPER); if (!n) return { ok: false, say: "Which exam number?" }; if ((typeof EXREADY !== "undefined" ? EXREADY[lv] || 0 : 0) < n) return { ok: false, say: "DELE " + pvLvName(lv) + " has " + ((typeof EXREADY !== "undefined" && EXREADY[lv]) || 0) + " exams ready." };
       return pvGo(lv + "-examen-" + n + (paper ? "-" + paper : ""), "DELE " + pvLvName(lv) + " exam " + n + (paper ? ", " + { lectura: "reading", auditiva: "listening", escritura: "writing", oral: "speaking" }[paper] : "")); },
@@ -222,6 +223,7 @@
   // returns true when the sentence was a command (handled here); false → it's for Profe as conversation or an answer
   function pvRoute(raw, origin) {
     const c = pvCtx(), s = pvNorm(raw), now = Date.now();
+    if (planChatOn() && !/^(go home|open (the )?(course|practice|library|settings|progress)|stop listening|hands free off)$/.test(s)) { planChatTurn(raw, origin); return true; }
     if (PV.pend && now < PV.pend.until) { const p = PV.pend; if (PV_YES.test(s)) { PV.pend = null; pvExec(p.a, p.s, origin, true); return true; } if (PV_NO.test(s)) { PV.pend = null; pvReply("Okay, I won't.", origin); return true; } PV.pend = null; }
     if (PV.clar && now < PV.clar.until) { const q = PV.clar; PV.clar = null;
       if (/^(answer|my answer|its my answer|respuesta|es mi respuesta|mi respuesta|la respuesta)$/.test(s)) { pvAnswer(q.raw, origin); return true; }
@@ -302,6 +304,7 @@
   async function pvExec(a, s, origin, confirmed) {
     pvLog("cmd " + a.id + " «" + (typeof s === "string" ? s : (s && s.label) || "") + "»");
     const h0 = location.hash, ch0 = PV.choice;
+    PV.org = origin;
     const gen = PV.execGen = (PV.execGen || 0) + 1; // each request gets an id: a slow one that finishes after a newer request mustn't speak over it
     PV.running = (PV.running || 0) + 1; PV.runAt = Date.now(); // while an action is still working (opening a page, waiting for a player) the exchange isn't over
     const t0 = performance.now(); let r; try { r = await PVH[a.id](s, pvCtx()); } catch (e) { r = { ok: false, say: "Something went wrong doing that." }; pvLog("cmd error " + a.id + " " + (e && e.message)); }
