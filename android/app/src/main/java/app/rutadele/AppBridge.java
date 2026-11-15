@@ -19,6 +19,14 @@ public class AppBridge {
     final Activity a;
     AppBridge(Activity a) { this.a = a; }
 
+    /** the installed app's version and when it was installed or last updated (shown in Settings) */
+    @android.webkit.JavascriptInterface
+    public String version() {
+        try { android.content.pm.PackageInfo p = a.getPackageManager().getPackageInfo(a.getPackageName(), 0);
+            return "{\"name\":\"" + p.versionName + "\",\"code\":" + p.getLongVersionCode() + ",\"updated\":" + p.lastUpdateTime + "}"; }
+        catch (Exception e) { return "{}"; }
+    }
+
     /** Save a text file (a progress backup) to Downloads. Returns where it went, or "ERR:…". */
     @JavascriptInterface
     public String saveText(String name, String text) {
