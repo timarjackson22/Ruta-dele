@@ -118,6 +118,14 @@ for v in sys.argv[1:]:
             print("YTS " + json.dumps({"q": q, "len": len(page), "consent": "consent.youtube.com" in page, "n": len(out), "rows": out}, ensure_ascii=False), flush=True)
         except Exception as e: print("YTS " + json.dumps({"q": v, "err": str(e)[:160]}))
         continue
+    if v.startswith("url:"):  # url:https://…~needle: is a live file there, how big, and does it contain the needle
+        try:
+            import urllib.request
+            u, _, needle = v[4:].partition("~")
+            with urllib.request.urlopen(urllib.request.Request(u, headers={"User-Agent": "Mozilla/5.0", "Cache-Control": "no-cache"}), timeout=30) as r: b = r.read()
+            print("URL " + json.dumps({"u": u, "status": 200, "bytes": len(b), "has": (needle in b.decode("utf-8", "replace")) if needle else None}))
+        except Exception as e: print("URL " + json.dumps({"u": v, "err": str(e)[:120]}))
+        continue
     if v.startswith("rss:"):
         try: rss(v[4:])
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
