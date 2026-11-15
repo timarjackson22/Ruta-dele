@@ -64,6 +64,17 @@ for v in sys.argv[1:]:
             if cid: rss(cid.group(1))
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
         continue
+    if v.startswith("lrc:"):  # lrc:Artist|Title (underscores for spaces): LRCLIB synced lyrics
+        try:
+            import urllib.parse, urllib.request
+            ar, ti = [x.replace("_", " ") for x in v[4:].split("|", 1)]
+            u = "https://lrclib.net/api/search?" + urllib.parse.urlencode({"track_name": ti, "artist_name": ar})
+            rq = urllib.request.Request(u, headers={"User-Agent": "RutaDELE/1 (https://github.com/timarjackson22/Ruta-dele)", "Origin": "https://timarjackson22.github.io"})
+            with urllib.request.urlopen(rq, timeout=20) as r: cors = r.headers.get("Access-Control-Allow-Origin"); js = json.loads(r.read().decode())
+            rows = [{"id": x.get("id"), "track": x.get("trackName"), "artist": x.get("artistName"), "album": x.get("albumName"), "dur": x.get("duration"), "synced": bool(x.get("syncedLyrics")), "first": (x.get("syncedLyrics") or "").split("\n")[:3]} for x in js[:4]]
+            print("LRC " + json.dumps({"q": ar + " / " + ti, "cors": cors, "n": len(js), "top": rows}, ensure_ascii=False), flush=True)
+        except Exception as e: print("LRC " + json.dumps({"q": v, "err": str(e)[:120]}))
+        continue
     if v.startswith("rss:"):
         try: rss(v[4:])
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
