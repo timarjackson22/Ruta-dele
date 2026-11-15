@@ -62,7 +62,9 @@ with op(SRC, "rt", encoding="utf-8") as f:
         senses = []; nsense = 0
         for s in e.get("senses", []) or []:
             for fo in (s.get("form_of") or []) + (s.get("alt_of") or []):
-                if fo.get("word") and " " not in w: FORMS.setdefault(w.lower(), fo["word"].lower())
+                if fo.get("word") and " " not in w:
+                    L_ = FORMS.setdefault(w.lower(), [])
+                    if fo["word"].lower() not in L_: L_.append(fo["word"].lower())
                 if s.get("form_of"): UNL.add(w.lower())  # also a plain form of another word (tía = feminine of tío): not informal by itself
             if s.get("form_of") or s.get("alt_of"): continue
             nsense += 1
@@ -151,7 +153,7 @@ toks = re.findall(r"[a-záéíóúüñ]+", corpus); tc = collections.Counter(tok
 old = lambda t: t in F or t in VF
 known_old = sum(n for t, n in tc.items() if old(t)); known_new = sum(n for t, n in tc.items() if old(t) or t in W or t in FORMS)
 miss = [(t, n) for t, n in tc.most_common() if not old(t) and t not in W and t not in FORMS][:80]
-newly = [(t, n, FORMS.get(t) or "") for t, n in tc.most_common() if not old(t) and (t in W or t in FORMS)][:60]
+newly = [(t, n, "|".join(FORMS.get(t) or [])) for t, n in tc.most_common() if not old(t) and (t in W or t in FORMS)][:60]
 def hits(keys):
     n = 0; found = []
     for k in keys:
@@ -167,7 +169,11 @@ common = set()
 for i, e in enumerate(lex["L"]):
     if i < lex["nf"]: common.update(l.lower() for l in e[0].split(", "))
 heads = {p[0].lower().split()[0] for p in P if p[1] == "verb"}; heads |= {h[:-2] for h in heads if h.endswith("se")}
-fo = {k: v for k, v in FORMS.items() if ((not old(k) and v in common) or v in heads) and re.fullmatch(r"[a-záéíóúüñ]+", k)}
+fo = {}
+for k, ls in FORMS.items():
+    if not re.fullmatch(r"[a-záéíóúüñ]+", k): continue
+    keep = [v for v in ls if (not old(k) and v in common) or v in heads]
+    if keep: fo[k] = "|".join(keep)
 open(os.path.join(OUT, "es-forms.json"), "w").write(json.dumps(fo, ensure_ascii=False, separators=(",", ":")))
 stats["forms_total"] = len(FORMS); stats["forms_new"] = len(fo)
 rep = {"entries": stats["entries"], "phrases_kept": len(P), "labelled_words_kept": len(W), "size_mb": round(len(js) / 1e6, 2),
