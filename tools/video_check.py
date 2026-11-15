@@ -97,6 +97,27 @@ for v in sys.argv[1:]:
             print("LRCAPP " + json.dumps({"id": vid, "q": [ar2, ti2], "used": used, "video": L, "pick": {"id": b["id"], "artist": b.get("artistName"), "track": b.get("trackName"), "dur": b.get("duration"), "lines": len(lines), "first_at": t0, "guess_off": off}, "alts": [(x.get("duration"), x["id"]) for x in ok[1:4]], "first": lines[:3]}, ensure_ascii=False), flush=True)
         except Exception as e: print("LRCAPP " + json.dumps({"q": v, "err": str(e)[:160]}))
         continue
+    if v.startswith("ytsearch:"):  # ytsearch:words_with_underscores: the same parsing as CaptionBridge.searchRun
+        try:
+            import urllib.parse, urllib.request
+            q = v[9:].replace("_", " ")
+            rq = urllib.request.Request("https://www.youtube.com/results?hl=es&search_query=" + urllib.parse.quote(q), headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36", "Accept-Language": "es,en;q=0.8"})
+            with urllib.request.urlopen(rq, timeout=20) as r: page = r.read().decode("utf-8", "replace")
+            out = []
+            for m in re.finditer(r'"videoRenderer":\{"videoId":"([\w-]{11})"', page):
+                ch = page[m.end():m.end() + 6000]; n = ch.find('"videoRenderer"'); ch = ch[:n] if n > 0 else ch
+                t = re.search(r'"title":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"', ch); l = re.search(r'"lengthText":\{.*?"simpleText":"([0-9:]+)"', ch); o = re.search(r'"ownerText":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"', ch)
+                secs = 0
+                if l:
+                    for part in l.group(1).split(":"): secs = secs * 60 + int(part)
+                row = {"id": m.group(1), "t": t.group(1) if t else None, "ch": o.group(1) if o else None, "secs": secs}
+                try: c = check(m.group(1)); row["tracks"] = c.get("tracks"); row["err"] = c.get("err")
+                except Exception as e: row["err"] = str(e)[:60]
+                out.append(row)
+                if len(out) >= 6: break
+            print("YTS " + json.dumps({"q": q, "len": len(page), "consent": "consent.youtube.com" in page, "n": len(out), "rows": out}, ensure_ascii=False), flush=True)
+        except Exception as e: print("YTS " + json.dumps({"q": v, "err": str(e)[:160]}))
+        continue
     if v.startswith("rss:"):
         try: rss(v[4:])
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
