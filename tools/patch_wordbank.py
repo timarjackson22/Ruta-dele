@@ -8,6 +8,9 @@ def rep(a, b, n=1):
     assert s.count(a) == n, ("anchor", a[:90], s.count(a)); s = s.replace(a, b)
 
 xp = open("/home/claude/app/xpbank.js", encoding="utf-8").read()
+import json as _j
+_pan = _j.load(open("/home/claude/ruta-dele/tools/panama_words.json", encoding="utf-8"))
+xp = xp.replace("/*PANAMA_W*/", "const PANAMA_W = " + _j.dumps({"words": _pan["words"]}, ensure_ascii=False, separators=(",", ":")) + ";")
 rep("  function route() {\n", xp + "\n  function route() {\n")
 
 # base forms: the app's table first, then the bank's

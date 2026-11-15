@@ -39,5 +39,15 @@ const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const
   // Words › Informal gains Panama's words
   await p.goto("http://localhost:8766/#palabras-informal").catch(() => {}); 
   const rows = await p.evaluate(() => { try { return window.__xp.get() ? 1 : 0; } catch (e) { return 0; } });
+  // Panama, curated
+  await p.goto("http://localhost:8766/#curso"); await p.waitForTimeout(500); await p.evaluate(() => window.__xp.load());
+  const pm = await p.evaluate(() => [window.__xp.meaning("qué xopá"), window.__xp.meaning("juega vivo"), window.__xp.meaning("chantin"), window.__xp.meaning("tranque")]);
+  rec("Profe: Panama words answered from the curated list (qué xopá, juega vivo, chantin, tranque)", /what's up/.test(pm[0]) && /street smarts/.test(pm[1]) && /home/.test(pm[2]) && /traffic jam/.test(pm[3]) && pm.every((x) => /🇵🇦/.test(x)), JSON.stringify(pm));
+  const pf = await p.evaluate(() => [window.__xp.find("Le metió un bate al jefe.").map((m) => m.e[0]), window.__xp.find("Hay que echar pa'lante, mopri.").map((m) => m.e[0]), window.__xp.find("Eso se volvió un arroz con mango.").map((m) => m.e[0])]);
+  rec("Panama expressions found in sentences (metió un bate, echar pa'lante, arroz con mango)", pf[0].includes("meter un bate") && pf[1].includes("echar pa'lante") && pf[2].includes("arroz con mango"), JSON.stringify(pf));
+  const pi = await p.evaluate(() => [window.__xp.inf("chantin"), window.__xp.inf("buco"), window.__xp.inf("chino"), window.__xp.inf("real")]);
+  rec("Distinctive Panama words are coloured (chantin, buco); everyday ones are not (chino, real)", pi[0] && pi[0].where === "Panama" && pi[1] && !pi[2] && !pi[3], JSON.stringify(pi));
+  const pc = await p.evaluate(() => window.__xp.lines("chino", "Voy al chino a comprar pan."));
+  rec("Word card for «chino» shows its Panama meaning with an example", /In Panama/.test(pc) && /corner shop/.test(pc) && /Voy al chino/.test(pc), pc.slice(0, 200));
   rec("No script errors", !er.length, er.join(" | "));
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close(); })();
