@@ -1,6 +1,7 @@
   /* ===================== Profe hands-free: capability registry, commands, "Ok Profe" (tools/PROFE_HANDSFREE_BRIEF.md) ===================== */
   const PVR = (() => { try { return JSON.parse(document.getElementById("pv-registry").textContent); } catch (e) { return { actions: [], routes: {}, acts: {} }; } })();
   const PV_DIAG = [];
+  window.__pvLog = (x) => pvLog(x);
   function pvLog(x) { PV_DIAG.push(new Date().toTimeString().slice(0, 8) + " " + x); if (PV_DIAG.length > 40) PV_DIAG.shift(); }
   // the phone's recogniser events, kept for "Mic diagnostics" (Profe › History & settings)
   (function () { const A = window.__astt; if (A && A.ev && !A.__pv) { const ev = A.ev; A.ev = function (t, a) { if (t !== "partial") pvLog("mic " + t + (a ? " " + String(a).slice(0, 40) : "")); return ev.apply(this, arguments); }; A.__pv = 1; } })();
