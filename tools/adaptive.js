@@ -507,8 +507,7 @@
   function adHTML() {
     const it = PR.it, st = adSt(PR.kind, PR.lv); if (!it) return '<div class="tscroll"><p class="muted">Loading…</p></div>';
     const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";
-    const PT = [["vocab", "Vocabulary by voice"], ["trans", "Sentence translation"], ["conj", "Conjugation"], ["rp", "Role-plays"], ["sp", "DELE speaking tasks"]], cur = PR.kind === "tr" ? "trans" : "conj";
-    let h = '<div class="adtop"><label class="sr" for="t-prsel">Switch practice</label><select id="t-prsel" class="prsel adsel-sw">' + PT.map(([v, n]) => '<option value="' + v + '"' + (v === cur ? " selected" : "") + ">" + n + "</option>").join("") + '</select><button class="btn small" data-act="ad-end">End session</button></div>';
+    let h = '';
     h += '<div class="tscroll adwrap"><p class="small muted adstat">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " right first time</p>";
     h += "<h3>" + title + "</h3>";
     if (PR.hist.length) h += '<div class="adhist">' + PR.hist.map((x, k) => adHistCard(x, k)).join("") + '</div><p class="adnow small muted" id="ad-now">Now</p>';
@@ -527,7 +526,7 @@
     const ph = PR.ask ? "…or type yes / no" : PR.over ? "…or type next" : PR.kind === "tr" && it.dir === "es-en" ? "Type your English answer" : "Type your Spanish answer";
     const pos = PR.view == null ? PR.hist.length + 1 : PR.view + 1, tot = PR.hist.length + 1;
     const fwd = PR.view != null ? "Next ›" : PR.ask ? "" : PR.over ? "Next question ›" : "Skip ›";
-    h += '<div class="adnav" role="toolbar" aria-label="Questions"><button class="btn small" data-act="ad-back"' + (pos <= 1 ? " disabled" : "") + '>‹ Back</button><span class="small muted">' + pos + " / " + tot + "</span>" + (fwd ? '<button class="btn small' + (PR.over && PR.view == null ? " primary" : "") + '" data-act="ad-fwd">' + fwd + "</button>" : "<span></span>") + "</div>";
+    h += '<div class="adnav" role="toolbar" aria-label="Questions"><button class="btn small" data-act="ad-back"' + (pos <= 1 ? " disabled" : "") + '>‹ Back</button><span class="small muted">' + pos + " / " + tot + "</span>" + '<button class="btn small adendb" data-act="ad-end">End</button>' + (fwd ? '<button class="btn small' + (PR.over && PR.view == null ? " primary" : "") + '" data-act="ad-fwd">' + fwd + "</button>" : "<span></span>") + "</div>";
     return h + '<div class="t-live" id="t-live" hidden></div><form class="tform" id="pr-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="pr-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="pr-input">Type your answer</label><input id="pr-input" autocomplete="off" autocapitalize="off" placeholder="' + ph + '"><button class="btn primary" type="submit">OK</button></form>';
   }
   function adHistCard(x, k) {
