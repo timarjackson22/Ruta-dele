@@ -67,7 +67,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   rec("Text glides up: the current line sits near the top of the window", g.y > 0.08 && g.y < 0.4 && g.tf !== "none", JSON.stringify(g));
   rec("Earlier lines fade out as they rise", g.op < 0.5);
   // layout: English right under its line, blank line between lines
-  await p.click('[data-act="vc-en"]'); await p.waitForTimeout(400);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vc-en"]'); await p.waitForTimeout(400);
   const lay = await p.evaluate(() => { const r = document.querySelectorAll("#vcap .vcue"); const es0 = r[0].querySelector(".ves").getBoundingClientRect(), en0 = r[0].querySelector(".ven").getBoundingClientRect(), es1 = r[1].querySelector(".ves").getBoundingClientRect(); return { enGap: en0.top - es0.bottom, lineGap: es1.top - en0.bottom, en: r[0].querySelector(".ven").textContent }; });
   rec("English on: each English line sits directly under its Spanish line", lay.en === LINES[0][2] && lay.enGap >= 0 && lay.enGap < 6, JSON.stringify(lay));
   rec("…with a blank line before the next Spanish line", lay.lineGap > 14);
@@ -89,17 +89,17 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   rec("…and the next name follows straight after (en → «Madrid»)", nm && nm.word === "Madrid" && nm.tip === "Madrid", JSON.stringify(nm) + " now=" + (await nowWord()));
   await T(37.05, 2); await p.waitForTimeout(400); nm = await tipOf();
   rec("…an ordinary word at the start is still translated (Hoy → today)", nm && nm.word === "Hoy" && /today/i.test(nm.tip), JSON.stringify(nm));
-  await p.click('[data-act="vc-cue"]'); await p.waitForTimeout(300);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vc-cue"]'); await p.waitForTimeout(300);
   rec("Cue tips button turns them off", !(await tipOf()) && (await p.getAttribute('[data-act="vc-cue"]', "aria-pressed")) === "false");
   await p.reload(); await p.waitForTimeout(1300); await T(3.7, 2); await p.waitForTimeout(400);
   rec("…and it's remembered (same setting as Reading and Listening)", !(await tipOf()) && (await p.evaluate(() => JSON.parse(localStorage.getItem("ruta-ui") || "{}").cues)) === false);
-  await p.click('[data-act="vc-cue"]'); await p.waitForTimeout(400); rec("…and back on", !!(await tipOf()));
-  await p.click('[data-act="vc-hide"]'); await p.waitForTimeout(200);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vc-cue"]'); await p.waitForTimeout(400); rec("…and back on", !!(await tipOf()));
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vc-hide"]'); await p.waitForTimeout(200);
   rec("Just listen: text hidden (blurred) with a note", await p.evaluate(() => document.getElementById("vcap").classList.contains("hide-text") && getComputedStyle(document.querySelector("#vcap .vcl")).filter.includes("blur") && getComputedStyle(document.querySelector(".vcap-listen")).display === "flex"));
   await p.reload(); await p.waitForTimeout(1300);
   rec("English and Just listen are remembered", await p.evaluate(() => { const w = document.getElementById("vcap"); return w.classList.contains("show-en") && w.classList.contains("hide-text"); }));
   rec("Captions come from the saved copy on reopening (no second download)", (await p.evaluate(() => window.__capCalls)) === 0);
-  await p.click('[data-act="vc-hide"]'); await p.waitForTimeout(200);
+  await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); }); await p.click('[data-act="vc-hide"]'); await p.waitForTimeout(200);
   // informal words
   const inf = await p.$$eval("#vcap .vword", (a) => a.filter((x) => x.classList.contains("vinf")).map((x) => x.textContent + ":" + [...x.classList].find((c) => /^vinf-/.test(c)).slice(5)));
   rec("Informal words coloured: pa', chévere, mae, tío (as 'dude'), qué onda, cansao, golazo, borrasca", ["pa':short", "chévere:slang", "mae:slang", "tío:slang", "qué:slang", "onda:slang", "cansao:short", "golazo:jargon", "borrasca:jargon"].every((x) => inf.includes(x)), inf.join(" "));
@@ -132,7 +132,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   rec("…labelled as automatic captions", /automatic Spanish captions/.test(await p.textContent("#vcap-note")));
   const as = await p.$$eval("#vcap .ves", (a) => a.map((x) => x.textContent));
   rec("Automatic captions: sentences at the pauses, with punctuation added", JSON.stringify(as) === JSON.stringify(["Hola, amigos bienvenidos al canal.", "Hoy hablamos de comida.", "Vamos pa la cocina.", "Oye, ¿qué vamos a comer hoy?", "Está muy rico, ¿verdad?", "Pero no sé si te gusta o no."]), as.join(" | "));
-  await p.evaluate(() => { window.__trEn = async (t) => "EN: " + t; }); if ((await p.getAttribute('[data-act="vc-en"]', "aria-pressed")) !== "true") await p.click('[data-act="vc-en"]'); else { await p.click('[data-act="vc-en"]'); await p.click('[data-act="vc-en"]'); }
+  await p.evaluate(() => { window.__trEn = async (t) => "EN: " + t; }); await p.evaluate(() => { const b = document.getElementById("vbar"); if (b) b.classList.add("more"); });  if ((await p.getAttribute('[data-act="vc-en"]', "aria-pressed")) !== "true") await p.click('[data-act="vc-en"]'); else { await p.click('[data-act="vc-en"]'); await p.click('[data-act="vc-en"]'); }
   await T(8.0, 2); await p.waitForFunction(() => { const r = document.querySelector("#vcap .vcue.on"); return r && /^Oye/.test(r.querySelector(".ves").textContent) && r.querySelector(".ven").textContent; }, null, { timeout: 4000 }).catch(() => {}); const ent = await p.$eval("#vcap .vcue.on .ven", (x) => x.textContent);
   rec("Automatic captions: English line = the whole punctuated sentence, translated by the app", ent === "EN: Oye, ¿qué vamos a comer hoy?", ent);
   rec("…and the note says the punctuation was added", /punctuation added by the app/.test(await p.textContent("#vcap-note")));

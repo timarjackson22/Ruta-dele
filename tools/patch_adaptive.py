@@ -28,7 +28,7 @@ rep('    else if (act === "pr-type") prGo(t.dataset.v);', '''    else if (act ==
     else if (act === "ad-show") { if (PR && PR.it && !PR.over) adFinish(false, null, true); }
     else if (act === "ad-skip") adSkip();''')
 rep('else if (act === "pr-mic") { if (listening) stopListening(); else listen(prAnswer, { continuous: PR && PR.kind === "sp" }); }',
-    'else if (act === "pr-mic") { if (listening) stopListening(); else { window.__sttOver = PR && PR.kind === "tr" && PR.it && PR.it.dir === "es-en" && !PR.over && !PR.ask ? "en-US" : null; listen(prAnswer, { continuous: PR && PR.kind === "sp" }); } }')
+    'else if (act === "pr-mic") { if (listening) stopListening(); else { window.__sttOver = PR && PR.kind === "tr" && PR.it && PR.it.dir === "es-en" && !PR.over && !PR.ask ? adEnLang() : null; listen(prAnswer, { continuous: PR && PR.kind === "sp" }); } }')
 rep('else if (act === "pr-exit") { PR = null;', 'else if (act === "pr-exit") { window.__sttOver = null; PR = null;')
 rep('  function sttLang() { return TS.sttLang ||', '  function sttLang() { return window.__sttOver || TS.sttLang ||')
 rep('.prsel-l { display: block; font-weight: 600 }', '.prsel-l { display: block; font-weight: 600 } .adfocus { margin: 2px 0 6px; padding: 6px 10px; border-radius: 10px; background: var(--cobalt-soft, #e7f1fb); } .addots { letter-spacing: 2px; color: var(--cobalt) } .adans { font-size: 1.05rem } .addiff { color: var(--terra, #b4471f); text-decoration: underline } .adbtns { gap: 6px; flex-wrap: wrap; margin: 8px 0 } .adask { border-color: var(--cobalt) }')

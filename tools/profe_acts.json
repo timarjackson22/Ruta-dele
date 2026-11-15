@@ -734,8 +734,8 @@
   "why": "video page controls: pause/resume covered; captions and words by touch"
  },
  "v-more": {
-  "voice": "pending",
-  "why": "video page controls: pause/resume covered; captions and words by touch"
+  "voice": "unsuitable",
+  "why": "opens the video page's option menu (its options have their own voice commands)"
  },
  "v-open": {
   "voice": "pending",
@@ -992,5 +992,17 @@
  "ad-skip": {
   "voice": "complete",
   "why": "adaptive practice: «skip» by voice"
+ },
+ "ad-back": {
+  "voice": "complete",
+  "why": "adaptive practice: «back» / «atrás» by voice"
+ },
+ "ad-fwd": {
+  "voice": "complete",
+  "why": "adaptive practice: «next» / «siguiente» by voice"
+ },
+ "v-play": {
+  "voice": "complete",
+  "why": "play / pause: «play the video», «pause»"
  }
 }

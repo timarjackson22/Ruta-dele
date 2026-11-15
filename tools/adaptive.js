@@ -377,20 +377,32 @@
   async function adStart(kind) {
     try { await loadIndex(); } catch (e) {}
     const lv = PRL || curLvl(), st = adSt(kind, lv);
-    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true };
+    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [] };
     ensureSession(kind === "tr" ? "Sentence translation" : "Conjugation drill", (kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";
     if (st.focus) PR.note = "Picking up where you left off: " + adLabel(st.focus) + ".";
     adNext(true);
   }
+  // the session's earlier questions stay on screen (scroll up, or ‹ Back): kept for an hour, or until the session ends
+  const AD_HKEY = "ruta-adhist", AD_HOUR = 3600000;
+  function adHistLoad(kind, lv) { try { const j = JSON.parse(localStorage.getItem(AD_HKEY) || "null"); if (!j || j.kind !== kind || j.lv !== lv) return []; return (j.items || []).filter((x) => Date.now() - x.t < AD_HOUR); } catch (e) { return []; } }
+  function adHistSave() { try { if (!PR || !PR.hist) return; PR.hist = PR.hist.filter((x) => Date.now() - x.t < AD_HOUR).slice(-60); localStorage.setItem(AD_HKEY, JSON.stringify({ kind: PR.kind, lv: PR.lv, items: PR.hist })); } catch (e) {} }
+  function adHistEnd() { try { localStorage.removeItem(AD_HKEY); } catch (e) {} }
+  function adHistPush() {
+    if (!PR || !PR.it || !(PR.att.length || PR.over)) return; const it = PR.it, fb = PR.fb || {};
+    PR.hist.push({ t: Date.now(), kind: PR.kind, dir: PR.kind === "cj" ? "cj" : it.dir, prompt: adPrompt(it), att: PR.att.slice(), ok: !!(PR.over && fb.ok), skipped: !PR.over, model: PR.kind === "cj" ? it.ans : it.ans[0], diff: fb.diff || "", notes: (fb.notes || []).slice(0, 4) });
+    adHistSave();
+  }
   function adNext(first) {
-    if (!PR) return; const lv = PR.lv;
+    if (!PR) return; const lv = PR.lv; if (!first) adHistPush(); PR.att = []; PR.view = null;
     PR.it = PR.kind === "tr" ? adPickTr(lv) : adPickCj(lv); PR.tries = 0; PR.fb = null; PR.over = false; PR.ask = null; if (!first) PR.note = PR.note2 || ""; PR.note2 = "";
     PR.recent.push(PR.it.id); if (PR.kind === "cj") PR.recent.push("v-" + PR.it.v); if (PR.recent.length > 40) PR.recent.splice(0, PR.recent.length - 40);
     tRender(); adAsk();
   }
+  // English answers: the phone's recogniser listens for English first, Spanish as a fallback where it can do both (some phones have no offline English)
+  function adEnLang() { try { if (window.AndroidSTT && window.AndroidSTT.multiLang) return "en-US|" + (TS.sttLang || (S.region === "es" ? "es-ES" : "es-US")); } catch (e) {} return "en-US"; }
   function adPrompt(it) { return PR.kind === "cj" ? it.v + " · " + it.p + " · " + AD_TN_ES[it.t] : it.src; }
   function adAsk() {
-    if (!PR || !PR.it) return; const it = PR.it; window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? "en-US" : null;
+    if (!PR || !PR.it) return; const it = PR.it; window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? adEnLang() : null;
     const go = () => { if (PR && PR.autoMic && CAN_MIC && !PR.over && !PR.ask) listen(prAnswer); };
     let u;
     if (PR.kind === "cj") u = utter(it.v + ". " + it.p + ". " + AD_TN_ES[it.t] + ".", "es", 0.9);
@@ -404,6 +416,7 @@
     window.__sttOver = null; if (!PR || !PR.it) return; const s = String(said || "").trim(); if (!s) return;
     if (PR.ask) { if (AD_YES.test(s) || AD_NEW.test(s)) return adNew(true); if (AD_NO.test(s)) return adNew(false); }
     if (AD_NEW.test(s)) return adNew(true);
+    if (/^(back|go back|previous( question)?|atr[aá]s|anterior)$/i.test(s)) return adBack();
     if (PR.over) { if (AD_SKIP.test(s) || AD_YES.test(s)) return adNext(); }
     else if (AD_SHOW.test(s)) return adFinish(false, null, true);
     else if (AD_SKIP.test(s) && s.split(" ").length <= 2) return adSkip();
@@ -422,9 +435,11 @@
     const lvl = PR.tries >= 2 ? 2 : 1;
     let lines = PR.kind === "cj" ? [adCjWhy(it, chk.issues[0].said, lvl)] : chk.issues.slice(0, 3).map((x) => (it.dir === "en-es" ? adWhy(x, lvl) : adWhyEn(x, it, lvl)));
     if (lvl >= 2 && it.note && PR.kind === "tr" && !lines.some((l) => /💡/.test(l))) lines.push("💡 Clue: " + it.note);
-    PR.fb = { ok: false, said: s, lines, left: AD_TRIES - PR.tries, chk };
+    lines = [...new Set(lines)];
+    if (PR.kind === "tr" && chk.issues.length > 3) lines = ["That's quite different from the sentence: check the whole thing, word by word." + (lvl >= 2 && it.note ? " 💡 Clue: " + it.note : "")];
+    PR.fb = { ok: false, said: s, lines, left: AD_TRIES - PR.tries, chk }; PR.att.push({ said: s, lines });
     const [pes, pen] = tpick(TEACH.retry); logMsg("a", pes + " " + lines.join(" "));
-    tRender(); speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + (lvl >= 2 ? "Te doy una pista." : "Inténtalo otra vez."), () => { if (PR && PR.autoMic && CAN_MIC && !PR.over) { window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? "en-US" : null; listen(prAnswer); } });
+    tRender(); speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + (lvl >= 2 ? "Te doy una pista." : "Inténtalo otra vez."), () => { if (PR && PR.autoMic && CAN_MIC && !PR.over) { window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? adEnLang() : null; listen(prAnswer); } });
   }
   function adCjWhy(it, said, lvl) {
     let why; try { why = formWhy(it.v, said, it.t, it.pi, null).replace(/\n.*$/, ""); } catch (e) { why = "We need **" + it.p + "** · **" + AD_TN_ES[it.t] + "**."; }
@@ -446,6 +461,7 @@
     PR.over = true; PR.done++; if (firstTry) PR.first++;
     const model = PR.kind === "cj" ? it.ans : it.ans[0];
     const [pes, pen] = tpick(pass ? (PR.tries > 1 ? TEACH.again : TEACH.first) : TEACH.reveal);
+    if (chk && PR.um && PR.um.c && (!PR.att.length || PR.att[PR.att.length - 1].said !== PR.um.c)) PR.att.push({ said: PR.um.c, lines: pass ? ["✓"] : [] });
     const notes = []; if (chk && chk.accents && chk.accents.length) notes.push("Accent: " + chk.accents.map((x) => "«" + x.l + "» → «" + x.a + "»").join(", ") + " (the DELE marks accents as spelling).");
     if (chk && chk.alt) notes.push("Also correct. The lesson's version: «" + model + "».");
     if (!pass && chk && chk.issues && PR.kind === "tr") notes.push(...chk.issues.slice(0, 3).map((x) => (it.dir === "en-es" ? adWhy(x, 1) : adWhyEn(x, it, 1))));
@@ -461,7 +477,8 @@
     if (ask) { PR.ask = ask; tRender(); const q = ask === "_" ? "¿Probamos algo nuevo? Would you like to try something new?" : "¡Dominado! You've mastered " + adLabel(ask) + ". ¿Probamos algo nuevo? Would you like to try something new?";
       speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + (PR.kind === "tr" && it.dir === "es-en" ? "" : model + ". ") + q, () => { if (PR && PR.ask && CAN_MIC && PR.autoMic) listen(prAnswer); }); return; }
     tRender(); const at = it.id;
-    speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + model, () => { setTimeout(() => { if (PR && PR.it && PR.it.id === at && PR.over && !PR.ask && PR.autoMic) adNext(); }, pass ? 900 : 2600); });
+    // the question stays until you move on: time to read the correction (say «siguiente» / "next", or tap Next)
+    speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + model, () => { if (PR && PR.it && PR.it.id === at && PR.over && !PR.ask && PR.autoMic && CAN_MIC) { window.__sttOver = null; listen(prAnswer); } });
   }
   function adNew(yes) {
     const st = adSt(PR.kind, PR.lv), was = st.focus; PR.ask = null;
@@ -491,6 +508,7 @@
     const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";
     let h = '<div class="tscroll adwrap"><div class="row" style="justify-content:space-between"><button class="btn small" data-act="pr-exit">‹ All practice</button><span class="small muted">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " first try</span></div>";
     h += "<h3>" + title + "</h3>";
+    if (PR.hist.length) h += '<div class="adhist">' + PR.hist.map((x, k) => adHistCard(x, k)).join("") + '</div><p class="adnow small muted" id="ad-now">Now</p>';
     if (st.focus) { const f = st.fstreak || 0; h += '<p class="adfocus small"><b>Practising:</b> ' + esc(adLabel(st.focus)) + ' <span class="addots" aria-label="' + f + " of " + AD_MASTER + ' right first time in a row">' + Array.from({ length: AD_MASTER }, (_, i) => (i < f ? "●" : "○")).join("") + "</span></p>"; }
     if (PR.note) h += '<p class="small muted">' + esc(PR.note) + "</p>";
     const dirL = PR.kind === "cj" ? "Say or type the form" : it.dir === "en-es" ? "English → Spanish" : "Spanish → English";
@@ -500,11 +518,29 @@
     if (PR.over && fb) h += '<div class="prbox ' + (fb.ok ? "ok" : "bad") + '"><p><b>' + esc(fb.praise) + "</b></p>" + (fb.ok ? "" : '<p class="small muted">' + (fb.gaveUp ? "Here's the answer." : "Here's the answer, after three tries.") + "</p>") + '<p class="adans">✓ ' + (fb.diff || esc(fb.model)) + (PR.kind === "cj" || it.dir === "en-es" ? " " + sayBtn(fb.model) : "") + "</p>" + (fb.notes || []).map((n) => '<p class="small">' + esc(n) + "</p>").join("") + (!fb.ok && PR.kind === "tr" && it.ans.length > 1 ? '<p class="small muted">Also right: ' + it.ans.slice(1, 3).map((a) => "«" + esc(a) + "»").join(" · ") + "</p>" : "") + "</div>";
     if (PR.um && PR.um.fx && PR.um.fx.items && PR.um.fx.items.length) h += '<div class="prfx">' + fixCard(PR.um) + "</div>";
     if (PR.ask) h += '<div class="prbox adask"><p><b>' + (PR.ask === "_" ? "¿Probamos algo nuevo?" : "¡Dominado! You've mastered " + esc(adLabel(PR.ask)) + ".") + '</b></p><p class="small">Would you like to try something new?</p><div class="row"><button class="btn primary small" data-act="ad-new" data-v="1">Yes, something new</button><button class="btn small" data-act="ad-new" data-v="0">No, more of this</button></div></div>';
-    h += '<div class="row adbtns">' + (PR.over ? (PR.ask ? "" : '<button class="btn primary small" data-act="ad-next">Next ›</button>') : '<button class="btn small" data-act="ad-show">Show the answer</button><button class="btn small" data-act="ad-skip">Skip</button>') + (PR.ask ? "" : '<button class="btn small" data-act="ad-new" data-v="1">Something new</button>') + "</div>";
+    h += '<div class="row adbtns">' + (PR.over ? "" : '<button class="btn small" data-act="ad-show">Show the answer</button>') + (PR.ask ? "" : '<button class="btn small" data-act="ad-new" data-v="1">Something new</button>') + "</div>";
     h += '<p class="small muted">' + (PR.kind === "tr" ? "Up to three tries; a clue after the second. Mistakes bring more of the same kind until you've got it." : "Up to three tries; a clue after the second. Verbs that behave like the one you missed come next.") + "</p>";
     h += "</div>";
     const ph = PR.ask ? "…or type yes / no" : PR.over ? "…or type next" : PR.kind === "tr" && it.dir === "es-en" ? "Type your English answer" : "Type your Spanish answer";
+    const pos = PR.view == null ? PR.hist.length + 1 : PR.view + 1, tot = PR.hist.length + 1;
+    const fwd = PR.view != null ? "Next ›" : PR.ask ? "" : PR.over ? "Next question ›" : "Skip ›";
+    h += '<div class="adnav" role="toolbar" aria-label="Questions"><button class="btn small" data-act="ad-back"' + (pos <= 1 ? " disabled" : "") + '>‹ Back</button><span class="small muted">' + pos + " / " + tot + "</span>" + (fwd ? '<button class="btn small' + (PR.over && PR.view == null ? " primary" : "") + '" data-act="ad-fwd">' + fwd + "</button>" : "<span></span>") + "</div>";
     return h + '<div class="t-live" id="t-live" hidden></div><form class="tform" id="pr-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="pr-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="pr-input">Type your answer</label><input id="pr-input" autocomplete="off" autocapitalize="off" placeholder="' + ph + '"><button class="btn primary" type="submit">OK</button></form>';
   }
-  window.__ad = { bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, render: () => tRender(), label: adLabel, key: adMainKey };
+  function adHistCard(x, k) {
+    const dl = x.dir === "cj" ? "Conjugation" : x.dir === "en-es" ? "English → Spanish" : "Spanish → English";
+    return '<div class="prbox adh' + (x.ok ? " ok" : " bad") + (PR.view === k ? " adsel" : "") + '" id="adh-' + k + '"><p class="small muted">' + (k + 1) + " · " + dl + (x.skipped ? " · skipped" : "") + '</p><p><b>' + esc(x.prompt) + "</b></p>" +
+      x.att.map((a, i) => '<p class="small">' + (x.att.length > 1 ? "Try " + (i + 1) + ": " : "You: ") + "«" + esc(a.said) + "»" + (a.lines && a.lines.length && a.lines[0] !== "✓" ? '<br><span class="muted">' + a.lines.map((l) => esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")).join("<br>") + "</span>" : a.lines && a.lines[0] === "✓" ? " ✓" : "") + "</p>").join("") +
+      '<p class="adans">✓ ' + (x.diff || esc(x.model)) + "</p>" + (x.notes || []).map((n) => '<p class="small muted">' + esc(n) + "</p>").join("") + "</div>";
+  }
+  function adBack() { if (!PR || !PR.hist.length) return; PR.view = PR.view == null ? PR.hist.length - 1 : Math.max(0, PR.view - 1); tRender(); }
+  function adFwd() {
+    if (!PR) return;
+    if (PR.view != null) { PR.view = PR.view + 1 >= PR.hist.length ? null : PR.view + 1; tRender(); return; }
+    if (PR.ask) return; if (PR.over) adNext(); else adSkip();
+  }
+  // after each render: show the question you're looking at (the current one, or the one ‹ Back selected)
+  function adScroll() { const box = document.querySelector("#tutor .adwrap"); if (!box || !PR) return; const el = PR.view != null ? document.getElementById("adh-" + PR.view) : document.getElementById("ad-now");
+    if (el) { const top = el.offsetTop - box.offsetTop - 8; box.scrollTop = PR.view != null ? top : Math.max(top, 0); } }
+  window.__ad = { bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, enLang: adEnLang, back: () => adBack(), fwd: () => adFwd(), render: () => tRender(), label: adLabel, key: adMainKey };
   /* ==/ADAPTIVE== */

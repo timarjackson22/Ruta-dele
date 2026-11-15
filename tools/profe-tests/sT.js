@@ -54,6 +54,25 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.fill("#pr-input", "sí"); await p.press("#pr-input", "Enter"); await H.wait(300);
   const after = await p.evaluate(() => { const PR = window.__ad.pr(); return { focus: window.__ad.st("tr", PR.lv).focus, ask: PR.ask, it: !!PR.it }; });
   rec("Saying «sí» moves to a different kind of sentence", after.focus !== "v:pret" && !after.ask && after.it, JSON.stringify(after));
+  // waits for Next; history; back/next; kept after a restart (1 hour); ending the session clears it
+  await p.evaluate(() => { const PR = window.__ad.pr(); PR.ask = null; PR.it = { id: "h1", dir: "en-es", src: "I live near the sea.", ans: ["Vivo cerca del mar."], tags: ["v:pres", "d:en-es"], len: 4, ui: 0 }; PR.tries = 0; PR.fb = null; PR.over = false; PR.att = []; window.__ad.render(); });
+  await typeIt("Vivo cerca del mar"); await H.wait(4000);
+  const stay = await p.evaluate(() => ({ id: window.__ad.pr().it.id, over: window.__ad.pr().over, nav: document.querySelector("#tutor .adnav").innerText }));
+  rec("After the answer the question stays until Next (no auto-advance)", stay.id === "h1" && stay.over && /Next question/.test(stay.nav), JSON.stringify(stay));
+  const nHist0 = await p.evaluate(() => window.__ad.pr().hist.length);
+  await p.click('#tutor [data-act="ad-fwd"]'); await H.wait(500);
+  const hs = await p.evaluate(() => { const PR = window.__ad.pr(); const cards = [...document.querySelectorAll("#tutor .adhist .adh")]; return { n: PR.hist.length, last: cards.length ? cards[cards.length - 1].innerText.replace(/\s+/g, " ") : "", newId: PR.it.id }; });
+  rec("Next question: the answered one moves into the session history above (prompt, your answer, the answer)", hs.n === nHist0 + 1 && /I live near the sea/.test(hs.last) && /Vivo cerca del mar/.test(hs.last) && hs.newId !== "h1", JSON.stringify(hs));
+  await p.click('#tutor [data-act="ad-back"]'); await H.wait(300);
+  const bk = await p.evaluate(() => ({ view: window.__ad.pr().view, sel: !!document.querySelector("#tutor .adh.adsel"), nav: document.querySelector("#tutor .adnav").innerText.replace(/\s+/g, " ") }));
+  rec("‹ Back selects the previous question (and the bar shows where you are)", bk.view === hs.n - 1 && bk.sel && /Next ›/.test(bk.nav), JSON.stringify(bk));
+  await p.click('#tutor [data-act="ad-fwd"]'); await H.wait(300);
+  rec("Next › from history returns to the current question", await p.evaluate(() => window.__ad.pr().view === null));
+  const kept = await p.evaluate(() => JSON.parse(localStorage.getItem("ruta-adhist") || "null"));
+  rec("Session history is saved (restored for up to an hour)", kept && kept.items && kept.items.length === hs.n, JSON.stringify(kept && kept.items && kept.items.length));
+  await p.click('#tutor [data-act="pr-exit"]'); await H.wait(300);
+  rec("Ending the session (‹ All practice) clears the history", await p.evaluate(() => localStorage.getItem("ruta-adhist") === null));
+  await p.selectOption("#t-prsel", "trans"); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
   // conjugation: verbs grouped by behaviour; a miss brings verbs that behave the same way
   const grp = await p.evaluate(() => { const G = window.__ad.group; return { tener: G("tener", "pret"), poder: G("poder", "pret"), hacer: G("hacer", "pret"), decir: G("decir", "pret"), querer: G("querer", "pres"), dormir: G("dormir", "pres"), pedir: G("pedir", "pres"), salir: G("salir", "pres"), hablar: G("hablar", "pres"), tenerF: G("tener", "fut"), leer: G("leer", "pret") }; });
   rec("Verb groups: -uve, u-stem, i-stem, j-stem preterites; e→ie, o→ue, e→i, -go presents; irregular future stems", grp.tener === "uv" && grp.poder === "u" && grp.hacer === "i" && grp.decir === "j" && grp.querer === "e>ie" && grp.dormir === "o>ue" && grp.pedir === "e>i" && grp.salir === "go" && grp.hablar === "reg-ar" && grp.tenerF === "stem" && grp.leer === "y", JSON.stringify(grp));

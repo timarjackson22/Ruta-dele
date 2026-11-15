@@ -33,7 +33,7 @@ const MOCK = `(() => {
     Object.defineProperty(window, "speechSynthesis", { configurable: true, value: { speaking: false, getVoices: () => [{ name: "es", lang: "es-MX", localService: true }], speak(u) { setTimeout(() => u.onend && u.onend({}), 50); }, cancel() {}, pause() {}, resume() {} } });
   });
   const p = await c.newPage(); const er = []; p.on("pageerror", (x) => er.push(x.message));
-  const go = async (h) => { await p.goto("http://localhost:8766/#" + h); await p.waitForTimeout(900); };
+  const go = async (h) => { await p.goto("http://localhost:8766/#" + h); await p.waitForTimeout(900); await p.evaluate(() => document.querySelectorAll("details.vsec").forEach((d) => (d.open = true))); };
   const st = () => p.evaluate(() => ({ tab: (document.querySelector('.tabbar a[aria-current="page"]') || {}).dataset?.s || null, back: (document.getElementById("nb-back") || {}).hidden ? "" : (document.getElementById("nb-back-t") || {}).textContent, tucked: document.body.classList.contains("no-tabs"), wide: document.documentElement.scrollWidth > innerWidth + 1 }));
   const S = () => p.evaluate(() => JSON.parse(localStorage.getItem("ruta-dele-v1") || "{}"));
   const log = () => p.evaluate(() => window.__yt.log.splice(0));
@@ -43,7 +43,7 @@ const MOCK = `(() => {
   await go("practicar"); const row = await p.$('a[href="#videos"]'); rec("Practice has a Videos row", !!row);
   await row.click(); await p.waitForTimeout(700);
   let s = await st(); const cards = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href")));
-  const per = await p.$$eval("h2.ghead", (hs) => hs.map((h) => [h.textContent.replace(/\s*\(.*$/, ""), h.nextElementSibling.querySelectorAll(".vcard").length]));
+  await p.evaluate(() => document.querySelectorAll("details.vsec").forEach((d) => (d.open = true))); const per = await p.$$eval(".vsec > summary.ghead", (hs) => hs.map((h) => [h.textContent.replace(/\s*\(.*$/, "").replace(/\s*\d+$/, ""), h.parentElement.querySelectorAll(".vcard").length]));
   rec("Library: at least 4 videos in each of the 7 types", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Music", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] >= 4) && cards.includes("#video-WLXiu-qp8Lw"), JSON.stringify(per));
   rec("Only videos that play in apps: the 4 not allowed are gone", !["2GrDFoMl978", "rqiOwOmYO80", "-VxpA-9x0jc", "4oay8Hwdpjc", "O07zoqmdmrk", "xYYz5RTqbEs"].some((i) => cards.includes("#video-" + i)));
   rec("Music has Thiago Navarro's 4 most-viewed songs", ["i5neBtAgc-c", "6S243h-V3p4", "cEsp1dMTM1w", "aR0GjIVIAdo"].every((i) => cards.includes("#video-" + i)));
