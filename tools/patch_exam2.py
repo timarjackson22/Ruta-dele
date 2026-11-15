@@ -95,7 +95,7 @@ REC = r'''  // ---------- v2: record, then the words (Android, on-device); time 
   }
   function exRecFail(R, why) {
     if (!EX || EX.arec !== R) return; EX.arec = null; EX.recT = null; EX.noRec = true;
-    const m = { "no-ondevice": "This phone can't write down a recording on the device, so your words will appear as you speak instead.", "no-lang": "The offline Spanish speech pack isn't installed (Settings › Google › Voice › Offline speech recognition), so your words will appear as you speak instead.", "no-mic": "The microphone is blocked for Ruta DELE: allow it in Android Settings › Apps › Ruta DELE › Permissions, or type your answer." }[why];
+    const m = { "no-ondevice": "This phone can't write down a recording on the device, so your words will appear as you speak instead.", "no-lang": "The offline Spanish speech pack isn't installed (the Google app › your profile picture › Settings › Voice › Offline speech recognition › Spanish), so your words will appear as you speak instead.", "no-mic": "The microphone is blocked for Ruta DELE: allow it in Android Settings › Apps › Ruta DELE › Permissions, or type your answer." }[why];
     exPaintCtl(R.ti); if (R.res) R.res("");
     if (why !== "no-mic") { if (R.onDone) { const cv = EX.cv; if (cv) { cv.qi--; exNextQ(R.ti); } } else exMono(R.ti); } // carry on in live mode
     exStat(R.ti, m || "Recording didn't start (" + why + "): your words will appear as you speak instead.", why === "no-mic");
