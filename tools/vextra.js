@@ -48,6 +48,7 @@
       if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
       else if (text === "asking") vaBanner("Android will ask to record: choose Start (the app only listens to its own video).");
       else if (text === "stopped") { VA.on = false; vaFinish(); }
+      else if (text === "error:no-lang") { VA.on = false; vaBanner("Spanish speech recognition isn't downloaded on this phone, and no online speech service answered.", true); const b = document.getElementById("vabar"); if (b && window.__pvModelDl) b.insertAdjacentHTML("beforeend", ' <button class="btn small primary" data-act="pv-model-dl">Download Spanish</button>'); }
       else if (/^error:/.test(text)) { VA.on = false; vaBanner(text.slice(6), true); }
       return;
     }

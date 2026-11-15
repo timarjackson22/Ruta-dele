@@ -83,7 +83,7 @@ public class AudioCapBridge {
     @JavascriptInterface
     public void stop() { main.post(this::end); }
 
-    String engine = "";
+    String engine = ""; boolean skipOnDevice = false;
     void begin() {
         if (CaptureService.projection == null) { ev("state", "error:Android didn't start the recording."); CaptureService.stop(a); return; }
         try {
@@ -117,7 +117,7 @@ public class AudioCapBridge {
     void listen() {
         if (!running) return;
         try { if (sr != null) sr.destroy(); } catch (Exception ignored) { }
-        Object[] rc = Recog.create(a, true); // on-device, else Google's service (handles recorded audio), else the default
+        Object[] rc = Recog.create(a, true, skipOnDevice); // on-device, else Google's service (handles recorded audio), else the default
         if (rc == null) { ev("state", "error:This phone has no speech recognition service that can listen to the video."); end(); return; }
         sr = (SpeechRecognizer) rc[0]; if (!String.valueOf(rc[1]).equals(engine)) { engine = String.valueOf(rc[1]); ev("state", "engine:" + engine); }
         sr.setRecognitionListener(new RecognitionListener() {
@@ -135,7 +135,9 @@ public class AudioCapBridge {
             @Override public void onError(int err) {
                 if (!running) return;
                 if (err == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) { ev("state", "error:Speech recognition isn't allowed."); end(); return; }
-                if (err == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || err == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE) { ev("state", "error:Spanish speech recognition isn't installed on this phone (Settings › Google › Voice › Offline speech recognition)."); end(); return; }
+                if (err == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || err == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE) {
+                    if (!skipOnDevice) { skipOnDevice = true; main.postDelayed(AudioCapBridge.this::listen, 150); return; } // Spanish not downloaded on the phone: use Google's online service
+                    ev("state", "error:no-lang"); end(); return; }
                 main.postDelayed(AudioCapBridge.this::listen, err == SpeechRecognizer.ERROR_RECOGNIZER_BUSY ? 800 : 250);
             }
         });

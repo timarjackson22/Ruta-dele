@@ -42,7 +42,7 @@ public class ExamRecBridge {
     ByteArrayOutputStream pcm;
     final StringBuilder words = new StringBuilder();
     String lang = "es-US";
-    boolean stopping = false, failed = false, delivered = false, secondPass = false;
+    boolean stopping = false, failed = false, delivered = false, secondPass = false, skipOnDevice = false;
     int gen = 0;
 
     ExamRecBridge(MainActivity a, WebView web) { this.a = a; this.web = web; }
@@ -97,7 +97,7 @@ public class ExamRecBridge {
 
     void recognise(ParcelFileDescriptor src, final int g) {
         try { if (sr != null) sr.destroy(); } catch (Exception ignored) { }
-        Object[] rc = Recog.create(a, true); if (rc == null) { failed = true; return; } sr = (SpeechRecognizer) rc[0];
+        Object[] rc = Recog.create(a, true, skipOnDevice); if (rc == null) { failed = true; return; } sr = (SpeechRecognizer) rc[0];
         sr.setRecognitionListener(new RecognitionListener() {
             String best(Bundle b) { ArrayList<String> r = b == null ? null : b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); return r == null || r.isEmpty() ? "" : r.get(0); }
             void add(String s) { if (s.isEmpty()) return; if (words.length() > 0) words.append(' '); words.append(s); }
@@ -113,7 +113,9 @@ public class ExamRecBridge {
             @Override public void onResults(Bundle b) { if (g != gen) return; add(best(b)); if (stopping) finish(); else failed = true; /* the session ended early: the second pass will read the whole recording */ }
             @Override public void onError(int err) {
                 if (g != gen) return;
-                if (err == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || err == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE) { cleanup(); ev("state", "error:no-lang"); return; }
+                if (err == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED || err == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE) {
+                    if (!skipOnDevice && Recog.hasGoogle(a)) { skipOnDevice = true; failed = true; if (stopping) finish(); return; } // the recording is re-read by Google's service when you stop
+                    cleanup(); ev("state", "error:no-lang"); return; }
                 if (err == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) { cleanup(); ev("state", "error:no-mic"); return; }
                 failed = true; if (stopping) finish();
             }

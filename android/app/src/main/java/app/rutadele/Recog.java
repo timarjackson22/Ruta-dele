@@ -32,19 +32,57 @@ final class Recog {
         try {
             List<ResolveInfo> l = c.getPackageManager().queryIntentServices(new Intent(RecognitionService.SERVICE_INTERFACE), 0);
             ComponentName best = null;
-            for (ResolveInfo r : l) { String pk = r.serviceInfo.packageName; if (!pk.startsWith("com.google.android")) continue; ComponentName cn = new ComponentName(pk, r.serviceInfo.name); if (pk.equals(GOOGLE.getPackageName())) return cn; if (best == null) best = cn; }
-            return best;
+            // the online Google services: the Google app, or Speech Services by Google (com.google.android.tts); never Android System
+            // Intelligence (com.google.android.as), which is the on-device one and needs the same language model
+            ComponentName tts = null;
+            for (ResolveInfo r : l) { String pk = r.serviceInfo.packageName; ComponentName cn = new ComponentName(pk, r.serviceInfo.name);
+                if (pk.equals(GOOGLE.getPackageName())) return cn; if (pk.equals("com.google.android.tts")) tts = cn; else if (best == null && pk.startsWith("com.google.android") && !pk.equals("com.google.android.as")) best = cn; }
+            return tts != null ? tts : best;
         } catch (Exception e) { return null; }
     }
     static boolean hasGoogle(Context c) { return google(c) != null; }
 
     /** returns [recogniser, label] or null when nothing allowed is available */
-    static Object[] create(Context c, boolean allowOnline) {
-        if (onDevice(c)) return new Object[]{ SpeechRecognizer.createOnDeviceSpeechRecognizer(c), "on-device" };
+    static Object[] create(Context c, boolean allowOnline) { return create(c, allowOnline, false); }
+    /** skipOnDevice: the on-device recogniser said the language isn't installed, so use an online one */
+    static Object[] create(Context c, boolean allowOnline, boolean skipOnDevice) {
+        if (onDevice(c) && !skipOnDevice) return new Object[]{ SpeechRecognizer.createOnDeviceSpeechRecognizer(c), "on-device" };
         if (!allowOnline) return null;
         ComponentName g = google(c); if (g != null) return new Object[]{ SpeechRecognizer.createSpeechRecognizer(c, g), "google" };
         if (SpeechRecognizer.isRecognitionAvailable(c)) return new Object[]{ SpeechRecognizer.createSpeechRecognizer(c), "default" };
         return null;
+    }
+
+    /** Spanish (or any language) for the ON-DEVICE recogniser: is it installed, and download it (Android 13+). Results go to cb. */
+    interface Cb { void on(String type, String json); }
+    static void modelInfo(Context c, String lang, Cb cb) {
+        if (Build.VERSION.SDK_INT < 33 || !onDevice(c)) { cb.on("model", "{\"lang\":\"" + lang + "\",\"state\":\"unsupported\"}"); return; }
+        try {
+            final SpeechRecognizer r = SpeechRecognizer.createOnDeviceSpeechRecognizer(c);
+            Intent i = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, lang);
+            r.checkRecognitionSupport(i, c.getMainExecutor(), new android.speech.RecognitionSupportCallback() {
+                @Override public void onSupportResult(android.speech.RecognitionSupport s) {
+                    String st = has(s.getInstalledOnDeviceLanguages(), lang) ? "installed" : has(s.getPendingOnDeviceLanguages(), lang) ? "downloading" : has(s.getSupportedOnDeviceLanguages(), lang) ? "available" : "unsupported";
+                    cb.on("model", "{\"lang\":\"" + lang + "\",\"state\":\"" + st + "\"}"); try { r.destroy(); } catch (Exception ignored) { } }
+                @Override public void onError(int e) { cb.on("model", "{\"lang\":\"" + lang + "\",\"state\":\"unknown\",\"err\":" + e + "}"); try { r.destroy(); } catch (Exception ignored) { } }
+            });
+        } catch (Exception e) { cb.on("model", "{\"lang\":\"" + lang + "\",\"state\":\"unknown\"}"); }
+    }
+    static boolean has(List<String> l, String lang) { if (l == null) return false; String b = lang.split("-")[0]; for (String x : l) if (x.equalsIgnoreCase(lang) || x.replace('_', '-').equalsIgnoreCase(lang)) return true; return false; }
+    static void modelDownload(Context c, String lang, Cb cb) {
+        if (Build.VERSION.SDK_INT < 33 || !onDevice(c)) { cb.on("model-dl", "unsupported"); return; }
+        try {
+            final SpeechRecognizer r = SpeechRecognizer.createOnDeviceSpeechRecognizer(c);
+            Intent i = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH).putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, lang);
+            if (Build.VERSION.SDK_INT >= 34) {
+                r.triggerModelDownload(i, c.getMainExecutor(), new android.speech.ModelDownloadListener() {
+                    @Override public void onProgress(int p) { cb.on("model-dl", "progress:" + p); }
+                    @Override public void onSuccess() { cb.on("model-dl", "done"); try { r.destroy(); } catch (Exception ignored) { } }
+                    @Override public void onScheduled() { cb.on("model-dl", "scheduled"); try { r.destroy(); } catch (Exception ignored) { } }
+                    @Override public void onError(int e) { cb.on("model-dl", "error:" + e); try { r.destroy(); } catch (Exception ignored) { } }
+                });
+            } else { r.triggerModelDownload(i); cb.on("model-dl", "started"); }
+        } catch (Exception e) { cb.on("model-dl", "error:" + e.getMessage()); }
     }
 
     /** what this phone offers, for Mic diagnostics */

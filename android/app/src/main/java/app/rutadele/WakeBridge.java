@@ -51,6 +51,13 @@ public class WakeBridge {
     @JavascriptInterface
     public String info() { return Recog.info(a); }
 
+    /** is Spanish installed for on-device recognition / download it (events: __awake.ev("model", json), ("model-dl", state)) */
+    @JavascriptInterface
+    public void modelInfo(final String lang) { main.post(() -> Recog.modelInfo(a, lang, this::ev)); }
+    @JavascriptInterface
+    public void modelDownload(final String lang) { main.post(() -> Recog.modelDownload(a, lang, this::ev)); }
+    boolean skipOnDevice = false;
+
     /** start, allowing an online recogniser when the phone has no on-device one (the learner agreed in Settings) */
     @JavascriptInterface
     public void startOnline(final String language) { begin(language, true); }
@@ -87,7 +94,7 @@ public class WakeBridge {
     void listen() {
         if (!on) return;
         if (sr == null) {
-            Object[] rc = Recog.create(a, online);
+            Object[] rc = Recog.create(a, online, skipOnDevice);
             if (rc == null) { halt(); ev("state", "no-ondevice"); return; }
             sr = (SpeechRecognizer) rc[0]; ev("state", "engine:" + rc[1]);
             sr.setRecognitionListener(new RecognitionListener() {
@@ -104,7 +111,9 @@ public class WakeBridge {
                     if (!on) return;
                     if (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) { retry(150); return; }
                     if (e == SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS) { halt(); ev("state", "no-mic"); return; }
-                    if (e == 12 || e == 13) { halt(); ev("state", "no-lang"); return; } // language not supported / not downloaded
+                    if (e == 12 || e == 13) { // Spanish isn't downloaded for on-device recognition: use the online service if allowed
+                        if (online && !skipOnDevice) { skipOnDevice = true; if (sr != null) { try { sr.destroy(); } catch (Exception ignored) { } sr = null; } retry(200); return; }
+                        halt(); ev("state", "no-lang"); return; }
                     // busy, client or audio errors: start again with a fresh recogniser, backing off; give up after 6 in a row
                     if (++errs > 6) { halt(); ev("state", "error"); return; }
                     if (sr != null) { try { sr.destroy(); } catch (Exception ignored) { } sr = null; }

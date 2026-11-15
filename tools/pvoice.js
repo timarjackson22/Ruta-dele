@@ -290,6 +290,12 @@
   window.__awake = { ev(type, v) {
     pvLog("wake " + type + (v && type !== "partial" ? " " + v : ""));
     if (type === "state" && /^engine:/.test(String(v))) { HF.engine = String(v).slice(7); return; }
+    if (type === "model") { try { const j = JSON.parse(v); HF.model = j.state; } catch (e) {} pvModelPaint(); return; }
+    if (type === "model-dl") { const x = String(v); HF.dl = x; pvLog("spanish model " + x);
+      if (x === "done") { HF.model = "installed"; try { coachToast("Spanish speech recognition is downloaded. “Ok Profe”, exam recording and video captions now work on the phone, offline."); } catch (e) {} }
+      else if (x === "scheduled") try { coachToast("The Spanish download is scheduled: Android will finish it (often on Wi-Fi, while charging)."); } catch (e) {}
+      else if (/^error/.test(x)) try { coachToast("Android couldn't download Spanish speech recognition (" + x + "). Try again on Wi-Fi."); } catch (e) {}
+      pvModelPaint(); return; }
     if (type === "state") { if (v === "no-ondevice" || v === "no-lang") { HF.mode = "tap"; HF.eng = "off"; HF.note = v; hfNotice(v); } else if (v === "no-mic") { HF.eng = "off"; hfNotice("no-mic"); } else if (v === "error") { HF.eng = "off"; HF.settle = Date.now() + 5000; } else if (v === "stopped") HF.eng = "off"; hfPaint(); return; }
     if (HF.eng !== "on" || hfBusy()) return; // Profe is speaking or the mic is in use: never wake on that
     const t = String(v || ""), m = t.match(PV_WAKE); if (!m) return;
@@ -351,7 +357,12 @@
     next(); }
   function hfBeep() { try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = hfBeep.c || (hfBeep.c = new C()), o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.06; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.12); } catch (e) {} }
   const hfOnText = () => HF.mode === "wake" ? "Hands-free is on. Say “Ok Profe” whenever you need me." : "Hands-free is on. Tap the Profe pill and speak; I'll keep listening for follow-ups.";
-  function hfNotice(k) { const m = { "no-ondevice": "“Ok Profe” needs on-device speech recognition, which this phone doesn't have. Tap the pill to talk instead.", "no-lang": "“Ok Profe” needs the offline Spanish speech pack: the Google app › your profile picture › Settings › Voice › Languages (add Spanish). Until then, tap the pill to talk.", "no-mic": "The microphone is blocked for Ruta DELE. Allow it in Android Settings › Apps › Ruta DELE › Permissions (or the browser's site settings), then turn hands-free on again." }[k]; if (m) try { coachToast(m); } catch (e) {} }
+  const PV_MODEL = { installed: "downloaded ✓", downloading: "downloading…", available: "not downloaded yet", unsupported: "not available on this phone", unknown: "unknown" };
+  function pvModelPaint() { const el = document.getElementById("pv-model"); if (!el) return; const st = HF.dl && /^progress:/.test(HF.dl) ? "downloading " + HF.dl.slice(9) + "%" : HF.dl === "scheduled" ? "download scheduled" : PV_MODEL[HF.model] || "checking…"; el.textContent = st;
+    document.querySelectorAll('[data-act="pv-model-dl"]').forEach((b) => (b.hidden = HF.model === "installed" || HF.model === "unsupported")); }
+  function pvModelCheck() { try { if (window.AndroidWake && window.AndroidWake.modelInfo) window.AndroidWake.modelInfo(sttLang()); } catch (e) {} }
+  window.__pvModelDl = () => { try { HF.dl = "progress:0"; pvModelPaint(); window.AndroidWake.modelDownload(sttLang()); } catch (e) {} };
+  function hfNotice(k) { const m = { "no-ondevice": "“Ok Profe” needs on-device speech recognition, which this phone doesn't have. Tap the pill to talk instead.", "no-lang": "Spanish speech recognition isn't downloaded on this phone yet. Download it with one tap in Profe › History & settings › Hands-free (“Download Spanish”). Until then, tap the pill to talk.", "no-mic": "The microphone is blocked for Ruta DELE. Allow it in Android Settings › Apps › Ruta DELE › Permissions (or the browser's site settings), then turn hands-free on again." }[k]; if (m) try { coachToast(m); } catch (e) {} }
   function hfEnable(on) {
     if (on) { const m = hfMode(); if (!m) { hfNotice("no-mic"); return; } HF.mode = m;
       if (window.AndroidWake && hfStatus() === "online" && !TS.hfOnline) try { coachToast("This phone has no on-device speech recognition, so for now tap the Profe pill to talk. To use “Ok Profe”, allow online recognition in Profe › History & settings › Hands-free."); } catch (e) {} HF.on = true; HF.paused = false; TS.hf = true; tsave(); if (!HF.tm) HF.tm = setInterval(hfReconcile, 300); }
@@ -375,6 +386,7 @@
     else if (a === "hf-toggle") { hfEnable(!HF.on); try { if (typeof tView !== "undefined") tRender(); } catch (x) {} }
     else if (a === "hf-pause") hfPause(true);
     else if (a === "t-speak") { tOpen(); tView = "chat"; tRender(); voiceMode = true; uiVoice(); setTimeout(() => listen((x) => tSend(x, true)), 60); }
+    else if (a === "pv-model-dl") window.__pvModelDl();
     else if (a === "pv-diag") { const d = document.getElementById("pv-diag-out"); let info = ""; try { if (window.AndroidWake && window.AndroidWake.info) info = "Phone: " + window.AndroidWake.info() + "\n"; } catch (x) {} if (d) d.textContent = info + "Hands-free: " + (HF.on ? HF.mode + (HF.online ? " online" : "") + " · engine " + (HF.engine || "—") + " · listener " + HF.eng : "off") + "\n" + (PV_DIAG.slice().reverse().join("\n") || "No microphone events yet."); }
   });
   document.addEventListener("change", (e) => { if (e.target && e.target.dataset && e.target.dataset.act === "hf-online") { TS.hfOnline = e.target.checked; tsave(); if (HF.on) { hfWakeStop(); HF.mode = hfMode(); hfReconcile(); } try { tRender(); } catch (x) {} } });
@@ -384,7 +396,10 @@
     return '<section class="block pvset"><h3>Hands-free <span class="vb newb">beta</span></h3><p class="small">' + (m === "wake" ? "Say <b>“Ok Profe”</b> to talk to Profe without touching the screen: open lessons, answer questions, control reading and practise. Listening for “Ok Profe” happens on your phone; no audio is sent anywhere until you’ve said it. It stops when the app is in the background." : m === "tap" ? "This " + (window.AndroidWake ? "phone has no on-device speech recognition, so" : "browser would send the room’s audio to its speech service to listen for a wake phrase, so") + " “Ok Profe” isn’t available here. With hands-free on, tap the Profe pill once and keep talking: Profe listens for follow-ups and reads lesson questions aloud." : "Hands-free needs a microphone and speech recognition, which aren’t available here.") + "</p>" +
       (st === "online" ? '<p class="small"><label><input type="checkbox" data-act="hf-online"' + (TS.hfOnline ? " checked" : "") + '> Use online speech recognition for “Ok Profe”</label><br><span class="muted">This phone has no on-device recognition, so without this you tap the Profe pill to talk. With it, Google’s (or your phone’s) speech service listens while hands-free is on, which may send audio to it. It stops in the background and while Profe speaks.</span></p>' : "") +
       (m ? '<button class="btn ' + (HF.on ? "" : "primary") + '" data-act="hf-toggle" aria-pressed="' + HF.on + '">' + (HF.on ? "Turn hands-free off" : "Turn hands-free on") + "</button>" + (HF.on ? ' <span class="small muted">Now: ' + (HF.mode === "wake" ? "listening for “Ok Profe”" + (HF.online ? " (online)" : " (on the phone)") : "tap the Profe pill to talk") + "</span>" : "") : "") +
+      (window.AndroidWake && window.AndroidWake.modelInfo ? '<p class="small">Spanish speech recognition on this phone: <b id="pv-model">' + (PV_MODEL[HF.model] || "checking…") + '</b> <button class="btn small" data-act="pv-model-dl"' + (HF.model === "installed" ? " hidden" : "") + '>Download Spanish</button><br><span class="muted">Used for “Ok Profe”, exam recording and captions from a video’s sound, on the phone, offline.</span></p>' : "") +
       '<details class="pvdiag"><summary>Mic diagnostics</summary><p class="small muted">The last microphone and voice-command events, newest first. If the mic doesn’t work, this shows why.</p><button class="btn small" data-act="pv-diag">Show</button><pre id="pv-diag-out" class="small"></pre></details></section>';
   }
   window.__pv = { px: () => PX, S: () => S, LI: () => Object.keys(LI), say: (t, cb) => { window.__pvSayOK = 1; speakMixed(t, cb || (() => {})); window.__pvSayOK = 0; }, view: () => tView, raStop: () => { try { raStop(true); } catch (e) {} }, match: (t, c) => { const m = pvMatch(t, Object.assign(pvCtx(), c || {})); return m ? m.a.id : null; }, norm: pvNorm, route: pvRoute, reg: PVR, hf: HF, diag: PV_DIAG, ctx: pvCtx, wake: (t) => PV_WAKE.test(t), answer: pvAnswer };
   if (TS.hf) setTimeout(() => hfEnable(true), 1200);
+  setTimeout(pvModelCheck, 1500); addEventListener("hashchange", () => setTimeout(() => { if (document.getElementById("pv-model")) pvModelCheck(); }, 100));
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="t-tab"][data-v="hist"]'); if (t) setTimeout(pvModelCheck, 100); });

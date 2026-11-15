@@ -274,7 +274,7 @@ const INIT = () => {
   // no Spanish pack: says why and carries on live
   await ra.evaluate(() => { location.hash = "a1-examen-12-oral"; window.__AR.fail = "no-lang"; }); await ra.waitForTimeout(500); await ra.click('[data-act="ex-start"][data-free="1"]'); await ra.waitForTimeout(200);
   await ra.click('[data-act="ex-mic"][data-t="0"]'); await ra.waitForTimeout(400);
-  rec("No offline Spanish pack: says where to get it and carries on with live words", /offline Spanish speech pack/.test(await ra.textContent("#app")) && (await ra.evaluate(() => !!window.__sr())), await ra.textContent("#ex-live-0"));
+  rec("No offline Spanish pack: says where to get it and carries on with live words", /Download Spanish/.test(await ra.textContent("#app")) && (await ra.evaluate(() => !!window.__sr())), await ra.textContent("#ex-live-0"));
   rec("No script errors (record mode)", !ra.er.length, ra.er.join(" | "));
 
   // ---------- G. iPhone: one phrase per session ----------
