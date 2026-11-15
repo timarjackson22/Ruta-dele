@@ -1,0 +1,11 @@
+const { chromium, devices } = require("playwright");
+(async () => { const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
+  await c.addInitScript(() => { window.AndroidApp = { version: () => JSON.stringify({ name: "1.0.212", code: 212, updated: Date.UTC(2026, 10, 14, 23, 50) }) }; });
+  const p = await c.newPage(); const er = []; p.on("pageerror", (x) => er.push(x.message));
+  await p.goto("http://localhost:8766/#ajustes"); await p.waitForTimeout(1500);
+  const t = await p.evaluate(() => [document.getElementById("ver-rel").closest("p").textContent, (document.getElementById("ver-apk") || {}).textContent]);
+  console.log(t, er);
+  const ok = /Version v\d+ · built \w+ \d+, \d{4}, \d+:\d\d/.test(t[0]) && /Android app 1\.0\.212 · installed or updated/.test(t[1]);
+  console.log((ok ? "PASS" : "FAIL") + " Settings shows the release number, build date and time, and the Android app version");
+  await p.evaluate(() => { location.hash = "inicio"; }); await p.waitForTimeout(300); await p.evaluate(() => { location.hash = "ajustes"; }); await p.waitForTimeout(600);
+  console.log(((await p.textContent("#ver-rel")) !== "…" ? "PASS" : "FAIL") + " …also when opened again"); await b.close(); })();
