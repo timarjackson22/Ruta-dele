@@ -1,4 +1,8 @@
 {
+"apk-later": {
+"voice": "unsuitable",
+"why": "dismiss the app-update banner"
+},
 "aw-back": {
 "voice": "unsuitable",
 "why": "read-aloud 'back to my place' button"
