@@ -18,6 +18,7 @@ const CORPUS = [
   ["next word", "vdrill", "drill.next"], ["siguiente", "vdrill", "drill.next"], ["previous word", "vdrill", "drill.prev"], ["la anterior", "vdrill", "drill.prev"],
   ["repeat the last word more slowly", "vdrill", "drill.repeat"], ["again", "vdrill", "drill.repeat"], ["repítela más despacio", "vdrill", "drill.repeat"],
   ["slower please", "vdrill", "drill.slower"], ["más despacio", "vdrill", "drill.slower"], ["faster", "vdrill", "drill.faster"], ["más rápido", "vdrill", "drill.faster"],
+  ["open my food word list", "home", "vocab.open"], ["take me to the travel vocabulary", "home", "vocab.open"], ["abre la lista de comida", "home", "vocab.open"], ["open the verbs list", "home", "nav.verbs"],
   ["pause that", "videoplay", "play.pause"], ["start it", "unit", "lesson.quiz"], ["practise ordering food with me", "home", "practise.convo"],
   // navigation, English
   ["open my lessons", "home", "nav.course"], ["Open my lessons.", "home", "nav.course"], ["show me the course", "home", "nav.course"], ["go to lessons", "home", "nav.course"], ["take me to my lessons please", "home", "nav.course"],
@@ -84,7 +85,9 @@ const HELD = [
   ["never mind", "home", "hf.stop"], ["olvídalo", "home", "hf.stop"], ["what are my options", "home", "meta.here"], ["me gustaría ir al cine el sábado", "tutor", null], ["can you help me with my homework", "home", null],
 ];
 // REAL PHONE (S24 log, 15 Nov 2026): what the recogniser actually wrote. Before the fix: 0/3.
-const REAL = [["Okay profe open the left with ayo One flashcards", "home", "nav.cards"], ["Okay profe Open deliver e One flashcards", "home", "nav.cards"], ["me to flash cards", "home", "nav.review"]];
+const REAL = [["Okay profe open the left with ayo One flashcards", "home", "nav.cards"], ["Okay profe Open deliver e One flashcards", "home", "nav.cards"], ["me to flash cards", "home", "nav.review"],
+  // second S24 log (v165, 02:08), Spanish recogniser on English commands; 0/4 before
+  ["Open up Levy One flashcards", "home", "nav.cards"], ["Take me to my Food Wireless", "home", "vocab.open"], ["Okay profe me to my Birds Wireless", "home", "nav.verbs"], ["Okay profe Take me to my Food Wireless", "home", "vocab.open"]];
 // HELD-OUT 3: the instructions in the learner's own brief (tools/PROFE_EVAL_BRIEF.md). Before stage 1: 1/9.
 const HELD3 = [["Play the video in this lesson.", "video", "video.play"], ["Pause that.", "videoplay", "play.pause"], ["Go back ten seconds.", "video", "video.seek"], ["Play my food vocabulary list.", "home", "vocab.drill"],
   ["Read each Spanish word, give me the English meaning, and leave time for me to repeat.", "home", "vocab.drill"], ["Repeat the last word more slowly.", "vdrill", "drill.repeat"], ["Explain that in English.", "tutor", "profe.explain"],
@@ -125,7 +128,7 @@ const HELD2 = [
   const h2ok = h2.filter((r) => r[2] === r[3]).length, h2bad = h2.filter((r) => r[2] === null && r[3]), h2wrong = h2.filter((r) => r[2] && r[3] && r[2] !== r[3]);
   h2.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("HELD-OUT-2 MISS [" + c + "] «" + t + "» expected " + e + " got " + g));
   console.log("INFO Held-out 2 (first measured 33/40 = 83% before its general fixes): " + h2ok + "/" + h2.length + " (" + ((h2ok / h2.length) * 100).toFixed(0) + "%) · conversation taken as a command: " + h2bad.length + " · wrong action: " + h2wrong.length);
-  for (const [name, set] of [["Real phone transcripts (0/3 before)", REAL], ["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
+  for (const [name, set] of [["Real phone transcripts (0/7 before their fixes)", REAL], ["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
     const hr = await p.evaluate(([corpus, C]) => corpus.map(([t, c, e]) => { const base = { unit: false, runner: false, "runner-mc": false, "runner-text": false, "runner-fb": false, "runner-open": false, guide: false, playing: false, paused: false, player: false, tutor: false, drill: false, video: false, vdrill: false }; return [t, c, e, window.__pv.match(t, Object.assign(base, C[c]))]; }), [set, C]);
     hr.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("MISS (" + name.split(" (")[0] + ") [" + c + "] «" + t + "» expected " + e + " got " + g));
     console.log("INFO " + name + ": " + hr.filter((r) => r[2] === r[3]).length + "/" + hr.length); }

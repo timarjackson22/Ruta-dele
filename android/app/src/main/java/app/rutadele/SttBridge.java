@@ -37,6 +37,10 @@ public class SttBridge {
         main.post(() -> web.evaluateJavascript("window.__astt && __astt.ev('" + type + "'," + a + "," + s + ")", null));
     }
 
+    /** this version understands "en-US|es-US" (several languages, auto-switching on Android 14+) */
+    @JavascriptInterface
+    public boolean multiLang() { return true; }
+
     @JavascriptInterface
     public boolean available() { return SpeechRecognizer.isRecognitionAvailable(act); }
 
@@ -46,8 +50,7 @@ public class SttBridge {
             this.lang = lang == null || lang.isEmpty() ? "es-US" : lang;
             this.interim = interim;
             this.continuous = continuous;
-            sid++; ready = false; retried = false;
-            stale = !ended || rec != null; // a previous session may still report back: ignore it until this one is ready
+            sid++; ready = false; retried = false; tries = 0;
             this.ended = false;
             if (!SpeechRecognizer.isRecognitionAvailable(act)) { js("error", "service-not-allowed"); end(); return; }
             if (!act.hasMic()) { pending = true; act.askMic(); return; }
@@ -63,52 +66,54 @@ public class SttBridge {
         else { js("error", "not-allowed"); end(); }
     }
 
+    int tries = 0;
     void begin() {
-        if (rec == null) {
-            rec = SpeechRecognizer.createSpeechRecognizer(act);
-            rec.setRecognitionListener(new RecognitionListener() {
-                @Override public void onReadyForSpeech(Bundle b) { stale = false; ready = true; js("start", null); }
-                @Override public void onBeginningOfSpeech() { }
-                @Override public void onRmsChanged(float v) { }
-                @Override public void onBufferReceived(byte[] b) { }
-                @Override public void onEndOfSpeech() { }
-                @Override public void onEvent(int t, Bundle b) { }
-                @Override public void onPartialResults(Bundle b) {
-                    if (stale) return;
-                    ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) { lastPartial = r.get(0); if (interim) js("partial", r.get(0)); }
+        // a fresh recogniser for every session (S24 log, Nov 2026: reusing one and ignoring "stale" events hid the errors, so after "Ok Profe"
+        // the page heard nothing and never learnt why). Each listener only acts for its own session.
+        final int my = sid;
+        if (rec != null) { try { rec.cancel(); rec.destroy(); } catch (Exception ignored) { } rec = null; }
+        rec = SpeechRecognizer.createSpeechRecognizer(act);
+        rec.setRecognitionListener(new RecognitionListener() {
+            boolean mine() { return my == sid; }
+            @Override public void onReadyForSpeech(Bundle b) { if (!mine()) return; ready = true; tries = 0; js("start", null); }
+            @Override public void onBeginningOfSpeech() { }
+            @Override public void onRmsChanged(float v) { }
+            @Override public void onBufferReceived(byte[] b) { }
+            @Override public void onEndOfSpeech() { }
+            @Override public void onEvent(int t, Bundle b) { }
+            @Override public void onPartialResults(Bundle b) {
+                if (!mine()) return;
+                ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) { lastPartial = r.get(0); if (interim) js("partial", r.get(0)); }
+            }
+            @Override public void onResults(Bundle b) {
+                if (!mine()) return;
+                ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
+                else if (!lastPartial.isEmpty()) js("final", lastPartial);
+                lastPartial = "";
+                if (continuous && active) { main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 150); }
+                else { active = false; end(); }
+            }
+            @Override public void onError(int e) {
+                if (!mine() || ended) return;
+                // the microphone or the service is still held (by the wake listener a moment ago, or a session ending): try again, up to 3 times
+                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_AUDIO) && !ready && active && tries < 3) {
+                    tries++; js("note", "retry " + tries + " after error " + e);
+                    main.postDelayed(() -> { if (sid == my && active) begin(); }, 300L * tries);
+                    return;
                 }
-                @Override public void onResults(Bundle b) {
-                    if (stale) return;
-                    ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                    if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
-                    else if (!lastPartial.isEmpty()) js("final", lastPartial);
-                    lastPartial = "";
-                    if (continuous && active) { main.postDelayed(() -> { if (active) listenOnce(); }, 150); }
-                    else { active = false; end(); }
+                if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
+                if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
+                if (continuous && active && ready && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
+                    main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 150);
+                    return;
                 }
-                @Override public void onError(int e) {
-                    if (ended) return;
-                    if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT) && !ready && !retried && active) {
-                        retried = true; final int my = sid;
-                        try { rec.destroy(); } catch (Exception ignored) { } rec = null;
-                        main.postDelayed(() -> { if (sid == my && active) begin(); }, 350);
-                        return;
-                    }
-                    if (stale) return;
-                    if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
-                    if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
-                    if (continuous && active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
-                        main.postDelayed(() -> { if (active) listenOnce(); }, 150);
-                        return;
-                    }
-                    active = false;
-                    js("error", code(e));
-                    end();
-                }
-            });
-        }
-        try { rec.cancel(); } catch (Exception ignored) { } // a recogniser still busy with the last session would refuse to start
+                active = false;
+                js("error", code(e) + (ready ? "" : " (before the mic opened, code " + e + ")"));
+                end();
+            }
+        });
         listenOnce();
     }
 
@@ -128,8 +133,18 @@ public class SttBridge {
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         if (android.os.Build.VERSION.SDK_INT >= 33 && !bias.isEmpty()) i.putStringArrayListExtra(RecognizerIntent.EXTRA_BIASING_STRINGS, new ArrayList<>(bias));
         i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
-        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, lang);
+        // "en-US|es-US": listen for the first language and, on Android 14+, also detect and switch to the others
+        // (hands-free commands are often English while practice is Spanish; the Spanish recogniser turned «level A1» into «Levy One»)
+        String[] langs = lang.split("\\|"); String primary = langs[0];
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, primary);
+        i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, primary);
+        if (langs.length > 1 && android.os.Build.VERSION.SDK_INT >= 34) {
+            ArrayList<String> all = new ArrayList<>(java.util.Arrays.asList(langs));
+            i.putExtra(RecognizerIntent.EXTRA_ENABLE_LANGUAGE_DETECTION, true);
+            i.putStringArrayListExtra(RecognizerIntent.EXTRA_LANGUAGE_DETECTION_ALLOWED_LANGUAGES, all);
+            i.putExtra(RecognizerIntent.EXTRA_ENABLE_LANGUAGE_SWITCH, RecognizerIntent.LANGUAGE_SWITCH_BALANCED);
+            i.putStringArrayListExtra(RecognizerIntent.EXTRA_LANGUAGE_SWITCH_ALLOWED_LANGUAGES, all);
+        }
         i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, interim);
         i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
         i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, continuous ? 3500 : 2000);

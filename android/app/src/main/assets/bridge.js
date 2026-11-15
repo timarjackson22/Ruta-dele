@@ -68,6 +68,7 @@
         else if (type === "partial") { var l = r._final.map(function (t) { return alt(t, true); }); l.push(alt(a, false)); fire(r, l, r._final.length); }
         else if (type === "final") { r._final.push(a); fire(r, r._final.map(function (t) { return alt(t, true); }), r._final.length - 1); }
         else if (type === "error") { try { if (r.onerror) r.onerror({ error: a }); } catch (e) {} }
+        else if (type === "note") { try { if (window.__pvLog) window.__pvLog("stt " + a); } catch (e) {} }
         else if (type === "end") { active = null; try { if (r.onend) r.onend({}); } catch (e) {} }
       }
     };
