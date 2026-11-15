@@ -47,7 +47,7 @@ def clean_gloss(g):
     return g[:160] + ("…" if len(g) > 160 else "")
 
 phr, words, stats = {}, {}, collections.Counter()
-FORMS = {}
+FORMS = {}; UNL = set()  # words with at least one sense that has no register/region label: never shown as informal on their own
 place_n, reg_n = collections.Counter(), collections.Counter()
 samples = collections.defaultdict(list)
 op = gzip.open if SRC.endswith(".gz") else open
@@ -92,6 +92,7 @@ with op(SRC, "rt", encoding="utf-8") as f:
             if "Panama" in where and len(samples["Panama phrases"]) < 25: samples["Panama phrases"].append(w + " = " + gl[:60])
         else:
             lab = [(g, r, p) for g, r, p, x in senses if (set(r) - {"old", "arc", "rar"}) or p]
+            if len(lab) < len(senses): UNL.add(w.lower())
             if not lab: continue
             stats["labelled words"] += 1
             k = w.lower()
@@ -105,8 +106,10 @@ with op(SRC, "rt", encoding="utf-8") as f:
             if "Panama" in where and len(samples["Panama words"]) < 40: samples["Panama words"].append(w + " = " + gl[:60])
             if "slg" in reg and len(samples["slang"]) < 25: samples["slang"].append(w + " [" + ",".join(where) + "] = " + gl[:50])
 
-# drop phrases that are only archaic/rare
-P = [v for v in phr.values() if not (set(v[3]) and set(v[3]) <= {"old", "arc", "rar"})]
+for k, v in words.items(): v[5] = k not in UNL
+# drop phrases that are only archaic/rare, and plain grammar pairs ("de la", "lo que") unless they're labelled colloquial/slang
+STOP = set("de la el los las lo que un una unos unas en es y a o se me te le les nos al del con por para su sus mi mis tu tus este esta ese esa no sí si ser estar ha he hay más muy como".split())
+P = [v for v in phr.values() if not (set(v[3]) and set(v[3]) <= {"old", "arc", "rar"}) and not (all(x in STOP for x in v[0].lower().split()) and not set(v[3]) & {"col", "slg", "vul"})]
 W = {k: v for k, v in words.items() if not (set(v[2]) and set(v[2]) <= {"old", "arc", "rar"} and not v[3])}
 bank = {"v": 1, "src": "Wiktionary (CC BY-SA 4.0) via kaikki.org/wiktextract", "P": P, "W": W}
 js = json.dumps(bank, ensure_ascii=False, separators=(",", ":"))
