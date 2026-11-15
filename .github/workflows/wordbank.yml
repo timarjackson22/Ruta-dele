@@ -1,0 +1,17 @@
+name: wordbank
+# Spanish word bank from Wiktionary (kaikki.org, CC BY-SA): expressions, slang and regional words, plus a coverage report. tools/WORDBANK_BRIEF.md
+on: { workflow_dispatch: {} }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          set -e
+          curl -sSL -o es.jsonl.gz https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl.gz || true
+          if ! gzip -t es.jsonl.gz 2>/dev/null; then rm -f es.jsonl.gz; curl -sSL -o es.jsonl https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl; ls -l es.jsonl; python3 tools/wordbank.py es.jsonl out; else ls -l es.jsonl.gz; python3 tools/wordbank.py es.jsonl.gz out; fi
+          zcat -f es.jsonl* | grep -m1 '"word": "echar una mano"' | cut -c1-1500 || true
+          zcat -f es.jsonl* | grep -m1 '"word": "chévere"' | cut -c1-1500 || true
+          ls -l out
+      - uses: actions/upload-artifact@v4
+        with: { name: wordbank, path: out }
