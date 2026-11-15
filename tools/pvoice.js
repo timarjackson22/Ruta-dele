@@ -156,7 +156,8 @@
     "nav.words": () => pvGo("palabras", "the word lists"),
     "nav.vocab": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-vocab", "the " + pvLvName(lv) + " vocabulary"); },
     "nav.cards": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-cards", "the " + pvLvName(lv) + " flashcards"); },
-    "nav.review": () => pvGo("repaso", "Review"), "nav.mistakes": () => pvGo("errores", "your mistakes"), "nav.progress": () => pvGo("progreso", "your progress"), "nav.plan": () => pvGo("plan", "your study plan"),
+    "nav.review": () => pvGo("repaso", "Review"), "nav.mistakes": () => pvGo("errores", "your mistakes"), "nav.progress": () => pvGo("progreso", "your progress"), "nav.plan": () => pvGo("plan", "your study plan"), "nav.cheats": () => pvGo("chuletas", "the Revision Cheat Sheets"),
+    "nav.cheat": (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return pvGo("chuletas", "the Revision Cheat Sheets"); return pvGo("chuleta-" + t, "the cheat sheet: " + (GUIDES.find((g) => g.id === t) || { en: t }).en); },
     "plan.setup": async () => { const o = PV.org || "chat"; if (o !== "hf") { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); } planChatStart(o === "voice" && !document.body.classList.contains("tutor-open") ? "hf" : o); return { ok: planChatOn(), own: 1, say: "" }; }, "nav.settings": () => pvGo("ajustes", "Settings"),
     "nav.exams": () => pvGo("examenes", "the full exams"),
     "nav.exam": (s) => { const here = /^#(a1|a2|b1|b2|c1|c2)-examen-(\d+)/.exec(location.hash) || [], lv = pvLv(s) || here[1] || "a1", n = pvN(s) || (here[2] ? +here[2] : 0), paper = pvFind(s, PV_PAPER); if (!n) return { ok: false, say: "Which exam number?" }; if ((typeof EXREADY !== "undefined" ? EXREADY[lv] || 0 : 0) < n) return { ok: false, say: "DELE " + pvLvName(lv) + " has " + ((typeof EXREADY !== "undefined" && EXREADY[lv]) || 0) + " exams ready." };

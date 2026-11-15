@@ -43,6 +43,22 @@
   "voice": "unsuitable",
   "why": "bookmark save"
  },
+ "ch-bm": {
+  "voice": "pending",
+  "why": "save a cheat sheet by voice"
+ },
+ "ch-bmf": {
+  "voice": "unsuitable",
+  "why": "show saved cheat sheets (filter)"
+ },
+ "ch-lv": {
+  "voice": "unsuitable",
+  "why": "filter chips on the cheat-sheet list"
+ },
+ "ch-print": {
+  "voice": "unsuitable",
+  "why": "printing needs the system print dialog"
+ },
  "cst-st": {
   "voice": "complete",
   "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"
