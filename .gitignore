@@ -5,3 +5,4 @@ android/local.properties
 eval/out/
 eval/node_modules/
 eval/package*.json
+tools/exgen/__pycache__/

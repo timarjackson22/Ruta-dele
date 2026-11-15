@@ -53,3 +53,12 @@ The phone ran an older APK: no `multiLang` (commands captured in es-US only) and
 | 23 | Screen | talking hands-free | screen stays on | screen went dark | keep-screen-on and dimming only knew about reading aloud | hands-free and voice chat keep the screen on and never dim | sF ("keeps the screen awake") |
 | 24 | Video captions (phone) | English line under the caption | as good as online | worse than online | the phone translated every line with the offline ML Kit model | caption lines use the online translator when there's a connection, ML Kit offline | caption-translation-test 8/8 |
 | 25 | Redo questions | clear an answer (right or wrong) and redo it | anywhere | not possible per question | only whole-set resets existed | tools/patch_redo.py: "↺ Redo" on practice questions and every multiple-choice list; voice `q.redo` ("redo question 2") | sR 10/10 |
+
+## 15 Nov 2026, 10:20 request (round 4)
+| # | Area | Said / did | Expected | Observed | Cause | Fix | Check |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 26 | Page awareness | hands-free, Profe opens a page | "You're now on X. You can say A, B or C. What would you like to do?" | silent arrival | replies only said what was done | `PV_PAGES` + `pvPageIntro()`: page name and three phrases that really work there (shorter on return visits; none over a video or song you asked for); "what can I do here" starts with where you are | sP (every suggested phrase is routed for real on 25 pages) |
+| 27 | Exams by voice | «open A1 exam 1», «start the reading paper» on an exam page | opens | offered options | patterns needed "exam N" without a level in front; papers needed the exam number | new nav.exam patterns; exam number taken from the page | sP |
+| 28 | Practice level | A1 vocabulary drill | A1 words | hard words | pool mixed every theme list, incl. long phrases | words from the level's own units first (tables like the alphabet excluded), short entries only; verbs: 40/120/300/600/1000/1500 most common by level | sU |
+| 29 | Stop during a page intro | «stop» while Profe introduces a page | stays quiet | listened again afterwards | a speech-end fallback timer still ran the follow-up | `HF.cut`: stop cancels any pending follow-up | sH |
+| 30 | Ask Profe about a video | the retell's "Ask Profe" button | Profe evaluates the summary | "Did you mean the video…?" | long prepared prompts were matched as a request to open things | messages over 120 characters or with line breaks go to Profe, not to command matching | videos-test |

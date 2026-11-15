@@ -156,7 +156,7 @@
     "nav.cards": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-cards", "the " + pvLvName(lv) + " flashcards"); },
     "nav.review": () => pvGo("repaso", "Review"), "nav.mistakes": () => pvGo("errores", "your mistakes"), "nav.progress": () => pvGo("progreso", "your progress"), "nav.settings": () => pvGo("ajustes", "Settings"),
     "nav.exams": () => pvGo("examenes", "the full exams"),
-    "nav.exam": (s) => { const lv = pvLv(s) || "a1", n = pvN(s), paper = pvFind(s, PV_PAPER); if (!n) return { ok: false, say: "Which exam number?" }; if ((typeof EXREADY !== "undefined" ? EXREADY[lv] || 0 : 0) < n) return { ok: false, say: "DELE " + pvLvName(lv) + " has " + ((typeof EXREADY !== "undefined" && EXREADY[lv]) || 0) + " exams ready." };
+    "nav.exam": (s) => { const here = /^#(a1|a2|b1|b2|c1|c2)-examen-(\d+)/.exec(location.hash) || [], lv = pvLv(s) || here[1] || "a1", n = pvN(s) || (here[2] ? +here[2] : 0), paper = pvFind(s, PV_PAPER); if (!n) return { ok: false, say: "Which exam number?" }; if ((typeof EXREADY !== "undefined" ? EXREADY[lv] || 0 : 0) < n) return { ok: false, say: "DELE " + pvLvName(lv) + " has " + ((typeof EXREADY !== "undefined" && EXREADY[lv]) || 0) + " exams ready." };
       return pvGo(lv + "-examen-" + n + (paper ? "-" + paper : ""), "DELE " + pvLvName(lv) + " exam " + n + (paper ? ", " + { lectura: "reading", auditiva: "listening", escritura: "writing", oral: "speaking" }[paper] : "")); },
     "exam.reset": async (s) => { const n = pvN(s), k = "a1-" + n; if (!n) return { ok: false, say: "Which exam?" }; if (!(S.ex && S.ex[k])) return { ok: false, say: "Exam " + n + " has no results to clear." };
       pvClick("ex-reset", { k }); return (await pvUntil(() => !(S.ex && S.ex[k]), 800)) ? { ok: true, say: "Cleared the results of exam " + n + "." } : { ok: false, say: "I couldn't clear them." }; },
@@ -186,7 +186,7 @@
     "profe.open": async () => { tOpen(); return { ok: await pvUntil(() => document.body.classList.contains("tutor-open"), 600), say: "", quiet: 1 }; },
     "profe.close": async () => { pvCloseProfe(); return { ok: await pvUntil(() => !document.body.classList.contains("tutor-open"), 600), say: "", quiet: 1 }; },
     "profe.new": async () => { tOpen(); await pvWait(50); if (!pvClick("t-new")) return { ok: false, say: "I couldn't start a new chat." }; return { ok: true, say: "New chat. ¿De qué quieres hablar?" }; },
-    "meta.here": () => ({ ok: true, say: pvHelpHere(), keep: 1 }),
+    "meta.here": () => { let w = ""; try { w = pvPageIntro(null, 1); } catch (e) {} return { ok: true, say: (w ? w + " " : "") + pvHelpHere(), keep: 1 }; },
     "meta.can": () => ({ ok: true, say: pvHelpAll(), keep: 1 }),
     "hf.stop": () => { hfQuiet(); return { ok: true, say: "", quiet: 1, end: 1 }; },
     "hf.on": () => { hfEnable(true); return { ok: HF.on, say: HF.on ? hfOnText() : "Hands-free isn't available here." }; },
@@ -228,6 +228,7 @@
     if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
     const m = pvMatch(raw, c);
     if (!m && (c.exam || c.qdrill) && pvAnswerX(raw, s, c, origin)) return true; // an answer said on an exam paper or in the quick drill
+    if (!m && (s.length > 120 || /\n/.test(raw))) return false; /* a long message or a prepared prompt (Ask Profe about a video) is for Profe, not a command */
     if (!m) return pvSeqTry(raw, origin) || pvResolve(raw, s, c, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
     // a practice task is running in the chat: "let's stop here" goes to Profe, which closes the task with a short summary (sC C4)
@@ -247,8 +248,58 @@
     pvExec(m.a, m.s, origin); return true;
   }
   const pvConfirmText = (a, s) => a.id === "exam.reset" ? "Clear the results of exam " + pvN(s) + "?" : a.id === "q.restart" ? "Start these questions again from the beginning?" : a.purpose + "?";
+  // ---------- arriving on a page in hands-free: say where you are and what you can say there ----------
+  const PV_LVN = (l) => (l || "").toUpperCase();
+  const PV_PAGES = [
+    [/^(hoy|inicio)?$/, () => "the Home page", ["continue where I left off", "review my flashcards", "play a song"]],
+    [/^curso$/, () => "the Course page", ["open A1", "open B1", "find my level"]],
+    [/^(a1|a2|b1|b2|c1|c2)$/, (m) => "the " + PV_LVN(m[1]) + " level page", ["open unit 1", "open the flashcards", "open the exams"]],
+    [/^(a1|a2|b1|b2|c1|c2|esc)-u(\d+)$/, (m) => "unit " + m[2] + (pvUnitT(m[1], +m[2]) ? ", " + pvUnitT(m[1], +m[2]) : ""), ["start the practice", "read the lesson to me", "next unit"]],
+    [/^(a1|a2|b1|b2|c1|c2)-examenes$/, (m) => "the DELE " + PV_LVN(m[1]) + " exams list", ["open exam 1", "open exam 2", "go back"]],
+    [/^(a1|a2|b1|b2|c1|c2)-examen-(\d+)(-([a-z]+))?$/, (m) => "DELE " + PV_LVN(m[1]) + " exam " + m[2] + (m[4] ? ", " + ({ lectura: "reading", auditiva: "listening", escritura: "writing", oral: "speaking" }[m[4]] || m[4]) + " paper" : ""), (m) => m[4] ? (pvCtx().exam ? ["question 1, b", "next question", "submit the paper"] : ["start", "practise without a timer", "go back"]) : ["start the reading paper", "start the listening paper", "go back"]],
+    [/^examenes$/, () => "the Exams page", ["open A1 exam 1", "open B1 exam 1", "go home"]],
+    [/^drill$/, () => "the quick drill", ["check", "skip", "go back"]],
+    [/^practicar$/, () => "the Practice page", ["quiz me on the words I got wrong", "review my flashcards", "show my mistakes"]],
+    [/^repaso$/, () => "your flashcards", ["show my mistakes", "flashcards for this level", "go home"]],
+    [/^errores$/, () => "your mistakes", ["review my mistakes", "review my flashcards", "go home"]],
+    [/^biblioteca$/, () => "the Library", ["play a song", "open videos", "open the stories"]],
+    [/^escuchar$/, () => "the Listening page", ["play a song", "play a podcast", "open the stories"]],
+    [/^leer$/, () => "the Reading page", ["open the stories", "open listening", "go back"]],
+    [/^escritura$/, () => "the Writing tasks", ["open the exams", "go back"]],
+    [/^escritura-.+$/, () => "a writing task", ["read the task", "check my writing", "go back"]],
+    [/^videos$/, () => "the Videos page", ["play a video", "go back"]],
+    [/^video-.+$/, () => "the video page", ["pause", "repeat that", "captions in English"]],
+    [/^verbos$/, () => "the Verb dictionary", ["open the verb comer", "reflexive verbs", "go back"]],
+    [/^verbo-\d+$/, () => "a verb page", ["conjugate it in the past", "open the verb tener", "go back"]],
+    [/^palabras$/, () => "the word list", ["open the word casa", "flashcards for this level", "go back"]],
+    [/^palabra-.+$/, () => "a dictionary word", ["say it", "open the word perro", "go back"]],
+    [/^gramatica$/, () => "the Grammar map", ["open the verbs", "open the grammar guides", "go back"]],
+    [/^guias$/, () => "the Grammar guides", ["open ser and estar", "open por and para", "go back"]],
+    [/^guia-.+$/, () => "a grammar guide", ["start the practice", "explain this page", "go back"]],
+    [/^nivel$/, () => "the placement test", ["start", "go back"]],
+    [/^progreso$/, () => "your progress", ["continue my lesson", "go home"]],
+    [/^recursos$/, () => "Resources", ["go home"]],
+    [/^ajustes$/, () => "Settings", ["turn off hands-free", "go home"]],
+    [/^costes$/, () => "the service costs dashboard", ["go back", "go home"]],
+  ];
+  function pvUnitT(lv, n) { try { const u = LV[lv].units[n - 1]; return u ? u.t : ""; } catch (e) { return ""; } }
+  function pvPageIntro(h, nameOnly) {
+    h = (h == null ? location.hash : h).replace(/^#/, "");
+    let name = "", says = null;
+    for (const [re, nm, sy] of PV_PAGES) { const m = re.exec(h); if (m) { name = nm(m); says = typeof sy === "function" ? sy(m) : sy; break; } }
+    if (!name) { try { const L = typeof LI !== "undefined" && LI[h]; if (L) { name = "«" + L.t + "»"; says = ["read it to me", "play it", "go back"]; } } catch (e) {} }
+    if (!name) { const c = typeof pageCtx === "function" ? pageCtx() : null; if (!c || !c.label) return ""; name = c.label; says = ["explain this page", "go back"]; }
+    if (nameOnly) return "You're on " + name + ".";
+    PV.seen = PV.seen || {}; const key = name.replace(/\d+/g, "#"), first = !PV.seen[key]; PV.seen[key] = 1;
+    if (!first) return "You're on " + name + ". What would you like to do?";
+    const q = says.slice(0, 3).map((x) => "“" + x + "”"), list = q.length > 1 ? q.slice(0, -1).join(", ") + " or " + q[q.length - 1] : q[0];
+    return "You're now on " + name + ". You can say " + list + ". What would you like to do?";
+  }
+  const PV_GENERIC = /^(ok(ay)?[,.]? )?(opening|opened|going to|taking you|here'?s|here is|here are|done|sure)\b[^.]{0,70}\.?$/i;
+
   async function pvExec(a, s, origin, confirmed) {
     pvLog("cmd " + a.id + " «" + (typeof s === "string" ? s : (s && s.label) || "") + "»");
+    const h0 = location.hash, ch0 = PV.choice;
     const gen = PV.execGen = (PV.execGen || 0) + 1; // each request gets an id: a slow one that finishes after a newer request mustn't speak over it
     PV.running = (PV.running || 0) + 1; PV.runAt = Date.now(); // while an action is still working (opening a page, waiting for a player) the exchange isn't over
     const t0 = performance.now(); let r; try { r = await PVH[a.id](s, pvCtx()); } catch (e) { r = { ok: false, say: "Something went wrong doing that." }; pvLog("cmd error " + a.id + " " + (e && e.message)); }
@@ -257,6 +308,11 @@
     if (gen !== PV.execGen) { pvLog("cmd " + a.id + " finished after a newer request: its reply is dropped"); return; }
     window.__pvLast = { id: a.id, ok: !!r.ok, say: r.say || "" };
     pvSess(a.id, r);
+    // hands-free and the page changed: confirm where you are and what you can say here (not in a lesson loop, not over a playing video)
+    if (origin === "hf" && r.ok && !r.own && !r.end && !r.lesson && !r.quiet && !(PV.choice && PV.choice !== ch0) && !HF.lesson && location.hash !== h0 && !document.body.classList.contains("tutor-open")) {
+      const asks = !!(r.say && (/\?\s*$/.test(r.say.trim()) || (r.say.trim().length > 50 && !PV_GENERIC.test(r.say.trim())))); /* the reply already asks or explains something: just say where you are first */ let intro = ""; try { intro = pvPageIntro(null, asks ? 1 : 0); } catch (e) {}
+      if (intro && !pvCtx().playing && !/^#(video|song)-/.test(location.hash)) { /* a video or song you asked for: its own reply already says what opened, and you want to watch, not talk */ r.say = asks ? intro + " " + r.say.trim() /* the action already asks something (which video?): just say where you are first */ : (r.say && !PV_GENERIC.test(r.say.trim()) ? r.say.trim().replace(/([^.!?])$/, "$1.") + " " : "") + intro; r.quiet = false; pvLog("page intro: " + intro); }
+    }
     if (r.own) return; // the action runs its own spoken loop (word list, role-play)
     if (r.end) { hfEnd(); return; }
     if (r.lesson || (HF.lesson && (r.next || r.fb))) { hfLessonStep(r.say || ""); return; }
@@ -366,9 +422,9 @@
     PV.skip = 1; tOpen(); tSend(text, true);
   }
   // follow-ups: no wake phrase needed for a few seconds after Profe finishes
-  function hfFollow() { if (!HF.on || HF.paused) { hfEnd(); return; } HF.engaged = true; hfCapture((t) => (t ? hfHandle(t) : hfEnd()), { startMs: 8000 }); }
+  function hfFollow() { if (!HF.on || HF.paused) { hfEnd(); return; } pvLog("follow-up listen"); HF.engaged = true; hfCapture((t) => (t ? hfHandle(t) : hfEnd()), { startMs: 8000 }); }
   function hfEnd() { HF.engaged = false; HF.lesson = HF.lesson && pvCtx().runner ? HF.lesson : false; hfReconcile(); }
-  function hfQuiet() { try { speechCut(); } catch (e) {} SPK_GEN++; try { speechSynthesis.cancel(); } catch (e) {} HF.saying = false; try { if (typeof listening !== "undefined" && listening) stopListening(); } catch (e) {} hfAbort(); HF.lesson = false; voiceMode = false; lastVoice = false; try { uiVoice(); } catch (e) {} }
+  function hfQuiet() { HF.cut = (HF.cut || 0) + 1; try { speechCut(); } catch (e) {} SPK_GEN++; try { speechSynthesis.cancel(); } catch (e) {} HF.saying = false; try { if (typeof listening !== "undefined" && listening) stopListening(); } catch (e) {} hfAbort(); HF.lesson = false; voiceMode = false; lastVoice = false; try { uiVoice(); } catch (e) {} }
   // stop every other user of the recogniser before listening (video captions from audio, the card pronunciation check, an exam recording)
   function hfStopOthers() {
     try { if (typeof VA !== "undefined" && VA && VA.on) vaStop(); } catch (e) {}
@@ -400,7 +456,7 @@
     return Math.min(endWait(t), o && o.lesson ? 4500 : 9000);
   }
   function hfAbort() { const r = HF.rec; if (r) { HF.rec = null; try { r._fin && r._fin(null); } catch (e) {} } }
-  function hfSay(text, then) { if (!HF.on && then) { const t0 = then; then = () => {}; } HF.saying = true; hfPaint(); let called = false; const go = () => { if (called) return; called = true; HF.saying = false; HF.settle = Date.now() + 400; hfPaint(); then && then(); };
+  function hfSay(text, then) { if (!HF.on && then) { const t0 = then; then = () => {}; } HF.saying = true; hfPaint(); let called = false; const cut = HF.cut || 0; const go = () => { if (called) return; called = true; HF.saying = false; HF.settle = Date.now() + 400; hfPaint(); if ((HF.cut || 0) !== cut) return; /* "stop" was said meanwhile: no follow-up listening */ then && then(); };
     try { if (canSpeak && Array.isArray(text)) { hfSaySeq(text, go); const est = 1500 + text.reduce((n, x) => n + x[0].split(/\s+/).length, 0) * 450; setTimeout(() => { if (!hfSpeaking()) go(); }, est); }
       else if (canSpeak) { window.__pvSayOK = 1; speakMixed(text, go); window.__pvSayOK = 0; setTimeout(() => { if (!hfSpeaking() && !called) { /* speech never started */ } }, 4000); const est = 1500 + text.split(/\s+/).length * 450; setTimeout(() => { if (!hfSpeaking()) go(); }, est); } else go(); } catch (e) { go(); } }
   function hfSaySeq(segs, done) { const gen = ++SPK_GEN; try { speechSynthesis.cancel(); } catch (e) {} let k = 0;
@@ -473,7 +529,7 @@
   function pvSetRefresh() { const o = document.querySelector(".pvset"); if (!o) return; const open = o.querySelector(".pvdiag") && o.querySelector(".pvdiag").open, out = o.querySelector("#pv-diag-out") ? o.querySelector("#pv-diag-out").textContent : ""; o.outerHTML = pvSettingsHTML(); const n = document.querySelector(".pvset"); if (open) { n.querySelector(".pvdiag").open = true; n.querySelector("#pv-diag-out").textContent = out; } }
   window.__pvVoskDl = () => { try { HF.vdl = "progress:0"; window.AndroidWake.voskDownload(); } catch (e) {} pvSetRefresh(); };
 
-  window.__pv = { px: () => PX, S: () => S, LI: () => Object.keys(LI), say: (t, cb) => { window.__pvSayOK = 1; speakMixed(t, cb || (() => {})); window.__pvSayOK = 0; }, view: () => tView, raStop: () => { try { raStop(true); } catch (e) {} }, match: (t, c) => { const m = pvMatch(t, Object.assign(pvCtx(), c || {})); return m ? m.a.id : null; }, norm: pvNorm, route: pvRoute, reg: PVR, hf: HF, diag: PV_DIAG, ctx: pvCtx, wake: (t) => PV_WAKE.test(t), answer: pvAnswer };
+  window.__pv = { px: () => PX, S: () => S, LI: () => Object.keys(LI), say: (t, cb) => { window.__pvSayOK = 1; speakMixed(t, cb || (() => {})); window.__pvSayOK = 0; }, view: () => tView, raStop: () => { try { raStop(true); } catch (e) {} }, match: (t, c) => { const m = pvMatch(t, Object.assign(pvCtx(), c || {})); return m ? m.a.id : null; }, norm: pvNorm, route: pvRoute, reg: PVR, hf: HF, diag: PV_DIAG, ctx: pvCtx, intro: pvPageIntro, wake: (t) => PV_WAKE.test(t), answer: pvAnswer };
   if (TS.hf) setTimeout(() => hfEnable(true), 1200);
   setTimeout(pvModelCheck, 1500); addEventListener("hashchange", () => setTimeout(() => { if (document.getElementById("pv-model")) pvModelCheck(); }, 100));
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="t-tab"][data-v="hist"]'); if (t) setTimeout(pvModelCheck, 100); });

@@ -972,5 +972,9 @@
  "cst-st": {
   "voice": "complete",
   "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"
+ },
+ "pr-type": {
+  "voice": "complete",
+  "why": "Profe's practice-type picker (role-plays / speaking tasks list)"
  }
 }

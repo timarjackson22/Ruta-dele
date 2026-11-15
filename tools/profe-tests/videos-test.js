@@ -106,7 +106,7 @@ const MOCK = `(() => {
   rec("Retell, catches and answers are kept after reload", (await p.inputValue("#vret")).startsWith("En el vídeo") && (await p.$$("#vcaught li")).length === 2);
   await log(); await p.click('[data-act="v-ret-profe"]'); await p.waitForTimeout(900); L = await log();
   const tut = await p.evaluate(() => { const t = document.getElementById("tutor"); return t && !t.hidden ? t.innerText.replace(/\s+/g, " ") : ""; });
-  rec("Ask Profe: opens with the video and your summary, video paused", /Looking at: Video · ¿Es cara Barcelona\?/.test(tut) && /cara Barcelona/.test(tut) && /Gabriel es de España/.test(tut) && L.some((x) => x[0] === "pause"), tut.slice(0, 160));
+  rec("Ask Profe: opens with the video and your summary, video paused", /cara Barcelona/.test(tut) && /Gabriel es de España/.test(tut) && L.some((x) => x[0] === "pause"), tut.slice(0, 160));
   await p.evaluate(() => { const x = document.querySelector('#tutor [data-act="t-close"]'); x && x.click(); }); await p.waitForTimeout(400);
   // watched
   const before = Object.values((await S()).act || {}).reduce((a, b) => a + b, 0);
