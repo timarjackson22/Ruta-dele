@@ -17,6 +17,7 @@
     for (let k = 0; k < 3; k++) s = s.replace(/^\s*(profe|hey|oye|ok|okay|okey|vale|bueno|so|um+|eh+|well|and|y)\s+/, "");
     s = s.replace(/\b(please|por favor|porfa|porfavor)\b/g, " ").replace(/^\s*(can|could|would|will) you (please )?/, "").replace(/^\s*(me )?(puedes|podrias)\s+/, "")
       .replace(/^\s*(i want to|i would like to|id like to|i wanna|quiero|me gustaria)\s+(?=(open|go|see|start|abrir|ir|ver|empezar|continuar|seguir)\b)/, "");
+    s = s.replace(/^\s*(lets|let us|can we|could we|shall we|should we)\s+(?=(do|go|play|read|review|practi[cs]e|start|watch|open|try|hear|listen|quiz|drill|run)\b)/, ""); // "let's do my travel words" = "do my travel words"
     s = s.replace(/\b(a|be|b|ce|c|se)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => ({ a: "a", be: "b", b: "b", ce: "c", c: "c", se: "c" }[l]) + (/uno|one|1/.test(n) ? "1" : "2"));
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema)\s+(number|numero|no|nr)\s+/g, "$1 ");
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema|number|numero|question|pregunta)\s+([a-z]+)\b/g, (m, x, n) => (PV_NUM[n] ? x + " " + PV_NUM[n] : m));
@@ -52,6 +53,7 @@
     try { if (typeof RA !== "undefined" && RA.on) { if (RA.paused) paused = true; else playing = true; } } catch (e) {}
     try { if (typeof VP !== "undefined" && VP.p && VP.p.getPlayerState && pvQ("#vplayer, .vframe, #vp")) { const st = VP.p.getPlayerState(); if (st === 1) playing = true; else if (st === 2 || st === 5) paused = true; } } catch (e) {}
     return { unit: run, runner: q, "runner-mc": mc, "runner-text": txt, "runner-fb": fb, "runner-open": mc || txt, guide: !!pvQ('[data-act="ra-start"]'), playing, paused, player: !!pvQ("#pl-rate"),
+      video: typeof VP !== "undefined" && !!VP.p && !!pvQ("#vplayer, .vframe, #vp"), vdrill: !!(typeof DR !== "undefined" && DR.on),
       tutor: document.body.classList.contains("tutor-open"), drill: !!(typeof PR !== "undefined" && PR && document.body.classList.contains("tutor-open") && typeof tView !== "undefined" && tView === "practice") };
   }
   const pvWhen = (w, c) => !w || w.split("|").some((k) => c[k]);
@@ -81,10 +83,13 @@
     if (/^(ex-reset|px-restart)$/.test(act)) { b = document.createElement("button"); b.dataset.act = act; Object.assign(b.dataset, data || {}); b.hidden = true; document.body.appendChild(b); b.click(); b.remove(); return true; }
     return false;
   }
+  const PV_RT = { n: 0 }; addEventListener("hashchange", () => setTimeout(() => { PV_RT.n++; }, 0)); // counts page renders (after the app's own hashchange handler)
   async function pvGo(h, label) {
     if (location.hash.slice(1) === h) return { ok: true, say: "You're already in " + label + "." };
-    pvCloseProfe(); location.hash = h;
-    const ok = await pvUntil(() => location.hash.slice(1) === h && app.children.length && !/^\s*Loading/.test(app.textContent), 3000);
+    pvMark();
+    pvCloseProfe(); const n0 = PV_RT.n; location.hash = h;
+    // wait for the app to actually render the new page (the old page's content must not count as success)
+    const ok = await pvUntil(() => location.hash.slice(1) === h && PV_RT.n > n0 && app.children.length && !/^\s*Loading/.test(app.textContent), 3000);
     return ok ? { ok: true, say: "Here's " + label + "." } : { ok: false, say: "I couldn't open " + label + "." };
   }
   const pvLvName = (lv) => lv.toUpperCase();
@@ -201,9 +206,10 @@
     if (PV.clar && now < PV.clar.until) { const q = PV.clar; PV.clar = null;
       if (/^(answer|my answer|its my answer|respuesta|es mi respuesta|mi respuesta|la respuesta)$/.test(s)) { pvAnswer(q.raw, origin); return true; }
       if (PV_YES.test(s) || q.a.re.some((re) => re.test(s)) || /^(command|go back|do it|comando)$/.test(s)) { pvExec(q.a, q.s, origin); return true; } }
-    const m = pvMatch(raw, c); if (!m) return false;
+    if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
+    const m = pvMatch(raw, c); if (!m) return pvSeqTry(raw, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
-    if (origin !== "hf" && m.a.id === "hf.stop" && !engaged && !(typeof listening !== "undefined" && listening) && !hfSpeaking()) return false; // "gracias" in a chat is just thanks
+    if (origin !== "hf" && m.a.id === "hf.stop" && !engaged && !(typeof listening !== "undefined" && listening) && !hfSpeaking() && !DR.on) return false; // "gracias" in a chat is just thanks
     // command or answer? a bare Spanish word while a question waits for an answer is the answer, or we ask
     if (m.a.bare && pvAnswerCtx(c) && pvSpanishish(raw) && !/^q\.(check|show|skip)$/.test(m.a.id) && m.s.split(" ").length <= 2) {
       if (c.drill && !engaged) return false;
@@ -223,6 +229,8 @@
     const t0 = performance.now(); let r; try { r = await PVH[a.id](s, pvCtx()); } catch (e) { r = { ok: false, say: "Something went wrong doing that." }; pvLog("cmd error " + a.id + " " + (e && e.message)); }
     r = r || { ok: false, say: "" }; if (a.route) window.__pvLat = Math.round(performance.now() - t0); pvLog("cmd " + a.id + " → " + (r.ok ? "ok" : "failed"));
     window.__pvLast = { id: a.id, ok: !!r.ok, say: r.say || "" };
+    pvSess(a.id, r);
+    if (r.own) return; // the action runs its own spoken loop (word list, role-play)
     if (r.end) { hfEnd(); return; }
     if (r.lesson || (HF.lesson && (r.next || r.fb))) { hfLessonStep(r.say || ""); return; }
     if (r.quiet && r.ok) { if (origin === "hf" && !document.body.classList.contains("tutor-open")) hfFollow(); return; }
@@ -428,3 +436,169 @@
   if (TS.hf) setTimeout(() => hfEnable(true), 1200);
   setTimeout(pvModelCheck, 1500); addEventListener("hashchange", () => setTimeout(() => { if (document.getElementById("pv-model")) pvModelCheck(); }, 100));
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="t-tab"][data-v="hist"]'); if (t) setTimeout(pvModelCheck, 100); });
+  // ===================== Profe evaluation brief, stage 1: real actions for media, word lists, mistakes, sessions (tools/PROFE_EVAL_BRIEF.md) =====================
+  // numbers said in words, English and Spanish
+  const PV_NUMS = Object.assign({ "a few": 5, few: 5, fifteen: 15, twenty: 20, thirty: 30, un: 1, uno: 1, unos: 5, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, quince: 15, veinte: 20, treinta: 30 }, PV_NUM);
+  function pvSecs(s) { const m = s.match(/(\d+)\s*(seconds?|secs?|segundos?)/); if (m) return +m[1]; for (const k of Object.keys(PV_NUMS).sort((a, b) => b.length - a.length)) if (new RegExp("\\b" + k + "\\b(?= (seconds?|secs?|segundos?))").test(s)) return PV_NUMS[k]; return /rewind/.test(s) ? 10 : null; }
+  const pvMmss = (t) => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
+  // --- where we were: a small stack of places, saved before a voice action leaves them ---
+  PV.marks = PV.marks || [];
+  function pvMark() {
+    const h = location.hash.slice(1); if (!h || /^(inicio|curso|practicar|ajustes|progreso)$/.test(h)) return;
+    const m = { h, t: Date.now(), label: (document.querySelector("h1") || {}).textContent || h };
+    try { if (typeof VP !== "undefined" && VP.p && VP.id) m.vt = vpT(); } catch (e) {}
+    try { if (typeof PL !== "undefined" && PL.items && PL.items.length && pvQ("#pl-play")) m.pi = PL.i; } catch (e) {}
+    const top = PV.marks[PV.marks.length - 1]; if (top && top.h === h) PV.marks.pop(); PV.marks.push(m); if (PV.marks.length > 8) PV.marks.shift();
+  }
+  // --- the session: what was done, for the summary at the end ---
+  PV.sess = PV.sess || { t0: Date.now(), n: 0, words: 0, ids: {} };
+  function pvSess(id, r) { if (!r || !r.ok) return; PV.sess.n++; PV.sess.ids[id] = (PV.sess.ids[id] || 0) + 1; }
+  // --- multi-step requests: "open my next lesson and start it", "stop the lesson and practise ordering food with me" ---
+  const PV_SPLIT = /\s*(?:,?\s*\b(?:and then|then|and after that|after that|and|y luego|luego|y despues|despues|y)\b)\s+/;
+  function pvSeqParts(raw) { const s = pvNorm(raw); if (s.split(" ").length < 4) return null; const parts = s.split(PV_SPLIT).map((x) => x.trim()).filter(Boolean); return parts.length >= 2 && parts.length <= 4 ? parts : null; }
+  function pvSeqTry(raw, origin) {
+    const parts = pvSeqParts(raw); if (!parts) return false;
+    if (!pvMatch(parts[0], pvCtx())) return false; // only when it clearly starts with a command; otherwise it's conversation for Profe
+    const key = "seq|" + parts.join("|"), now = Date.now(); if (PV.last && PV.last.key === key && now - PV.last.t < 1500) return true; PV.last = { key, t: now };
+    PV.seqGen = (PV.seqGen || 0) + 1; pvSeq(parts, origin, PV.seqGen); return true;
+  }
+  async function pvSeq(parts, origin, gen) {
+    const said = [];
+    for (let i = 0; i < parts.length; i++) {
+      if (gen !== PV.seqGen) return; // a newer instruction replaced this one
+      const m = pvMatch(parts[i], pvCtx());
+      if (!m) {
+        if (i === parts.length - 1 && i > 0) { pvLog("seq: last part to Profe «" + parts[i] + "»"); PV.skip = 1; tOpen(); tSend(parts[i], origin !== "chat"); return; }
+        pvReply((said.length ? said.join(" ") + " But I" : "I") + " didn't understand “" + parts[i] + "”, so I stopped there.", origin, { listen: 1 }); return;
+      }
+      pvLog("seq " + (i + 1) + "/" + parts.length + " " + m.a.id + " «" + parts[i] + "»");
+      let r; try { r = await PVH[m.a.id](m.s, pvCtx()); } catch (e) { r = { ok: false, say: "Something went wrong." }; }
+      r = r || { ok: false }; pvSess(m.a.id, r);
+      if (!r.ok) { pvReply((said.length ? said.join(" ") + " But: " : "") + (r.say || "I couldn't do “" + parts[i] + "”.") + (i < parts.length - 1 ? " I didn't do the rest." : ""), origin, { listen: 1 }); return; }
+      if (i === parts.length - 1) { // the last step decides what happens next (its own loop, the lesson questions, or a reply)
+        window.__pvLast = { id: m.a.id, ok: true, say: r.say || "", seq: parts.length };
+        if (r.own) return;
+        if (r.lesson) { hfLessonStep((said.join(" ") + " " + (r.say || "")).trim()); return; }
+        const out = (said.concat(r.say ? [r.say] : [])).join(" ").replace(/Here's /g, "Opened ").trim();
+        if (r.quiet && !out) { if (origin === "hf") hfFollow(); return; }
+        pvReply(out || "Done.", origin, { listen: 1 }); return;
+      }
+      if (r.say && !r.quiet) said.push(r.say.replace(/^Here's /, "Opened "));
+      await pvWait(250);
+    }
+  }
+  // --- word lists read aloud: Spanish word, English meaning, time to repeat ---
+  var DR = { on: false, words: [], i: 0, rate: 1, gap: 3, title: "", gen: 0, last: null };
+  function drTopic(s) {
+    const q = " " + s.replace(/\b(play|read|practi[cs]e|drill|go through|run through|do|start|say|me|my|the|our|this|vocabulary|vocab|words?|word list|list|with|and|english|meanings?|translations?|then|let|leave|time|for|to|ill|repeat|them|it|each|every|all|spanish|give|repasa|repasemos|practica|practiquemos|lee|leeme|pon|ponme|dime|el|mi|las|la|los|vocabulario|palabras|lista|de|del|sobre)\b/g, " ").replace(/\s+/g, " ").trim() + " ";
+    const t = q.trim(); if (!t) return null;
+    const EN = { food: "food|comida|cooking|restaurant", drink: "drink|bebida", family: "family|familia", travel: "travel|viaje|trip", work: "work|trabajo|job|office", house: "home|house|casa|vivienda|housing", body: "body|cuerpo|health|salud", clothes: "clothes|ropa|shopping|compras", weather: "weather|clima|tiempo", city: "city|ciudad|places", transport: "transport|transporte", school: "school|escuela|studies|estudios", sport: "sport|deporte|free time" };
+    const words = t.split(" ").filter((w) => w.length > 2); const lvs = [curLevel()].concat(["a1", "a2", "b1", "b2", "c1", "c2"].filter((x) => x !== curLevel()));
+    for (const lv of lvs) for (const [i, top] of (VOCAB[lv] || []).entries()) { const hay = pvStrip(top.t + " " + top.en).toLowerCase();
+      if (words.some((w) => hay.includes(w) || Object.entries(EN).some(([k, re]) => (w === k || new RegExp("\\b(" + re + ")").test(w)) && new RegExp("\\b(" + re + ")").test(hay)))) return { lv, i, top }; }
+    return { none: t };
+  }
+  function drSay(segs, done) { // like hfSaySeq, with the drill's speed; cancelled by any newer speech
+    const gen = ++SPK_GEN; try { speechSynthesis.cancel(); } catch (e) {} let k = 0; HF.saying = true; hfPaint();
+    const next = () => { if (gen !== SPK_GEN) return; if (k >= segs.length) { HF.saying = false; hfPaint(); done(); return; } const [t, es] = segs[k++]; let u; try { u = profeUtter(t, es); u.rate = Math.max(0.5, Math.min(1.6, (u.rate || 1) * DR.rate)); } catch (e) { next(); return; } let moved = false; const go = () => { if (moved) return; moved = true; clearTimeout(wd); setTimeout(next, 250); }; u.onend = u.onerror = go;
+      const wd = setTimeout(go, 1500 + (90 * t.length) / Math.max(0.5, DR.rate)); // a voice that never reports the end (cancelled elsewhere, some Samsung engines) doesn't stall the list
+      try { speechSynthesis.speak(u); } catch (e) { go(); } };
+    next();
+  }
+  function drStep(pre) {
+    if (!DR.on) return; const g = ++DR.gen;
+    if (DR.i >= DR.words.length) { DR.on = false; hfPaint(); const n = DR.words.length; pvReply("That's the list: " + n + " words. Say “again” to hear it once more, “quiz me on this lesson” to test yourself, or “stop”.", HF.on ? "hf" : "voice", { listen: 1 }); return; }
+    if (DR.i < 0) DR.i = 0;
+    const [es, en] = DR.words[DR.i]; PV.sess.words++; DR.last = DR.i;
+    const segs = (pre ? [[pre, false]] : []).concat([[es, true], [en.split(/[;(]/)[0].trim(), false]]);
+    drSay(segs, () => {
+      if (!DR.on || g !== DR.gen) return;
+      if (HF.on && !HF.paused) { // listen for the repetition or a command ("next", "repeat more slowly", "stop")
+        HF.engaged = true; hfCapture((t) => { if (!DR.on || g !== DR.gen) return; if (!t) { DR.i++; drStep(); return; }
+          const c = pvCtx(), m = pvMatch(t, c); if (m) { pvExec(m.a, m.s, "hf"); return; }
+          const ok = pvSim(pvStrip(t).toLowerCase().replace(/[^\p{L} ]/gu, "").trim(), pvStrip(es).toLowerCase().replace(/^(el|la|los|las|un|una) /, "").replace(/[^\p{L} ]/gu, "").trim()) >= 0.55 || pvSim(pvStrip(t).toLowerCase(), pvStrip(es).toLowerCase()) >= 0.6;
+          DR.i++; drStep(ok ? pvPick(["¡Bien!", "¡Muy bien!", "¡Eso!", "Good."]) : ""); }, { startMs: DR.gap * 1000 + 1500 });
+      } else setTimeout(() => { if (DR.on && g === DR.gen) { DR.i++; drStep(); } }, DR.gap * 1000);
+    });
+  }
+  function drStop() { if (!DR.on) return false; DR.on = false; DR.gen++; SPK_GEN++; try { speechSynthesis.cancel(); } catch (e) {} HF.saying = false; hfPaint(); return true; }
+  Object.assign(PVH, {
+    "review.mistakes": async () => {
+      if (!(S.mist && S.mist.length)) return { ok: false, say: "You have no saved mistakes yet. Questions you miss in lessons and guides are saved for review." };
+      const r = await pvGo("errores", "your mistakes"); if (!r.ok) return r; await pvWait(150);
+      const q = await PVH["lesson.quiz"](); if (!q.ok) return q;
+      return { ok: true, say: HF.on ? "Let's go over your mistakes: " + Math.min(20, S.mist.length) + " questions." : "Here are your mistakes to review.", lesson: HF.on };
+    },
+    "vocab.drill": async (s) => {
+      let t = drTopic(s), words = null, title = "";
+      if ((!t || t.none) && DR.words.length && /\b(again|same|that|this|it|otra vez|misma|esa)\b/.test(s)) { words = DR.words; title = DR.title; t = { again: 1 }; }
+      else if (!t || t.none) { PV.need = { id: "vocab.drill", prefix: "play vocabulary", until: Date.now() + 20000 }; return { ok: false, say: t && t.none ? "I couldn't find a word list for “" + t.none + "”. Which one? For example: food, family, travel or work." : "Which word list? For example: food, family, travel or work." }; }
+      else if (!words) { words = t.top.w; title = t.top.en + " (" + t.lv.toUpperCase() + ")"; await pvGo(t.lv + "-vocab", "the " + t.lv.toUpperCase() + " vocabulary"); }
+      drStop(); hfStopOthers(); hfQuiet();
+      Object.assign(DR, { on: true, words: words.slice(), i: 0, title }); hfPaint();
+      drStep(title + ": " + words.length + " words. Listen, then repeat each one."); return { ok: true, own: 1, say: "" };
+    },
+    "drill.next": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.i = (DR.last == null ? DR.i : DR.last) + 1; drStep(); return { ok: true, own: 1 }; },
+    "drill.prev": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.i = Math.max(0, (DR.last == null ? DR.i : DR.last) - 1); drStep(); return { ok: true, own: 1 }; },
+    "drill.repeat": (s) => { if (!DR.on) return { ok: false, say: "No word list is playing." }; if (/slow|despacio|lento/.test(s)) DR.rate = Math.max(0.55, DR.rate - 0.2); DR.i = DR.last == null ? DR.i : DR.last; drStep(); return { ok: true, own: 1 }; },
+    "drill.slower": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.rate = Math.max(0.55, DR.rate - 0.2); DR.gap = Math.min(6, DR.gap + 1); DR.i = DR.last == null ? DR.i : DR.last; drStep("Slower."); return { ok: true, own: 1 }; },
+    "drill.faster": () => { if (!DR.on) return { ok: false, say: "No word list is playing." }; DR.rate = Math.min(1.4, DR.rate + 0.2); DR.gap = Math.max(2, DR.gap - 1); DR.i = (DR.last == null ? DR.i : DR.last) + 1; drStep("Faster."); return { ok: true, own: 1 }; },
+    "video.play": async (s) => {
+      if (!(typeof VP !== "undefined" && VP.p && pvQ("#vplayer, .vframe, #vp"))) return { ok: false, say: "There's no video on this screen. Say “open videos” to choose one." };
+      if (/(start|beginning|top|principio|inicio)$/.test(s || "")) vpSeek(vpLo()); vpPlay(); const ok = await pvUntil(() => VP.p.getPlayerState && VP.p.getPlayerState() === 1, 2500);
+      return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "The video didn't start. Tap play on the video once; after that I can control it." };
+    },
+    "video.seek": async (s) => {
+      const n = pvSecs(s) || 10, back = !/forward|ahead|adelanta|avanza|salta|adelante/.test(s), t0 = vpT(), to = Math.max(0, t0 + (back ? -n : n));
+      vpSeek(to); const ok = await pvUntil(() => Math.abs(vpT() - to) < 2, 1500);
+      return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I couldn't move the video." };
+    },
+    "video.replay": async () => {
+      const c = typeof VCAP !== "undefined" && VCAP.cur >= 0 ? VCAP.cues[VCAP.cur] : null, to = c ? c.s : Math.max(0, vpT() - 5);
+      vpSeek(to); vpPlay(); const ok = await pvUntil(() => Math.abs(vpT() - to) < 2.5, 1500); return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I couldn't replay it." };
+    },
+    "lesson.stop": async () => {
+      const was = drStop(); let any = was;
+      try { if (typeof RA !== "undefined" && RA.on) { pvClick("ra-stop") || (RA.on && !RA.paused && pvClick("ra-pp")); any = true; } } catch (e) {}
+      try { if (typeof PL !== "undefined" && PL.playing) { pvClick("l-play"); any = true; } } catch (e) {}
+      try { if (typeof VP !== "undefined" && VP.p && VP.p.getPlayerState && VP.p.getPlayerState() === 1) { vpPause(); any = true; } } catch (e) {}
+      if (HF.lesson) { HF.lesson = false; any = true; } hfQuiet(); HF.lesson = false;
+      const ok = await pvUntil(() => !pvCtx().playing && !DR.on, 1000);
+      return { ok: ok, say: ok ? (any ? "Stopped." : "") : "I couldn't stop it.", quiet: 1 };
+    },
+    "ctx.return": async () => {
+      const here = location.hash.slice(1); let m = null; while (PV.marks.length) { const x = PV.marks.pop(); if (x.h !== here) { m = x; break; } }
+      if (!m) { if (document.body.classList.contains("tutor-open")) { pvCloseProfe(); return { ok: true, say: "Back to " + ((document.querySelector("h1") || {}).textContent || "the page") + "." }; } return { ok: false, say: "I don't have an earlier place to go back to." }; }
+      pvCloseProfe(); location.hash = m.h; const ok = await pvUntil(() => location.hash.slice(1) === m.h && app.children.length, 3000); if (!ok) return { ok: false, say: "I couldn't go back there." };
+      if (m.vt != null) { await pvUntil(() => typeof VP !== "undefined" && VP.ready, 4000); vpSeek(Math.max(0, m.vt - 2)); }
+      return { ok: true, say: "Back to " + m.label.trim() + (m.vt != null ? " at " + pvMmss(Math.max(0, m.vt - 2)) : "") + "." };
+    },
+    "session.end": () => {
+      drStop(); const ss = PV.sess, mins = Math.max(1, Math.round((Date.now() - ss.t0) / 60000)), bits = [];
+      if (ss.words) bits.push(ss.words + " words practised"); const q = (ss.ids["q.pick"] || 0) + (ss.ids["q.check"] || 0); if (q) bits.push(q + " questions answered");
+      const others = ss.n - q - (ss.ids["session.end"] || 0); if (others > 0) bits.push(others + " things done by voice");
+      const say = "Good work today" + (bits.length ? ": " + bits.join(", ") : "") + ", in about " + mins + " minute" + (mins > 1 ? "s" : "") + ". ¡Hasta la próxima!" + (HF.on ? " Hands-free is now off." : "");
+      PV.sess = { t0: Date.now(), n: 0, words: 0, ids: {} };
+      if (HF.on) { hfSay(say, () => hfEnable(false)); return { ok: true, own: 1 }; }
+      return { ok: true, say };
+    },
+  });
+  // practise.convo with a situation: "practise ordering food with me" starts the closest role-play, or Profe improvises one
+  { const base = PVH["practise.convo"];
+    PVH["practise.convo"] = async (s) => {
+      const m = s.match(/(?:practi[cs]e|role ?play|do a role ?play (?:about|for|of|at)|rehearse|practicar|ensayar) (?:como )?(.+?)(?: with me| together| in spanish| conmigo)*$/), topic = m && !/^(spanish |some )?(conversation|speaking|talking|role ?plays?)( in spanish)?$|^(la |una )?(conversacion|hablar)$/.test(m[1]) ? m[1] : "";
+      if (!topic) return base(s);
+      drStop(); const KEY = { "ordering food|order food|food|restaurant|eating out|comida|pedir comida|restaurante": "café|restaurant|fast-food|fonda|bill|pizza", "coffee|cafe": "café", "taxi|directions|getting around|transport": "taxi|directions|Metro|bus", "shopping|clothes|buying": "shop|clothes|supermarket|market", "doctor|pharmacy|health": "doctor|pharmacy|clinic|dentist", "hotel|travel|booking": "hotel|ticket|travel", "phone|call": "Phoning|phone|Calling" };
+      const lvl = curLevel(); let rp = null;
+      for (const [k, v] of Object.entries(KEY)) if (new RegExp("\\b(" + k + ")\\b").test(topic)) { const re = new RegExp(v, "i"); rp = VOICE.roleplays.filter((r) => re.test(r.en)).sort((a, b) => (a.lvl === lvl ? -1 : 0) - (b.lvl === lvl ? -1 : 0))[0]; if (rp) break; }
+      tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800);
+      if (rp) { startRoleplay(rp.id); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.sc && PR.sc.id === rp.id, 1000); return ok ? { ok: true, own: 1, say: "" } : { ok: false, say: "The role-play didn't start." }; }
+      PV.skip = 1; tSend("Let's role-play in Spanish: " + topic + ". You play the other person and start; keep each turn short, then wait for me.", true); return { ok: true, own: 1, say: "" };
+    }; }
+  // hands-free: answering a question pauses what was playing; when the exchange ends it carries on from there
+  { const woke = hfWoke; hfWoke = function (cmd) { try { const c = pvCtx(); if (c.playing && !DR.on) { HF.wasPlaying = location.hash; PVH["play.pause"](); } } catch (e) {} return woke(cmd); };
+    const end = hfEnd; hfEnd = function () { const w = HF.wasPlaying; HF.wasPlaying = null; end(); if (w && w === location.hash && HF.on && !HF.paused && !DR.on && !HF.lesson) { const c = pvCtx(); if (c.paused) { pvLog("resume after exchange"); PVH["play.resume"](); } } };
+    const pause = PVH["play.pause"]; PVH["play.pause"] = async (s, c) => { const r = await pause(s, c); if (s && s !== "auto") HF.wasPlaying = null; return r; }; }
+  { const st = PVH["hf.stop"]; PVH["hf.stop"] = (s2, c) => { drStop(); return st(s2, c); }; } // "stop" also stops a word list
+  window.__pv.pr = () => (typeof PR !== "undefined" && PR && PR.sc ? PR.sc.id + " " + PR.sc.en : null); window.__pv.store = () => S; window.__pv.save = () => save();
+  window.__pv.dr = () => DR; window.__pv.marks = () => PV.marks; window.__pv.sess = () => PV.sess; window.__pv.seq = pvSeqParts;
