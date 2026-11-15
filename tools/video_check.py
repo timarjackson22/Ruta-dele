@@ -75,6 +75,28 @@ for v in sys.argv[1:]:
             print("LRC " + json.dumps({"q": ar + " / " + ti, "cors": cors, "n": len(js), "top": rows}, ensure_ascii=False), flush=True)
         except Exception as e: print("LRC " + json.dumps({"q": v, "err": str(e)[:120]}))
         continue
+    if v.startswith("lrcapp:"):  # lrcapp:VIDEOID~Artist~Title: what the app would pick (same query, same choice, same intro guess as vlFetch in vextra.js)
+        try:
+            import urllib.parse, urllib.request
+            vid, ar, ti = [x.replace("_", " ") for x in v[7:].split("~", 2)]
+            try: L = check(vid).get("secs") or 0
+            except Exception: L = 0
+            ti2 = re.sub(r"\s*[-\u2013|].*$", "", re.sub(r"\((?:en vivo|live|official[^)]*|video oficial|videoclip|lyrics?|letra|audio)\)", "", ti, flags=re.I)); ti2 = re.sub(r"\s+", " ", ti2).strip()
+            ar2 = re.split(r",|&| y | ft\.| feat\.", ar, flags=re.I)[0]; ar2 = re.sub(r"\s+", " ", re.sub(r"\b(music|vevo|official)\b", "", ar2, flags=re.I)).strip()
+            def q(params):
+                rq = urllib.request.Request("https://lrclib.net/api/search?" + urllib.parse.urlencode(params), headers={"User-Agent": "RutaDELE/1 (https://github.com/timarjackson22/Ruta-dele)"})
+                with urllib.request.urlopen(rq, timeout=20) as r: return json.loads(r.read().decode())
+            rows = q({"track_name": ti2, "artist_name": ar2}); used = "track+artist"
+            if not any(x.get("syncedLyrics") for x in rows): rows = rows + q({"q": ti2 + " " + ar2}); used += ",q"
+            ok = [x for x in rows if x.get("syncedLyrics") and len([l for l in x["syncedLyrics"].split("\n") if re.match(r"^\[\d+:\d+(\.\d+)?\]\s*\S", l)]) > 4]
+            if L: ok.sort(key=lambda x: abs((x.get("duration") or 0) - L))
+            if not ok: print("LRCAPP " + json.dumps({"id": vid, "q": [ar2, ti2], "used": used, "video": L, "found": len(rows), "pick": None}, ensure_ascii=False)); continue
+            b = ok[0]; lines = [l for l in b["syncedLyrics"].split("\n") if l.strip()]
+            t0 = re.match(r"^\[(\d+):(\d+(?:\.\d+)?)\]", lines[0]); t0 = int(t0.group(1)) * 60 + float(t0.group(2)) if t0 else 0
+            extra = L - (b.get("duration") or 0) if L else 0; off = round(extra, 1) if 2 < extra < 40 and t0 < 3 else 0
+            print("LRCAPP " + json.dumps({"id": vid, "q": [ar2, ti2], "used": used, "video": L, "pick": {"id": b["id"], "artist": b.get("artistName"), "track": b.get("trackName"), "dur": b.get("duration"), "lines": len(lines), "first_at": t0, "guess_off": off}, "alts": [(x.get("duration"), x["id"]) for x in ok[1:4]], "first": lines[:3]}, ensure_ascii=False), flush=True)
+        except Exception as e: print("LRCAPP " + json.dumps({"q": v, "err": str(e)[:160]}))
+        continue
     if v.startswith("rss:"):
         try: rss(v[4:])
         except Exception as e: print("RSS " + json.dumps({"ch": v, "err": str(e)[:100]}))
