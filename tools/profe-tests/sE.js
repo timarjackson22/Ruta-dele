@@ -6,7 +6,7 @@ const out = []; const log = (id, input, expected, verdict, observed, why) => { o
 (async () => {
   const H = await open({ hash: "#curso" }); const p = H.p;
   await p.evaluate(() => { window.__L.def = { text: "Vale. ¿Y luego? [[·]]", delay: 60, wordMs: 5 }; });
-  const turn = async (t) => { await p.click('[data-act="t-new"]').catch(() => {}); await H.wait(200); await H.type(t); await H.idle(6000); await H.wait(500);
+  const turn = async (t) => { await p.evaluate(() => { document.querySelector('#tutor [data-act="t-tab"][data-v="hist"]').click(); const b = document.querySelector('#tutor [data-act="t-new"]'); if (b) b.click(); }).catch(() => {}); await H.wait(200); await H.type(t); await H.idle(6000); await H.wait(500);
     const m = await H.msgs(); return m.slice(1).filter((x) => /^P: /.test(x)).map((x) => x.slice(3)).join(" ⏐ ") || "(no reply)"; };
   const fixed = (o, want) => o.toLowerCase().includes(want.toLowerCase());
   const flagged = (o) => /\*\*|→|✏️|instead|should be|we say|use «|not quite|casi|correct(ed)? (form|version)/i.test(o);
@@ -30,7 +30,7 @@ const out = []; const log = (id, input, expected, verdict, observed, why) => { o
   // E5 again with the intent stated, as the framework specifies (translate "I am embarrassed")
   { const o = await turn("How do I say \"I am embarrassed\"? Estoy embarazado?"); const v5 = /avergonzad|vergüenza/i.test(o) ? "pass" : /pregnant/i.test(o) ? "partial" : MOCK.test(o.trim()) ? "untested" : "fail"; log("E5b", "How do I say \"I am embarrassed\"? Estoy embarazado?", "avergonzado / me da vergüenza; explains pregnant", v5, o, v5 === "untested" ? "an English question goes to the AI (not measured here)" : "with the intent stated"); }
   // D1 goal recovery: what the app does locally (an English explanation is requested inside a practice request)
-  { await p.click('[data-act="t-new"]').catch(() => {}); await H.wait(200); await p.evaluate(() => { window.__L.reqs.length = 0; });
+  { await p.evaluate(() => { document.querySelector('#tutor [data-act="t-tab"][data-v="hist"]').click(); const b = document.querySelector('#tutor [data-act="t-new"]'); if (b) b.click(); }).catch(() => {}); await H.wait(200); await p.evaluate(() => { window.__L.reqs.length = 0; });
     await H.type("Quiero practicar pedir comida. No entiendo, explícamelo en inglés."); await H.idle(7000); await H.wait(500);
     const r = await p.evaluate(() => ({ pr: window.__pv.pr(), last: window.__pvLast, reqs: window.__L.reqs.map((x) => x.user).slice(-2) })); const m = (await H.msgs()).slice(-2).join(" ⏐ ");
     log("D1", "Quiero practicar pedir comida. No entiendo, explícamelo en inglés.", "brief English explanation, then resume the restaurant practice in Spanish", r.pr ? "partial" : r.reqs.length ? "untested" : "fail", "role-play: " + (r.pr || "none") + " · sent to AI: " + JSON.stringify(r.reqs) + " · shown: " + m, "the explanation itself comes from the AI (mocked here)"); }

@@ -187,7 +187,7 @@
     "profe.repeat": (s) => { if (tCur && localTurn(s.match(/despacio|lento|slow/) ? "más despacio" : "repite")) return { ok: true, say: "", quiet: 1 }; return { ok: false, say: "There's nothing to repeat yet." }; },
     "profe.open": async () => { tOpen(); return { ok: await pvUntil(() => document.body.classList.contains("tutor-open"), 600), say: "", quiet: 1 }; },
     "profe.close": async () => { pvCloseProfe(); return { ok: await pvUntil(() => !document.body.classList.contains("tutor-open"), 600), say: "", quiet: 1 }; },
-    "profe.new": async () => { tOpen(); await pvWait(50); if (!pvClick("t-new")) return { ok: false, say: "I couldn't start a new chat." }; return { ok: true, say: "New chat. ¿De qué quieres hablar?" }; },
+    "profe.new": async () => { tOpen(); await pvWait(50); tView = "hist"; tRender(); if (!pvClick("t-new")) return { ok: false, say: "I couldn't start a new chat." }; return { ok: true, say: "New chat. ¿De qué quieres hablar?" }; },
     "meta.here": () => { let w = ""; try { w = pvPageIntro(null, 1); } catch (e) {} return { ok: true, say: (w ? w + " " : "") + pvHelpHere(), keep: 1 }; },
     "meta.can": () => ({ ok: true, say: pvHelpAll(), keep: 1 }),
     "hf.stop": () => { hfQuiet(); return { ok: true, say: "", quiet: 1, end: 1 }; },

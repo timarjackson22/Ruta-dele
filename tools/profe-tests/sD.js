@@ -15,7 +15,7 @@ const GOOD = [
 (async () => {
   const H = await open(); const res = { caught: 0, missed: [], false: [] };
   await H.p.evaluate(() => { window.__L.def = { text: "Vale, entiendo. ¿Y luego? [[·]]", delay: 60, wordMs: 5 }; });
-  const turn = async (t) => { await H.p.click('[data-act="t-new"]').catch(() => {}); await H.wait(200); await H.type(t); await H.idle(6000); await H.wait(600); const all = await H.p.evaluate(() => [...document.querySelectorAll("#t-msgs > *")].map((x) => x.innerText.replace(/\s+/g, " ").trim())); const k = all.findIndex((x) => x.includes(""));  return all.slice(1).join(" ⏐ "); };
+  const turn = async (t) => { await H.p.evaluate(() => { document.querySelector('#tutor [data-act="t-tab"][data-v="hist"]').click(); const b = document.querySelector('#tutor [data-act="t-new"]'); if (b) b.click(); }).catch(() => {}); await H.wait(200); await H.type(t); await H.idle(6000); await H.wait(600); const all = await H.p.evaluate(() => [...document.querySelectorAll("#t-msgs > *")].map((x) => x.innerText.replace(/\s+/g, " ").trim())); const k = all.findIndex((x) => x.includes(""));  return all.slice(1).join(" ⏐ "); };
   for (const [s, want] of BAD) {
     const out = (await turn(s)).toLowerCase();
     const hit = want ? out.includes(want) : /\*\*|→|instead|better|corr/i.test(out);
