@@ -50,6 +50,33 @@ act("media.pick", "Videos", "Play a video, song, podcast, story or poem: opens t
     verify="the matching list opens and Profe asks which one, or the chosen item opens and plays", test="sM")
 # anything in the app by its name: titles of videos (and their singers), listening and reading texts, units, guides, grammar pages, writing tasks,
 # exams; and the buttons on the current screen ("tap Music"). Also the fallback for every request that isn't a known command (pvResolve).
+# one dictionary word or one verb by name (round 3, 15 Nov 2026)
+act("nav.verb", "Verbs", "Open one verb's page (all its tenses) by name, by any of its forms («tengo» → tener) or by its English meaning (\"the verb to eat\")", ["open the verb comer", "show me the conjugation of tener"], ["abre el verbo comer", "conjuga el verbo tener"],
+    ["^({OPEN}|look up |find |show me )(the )?verb (to )?(.+)$", "^(show|open)( me)? (the )?conjugations? (of|for) (the verb )?(to )?(.+)$", "^(abre|muestra(me)?|busca|ve a|ensename|ensename) el verbo (.+)$", "^(conjuga|conjugame) el verbo (.+)$"],
+    route="verbo-{n}", params=["verb"], verify="hash is verbo-N for that verb and its page renders; an unknown verb gets the closest three or an honest answer", test="sW")
+act("nav.word", "Words", "Open one word's dictionary page by name, or by its English meaning (\"the word for dog\")", ["open the word casa", "look up perro in the dictionary", "show me the word for dog"], ["abre la palabra casa", "busca perro en el diccionario"],
+    ["^({OPEN}|look up |find |show me )(the )?(word|dictionary entry) (for )?(.+)$", "^(look up|find|search for|check) (.+) in the dictionary$", "^(abre|muestra(me)?|busca|ensename) la palabra (.+)$", "^(busca|buscame|mira) (.+) en el diccionario$"],
+    route="palabra-{w}", params=["word"], verify="hash is palabra-<word> and the entry renders; an unknown word gets the closest three or an honest answer", test="sW")
+# exam papers by voice (round 3): questions are numbered on screen; answers by letter, number or the answer's words; submitting asks first
+act("exam.answer", "Exams", "Answer a question on an exam paper: “b”, “question 3, c”, “task 2 question 1 a”, “change question 2 to a”, or the words of the answer", ["question 3, b", "c", "change question 2 to a"], ["pregunta 3, be", "la segunda"],
+    ["^((task|tarea) (\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce) )?((question|number|pregunta|numero) (\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)[ ,]*(is |es )?)?((answer|respuesta|letter|letra|option|opcion) )?(the |la )?(a|ay|b|be|bee|c|ce|see|sea|se|d|de|dee|first|second|third|fourth|primera|segunda|tercera|cuarta)( one)?$", "^change (question |number )?(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce) to (a|ay|b|be|bee|c|ce|see|sea|se|d|de|dee|first|second|third|fourth|primera|segunda|tercera|cuarta)$", "^(\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)[ ,]+(a|ay|b|be|bee|c|ce|see|sea|se|d|de|dee|first|second|third|fourth|primera|segunda|tercera|cuarta)$"],
+    act="ex-ans", when="exam", verify="the option is marked (aria-pressed) and Profe reads the next unanswered question", test="sX", bare=True)
+act("exam.go", "Exams", "Move through an exam paper and hear a question: next, previous, question 5, task 2, read the question", ["next question", "go to question 5", "read the question"], ["siguiente pregunta", "lee la pregunta"],
+    ["^(next|previous|go back|back)( question)?$", "^(go to |open |show me )?(question|number|task) (\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)$", "^(read|repeat|say)( me)? (the |this )?(question|it)( again)?$", "^(what is|whats) (the )?question( (\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce))?$",
+     "^(siguiente|anterior|la siguiente|la anterior)( pregunta)?$", "^(ve a |ir a )?(la )?(pregunta|tarea) (\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce)$", "^(lee|leeme|repite) (la )?pregunta$"],
+    act="ex-ans", when="exam", verify="the question scrolls into view and is read with its options", test="sX")
+act("exam.status", "Exams", "Which questions are still unanswered", ["what's left", "how many are left"], ["cuantas faltan", "que me falta"],
+    ["^(whats|what is) left$", "^how many (are )?(left|unanswered)$", "^(which|what) (ones |questions )?(havent i|have i not|did i not|didnt i) answer(ed)?$", "^(cuantas|cuales) (preguntas )?(faltan|me faltan|quedan)$", "^que me falta$"],
+    when="exam", verify="Profe lists the unanswered question numbers", test="sX")
+act("exam.play", "Exams", "Play the recording of the current listening task", ["play the audio", "play the recording"], ["pon el audio", "reproduce la grabacion"],
+    ["^(play|start) (the )?(audio|recording|listening|track)( again)?$", "^(pon|reproduce) (el audio|la grabacion|la audicion)( otra vez)?$"], act="ex-play", when="exam", verify="the recording starts", test="sX")
+act("exam.submit", "Exams", "Submit the exam paper (asks to confirm first)", ["submit the paper", "I'm finished"], ["entrega el examen", "he terminado"],
+    ["^(submit|hand in|turn in|finish)( the| my)?( paper| exam| test)?$", "^(im|i am) (finished|done)( with the (paper|exam))?$", "^(entrega|entregar|enviar|envia)( el)?( examen| la prueba)?$", "^(he terminado|ya termine)$"],
+    act="ex-submit", when="exam", confirm=True, verify="the paper closes and the result appears", test="sX")
+# the quick drill by voice: card words are matched to the buttons; these are its controls
+act("drill.do", "Quick drill", "Quick drill by voice: say the words on the cards (“el agua, water”) or a typed answer; skip, check, next, again, play", ["skip", "check", "again"], ["salta", "comprueba", "otra vez"],
+    ["^(skip|skip it|skip this one|next|next one|next card|check|check it|again|try again|play|play it|play it again|listen|listen again|undo)$", "^(salta|saltar|pasa|siguiente|comprueba|otra vez|de nuevo|escucha|escuchar|deshacer)$"],
+    act="dr-skip", when="qdrill", verify="the card changes (matched, checked or the next card appears)", test="sX", bare=True)
 act("find.open", "Everything", "Open, play or press anything by its name (a title, a singer, a unit, a guide, a button on screen); unclear names get the closest three to choose from", ["find La camisa negra", "open the Panama Canal", "tap Music"], ["busca La camisa negra", "pulsa Música"],
     ["^(find|search for|look for|busca|buscame) .+$", "^(tap|press|click|hit|toca|pulsa) .+$"], verify="the named page opens (hash changes and renders), the media plays, or the pressed control changes state; otherwise Profe says what it could not do", test="sF")
 act("video.play", "Videos", "Play the video on screen", ["play the video", "play the video in this lesson"], ["reproduce el vídeo", "pon el video"], ["^(play|start|watch|show me|put on) (the |this |that )?(video|clip)( again)?( in (this|the) (lesson|unit|page))?$", "^(play|start|watch) (it|the video|this|the clip) (again )?from the (start|beginning|top)$", "^(reproduce|pon|empieza) (el video )?desde el (principio|inicio)$", "^(reproduce|pon|empieza|ver|mira|ponme) (el |este )?(video|clip)$"], verify="the YouTube player reports playing")
@@ -125,14 +152,14 @@ ROUTES = {
   "practicar": "nav.practice", "escuchar": "nav.listen", "leer": "nav.read", "escritura": "nav.write",
   "escritura-{task}": "find.open",
   "leer-add": {"voice": "unsuitable", "why": "pasting or importing a text needs the keyboard/files"},
-  "verbos": "nav.verbs", "verbos-reflexivos": "nav.gcat", "verbo-{n}": {"voice": "pending", "why": "open a verb by name: needs a verb-name lookup; Profe answers conjugation questions instead"},
+  "verbos": "nav.verbs", "verbos-reflexivos": "nav.gcat", "verbo-{n}": "nav.verb",
   "gramatica": "nav.grammar", "g-{cat}": "nav.gcat", "guias": "nav.guides", "guia-{topic}": "nav.guide",
-  "palabras": "nav.words", "palabra-{w}": {"voice": "pending", "why": "word pages: Profe answers 'what does X mean' in chat instead"},
+  "palabras": "nav.words", "palabra-{w}": "nav.word",
   "repaso": "nav.review", "repaso-{deck}": {"voice": "pending", "why": "a specific deck: decks have user-given names; open from Review"},
   "errores": "nav.mistakes", "nivel": "nav.placement", "esc": {"voice": "unsuitable", "why": "school mode for teachers"},
   "recursos": "nav.resources", "videos": "nav.videos", "video-{id}": "find.open",
   "biblioteca": "nav.library", "progreso": "nav.progress", "ajustes": "nav.settings", "drill": "find.open",
-  "{text}": "find.open",
+  "{text}": "find.open", "costes": "find.open",
   "my-{id}": "find.open",
 }
 # ---- on-screen actions (data-act): covered by an action, or declared by prefix with a status ----

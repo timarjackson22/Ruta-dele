@@ -57,6 +57,19 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const back2 = await p.waitForFunction(() => window.__W.on, null, { timeout: 40000 }).then(() => true).catch(() => false);
   const ok7 = back2 ? await p.evaluate(() => window.__hear("ok profe open the verbs", true)) : false; await H.wait(2500);
   rec("Profe left open after a voice chat: “Ok Profe” works again by itself", back2 && ok7 && (await st()).h === "#verbos", "back=" + back2 + " " + JSON.stringify(await st()));
+  // 8. S24 09:32: the recogniser was slow to open (error 11 + retry): the time to speak starts when the mic is really open
+  await p.evaluate(() => { if (document.body.classList.contains("tutor-open")) document.querySelector('#tutor [data-act="t-close"]').click(); location.hash = "#inicio"; });
+  await p.waitForFunction(() => window.__W.on, null, { timeout: 25000 }).catch(() => {});
+  await p.evaluate(() => { window.__R.readyDelay = 3500; window.__hear("okey profe", true); });
+  await p.waitForFunction(() => window.__R.on, null, { timeout: 5000 }).catch(() => {}); await H.wait(3500 + 4500); // old rule: the window had already closed 4 s after start
+  await H.say("open the verbs"); await p.waitForFunction(() => location.hash === "#verbos", null, { timeout: 9000 }).catch(() => {});
+  await p.evaluate(() => { window.__R.readyDelay = 0; });
+  rec("Slow-starting mic: speaking 8 s after “Ok Profe” (4.5 s after the mic opened) still works", (await st()).h === "#verbos", JSON.stringify(await st()));
+  // 9. a wake listener that has been silent for 3 minutes is restarted (S24 09:33: "it stopped waking after a while")
+  await H.wait(3000); await p.waitForFunction(() => window.__W.on, null, { timeout: 25000 }).catch(() => {});
+  await p.evaluate(() => { window.__W.log = []; window.__pv.hf.wakeEvT = Date.now() - 181000; }); await H.wait(2500);
+  const wl = await p.evaluate(() => ({ log: window.__W.log.map((x) => x[0]).join(","), on: window.__W.on }));
+  rec("A silent wake listener is restarted and listening again", /stop/.test(wl.log) && /start/.test(wl.log) && wl.on, JSON.stringify(wl));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
   console.log(R.every(Boolean) ? "ALL " + R.length + " PASS" : R.filter((x) => !x).length + " FAILED of " + R.length);

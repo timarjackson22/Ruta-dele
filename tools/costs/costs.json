@@ -1,0 +1,986 @@
+{
+ "asof": "2026-11-15",
+ "note": "Prices are public list prices looked up on the date above (USD). Usage per user is an assumption written below, not measured. Impact scores are judgments on a 0–10 scale (0 = no improvement over today's free setup, 10 = removes the gap completely). Re-check prices before buying.",
+ "hybrid_note": "Biggest saving: keep the phone's free recogniser for commands and conversation, and send only graded speaking answers (about 1 minute a day) to a paid recogniser. That cuts the speech-recognition line by about 80% in every scenario.",
+ "stages": [
+  [
+   "test",
+   "Testing",
+   21
+  ],
+  [
+   "soft",
+   "Soft launch",
+   1000
+  ],
+  [
+   "launch",
+   "Launch",
+   10000
+  ],
+  [
+   "growth",
+   "Growth",
+   50000
+  ],
+  [
+   "mature",
+   "Maturity",
+   100000
+  ]
+ ],
+ "usage": {
+  "mau_share": {
+   "test": 1.0,
+   "soft": 0.5,
+   "launch": 0.45,
+   "growth": 0.4,
+   "mature": 0.4
+  },
+  "days_per_month": 12,
+  "ai_turns_per_day": 12,
+  "ai_in_tokens": 2500,
+  "ai_cached_share": 0.8,
+  "ai_out_tokens": 200,
+  "stt_min_per_day": 6,
+  "tts_chars_per_day": 4000,
+  "tts_cache_saving": 0.5,
+  "tr_chars_per_day": 1000,
+  "pron_min_per_day": 2,
+  "video_minutes_library": 1200,
+  "video_minutes_new_per_month": 200
+ },
+ "metrics": [
+  [
+   "teach",
+   "Teaching quality"
+  ],
+  [
+   "voice",
+   "Voice experience"
+  ],
+  [
+   "rel",
+   "Reliability"
+  ],
+  [
+   "scale",
+   "Scales to 100k"
+  ],
+  [
+   "legal",
+   "Legal & trust"
+  ]
+ ],
+ "revenue_note": "Selling subscriptions through Google Play costs 15% of subscription revenue (10% service + 5% billing in the US, UK and EEA). That's a share of sales, not a service cost, so it isn't in the totals.",
+ "gaps": [
+  {
+   "id": "ai",
+   "name": "Profe's AI brain",
+   "today": "A small AI that runs on the phone (free, offline, makes Spanish mistakes) or each learner's own Claude plan / API key.",
+   "gap": "Most learners have no Claude key, so the strongest tutor is unavailable; the on-device model is slow and weaker at grammar.",
+   "driver": "per AI reply: input + output tokens",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Claude Haiku 5.5 (API, through your own server)",
+     "unit": "$0.10 / M input tokens, $0.50 / M output; cached input 0.1×",
+     "src": "https://www.getmaxim.ai/articles/claude-api-pricing.md",
+     "impact": {
+      "teach": 6,
+      "voice": 2,
+      "rel": 7,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 6.17,
+      "soft": 146.88,
+      "launch": 1321.92,
+      "growth": 5875.2,
+      "mature": 11750.4
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Claude Sonnet 5.5",
+     "unit": "$2 / M input, $10 / M output; cached input $0.10",
+     "src": "https://www.getmaxim.ai/articles/claude-api-pricing.md",
+     "impact": {
+      "teach": 8,
+      "voice": 2,
+      "rel": 7,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 123.38,
+      "soft": 2937.6,
+      "launch": 26438.4,
+      "growth": 117504.0,
+      "mature": 235008.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "Claude Opus 5.5",
+     "unit": "$4 / M input, $20 / M output",
+     "src": "https://www.getmaxim.ai/articles/claude-api-pricing.md",
+     "impact": {
+      "teach": 9,
+      "voice": 2,
+      "rel": 7,
+      "scale": 7,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 246.76,
+      "soft": 5875.2,
+      "launch": 52876.8,
+      "growth": 235008.0,
+      "mature": 470016.0
+     }
+    }
+   ]
+  },
+  {
+   "id": "stt",
+   "name": "Speech recognition",
+   "today": "The phone's free Google recogniser (Android SpeechRecognizer).",
+   "gap": "No control over accuracy; on the S24 every first start fails with error 11 and is retried; can't tune for learners' accents or for mixed English/Spanish.",
+   "driver": "per minute of speech",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Deepgram Nova-3 Multilingual (streaming)",
+     "unit": "$0.0058 / min",
+     "src": "https://deepgram.com/pricing",
+     "impact": {
+      "teach": 3,
+      "voice": 6,
+      "rel": 6,
+      "scale": 8,
+      "legal": 5
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 105.24,
+      "soft": 2505.6,
+      "launch": 22550.4,
+      "growth": 100224.0,
+      "mature": 200448.0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Google Cloud Speech-to-Text V2 (Chirp)",
+     "unit": "$0.016 / min to 500k min a month, $0.010 to 1M, $0.008 to 2M, $0.004 above",
+     "src": "https://diyai.io/ai-tools/speech-to-text/google-cloud-speech-to-text-pricing/",
+     "impact": {
+      "teach": 3,
+      "voice": 7,
+      "rel": 8,
+      "scale": 9,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 290.3,
+      "soft": 6912.0,
+      "launch": 62208.0,
+      "growth": 198240.0,
+      "mature": 294240.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "Azure AI Speech real-time (same engine as pronunciation scoring)",
+     "unit": "$1 / audio hour; 5 h free a month",
+     "src": "https://costbench.com/software/ai-voice-tools/microsoft-speech/",
+     "impact": {
+      "teach": 4,
+      "voice": 8,
+      "rel": 8,
+      "scale": 9,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 242.4,
+      "soft": 7140.14,
+      "launch": 64741.29,
+      "growth": 287945.76,
+      "mature": 575951.52
+     }
+    }
+   ]
+  },
+  {
+   "id": "pron",
+   "name": "Pronunciation feedback",
+   "today": "Only a pass/fail word match from the phone recogniser.",
+   "gap": "No sound-by-sound scoring (pero/perro, stress), so pronunciation can't really be taught or graded.",
+   "driver": "per minute of learner speech scored",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Azure pronunciation assessment, batch scoring of short clips",
+     "unit": "≈ $0.66 / hour (short-audio REST)",
+     "src": "https://learn.microsoft.com/en-us/answers/questions/5608069/pricing-and-usage-of-pronunciation-assessment-feat",
+     "impact": {
+      "teach": 6,
+      "voice": 5,
+      "rel": 6,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 66.53,
+      "soft": 1584.0,
+      "launch": 14256.0,
+      "growth": 63360.0,
+      "mature": 126720.0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Azure real-time recognition + pronunciation assessment add-on",
+     "unit": "$1 / hour + $0.30 / hour per add-on",
+     "src": "https://blocksentient.com/review/microsoft-azure-speech-service/",
+     "impact": {
+      "teach": 7,
+      "voice": 7,
+      "rel": 7,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 131.04,
+      "soft": 3120.05,
+      "launch": 28080.43,
+      "growth": 124801.92,
+      "mature": 249603.84
+     }
+    },
+    {
+     "t": "best",
+     "name": "Specialist language-learning speech API (SpeechAce / ELSA-type)",
+     "unit": "quote-based",
+     "src": "",
+     "impact": {
+      "teach": 9,
+      "voice": 8,
+      "rel": 8,
+      "scale": 8,
+      "legal": 7
+     },
+     "from": false,
+     "quote": true,
+     "year": {
+      "test": null,
+      "soft": null,
+      "launch": null,
+      "growth": null,
+      "mature": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "tts",
+   "name": "Profe's voices",
+   "today": "Whatever voices the phone has installed (some phones have no Spanish voice; quality varies).",
+   "gap": "Robotic or missing voices; learners hear different accents on different phones.",
+   "driver": "per million characters spoken (lesson audio can be generated once and cached)",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Google Cloud TTS Standard/WaveNet",
+     "unit": "$4 / M characters; 4 M free a month",
+     "src": "https://diyai.io/ai-tools/audio-generation/google-cloud-text-to-speech-pricing/",
+     "impact": {
+      "teach": 2,
+      "voice": 5,
+      "rel": 7,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0.0,
+      "soft": 384.0,
+      "launch": 4992.0,
+      "growth": 22848.0,
+      "mature": 45888.0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Azure Neural voices (Latin American and Spain accents)",
+     "unit": "$15 / M characters; 0.5 M free a month",
+     "src": "https://www.developersdigest.tech/models/speech/azure",
+     "impact": {
+      "teach": 3,
+      "voice": 7,
+      "rel": 8,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0.72,
+      "soft": 2070.0,
+      "launch": 19350.0,
+      "growth": 86310.0,
+      "mature": 172710.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "ElevenLabs Multilingual v2",
+     "unit": "$0.10 / 1,000 characters ($100 / M)",
+     "src": "https://modelslab.com/elevenlabs-api-pricing",
+     "impact": {
+      "teach": 3,
+      "voice": 9,
+      "rel": 7,
+      "scale": 7,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 604.8,
+      "soft": 14400.0,
+      "launch": 129600.0,
+      "growth": 576000.0,
+      "mature": 1152000.0
+     }
+    }
+   ]
+  },
+  {
+   "id": "tr",
+   "name": "Translations (captions, texts)",
+   "today": "MyMemory free online translator (daily limit) and Google ML Kit offline on the phone.",
+   "gap": "Daily limit runs out; offline model is noticeably weaker; no service agreement.",
+   "driver": "per million characters translated (each text translated once and cached)",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Azure Translator",
+     "unit": "$10 / M characters; 2 M free a month",
+     "src": "https://simplelocalize.io/blog/posts/ai-machine-translation-cost-comparison/",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 8,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0.0,
+      "soft": 480.0,
+      "launch": 6240.0,
+      "growth": 28560.0,
+      "mature": 57360.0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Google Cloud Translation (NMT)",
+     "unit": "$20 / M characters; 500k free a month",
+     "src": "https://cloud.google.com/translate/pricing?hl=eu",
+     "impact": {
+      "teach": 4,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0.0,
+      "soft": 1320.0,
+      "launch": 12840.0,
+      "growth": 57480.0,
+      "mature": 115080.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "DeepL API Pro",
+     "unit": "$5.49 / month + $25 / M characters",
+     "src": "https://toolradar.com/tools/deepl/pricing",
+     "impact": {
+      "teach": 5,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 141.48,
+      "soft": 1865.88,
+      "launch": 16265.88,
+      "growth": 72065.88,
+      "mature": 144065.88
+     }
+    }
+   ]
+  },
+  {
+   "id": "wake",
+   "name": "“Ok Profe” wake word",
+   "today": "Vosk small Spanish model, open source, on the phone.",
+   "gap": "Detection confidence ~0.5; misses and false wakes in noise; listener has to be restarted.",
+   "driver": "yearly licence by number of users",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Train a custom open-source wake model (openWakeWord-style)",
+     "unit": "no licence; training and testing time only",
+     "src": "",
+     "impact": {
+      "teach": 0,
+      "voice": 4,
+      "rel": 4,
+      "scale": 7,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0,
+      "soft": 0,
+      "launch": 0,
+      "growth": 0,
+      "mature": 0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Picovoice Porcupine, Foundation plan",
+     "unit": "$6,000 / year (startup plan, small user cap)",
+     "src": "https://www.activepieces.com/blog/picovoice-pricing-2026-free-foundation-enterprise",
+     "impact": {
+      "teach": 0,
+      "voice": 7,
+      "rel": 7,
+      "scale": 4,
+      "legal": 8
+     },
+     "from": true,
+     "quote": false,
+     "year": {
+      "test": 6000,
+      "soft": 30000,
+      "launch": 30000,
+      "growth": 30000,
+      "mature": 30000
+     }
+    },
+    {
+     "t": "best",
+     "name": "Picovoice Enterprise (custom “Ok Profe”, any number of users)",
+     "unit": "from $30,000 / year (quote)",
+     "src": "https://www.activepieces.com/blog/picovoice-pricing-2026-free-foundation-enterprise",
+     "impact": {
+      "teach": 0,
+      "voice": 8,
+      "rel": 8,
+      "scale": 9,
+      "legal": 9
+     },
+     "from": true,
+     "quote": false,
+     "year": {
+      "test": 30000,
+      "soft": 30000,
+      "launch": 30000,
+      "growth": 30000,
+      "mature": 30000
+     }
+    }
+   ]
+  },
+  {
+   "id": "cap",
+   "name": "Video captions",
+   "today": "YouTube's own caption tracks read by the app.",
+   "gap": "Unofficial access that can break any day and isn't covered by YouTube's terms for redistribution.",
+   "driver": "per minute of video transcribed (library-wide, not per user)",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "OpenAI gpt-transcribe on videos you have rights to",
+     "unit": "$0.0045 / min",
+     "src": "https://www.developersdigest.tech/models/speech/openai",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 7,
+      "scale": 9,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 16.2,
+      "soft": 16.2,
+      "launch": 16.2,
+      "growth": 16.2,
+      "mature": 16.2
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Deepgram Nova-3 batch + human check of each video",
+     "unit": "$0.0052 / min + review time",
+     "src": "https://deepgram.com/pricing",
+     "impact": {
+      "teach": 5,
+      "voice": 0,
+      "rel": 8,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 18.72,
+      "soft": 18.72,
+      "launch": 18.72,
+      "growth": 18.72,
+      "mature": 18.72
+     }
+    },
+    {
+     "t": "best",
+     "name": "Licensed or commissioned video library with official subtitles",
+     "unit": "quote-based (content licensing)",
+     "src": "",
+     "impact": {
+      "teach": 7,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 10
+     },
+     "from": false,
+     "quote": true,
+     "year": {
+      "test": null,
+      "soft": null,
+      "launch": null,
+      "growth": null,
+      "mature": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "lyr",
+   "name": "Song lyrics",
+   "today": "LRCLIB, a free community lyrics database.",
+   "gap": "Lyrics are copyrighted; free sources don't license them for a commercial app.",
+   "driver": "licence (quote) or content production",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Use only the app's own original songs (12 already written)",
+     "unit": "no licence; writing time",
+     "src": "",
+     "impact": {
+      "teach": 2,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 9
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0,
+      "soft": 0,
+      "launch": 0,
+      "growth": 0,
+      "mature": 0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Musixmatch API, self-serve commercial plan",
+     "unit": "subscription; price on request",
+     "src": "https://freeapihub.com/apis/musixmatch",
+     "impact": {
+      "teach": 5,
+      "voice": 0,
+      "rel": 8,
+      "scale": 8,
+      "legal": 9
+     },
+     "from": false,
+     "quote": true,
+     "year": {
+      "test": null,
+      "soft": null,
+      "launch": null,
+      "growth": null,
+      "mature": null
+     }
+    },
+    {
+     "t": "best",
+     "name": "Musixmatch Scale / Enterprise (full and time-synced lyrics)",
+     "unit": "quote-based",
+     "src": "https://freeapihub.com/apis/musixmatch",
+     "impact": {
+      "teach": 6,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 10
+     },
+     "from": false,
+     "quote": true,
+     "year": {
+      "test": null,
+      "soft": null,
+      "launch": null,
+      "growth": null,
+      "mature": null
+     }
+    }
+   ]
+  },
+  {
+   "id": "acct",
+   "name": "Accounts, sync and backup",
+   "today": "None: progress lives only on the phone.",
+   "gap": "Changing or losing the phone loses all progress; no way to know who your users are or to sell subscriptions.",
+   "driver": "monthly active users (MAU) + database use",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Firebase (Auth + Firestore, pay as you go)",
+     "unit": "Auth free to 50k MAU, then ≈ $0.0055 / MAU; Firestore $0.06 / 100k reads, $0.18 / 100k writes",
+     "src": "https://apicalculators.com/compare/supabase-vs-firebase",
+     "impact": {
+      "teach": 2,
+      "voice": 0,
+      "rel": 7,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0.15,
+      "soft": 3.46,
+      "launch": 31.1,
+      "growth": 138.24,
+      "mature": 276.48
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Supabase Pro",
+     "unit": "$25 / month incl. 100k MAU, then $0.00325 / MAU",
+     "src": "https://makerkit.dev/blog/saas/supabase-pricing",
+     "impact": {
+      "teach": 2,
+      "voice": 0,
+      "rel": 8,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 300.0,
+      "soft": 300.0,
+      "launch": 300.0,
+      "growth": 300.0,
+      "mature": 300.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "Supabase Team (SSO, audit logs, longer backups)",
+     "unit": "$599 / month + usage",
+     "src": "https://focusreactive.com/blog/supabase-price/",
+     "impact": {
+      "teach": 2,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 9
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 7188.0,
+      "soft": 7188.0,
+      "launch": 7188.0,
+      "growth": 7188.0,
+      "mature": 7188.0
+     }
+    }
+   ]
+  },
+  {
+   "id": "obs",
+   "name": "Crash reports and diagnostics",
+   "today": "The in-app diagnostic log you copy by hand.",
+   "gap": "You only learn about a crash when a tester tells you.",
+   "driver": "flat plan",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Firebase Crashlytics",
+     "unit": "free, unlimited",
+     "src": "https://dupple.com/learn/best-crash-reporting-tools",
+     "impact": {
+      "teach": 0,
+      "voice": 2,
+      "rel": 7,
+      "scale": 8,
+      "legal": 5
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 0,
+      "soft": 0,
+      "launch": 0,
+      "growth": 0,
+      "mature": 0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Sentry Team",
+     "unit": "$26 / month (annual)",
+     "src": "https://www.softwares.com/software/sentry/pricing",
+     "impact": {
+      "teach": 0,
+      "voice": 3,
+      "rel": 8,
+      "scale": 8,
+      "legal": 6
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 312,
+      "soft": 312,
+      "launch": 312,
+      "growth": 312,
+      "mature": 312
+     }
+    },
+    {
+     "t": "best",
+     "name": "Sentry Business",
+     "unit": "$80 / month (annual)",
+     "src": "https://www.softwares.com/software/sentry/pricing",
+     "impact": {
+      "teach": 0,
+      "voice": 3,
+      "rel": 9,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 960,
+      "soft": 960,
+      "launch": 960,
+      "growth": 960,
+      "mature": 960
+     }
+    }
+   ]
+  },
+  {
+   "id": "host",
+   "name": "Hosting, AI key server and app store",
+   "today": "GitHub Pages for the web app; the APK is installed by hand from GitHub Releases.",
+   "gap": "No server to keep a shared AI key secret; no Play Store listing, automatic updates or payments.",
+   "driver": "flat plans + requests; store fee is a share of sales",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Cloudflare Pages (free) + Workers Paid for the AI proxy + Play Console",
+     "unit": "$5 / month incl. 10 M requests, $0.30 / M after; Play Console $25 once",
+     "src": "https://developers.cloudflare.com/workers/platform/pricing/index.md",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 7,
+      "scale": 9,
+      "legal": 8
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 85.0,
+      "soft": 85.0,
+      "launch": 85.0,
+      "growth": 85.0,
+      "mature": 85.0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Same + Cloudflare Pro plan (security, analytics)",
+     "unit": "+ $20 / month",
+     "src": "https://blog.blazingcdn.com/en-us/cloudflares-pricing-for-developers-a-closer-look-at-workers-pages",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 8,
+      "scale": 9,
+      "legal": 8
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 325.0,
+      "soft": 325.0,
+      "launch": 325.0,
+      "growth": 325.0,
+      "mature": 325.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "Same + Cloudflare Business plan (SLA, priority support)",
+     "unit": "+ $200 / month",
+     "src": "https://blog.blazingcdn.com/en-us/cloudflares-pricing-for-developers-a-closer-look-at-workers-pages",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 9,
+      "scale": 10,
+      "legal": 9
+     },
+     "from": false,
+     "quote": false,
+     "year": {
+      "test": 2485.0,
+      "soft": 2485.0,
+      "launch": 2485.0,
+      "growth": 2485.0,
+      "mature": 2485.0
+     }
+    }
+   ]
+  }
+ ],
+ "totals": {
+  "cheap": {
+   "test": {
+    "sum": 279.29,
+    "quotes": 0,
+    "per_mau": 13.3
+   },
+   "soft": {
+    "sum": 5205.14,
+    "quotes": 0,
+    "per_mau": 10.41
+   },
+   "launch": {
+    "sum": 49492.62,
+    "quotes": 0,
+    "per_mau": 11.0
+   },
+   "growth": {
+    "sum": 221106.64,
+    "quotes": 0,
+    "per_mau": 11.06
+   },
+   "mature": {
+    "sum": 442544.08,
+    "quotes": 0,
+    "per_mau": 11.06
+   }
+  },
+  "modest": {
+   "test": {
+    "sum": 7501.16,
+    "quotes": 1,
+    "per_mau": 357.2
+   },
+   "soft": {
+    "sum": 47315.37,
+    "quotes": 1,
+    "per_mau": 94.63
+   },
+   "launch": {
+    "sum": 179872.55,
+    "quotes": 1,
+    "per_mau": 39.97
+   },
+   "growth": {
+    "sum": 615291.64,
+    "quotes": 1,
+    "per_mau": 30.76
+   },
+   "mature": {
+    "sum": 1097597.56,
+    "quotes": 1,
+    "per_mau": 27.44
+   }
+  },
+  "best": {
+   "test": {
+    "sum": 41868.44,
+    "quotes": 3,
+    "per_mau": 1993.74
+   },
+   "soft": {
+    "sum": 69914.22,
+    "quotes": 3,
+    "per_mau": 139.83
+   },
+   "launch": {
+    "sum": 304116.97,
+    "quotes": 3,
+    "per_mau": 67.58
+   },
+   "growth": {
+    "sum": 1211652.64,
+    "quotes": 3,
+    "per_mau": 60.58
+   },
+   "mature": {
+    "sum": 2382666.4,
+    "quotes": 3,
+    "per_mau": 59.57
+   }
+  }
+ }
+}

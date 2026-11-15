@@ -66,6 +66,7 @@
     try { if (typeof VP !== "undefined" && VP.p && VP.p.getPlayerState && pvQ("#vplayer, .vframe, #vp")) { const st = VP.p.getPlayerState(); if (st === 1) playing = true; else if (st === 2 || st === 5) paused = true; } } catch (e) {}
     return { unit: run, runner: q, "runner-mc": mc, "runner-text": txt, "runner-fb": fb, "runner-open": mc || txt, guide: !!pvQ('[data-act="ra-start"]'), playing, paused, player: !!pvQ("#pl-rate"),
       video: typeof VP !== "undefined" && !!VP.p && !!pvQ("#vplayer, .vframe, #vp"), vdrill: !!(typeof DR !== "undefined" && DR.on),
+      exam: !!pvQ('main [data-act="ex-ans"]'), qdrill: location.hash === "#drill" && !!pvQ('main [data-act^="dr-"]'),
       tutor: document.body.classList.contains("tutor-open"), drill: !!(typeof PR !== "undefined" && PR && document.body.classList.contains("tutor-open") && typeof tView !== "undefined" && tView === "practice") };
   }
   const pvWhen = (w, c) => !w || w.split("|").some((k) => c[k]);
@@ -226,6 +227,7 @@
     if (PV.choice && now < PV.choice.until) { const r = pvChoose(raw, s, c, origin); if (r) return true; }
     if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
     const m = pvMatch(raw, c);
+    if (!m && (c.exam || c.qdrill) && pvAnswerX(raw, s, c, origin)) return true; // an answer said on an exam paper or in the quick drill
     if (!m) return pvSeqTry(raw, origin) || pvResolve(raw, s, c, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
     // a practice task is running in the chat: "let's stop here" goes to Profe, which closes the task with a short summary (sC C4)
@@ -316,13 +318,15 @@
     if (HF.engaged && !hfBusy()) { HF.idle0 = HF.idle0 || Date.now(); if (Date.now() - HF.idle0 > 4000) { HF.engaged = false; HF.idle0 = 0; pvLog("wake: exchange over, listening for “Ok Profe” again"); } } else HF.idle0 = 0;
     const want = !HF.paused && !document.hidden && !hfBusy() && !HF.engaged && Date.now() > HF.settle;
     if (hfSpeaking() || HF.saying) HF.settle = Date.now() + 400; // Profe's voice has just ended: wait before listening, so the room's echo isn't heard
-    if (want && HF.eng === "off") hfWakeStart(); else if (!want && HF.eng === "on") hfWakeStop();
+    if (want && HF.eng === "on" && Date.now() - (HF.wakeEvT || Date.now()) > 180000) { pvLog("wake: no sound from the listener for 3 min, restarting it"); hfWakeStop(); HF.settle = Date.now() + 600; }
+    else if (want && HF.eng === "off") hfWakeStart(); else if (!want && HF.eng === "on") hfWakeStop();
     hfPaint();
   }
-  function hfWakeStart() { HF.eng = "on"; HF.heard = ""; try { if (HF.online && window.AndroidWake.startOnline) window.AndroidWake.startOnline(sttLang()); else window.AndroidWake.start(sttLang()); } catch (e) { HF.eng = "off"; } }
+  function hfWakeStart() { HF.eng = "on"; HF.heard = ""; HF.wakeEvT = HF.wakeOnT = Date.now(); try { if (HF.online && window.AndroidWake.startOnline) window.AndroidWake.startOnline(sttLang()); else window.AndroidWake.start(sttLang()); } catch (e) { HF.eng = "off"; } }
   function hfWakeStop() { HF.eng = "off"; clearTimeout(HF.wt); try { window.AndroidWake.stop(); } catch (e) {} }
   window.__awake = { ev(type, v) {
-    pvLog("wake " + type + (v && type !== "partial" ? " " + v : ""));
+    HF.wakeEvT = Date.now();
+    if (type !== "partial") pvLog("wake " + type + (v ? " " + v : ""));
     if (type === "state" && /^engine:/.test(String(v))) { HF.engine = String(v).slice(7); return; }
     if (type === "vosk") { const x = String(v); if (/^(progress|ready|error|deleted)/.test(x) && !/^error:load/.test(x)) HF.vdl = x;
       if (x === "ready") { try { coachToast("“Ok Profe” now listens offline on this phone. Say “Ok Profe” and what you want."); } catch (e) {} if (HF.on) { hfWakeStop(); HF.mode = hfMode(); hfReconcile(); } }
@@ -348,7 +352,7 @@
     // a short beep FIRST, then the mic (S24, v164: starting the beep after the mic opened silenced the recogniser, so every capture came back empty).
     // The first word lost to the beep is covered by reading «me to …» as «take me to …».
     // 150 ms also lets the wake listener release the microphone before the recogniser takes it
-    const wokeT = Date.now(); hfBeep(); pvUntil(() => (HF.wakeStopT || 0) >= wokeT, 800).then(() => pvWait(120)).then(() => { if (!HF.engaged || HF.rec) return; pvLog("wake released the mic after " + ((HF.wakeStopT || wokeT) - wokeT) + " ms"); hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); });
+    const wokeT = Date.now(); hfBeep(); pvUntil(() => (HF.wakeStopT || 0) >= wokeT, 800).then(() => pvWait(120)).then(() => { if (!HF.engaged || HF.rec) return; pvLog("wake released the mic after " + ((HF.wakeStopT || wokeT) - wokeT) + " ms"); hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 8000 })); }, { startMs: 6000 }); });
   }
   function hfHandle(text) {
     HF.engaged = true; pvLog("heard «" + text + "»");
@@ -383,10 +387,10 @@
     r._fin = finish;
     r.onresult = (e) => { if (end) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; } fin = f.trim(); live = (f + im).trim();
       clearTimeout(r._s); clearTimeout(r._q); r._q = setTimeout(() => finish(live), hfWaitFor(live, fin && !im.trim(), o)); const l = document.getElementById("t-live"); if (l) { l.hidden = false; l.textContent = live; } };
-    r.onaudiostart = () => { r._ready = 1; }; r.onspeechstart = () => { r._got = 1; };
+    r.onaudiostart = () => { r._ready = 1; r._readyT = Date.now(); if (!live) { clearTimeout(r._s); r._s = setTimeout(() => finish(null), o.startMs || 7000); } }; r.onspeechstart = () => { r._got = 1; };
     r.onerror = (e) => { r._err = e && e.error; pvLog("capture error " + r._err); if (/not-allowed|service-not-allowed/.test(r._err)) { hfNotice("no-mic"); hfEnable(false); } };
     r.onend = () => { if (end) return; if (!live && /aborted|busy/.test(r._err || "") && !retried && Date.now() - t0 < 1500) { end = true; HF.hold = Date.now() + 1500; if (HF.rec === r) HF.rec = null; setTimeout(() => hfCapture(done, Object.assign({}, o, { retried: true })), 400); return; } finish(live || fin); };
-    r._s = setTimeout(() => finish(null), o.startMs || 7000);
+    r._s = setTimeout(() => finish(null), (o.startMs || 7000) + 5000); // until the mic reports it's open; then the full window starts (onaudiostart)
     try { r.start(); } catch (e) { finish(null); }
     hfPaint();
   }
@@ -779,7 +783,7 @@
     ["leer", "reading|read|texts|lectura|leer"], ["escritura", "writing|write|escritura|escribir"], ["verbos", "verbs|verb list|verb dictionary|verbos"], ["verbos-reflexivos", "reflexive verbs|verbos reflexivos"], ["gramatica", "grammar|grammar map|gramatica"],
     ["palabras", "words|dictionary|vocabulary|palabras|diccionario"], ["videos", "videos|video library|videos list"], ["repaso", "flashcards|review|cards|spaced repetition|repaso|tarjetas"], ["errores", "my mistakes|mistakes|errores|mis errores"],
     ["nivel", "placement test|level test|find my level|prueba de nivel"], ["guias", "grammar guides|guides|guias"], ["examenes", "exams|mock exams|dele exams|examenes"], ["recursos", "resources|recursos"], ["progreso", "progress|my progress|stats|progreso"],
-    ["ajustes", "settings|options|preferences|ajustes|configuracion"], ["drill", "quick drill|drill|practice drill"]];
+    ["ajustes", "settings|options|preferences|ajustes|configuracion"], ["drill", "quick drill|drill|practice drill"], ["costes", "service gaps and costs|costs dashboard|costs|service costs|gaps dashboard|pricing dashboard"]];
   const PV_KIND_RE = { video: /\b(videos?|clips?|music videos?)\b/, song: /\b(songs?|cancion(es)?|music)\b/, podcast: /\bpodcasts?\b/, story: /\b(stor(y|ies)|historias?|cuentos?)\b/, poem: /\b(poems?|poemas?)\b/, news: /\b(news|noticias?)\b/,
     reading: /\b(readings?|texts?|lecturas?)\b/, history: /\bhistory\b/, culture: /\bculture\b/, unit: /\b(units?|lessons?|unidad(es)?|leccion(es)?)\b/, guide: /\bguides?\b/, grammar: /\bgrammar\b/, writing: /\b(writing|essay|letter|email|escritura)\b/, exam: /\b(exams?|examen(es)?|mock)\b/, cards: /\b(flashcards|cards|tarjetas)\b/, screen: /\b(screen|page|section|tab|pantalla|seccion)\b/ };
   const PV_LISTENK = { song: "song", podcast: "podcast", story: "story", poem: "poem", news: "news", reading: "reading", history: "history", culture: "culture" };
@@ -791,14 +795,18 @@
     try { COURSE.forEach((L) => { const N = L.name, l = L.id; add(l, ["level " + N, N + " level", "nivel " + N, N + " course"], "level", l, { label: "level " + N });
       (L.units || []).forEach((u, i) => add(l + "-u" + (i + 1), [u.t, u.s, "unit " + (i + 1) + " " + N, N + " unit " + (i + 1)], "unit", l, { label: N + " unit " + (i + 1) + ": " + (u.s || u.t) }));
       add(l + "-cards", [N + " flashcards", "flashcards " + N], "cards", l); add(l + "-exam", [N + " exam", N + " test", "examen " + N], "exam", l); }); } catch (e) {}
-    try { LISTEN.forEach((x) => add(x.id, [x.t, x.en, (x.cat || "") + " " + x.t], PV_LISTENK[x.cat] || "reading", x.lvl, { label: x.t })); } catch (e) {}
+    if (!PV.titleEn) { try { PV.titleEn = JSON.parse(document.getElementById("pv-titles").textContent.replace(/<\\\//g, "</")); } catch (e) { PV.titleEn = {}; } }
+    try { LISTEN.forEach((x) => add(x.id, [x.t, PV.titleEn[x.id], x.en, (x.cat || "") + " " + x.t, /^[A-Za-z ,'’-]+$/.test(x.s || "") ? x.s : ""], PV_LISTENK[x.cat] || "reading", x.lvl, { label: x.t })); } catch (e) {}
     try { (typeof MY !== "undefined" ? MY : []).forEach((x) => add(x.id, [x.t], "reading", x.lvl, { label: x.t })); } catch (e) {}
     try { VID_START.concat(typeof vMine === "function" ? vMine() : []).forEach((v) => add("video-" + v.yt, [v.t, (v.ch || "") + " " + v.t, v.ch], "video", (v.lvl || "").toLowerCase(), { label: v.t + (v.ch ? " (" + v.ch.replace(/\s*,\s*/g, ", ").slice(0, 34) + ")" : ""), cat: v.cat, artist: v.ch || "" })); } catch (e) {}
     try { GUIDES.forEach((g) => add("guia-" + g.id, [g.en, g.t, g.en + " guide"], "guide", g.lvl, { label: "the guide " + g.en })); } catch (e) {}
     try { GCAT.forEach((c) => add("g-" + c.id, [c.en, c.es, c.en + " grammar"], "grammar", "", { label: "grammar: " + c.en })); } catch (e) {}
     try { WTASKS.forEach((w) => add("escritura-" + w.id, [w.en, w.type + " " + w.lvl, (w.type || "") + " writing " + w.lvl], "writing", w.lvl, { label: "writing: " + w.type + " (" + w.lvl.toUpperCase() + ")" })); } catch (e) {}
     // Spanish titles also answer to their English words, from the app's own dictionary: «En el mercado» ~ "the market", «En la consulta del médico» ~ "the doctor"
-    const gl = (w) => { try { const g = (typeof TG !== "undefined" && (TG[w] || TG[pvStrip(w)])) || null; return g && g[2] ? String(g[2]).split(/[;,]/)[0].replace(/^(to|a|an|the)\s+/, "").replace(/\([^)]*\)/g, "").trim() : ""; } catch (x) { return ""; } };
+    const gl = (w) => { try { if (typeof TG === "undefined" || !w) return ""; // prefer a noun/adjective reading: «muertos» → muerto "dead", not morir "to die"
+      const cands = [w, w.replace(/s$/, ""), w.replace(/as$/, "o"), w.replace(/a$/, "o"), w.replace(/es$/, "")].filter((x, i, A) => x && A.indexOf(x) === i);
+      let g = null; for (const c of cands) { const e = TG[c] || TG[pvStrip(c)]; if (e && e[2]) { if (e[1] !== "verb") { g = e; break; } g = g || e; } }
+      return g ? String(g[2]).split(/[;,]/)[0].replace(/^(to|a|an|the)\s+/, "").replace(/\([^)]*\)/g, "").trim() : ""; } catch (x) { return ""; } };
     I.forEach((e) => { e.toks = e.names.map(pvToks); if (/^(story|podcast|poem|news|reading|history|culture|song|video|unit|guide)$/.test(e.kind)) { const en = pvToks(e.names[0].toLowerCase().split(/\s+/).map((w) => gl(w.replace(/[^a-záéíóúüñ]/g, ""))).filter(Boolean).join(" ")); if (en.length) e.toks.push(en); } });
     PV.idx = I; PV.idxAt = Date.now(); return I;
   }
@@ -901,5 +909,111 @@
       li = li || done.find((x) => { const r = x.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }) || done[done.length - 1];
       window.__qRedo(li); const ok = !li.querySelector(".opt[disabled]");
       return ok ? { ok: true, say: "Cleared question " + (all.indexOf(li) + 1) + ". Choose again." } : { ok: false, say: "I couldn't clear it." };
+    },
+  });
+  // ---- one verb or one dictionary word by name (round 3): resolved through the app's own verb index and dictionary, never guessed ----
+  const pvAfter = (s, re) => { const m = re.exec(s); return m ? m[m.length - 1].replace(/^(to|el|la|un|una)\s+/, "").replace(/\s+(please|por favor|in spanish|en espanol)$/, "").trim() : ""; };
+  async function pvOptsFor(items, what) { // items: [{label, run, arg}] → "Did you mean one…, two…, three…?"
+    const shown = items.slice(0, 3); if (!shown.length) return null;
+    PV.choice = { opts: shown.map((x) => Object.assign({ sc: 0.5 }, x)), until: Date.now() + 30000 };
+    return { ok: true, say: "I couldn't find " + what + ". Did you mean " + (shown.length === 1 ? shown[0].say + "? Say yes, or another name." : shown.map((x, i) => ["one", "two", "three"][i] + ", " + x.say).join("; ") + "? Say the number."), keep: 1 };
+  }
+  Object.assign(PVH, {
+    "nav.verb": async (s) => {
+      let w = pvAfter(s, /(?:verb|verbo|conjugations? (?:of|for)(?: the verb)?)\s+(.+)$/); if (!w) return { ok: false, say: "Which verb? Say for example “open the verb comer”." };
+      try { await loadIndex(); } catch (e) { return { ok: false, say: "The verb list couldn't load. Check your connection; after the first time it works offline." }; }
+      const k = pvStrip(w); let i = VI.findIndex((v) => pvStrip(v[0]) === k);
+      if (i < 0) { try { const rd = verbReadings(w); if (rd.length) i = VI.findIndex((v) => v[0] === rd[0].v); } catch (e) {} } // a form: «tengo» → tener
+      if (i < 0) i = VI.findIndex((v) => String(v[1]).toLowerCase().split(/[;,(]/).some((g) => g.trim() === "to " + k.replace(/^to /, ""))); // English: "to eat" → comer
+      if (i >= 0) return pvGo("verbo-" + (i + 1), "the verb «" + VI[i][0] + "»");
+      const near = VI.slice(0, 3000).map((v, j) => ({ j, sc: pvSim(pvStrip(v[0]), k) })).filter((x) => x.sc >= 0.6).sort((a, b) => b.sc - a.sc).slice(0, 3);
+      return (await pvOptsFor(near.map((x) => ({ say: "the verb «" + VI[x.j][0] + "»", run: { id: "find.open", purpose: "open" }, arg: { kind: "screen", h: "verbo-" + (x.j + 1), label: "the verb «" + VI[x.j][0] + "»" } })), "the verb “" + w + "”")) || { ok: false, say: "I can't find a verb “" + w + "” in the verb list." };
+    },
+    "nav.word": async (s) => {
+      let w = pvAfter(s, /(?:word|dictionary entry|palabra)\s+(?:for\s+)?(.+)$/) || pvAfter(s, /^(?:look up|find|search for|check|busca|buscame|mira)\s+(.+?)\s+(?:in the dictionary|en el diccionario)$/);
+      if (!w) return { ok: false, say: "Which word? Say for example “open the word casa”." };
+      const english = /\b(word|entry) for\b/.test(s), lw = w.toLowerCase();
+      try { await loadLex(); } catch (e) {}
+      const known = (x) => { try { return !!(TG[x] || (typeof lexIdx === "function" && LEX && lexIdx(x) >= 0) || W.some((e) => e[0].toLowerCase().split(/,\s*/).includes(x))); } catch (e) { return !!TG[x]; } };
+      if (!english && known(lw)) return pvGo("palabra-" + encodeURIComponent(lw), "the word «" + lw + "»");
+      // English meaning → the most common Spanish word for it (the app's word list is ordered by frequency)
+      const key = lw.replace(/^(to|a|an|the)\s+/, ""), hits = W.filter((e) => String(e[2]).toLowerCase().replace(/\([^)]*\)/g, "").split(/[;,]/).map((x) => x.trim().replace(/^(to|a|an|the)\s+/, "")).includes(key));
+      if (hits.length) { const es = hits[0][0].split(/,\s*/)[0].replace(/^(el|la|los|las)\s+/, ""); return pvGo("palabra-" + encodeURIComponent(es), "the word «" + es + "» (" + key + ")"); }
+      if (known(lw)) return pvGo("palabra-" + encodeURIComponent(lw), "the word «" + lw + "»");
+      const near = W.slice(0, 3000).map((e) => ({ es: e[0].split(/,\s*/)[0].replace(/^(el|la|los|las)\s+/, ""), sc: pvSim(pvStrip(e[0].split(/,\s*/)[0].replace(/^(el|la|los|las)\s+/, "")), pvStrip(lw)) })).filter((x) => x.sc >= 0.65).sort((a, b) => b.sc - a.sc).filter((x, i, A) => A.findIndex((y) => y.es === x.es) === i).slice(0, 3);
+      return (await pvOptsFor(near.map((x) => ({ say: "the word «" + x.es + "»", run: { id: "find.open", purpose: "open" }, arg: { kind: "screen", h: "palabra-" + encodeURIComponent(x.es), label: "the word «" + x.es + "»" } })), "the word “" + w + "”")) || { ok: false, say: "I can't find “" + w + "” in the dictionary." };
+    },
+  });
+  // ---- exam papers and the quick drill by voice (round 3, 15 Nov 2026) ----
+  // exam: questions are numbered on screen (1, 2, 3… across the paper); the "current" question is the one Profe last read or the first unanswered one
+  const PV_NUMW = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12 };
+  const PV_LET = { a: 0, ay: 0, ah: 0, b: 1, be: 1, bee: 1, c: 2, ce: 2, see: 2, sea: 2, se: 2, d: 3, de: 3, dee: 3, first: 0, primera: 0, second: 1, segunda: 1, third: 2, tercera: 2, fourth: 3, cuarta: 3 };
+  const pvNum = (x) => (x == null ? null : /^\d+$/.test(x) ? +x : PV_NUMW[x] || null);
+  const pvExQs = () => [...document.querySelectorAll("main .exq")].filter((q) => q.querySelector('[data-act="ex-ans"]'));
+  const pvExDone = (q) => !!q.querySelector('[data-act="ex-ans"][aria-pressed="true"]');
+  function pvExCur() { const Q = pvExQs(); if (PV.exI != null && Q[PV.exI]) return PV.exI; const i = Q.findIndex((q) => !pvExDone(q)); return i < 0 ? 0 : i; }
+  const pvExStem = (q) => [...q.childNodes].filter((n) => !(n.nodeType === 1 && /\b(exn|exopts|q-redo)\b/.test(n.className || ""))).map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim().slice(0, 120);
+  const pvExOpts = (q) => [...q.querySelectorAll('[data-act="ex-ans"]')].map((b) => b.textContent.replace(/^\s*[a-d]\)\s*/i, "").trim());
+  const pvExRead = (i) => { const q = pvExQs()[i]; if (!q) return ""; const o = pvExOpts(q); return "Question " + (i + 1) + ": «" + pvExStem(q) + "» " + o.map((x, k) => "abcd"[k] + ") «" + x + "»").join(" "); };
+  function pvExNumber() { pvExQs().forEach((q, i) => { let n = q.querySelector(":scope > .exn"); if (!n) { n = document.createElement("span"); n.className = "exn"; n.setAttribute("aria-hidden", "true"); q.insertBefore(n, q.firstChild); } if (n.textContent !== String(i + 1)) n.textContent = String(i + 1); q.classList.toggle("ex-cur", PV.exShow === i); }); }
+  setInterval(() => { if (pvQ('main [data-act="ex-ans"]')) pvExNumber(); else PV.exI = PV.exShow = null; }, 700);
+  async function pvExPick(i, k) {
+    const q = pvExQs()[i]; if (!q) return { ok: false, say: "There's no question " + (i + 1) + " on this paper." };
+    const b = q.querySelectorAll('[data-act="ex-ans"]')[k]; if (!b) return { ok: false, say: "Question " + (i + 1) + " has only " + q.querySelectorAll('[data-act="ex-ans"]').length + " options." };
+    b.click(); const ok = await pvUntil(() => b.getAttribute("aria-pressed") === "true", 800);
+    if (!ok) return { ok: false, say: "I couldn't mark that answer." };
+    const Q = pvExQs(), nx = Q.findIndex((x, j) => j > i && !pvExDone(x)), left = Q.filter((x) => !pvExDone(x)).length;
+    PV.exI = nx >= 0 ? nx : null; PV.exShow = PV.exI; if (nx >= 0) try { Q[nx].scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+    return { ok: true, say: "Question " + (i + 1) + ": " + "abcd"[k] + "." + (nx >= 0 ? " Next, " + pvExRead(nx) : left ? " " + left + " still unanswered. Say “what's left”." : " That's every question. Say “submit the paper” when you're ready.") };
+  }
+  function pvAnswerX(raw, s, c, origin) {
+    if (c.exam) { // an option's words for the current question ("en la playa")
+      const i = pvExCur(), q = pvExQs()[i]; if (!q) return false; const o = pvExOpts(q).map((x) => pvStrip(x).replace(/[^a-z0-9ñ ]/g, "").trim()), n = pvStrip(raw).replace(/[^a-z0-9ñ ]/g, "").trim();
+      let best = -1, bs = 0; o.forEach((x, k) => { const v = Math.max(pvSim(x, n), x && n.includes(x) ? 0.9 : 0); if (v > bs) { bs = v; best = k; } });
+      if (best >= 0 && bs >= 0.6) { pvExec({ id: "exam.answer", purpose: "answer" }, { i, k: best }, origin, false); return true; }
+      return false;
+    }
+    if (c.qdrill) { // the quick drill: say the words on the cards ("el agua, water"), or type-in answers
+      const inp = pvQ("main input:not([readonly])"); const chk = pvQ('main [data-act="dr-check"]');
+      if (inp && chk) { inp.value = raw.trim(); inp.dispatchEvent(new Event("input", { bubbles: true })); pvExec({ id: "drill.do", purpose: "check" }, "check", origin); return true; }
+      const btns = [...document.querySelectorAll('main [data-act="dr-m"], main [data-act="dr-pick"], main [data-act="dr-b"]')].filter((b) => b.offsetParent && !b.disabled && !/\b(done|ok|matched|gone)\b/.test(b.className));
+      const n = " " + pvStrip(raw).replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim() + " ";
+      const hits = btns.map((b) => ({ b, t: pvStrip(b.textContent).replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim() })).filter((x) => x.t && n.includes(" " + x.t.replace(/^(el|la|los|las) /, "") + " ")).sort((a, b) => n.indexOf(a.t) - n.indexOf(b.t));
+      if (!hits.length) return false;
+      pvExec({ id: "drill.do", purpose: "tap" }, { tap: hits.slice(0, 2).map((x) => x.b) }, origin); return true;
+    }
+    return false;
+  }
+  Object.assign(PVH, {
+    "exam.answer": async (s) => {
+      if (s && typeof s === "object") return pvExPick(s.i, s.k);
+      const m = /(?:(?:task|tarea) (\d+|\w+) )?(?:(?:question|number|pregunta|numero|change question|change) (\d+|\w+)[ ,]*(?:to |is |es )?)?(?:answer |respuesta |letter |letra |option |opcion )?(\w+)(?: one)?$/.exec(s.replace(/^change /, ""));
+      if (!m || !(m[3] in PV_LET)) return { ok: false, say: "Say the letter, for example “question 3, b”, or the words of the answer." };
+      let i = pvExCur(); const Q = pvExQs();
+      if (m[1] && m[2]) { const t = pvNum(m[1]), qn = pvNum(m[2]); const heads = [...document.querySelectorAll("main h2, main h3")].filter((h) => /^tarea\s*\d/i.test(h.textContent.trim())); const h = heads[t - 1]; if (!h) return { ok: false, say: "There's no task " + t + "." };
+        const inTask = Q.filter((q) => h.compareDocumentPosition(q) & 4 && (!heads[t] || q.compareDocumentPosition(heads[t]) & 4)); if (!inTask[qn - 1]) return { ok: false, say: "Task " + t + " has " + inTask.length + " questions." }; i = Q.indexOf(inTask[qn - 1]); }
+      else if (m[2]) { const qn = pvNum(m[2]); if (!qn) return { ok: false, say: "Which question number?" }; i = qn - 1; }
+      return pvExPick(i, PV_LET[m[3]]);
+    },
+    "exam.go": async (s) => {
+      const Q = pvExQs(); if (!Q.length) return { ok: false, say: "There are no questions on this screen." };
+      let i = pvExCur(); const n = /(?:question|pregunta|number|numero) (\d+|\w+)$/.exec(s), t = /(?:task|tarea) (\d+|\w+)$/.exec(s);
+      if (/^(next|siguiente|la siguiente)/.test(s)) i = Math.min(Q.length - 1, i + 1); else if (/^(previous|back|go back|anterior|la anterior)/.test(s)) i = Math.max(0, i - 1);
+      else if (n) { const k = pvNum(n[1]); if (!k || !Q[k - 1]) return { ok: false, say: "This paper has " + Q.length + " questions." }; i = k - 1; }
+      else if (t) { const k = pvNum(t[1]); const heads = [...document.querySelectorAll("main h2, main h3")].filter((h) => /^tarea\s*\d/i.test(h.textContent.trim())); const h = heads[k - 1]; if (!h) return { ok: false, say: "This paper has " + heads.length + " tasks." }; const j = Q.findIndex((q) => h.compareDocumentPosition(q) & 4); if (j >= 0) i = j; try { h.scrollIntoView({ block: "start", behavior: "smooth" }); } catch (e) {} }
+      PV.exI = PV.exShow = i; try { Q[i].scrollIntoView({ block: "center", behavior: "smooth" }); } catch (e) {}
+      return { ok: true, say: pvExRead(i) };
+    },
+    "exam.status": async () => { const Q = pvExQs(), left = Q.map((q, i) => (pvExDone(q) ? 0 : i + 1)).filter(Boolean); return { ok: true, say: left.length ? left.length + " of " + Q.length + " unanswered: question" + (left.length > 1 ? "s " : " ") + left.slice(0, 12).join(", ") + (left.length > 12 ? "…" : "") + "." : "All " + Q.length + " questions are answered. Say “submit the paper” when you're ready." }; },
+    "exam.play": async () => { const Q = pvExQs(), q = Q[pvExCur()]; const plays = [...document.querySelectorAll('main [data-act="ex-play"]')]; if (!plays.length) return { ok: false, say: "This paper has no recordings." };
+      const b = (q && plays.filter((p) => p.compareDocumentPosition(q) & 4).pop()) || plays[0]; b.click(); const ok = await pvUntil(() => hfSpeaking() || /pause|stop|playing|⏸/i.test(b.textContent + (b.getAttribute("aria-pressed") || "")), 2500); return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I pressed play, but I can't tell if the recording started." }; },
+    "exam.submit": async () => { if (!pvClick("ex-submit")) return { ok: false, say: "There's nothing to submit here." }; const ok = await pvUntil(() => !pvQ('main [data-act="ex-ans"]') || pvQ(".exresult"), 3000); return ok ? { ok: true, say: "Submitted. " + ((pvQ(".exresult h2") || {}).textContent || "Your result is on the screen.") } : { ok: false, say: "I pressed submit, but the paper didn't close. Check the screen." }; },
+    "drill.do": async (s) => {
+      if (s && typeof s === "object" && s.tap) { const before = s.tap.map((b) => b.className + b.disabled + b.isConnected); s.tap.forEach((b, k) => setTimeout(() => b.click(), k * 250)); await pvWait(s.tap.length * 250 + 300);
+        const changed = s.tap.some((b, k) => b.className + b.disabled + b.isConnected !== before[k]); return changed ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I tapped " + s.tap.map((b) => "«" + b.textContent.trim() + "»").join(" and ") + ", but nothing changed." }; }
+      const map = [[/^(skip|salta|saltar|pasa)/, "dr-skip"], [/^(next|siguiente|continue|continua)/, "dr-next"], [/^(again|try again|otra vez|de nuevo|repeat)/, "dr-again"], [/^(check|comprueba|corregir|correct it)/, "dr-check"], [/^(play|listen|escuchar|escucha|pon el audio)/, "dr-play"], [/^(undo|deshacer)/, "dr-un"]];
+      const hit = map.find(([re]) => re.test(s)); if (!hit) return { ok: false, say: "Say the words on the cards, or “skip”, “check”, “next”, “again”." };
+      const html0 = app.innerHTML.length; if (!pvClick(hit[1])) return { ok: false, say: "There's no “" + s + "” button on this card." };
+      const ok = await pvUntil(() => app.innerHTML.length !== html0 || hfSpeaking(), 1200); return ok ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I pressed it, but nothing changed." };
     },
   });

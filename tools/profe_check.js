@@ -53,5 +53,9 @@ for (const [a, v] of Object.entries(R.acts)) {
 }
 const n = R.actions.filter((a) => a.voice === "complete").length, pend = Object.values(R.acts).filter((v) => v && v.voice === "pending").length + Object.values(R.routes).filter((v) => v && v.voice === "pending").length;
 console.log("Profe registry: " + n + " voice actions · " + appActs.size + " on-screen actions declared · " + conds.length + " route rules covered · " + pend + " marked pending");
+// two top-level declarations with the same name in the app script: one silently replaces the other, or the whole page fails to start
+{ const scripts = [...s.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((x) => x[1]); const big = scripts.sort((a, b) => b.length - a.length)[0] || "";
+  const top = [...big.matchAll(/^  (?:async )?(?:function|const|let|var|class) ([A-Za-z_$][\w$]*)/gm)].map((x) => x[1]); const seen = new Set();
+  top.forEach((n) => { if (seen.has(n)) bad.push("the name «" + n + "» is declared twice at the top level of the app script"); seen.add(n); }); }
 if (bad.length) { bad.forEach((b) => console.log("FAIL " + b)); process.exit(1); }
 console.log("OK");

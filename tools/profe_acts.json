@@ -67,54 +67,24 @@
   "voice": "unsuitable",
   "why": "deck editor: creating, renaming and deleting decks needs typing and careful confirmation"
  },
- "dr-again": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-b": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-check": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-m": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
+ "dr-again": "drill.do",
+ "dr-b": "drill.do",
+ "dr-check": "drill.do",
+ "dr-m": "drill.do",
  "dr-mic": {
   "voice": "pending",
   "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
  },
- "dr-next": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-pick": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-play": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-skip": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
- "dr-un": {
-  "voice": "pending",
-  "why": "quick drill: answering drills by voice is the next step (Profe's own drills already work by voice)"
- },
+ "dr-next": "drill.do",
+ "dr-pick": "drill.do",
+ "dr-play": "drill.do",
+ "dr-skip": "drill.do",
+ "dr-un": "drill.do",
  "ex-again": {
   "voice": "pending",
   "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
  },
- "ex-ans": {
-  "voice": "pending",
-  "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
- },
+ "ex-ans": "exam.answer",
  "ex-mic": {
   "voice": "pending",
   "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
@@ -123,19 +93,13 @@
   "voice": "pending",
   "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
  },
- "ex-play": {
-  "voice": "pending",
-  "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
- },
+ "ex-play": "exam.play",
  "ex-reset": "exam.reset",
  "ex-start": {
   "voice": "pending",
   "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
  },
- "ex-submit": {
-  "voice": "pending",
-  "why": "exam papers: the speaking paper already uses the microphone; answering exam questions by voice comes next"
- },
+ "ex-submit": "exam.submit",
  "fc-again": {
   "voice": "pending",
   "why": "flashcards: 'again' by voice planned"
@@ -1004,5 +968,9 @@
  "w-type": {
   "voice": "unsuitable",
   "why": "writing tasks need typing"
+ },
+ "cst-st": {
+  "voice": "complete",
+  "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"
  }
 }

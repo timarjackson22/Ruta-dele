@@ -5,33 +5,31 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
 (async () => {
   let H = await open({ hash: "#inicio", noOpen: true, wake: true }); let p = H.p;
   const st = () => p.evaluate(() => ({ h: location.hash, last: window.__pvLast, ch: window.__pv.choice() ? Object.keys(window.__pv.choice()) : null, pl: !!window.__pv.ctx().playing, toast: (document.querySelector(".coach-toast, #coach, .toast") || {}).textContent || "" }));
+  const sayNow = async (t) => { await p.waitForFunction(() => window.__R.on && !speechSynthesis.speaking && !(window.__T.cur), null, { timeout: 15000 }).catch(() => {}); await H.wait(300); await H.say(t); };
   const said = () => p.evaluate(() => window.__T.log.map((e) => e.text).join(" ⏐ ") + " ⏐ " + ((window.__pvLast || {}).say || ""));
   // back to waiting for "Ok Profe" (Profe closed, nothing playing), then say it
   const hear = async (t) => { await p.evaluate(() => { try { if (window.__pv.ctx().playing) document.querySelector('[data-act="l-play"]').click(); } catch (e) {} if (document.body.classList.contains("tutor-open")) document.querySelector('#tutor [data-act="t-close"]').click(); if (location.hash !== "#inicio") location.hash = "#inicio"; });
-    await p.waitForFunction(() => window.__W.on, null, { timeout: 25000 }).catch(() => {}); const ok = await p.evaluate((t) => { window.__T.log = []; return window.__hear(t, true); }, t); if (!ok) console.log("  (the wake listener was not running for «" + t + "»)"); };
+    await p.waitForFunction(() => window.__W.on, null, { timeout: 25000 }).catch(() => {}); await H.wait(500); const ok = await p.evaluate((t) => { window.__T.log = []; return window.__hear(t, true); }, t); if (!ok) console.log("  (the wake listener was not running for «" + t + "»)"); };
   await p.evaluate(() => window.__pv.route("turn on hands-free", "chat")); await H.wait(3500);
   // 1. a song: list opens, Profe asks which one, "the second" plays it
   await hear("ok profe play a song"); await H.wait(2500);
   let s = await st(), t = await said();
   rec("“Ok Profe, play a song” opens the songs and asks which one", s.h === "#escuchar" && /Which one\?/.test(t) && s.ch && s.ch.includes("items"), JSON.stringify(s) + " " + t);
-  await p.waitForFunction(() => window.__R.on, null, { timeout: 8000 }).catch(() => {});
-  await H.say("the second one"); await p.waitForFunction(() => /^#song-/.test(location.hash) && window.__pv.ctx().playing, null, { timeout: 9000 }).catch(() => {});
+  await sayNow("the second one"); await p.waitForFunction(() => /^#song-/.test(location.hash) && window.__pv.ctx().playing, null, { timeout: 9000 }).catch(() => {});
   s = await st(); rec("“the second one” opens that song and it plays", /^#song-/.test(s.h) && s.pl, JSON.stringify(s));
   const second = s.h;
   // 2. "any" picks one; a title picks that one
   await hear("ok profe play a random song"); await p.waitForFunction(() => /^#song-/.test(location.hash), null, { timeout: 9000 }).catch(() => {});
   rec("“play a random song” plays one without asking", /^#song-/.test((await st()).h), JSON.stringify(await st()));
-  await hear("ok profe select a video"); await H.wait(2500);
+  await hear("ok profe select a video"); await p.waitForFunction(() => location.hash === "#videos" && window.__pv.choice() && window.__pv.choice().items, null, { timeout: 9000 }).catch(() => {});
   s = await st(); t = await said(); rec("“Select a video” opens Videos and offers three titles", s.h === "#videos" && /Which one\?/.test(t) && ((await p.evaluate(() => (window.__pvLast || {}).say || "")).match(/«/g) || []).length >= 3, JSON.stringify(s) + " " + t);
   const firstTitle = await p.evaluate(() => window.__pv.choice().top[0].t);
-  await p.waitForFunction(() => window.__R.on, null, { timeout: 8000 }).catch(() => {});
-  await H.say(firstTitle.split(" ").slice(0, 4).join(" ")); await p.waitForFunction(() => /^#video-/.test(location.hash), null, { timeout: 9000 }).catch(() => {});
+  await sayNow(firstTitle.split(" ").slice(0, 4).join(" ")); await p.waitForFunction(() => /^#video-/.test(location.hash), null, { timeout: 9000 }).catch(() => {});
   rec("Saying part of a title opens that video", /^#video-/.test((await st()).h), firstTitle + " " + JSON.stringify(await st()));
   // 3. "play something": asks which kind first
   await hear("ok profe play something"); await H.wait(1800);
   t = await said(); rec("“play something” asks: a video, a song, a podcast or a story?", /video, a song, a podcast or a story/.test(t), t);
-  await p.waitForFunction(() => window.__R.on, null, { timeout: 8000 }).catch(() => {});
-  await H.say("a podcast"); await p.waitForFunction(() => location.hash === "#escuchar" && window.__pv.choice() && window.__pv.choice().items, null, { timeout: 9000 }).catch(() => {});
+  await sayNow("a podcast"); await p.waitForFunction(() => location.hash === "#escuchar" && window.__pv.choice() && window.__pv.choice().items, null, { timeout: 9000 }).catch(() => {});
   s = await st(); rec("…“a podcast” opens the podcasts and asks which one", s.h === "#escuchar" && s.ch && s.ch.includes("items"), JSON.stringify(s));
   // 4. not a known command but clearly for the app («of video»: the first word lost to the beep): Profe asks instead of guessing
   await hear("okay profe of video"); await H.wait(1800); if (process.env.DBG) console.log((await p.evaluate(() => [].concat(window.__pv.diag).slice(-14).join("\n"))));

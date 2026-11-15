@@ -35,7 +35,7 @@ const MOCKS = () => {
   const closeWin = () => { const w = R.wins[R.wins.length - 1]; if (w && !w[1]) w[1] = now(); };
   window.AndroidSTT = {
     setBias() {},
-    start(lang, interim, cont) { setTimeout(() => { R.sid++; const my = R.sid; R.log.push(["start", now()]); closeWin(); R.on = true; R.wins.push([now(), null]); setTimeout(() => ev("start", null, my), 40); }, 0); },
+    start(lang, interim, cont) { setTimeout(() => { R.sid++; const my = R.sid; R.log.push(["start", now()]); closeWin(); R.on = true; R.wins.push([now(), null]); setTimeout(() => ev("start", null, my), R.readyDelay || 40); }, 0); },
     stop() { setTimeout(() => { R.log.push(["stop", now()]); const my = R.sid; setTimeout(() => { if (R.sid !== my) return; if (R.pend) { ev("final", R.pend, my); R.pend = null; } R.on = false; closeWin(); ev("end", null, my); }, 80); }, 0); },
     cancel() { setTimeout(() => { R.log.push(["cancel", now()]); const my = R.sid; R.on = false; closeWin(); setTimeout(() => ev("end", null, my), 30); }, 0); },
   };

@@ -122,7 +122,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   // wake alone
   await p.evaluate(() => { window.__T.log = []; window.__hear("okey profe", true); }); await H.wait(400);
   rec("“Ok Profe” alone: listens straight away (a short tone, no talking over you)", await p.evaluate(() => window.__R.on && !window.__T.log.length));
-  await H.wait(4600);
+  await H.wait(6900); // 6 s from when the mic is really open (15 Nov 2026: was 4 s from the start request, too short on the S24)
   rec("…nothing said: “What would you like to do?”", (await H.tts()).some((e) => /What would you like to do/.test(e.text)), JSON.stringify((await H.tts()).map((e) => e.text)));
   await p.waitForFunction(() => window.__R.on, null, { timeout: 5000 }).catch(() => {}); await H.say("abre la gramática"); await p.waitForFunction(() => location.hash === "#gramatica", null, { timeout: 6000 }).catch(() => {});
   rec("…then the instruction is carried out", (await p.evaluate(() => location.hash)) === "#gramatica");

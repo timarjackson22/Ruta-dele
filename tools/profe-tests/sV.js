@@ -2,7 +2,7 @@
 // recognisers write them. Each line: [what was said, what's on screen, expected action id or null (= conversation/answer for Profe)].
 // Target: ≥97% correct and no answer or conversation ever taken as navigation.
 const { chromium, devices } = require("playwright");
-const C = { home: {}, mc: { unit: true, runner: true, "runner-mc": true, "runner-open": true }, text: { unit: true, runner: true, "runner-text": true, "runner-open": true }, fb: { unit: true, runner: true, "runner-fb": true },
+const C = { home: {}, exam: { exam: true }, qdrill: { qdrill: true }, mc: { unit: true, runner: true, "runner-mc": true, "runner-open": true }, text: { unit: true, runner: true, "runner-text": true, "runner-open": true }, fb: { unit: true, runner: true, "runner-fb": true },
   play: { playing: true, player: true }, paused: { paused: true, player: true }, tutor: { tutor: true }, unit: { unit: true, guide: true }, guide: { guide: true },
   video: { video: true }, videoplay: { video: true, playing: true }, vdrill: { vdrill: true } };
 const CORPUS = [
@@ -11,6 +11,9 @@ const CORPUS = [
   ["play the food vocabulary", "home", "vocab.drill"], ["practise my family words", "home", "vocab.drill"], ["léeme las palabras de viajes", "home", "vocab.drill"], ["repasa el vocabulario de la comida", "home", "vocab.drill"],
   ["play the video", "home", "video.play"], ["watch the video", "video", "video.play"], ["pon el video", "video", "video.play"],
   ["redo this question", "fb", "q.redo"], ["clear my answer", "home", "q.redo"], ["redo question 2", "home", "q.redo"], ["borra mi respuesta", "home", "q.redo"],
+  ["open the verb comer", "home", "nav.verb"], ["show me the conjugation of tener", "home", "nav.verb"], ["abre el verbo hablar", "home", "nav.verb"], ["open the word casa", "home", "nav.word"], ["look up perro in the dictionary", "home", "nav.word"], ["show me the word for dog", "home", "nav.word"], ["busca perro en el diccionario", "home", "nav.word"],
+  ["b", "exam", "exam.answer"], ["question 3, c", "exam", "exam.answer"], ["change question 2 to a", "exam", "exam.answer"], ["task 2 question 1 b", "exam", "exam.answer"], ["pregunta 3, be", "exam", "exam.answer"], ["next question", "exam", "exam.go"], ["go to question 5", "exam", "exam.go"], ["read the question", "exam", "exam.go"], ["lee la pregunta", "exam", "exam.go"],
+  ["what's left", "exam", "exam.status"], ["cuantas faltan", "exam", "exam.status"], ["play the audio", "exam", "exam.play"], ["submit the paper", "exam", "exam.submit"], ["i'm finished", "exam", "exam.submit"], ["skip", "qdrill", "drill.do"], ["check", "qdrill", "drill.do"], ["otra vez", "qdrill", "drill.do"],
   ["find La camisa negra", "home", "find.open"], ["tap Music", "home", "find.open"], ["busca Machu Picchu", "home", "find.open"], ["press the A2 filter", "home", "find.open"],
   ["play a video", "home", "media.pick"], ["play a song", "home", "media.pick"], ["play some music", "home", "media.pick"], ["surprise me with a song", "home", "media.pick"], ["pon una canción", "home", "media.pick"], ["quiero ver un video", "home", "media.pick"], ["play something", "home", "media.pick"],
   ["go back 10 seconds", "video", "video.seek"], ["rewind", "video", "video.seek"], ["skip forward 30 seconds", "video", "video.seek"], ["adelanta treinta segundos", "video", "video.seek"],
