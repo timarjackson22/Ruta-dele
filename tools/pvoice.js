@@ -19,7 +19,9 @@
       .replace(/^\s*(i want to|i would like to|id like to|i wanna|quiero|me gustaria)\s+(?=(open|go|see|start|abrir|ir|ver|empezar|continuar|seguir)\b)/, "");
     s = s.replace(/^\s*(lets|let us|can we|could we|shall we|should we)\s+(?=(do|go|play|read|review|practi[cs]e|start|watch|open|try|hear|listen|quiz|drill|run)\b)/, ""); // "let's do my travel words" = "do my travel words"
     // what recognisers write for "level A1 flashcards" (S24 log, Nov 2026: «open the left with ayo one flashcards», «open deliver e one flashcards»)
-    s = s.replace(/\bflash ?cards?\b/g, "flashcards");
+    s = s.replace(/\bflash ?cards?\b/g, "flashcards").replace(/\b(wireless|wordless|word less|world list|worldless|wordlist|word lists)\b/g, "word list").replace(/^open up\b/, "open")
+      .replace(/\b(levy|levi|leve|lebel)\b(?= (one|two|three|four|five|six|uno|dos|\d|a|b|c)\b)/g, "level").replace(/\b(birds|herbs|bursts)\b(?= (word list|list|vocabulary))/g, "verbs");
+    s = s.replace(/\blevel (one|two|three|four|five|six|1|2|3|4|5|6)\b(?= (flashcards|cards|vocabulary|vocab|words|word list|units?|lessons?|exam)|$)/g, (m, n) => "level " + ["a1", "a2", "b1", "b2", "c1", "c2"][({ one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 }[n] || +n) - 1]);
     if (/\b(flashcards|cards|vocab|vocabulary|words|level|nivel|unit|lesson|exam|tarjetas|vocabulario|left with|deliver)\b/.test(s)) {
       s = s.replace(/\b(left with|deliver|lever|label|lebel|leble)\b(?= (a|ay|ayo|eh|hey|e|be|bee|b|v|ve|ce|c|se|see|sea|si)\s*(uno|one|1|dos|two|2)\b)/g, "level");
       s = s.replace(/\b(ay|ayo|eh|hey|e)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "a" + (/uno|one|1/.test(n) ? "1" : "2"));
@@ -318,7 +320,7 @@
       else if (x === "scheduled") try { coachToast("The Spanish download is scheduled: Android will finish it (often on Wi-Fi, while charging)."); } catch (e) {}
       else if (/^error/.test(x)) try { coachToast("Android couldn't download Spanish speech recognition (" + x + "). Try again on Wi-Fi."); } catch (e) {}
       pvModelPaint(); return; }
-    if (type === "state") { if (v === "no-ondevice" || v === "no-lang") { HF.mode = "tap"; HF.eng = "off"; HF.note = v; hfNotice(v); } else if (v === "no-mic") { HF.eng = "off"; hfNotice("no-mic"); } else if (v === "error") { HF.eng = "off"; HF.settle = Date.now() + 5000; } else if (v === "stopped") HF.eng = "off"; hfPaint(); return; }
+    if (type === "state") { if (v === "no-ondevice" || v === "no-lang") { HF.mode = "tap"; HF.eng = "off"; HF.note = v; hfNotice(v); } else if (v === "no-mic") { HF.eng = "off"; hfNotice("no-mic"); } else if (v === "error") { HF.eng = "off"; HF.settle = Date.now() + 5000; } else if (v === "stopped") { HF.eng = "off"; HF.wakeStopT = Date.now(); } hfPaint(); return; }
     if (HF.eng !== "on" || hfBusy()) return; // Profe is speaking or the mic is in use: never wake on that
     const t = String(v || ""), m = t.match(PV_WAKE); if (!m) return;
     HF.heard = t.slice(m.index + m[0].length).trim(); clearTimeout(HF.wt);
@@ -332,7 +334,7 @@
     // a short beep FIRST, then the mic (S24, v164: starting the beep after the mic opened silenced the recogniser, so every capture came back empty).
     // The first word lost to the beep is covered by reading «me to …» as «take me to …».
     // 150 ms also lets the wake listener release the microphone before the recogniser takes it
-    hfBeep(); setTimeout(() => { if (!HF.engaged || HF.rec) return; hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); }, 150);
+    const wokeT = Date.now(); hfBeep(); pvUntil(() => (HF.wakeStopT || 0) >= wokeT, 800).then(() => pvWait(120)).then(() => { if (!HF.engaged || HF.rec) return; pvLog("wake released the mic after " + ((HF.wakeStopT || wokeT) - wokeT) + " ms"); hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); });
   }
   function hfHandle(text) {
     HF.engaged = true; pvLog("heard «" + text + "»");
@@ -356,9 +358,10 @@
   function hfCapture(done, o) {
     o = o || {}; hfAbort(); if (!CAN_MIC || !HF.on || HF.paused) { done(null); return; }
     hfStopOthers(); try { speechCut(); } catch (e) {} try { speechSynthesis.cancel(); } catch (e) {}
-    const r = new SR(); HF.rec = r; r.lang = sttLang(); r.interimResults = true; r.continuous = !IS_IOS;
+    const r = new SR(); HF.rec = r; r.lang = o.lesson || HF.lesson || (typeof DR !== "undefined" && DR.on) ? sttLang() : hfCmdLang(); r.interimResults = true; r.continuous = !IS_IOS;
+    try { if (window.AndroidSTT && window.AndroidSTT.setBias && !(o.lesson || HF.lesson)) window.AndroidSTT.setBias(JSON.stringify(PV_BIAS)); } catch (e) {}
     let live = "", fin = "", end = false, retried = !!o.retried; const t0 = Date.now();
-    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint(); pvLog("capture → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
+    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint(); if (t) { try { HF.cmdEs = isSpanish(t + " ") && !/\b(the|my|to|me|open|go|take|play|show)\b/i.test(t); } catch (e) {} } pvLog("capture [" + r.lang + "] → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
     r._fin = finish;
     r.onresult = (e) => { if (end) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; } fin = f.trim(); live = (f + im).trim();
       clearTimeout(r._s); clearTimeout(r._q); r._q = setTimeout(() => finish(live), hfWaitFor(live, fin && !im.trim(), o)); const l = document.getElementById("t-live"); if (l) { l.hidden = false; l.textContent = live; } };
@@ -618,3 +621,19 @@
   { const st = PVH["hf.stop"]; PVH["hf.stop"] = (s2, c) => { drStop(); return st(s2, c); }; } // "stop" also stops a word list
   window.__pv.pr = () => (typeof PR !== "undefined" && PR && PR.sc ? PR.sc.id + " " + PR.sc.en : null); window.__pv.store = () => S; window.__pv.save = () => save();
   window.__pv.dr = () => DR; window.__pv.marks = () => PV.marks; window.__pv.sess = () => PV.sess; window.__pv.seq = pvSeqParts;
+  // ---- word lists by topic, opened without reading (S24 log: «take me to my food word list») ----
+  async function drShowTopic(t) { await pvUntil(() => document.querySelectorAll(".themes details.theme").length, 1500); const ds = [...document.querySelectorAll(".themes details.theme")]; const d = ds[t.i]; if (!d) return false; ds.forEach((x) => (x.open = x === d)); d.scrollIntoView({ block: "start", behavior: "smooth" }); return true; }
+  Object.assign(PVH, {
+    "vocab.open": async (s) => {
+    const t = drTopic(s.replace(/\b(take me to|open|show me|show|go to|abre|llevame al|llevame a|ver)\b/g, " "));
+    if (!t || t.none) { const r = await pvGo("palabras", "the word lists"); return r.ok ? { ok: true, say: "I couldn't find a list called “" + (t && t.none ? t.none : "that") + "”. Here are all the word lists." } : r; }
+    const r = await pvGo(t.lv + "-vocab", "the " + t.lv.toUpperCase() + " vocabulary"); if (!r.ok && !/already/.test(r.say)) return r;
+    const ok = await drShowTopic(t); return ok ? { ok: true, say: "Here's " + t.top.en + " (" + t.lv.toUpperCase() + "): " + t.top.w.length + " words. Say “play this list” to hear them." } : { ok: false, say: "I opened the vocabulary but couldn't find that list." };
+    },
+  });
+  { const vd = PVH["vocab.drill"]; PVH["vocab.drill"] = async (s, c) => { const r = await vd(s, c); try { const t = drTopic(s); if (t && t.top) drShowTopic(t); } catch (e) {} return r; }; }
+  // ---- which language the recogniser listens for after "Ok Profe" (S24 log: English commands heard by the Spanish recogniser became «Levy One», «Wireless») ----
+  // Android 14+: both languages, switching automatically; elsewhere: the language of the learner's last command (English first)
+  HF.cmdEs = false;
+  function hfCmdLang() { const es = sttLang(), en = "en-US"; if (window.AndroidSTT && window.AndroidSTT.multiLang) return (HF.cmdEs ? es + "|" + en : en + "|" + es); /* an older app gets one language */ return HF.cmdEs ? es : en; }
+  const PV_BIAS = ["Ok Profe", "flashcards", "word list", "vocabulary", "level A1", "level A2", "level B1", "level B2", "level C1", "level C2", "verbs", "grammar", "lesson", "next lesson", "unit", "video", "pause", "play", "go back", "go back ten seconds", "review", "my mistakes", "quiz me", "food", "travel", "family", "work", "stop", "next word", "repeat", "slower", "end the session", "abre", "siguiente", "repite", "más despacio"];
