@@ -28,7 +28,7 @@ body:has(#litem) { overflow-x: clip }
 #litem .lh-top { gap: 8px; align-items: center } #litem .lh-chips { gap: 5px } #litem .lh-chip { font-size: 9.5px; padding: 1px 6px } #litem .lh-ic { width: 26px !important; height: 26px !important } #litem .lh-ic svg { width: 14px !important; height: 14px !important }
 #litem .lh-sub { font-size: .86rem !important; margin: 2px 0 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 #litem .lhead .ltitle { display: -webkit-box !important; -webkit-box-orient: vertical !important; -webkit-line-clamp: 2 !important; overflow: hidden !important }
-#litem .lh-chips { flex: 1; min-width: 0; flex-wrap: nowrap !important; overflow: hidden; mask-image: linear-gradient(90deg, #000 85%, transparent) }
+#litem .lh-chips { flex: 1; min-width: 0; flex-wrap: nowrap !important; overflow: hidden; }
 #litem .lh-chip { flex: none }
 @media (max-height: 760px) { #litem .lh-sub { display: none !important } #litem .lhead .ltitle { -webkit-line-clamp: 1 !important; margin: 6px 0 0 !important }
   #litem .lhead, body.lplaying #litem .lhead { padding-top: 8px !important; padding-bottom: 36px !important } #litem .lh-land, body.lplaying #litem .lh-land { height: 32px !important } #litem .lprog { margin-top: 4px !important } }
@@ -95,7 +95,10 @@ rep('''  function lhState() {''', '''  // background sound while the text is rea
   document.addEventListener("visibilitychange", () => { if (document.hidden) lStream(false); });
   addEventListener("hashchange", () => lStream(false));
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="l-amb"]'); if (!t) return; UI.amb = { stream: "birds", birds: "off", off: "stream" }[lAmb()]; try { uiSave(); } catch (x) {} t.outerHTML = lambHTML(); try { lStream(PL.playing && !!document.getElementById("litem")); } catch (x) {} });
+  function lhFit() { try { const cc = document.querySelector("#lhead .lh-chips"); if (!cc) return; const kids = [...cc.children]; kids.forEach((c) => (c.style.display = "")); const R = cc.getBoundingClientRect().right; kids.forEach((c) => { if (c.getBoundingClientRect().right > R + 1) c.style.display = "none"; }); } catch (e) {} }
+  addEventListener("hashchange", () => setTimeout(lhFit, 60)); addEventListener("resize", () => lhFit()); setTimeout(lhFit, 300);
   function lhState() {
+    lhFit();
     try { lStream(typeof PL !== "undefined" && PL.playing && !!document.getElementById("litem")); } catch (e) {}''')
 # the sound switch sits in the pane's top row
 rep('''      (opts ? '<button class="lh-opts" data-act="lh-opts"''', '''      lambHTML() + (opts ? '<button class="lh-opts" data-act="lh-opts"''')
