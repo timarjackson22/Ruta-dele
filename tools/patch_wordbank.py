@@ -73,6 +73,17 @@ rep('''    if (!hits.length && TG[w]) hits.push(''', '''    if (!hits.length) { 
 rep('''    Object.entries(VJARGON).forEach(([w, m]) => rows.push([w, m, "Jargon"]));''', '''    Object.entries(VJARGON).forEach(([w, m]) => rows.push([w, m, "Jargon"]));
     try { const have = new Set(rows.map((r) => r[0])); xpPanamaRows().forEach((r) => { if (!have.has(r[0])) rows.push(r); }); } catch (e) {}''')
 
+# translations: the free translator sometimes returns its markup («<g id="1">I say one</g>», seen on a song, Nov 2026); and a line that is one
+# known expression («A ver») gets the expression's meaning instead of a word-by-word guess («Really?»)
+rep('''    const d = document.createElement("textarea"); d.innerHTML = out; return d.value;''', '''    const d = document.createElement("textarea"); d.innerHTML = out; return d.value.replace(/<\\/?[a-z][^>]*>/gi, "").replace(/\\s+([.,!?;:])/g, "$1").trim();''')
+rep("\n  function route() {\n", '''
+  { const tr0 = window.__trEn; if (tr0) window.__trEn = async (t) => {
+    const k = String(t || "").toLowerCase().replace(/[¿?¡!.,;:"“”«»…]/g, " ").replace(/\\s+/g, " ").trim();
+    try { if (k && k.split(" ").length <= 4) { const o = PAN.get(k); if (o) return o.en.replace(/\\s*\\(.*?\\)\\s*/g, " ").trim(); if (!XP) await loadXP().catch(() => {}); const e = XP && XP.P.get(k); if (e) { /* the whole line is the expression, so even a two-word one counts */ const g = xpFirst(e[2]); return g.charAt(0).toUpperCase() + g.slice(1); } } } catch (e) {}
+    const out = await tr0(t); return String(out || "").replace(/<\\/?[a-z][^>]*>/gi, "").replace(/\\s+([.,!?;:])/g, "$1").trim();
+  }; }
+  function route() {
+''')
 rep("</head>", '''<style>.xpe{margin:6px 0 4px}.xpe .eyebrow{font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#667)}.pill.xpl{background:#fdf0d5;color:#8a5a00;border-radius:999px;padding:1px 7px;font-size:.72rem}.xpx{margin:0 0 8px;color:var(--muted,#556)}.xpw{margin:6px 0}.xpsrc{margin:8px 0 0;font-size:.68rem}</style></head>''')
 open(p, "w", encoding="utf-8").write(s)
 print("wordbank ok")
