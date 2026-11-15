@@ -16,3 +16,8 @@ If no: say so in the commit message ("costs: no impact").
 
 ## Exams
 - Exam data is generated: `python3 tools/exgen/gen.py <level>` from `tools/exgen/<level>_part*.py`. Update `EXREADY` and `sw.js` when adding exams.
+
+## Versions
+- Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
+  If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").
+- Bump the `sw.js` cache name (ruta-dele-vNNN) with each release.

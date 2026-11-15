@@ -22,6 +22,12 @@ o, new = open(old, encoding="utf-8").read(), open(os.path.join(T, "pvoice.js"), 
 if o != new:
     assert s.count(o) == 1, "old pvoice.js not found verbatim in index.html"
     s = s.replace(o, new)
-s = re.sub(r'var BUILD = "\d+";', 'var BUILD = "%s";' % datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M"), s)
+stamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M")
+s = re.sub(r'var BUILD = "\d+";', 'var BUILD = "%s";' % stamp, s)
+# one build stamp everywhere: the page's two stamps and version.json must match, or the update check
+# sees a "newer" version.json than the page and reloads for ever
+s = re.sub(r'window.__BUILD = "\d+"', 'window.__BUILD = "%s"' % stamp, s)
+import os
+open(os.path.join(os.path.dirname(os.path.abspath(sys.argv[1])), "version.json"), "w").write('{"v":"%s"}' % stamp)
 open(p, "w", encoding="utf-8").write(s)
 print("synced registry (%d bytes) and pvoice.js (%s)" % (len(reg), "changed" if o != new else "unchanged"))
