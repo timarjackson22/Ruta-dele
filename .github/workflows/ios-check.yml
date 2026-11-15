@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
       - run: npm i playwright@1.55.0 && npx playwright install webkit
-      - run: (python3 -m http.server 8766 >/dev/null 2>&1 &) && sleep 2 && mkdir -p eval/out && cd eval && node ios.js 2>&1 | tee out/ios.txt
+      - run: (python3 -m http.server 8766 >/dev/null 2>&1 &) && sleep 2 && mkdir -p eval/out && cd eval && node ios-lyrics.js 2>&1 | tee out/ios-lyrics.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: ios, path: eval/out }
