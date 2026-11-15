@@ -56,5 +56,8 @@ body.tutor-open #hfpill{bottom:auto;top:calc(10px + env(safe-area-inset-top));le
 </style></head>''')
 # hands-free speaks from any screen (speakMixed stays silent while the panel is closed, except for hands-free)
 rep('''if (tp && tp.hidden && !document.getElementById("litem") && !(typeof PR !== "undefined" && PR)) { if (onDone) onDone(); return; } }''', '''if (tp && tp.hidden && !document.getElementById("litem") && !(typeof PR !== "undefined" && PR) && !window.__pvSayOK) { if (onDone) onDone(); return; } }''')
+# Profe's header: a Hands-free button next to the tabs (easy to find; shows on/off)
+rep('''["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("");''',
+    '''["chat", "Chat"], ["practice", "Practice"], ["hist", "History & settings"]].map(([k, n]) => '<button class="btn small" data-act="t-tab" data-v="' + k + '" aria-pressed="' + (tView === k) + '">' + n + "</button>").join("") + (() => { let on = false; try { on = HF.on; } catch (e) {} return CAN_MIC ? '<button class="btn small hfchip" data-act="hf-toggle" aria-pressed="' + on + '">🎙️ Hands-free ' + (on ? "on" : "off") + "</button>" : ""; })();''')
 open(p, "w", encoding="utf-8").write(s)
 print("pvoice ok")

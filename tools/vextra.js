@@ -27,7 +27,7 @@
   }
   function vaStart() {
     if (!vaOk()) return;
-    VA.id = VP.id; VA.cues = []; VA.seg = null; VA.live = "";
+    VA.id = VP.id; VA.cues = []; VA.seg = null; VA.live = ""; VA.peak = 0; VA.levels = 0; VA.engine = "";
     vaBanner("Asking Android for permission to record the video's sound…");
     try { window.AndroidAud.start(S.region === "es" ? "es-ES" : "es-US"); } catch (e) { vaBanner("Couldn't start: " + e, true); }
   }
@@ -41,6 +41,8 @@
   }
   window.__aaud = { ev(type, text) {
     if (!VA.id || VA.id !== VP.id) return;
+    if (type === "level") { const x = +text || 0; VA.levels++; if (!VP.ad) VA.peak = Math.max(VA.peak || 0, x); return; }
+    if (type === "state" && /^engine:/.test(text)) { VA.engine = text.slice(7); return; }
     if (type === "state") {
       if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
       else if (text === "asking") vaBanner("Android will ask to record: choose Start (the app only listens to its own video).");
@@ -62,7 +64,8 @@
   function vaFinish() {
     const id = VA.id; if (!id) return; VA.on = false;
     if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); setTimeout(() => vaBanner(""), 5000); if (VP.id === id) vWordCheck(id); }
-    else vaBanner("No speech was picked up. Is the volume on? Music can make it harder.", true);
+    else if (VA.levels > 4 && (VA.peak || 0) < 0.003) vaBanner("The video's sound didn't reach the app: Android passed it silence. Turn the media volume up (not muted), start again and choose Start on Android's prompt. If it still happens, this phone doesn't allow the app to record its own video sound.", true);
+    else vaBanner("The sound reached the app but no Spanish speech was recognised" + (VA.engine ? " (" + (VA.engine === "on-device" ? "on-device recogniser" : VA.engine === "google" ? "Google speech service" : "phone's speech service") + ")" : "") + ". Music can make it harder; for Google's recogniser, the offline Spanish pack helps (Settings › Google › Voice › Offline speech recognition).", true);
     VA.id = null;
   }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (a === "va-start") vaStart(); else if (a === "va-stop") vaStop(); else if (a === "va-redo") { try { localStorage.removeItem(vaKey(VP.id)); } catch (x) {} vaStart(); } else if (a === "v-report") vReport(); else if (a === "v-copyrep") { const ta = document.getElementById("vrep"); try { navigator.clipboard.writeText(ta.value); t.textContent = "Copied"; } catch (x) { ta.select(); document.execCommand("copy"); t.textContent = "Copied"; } } });

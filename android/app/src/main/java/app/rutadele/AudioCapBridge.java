@@ -83,6 +83,7 @@ public class AudioCapBridge {
     @JavascriptInterface
     public void stop() { main.post(this::end); }
 
+    String engine = "";
     void begin() {
         if (CaptureService.projection == null) { ev("state", "error:Android didn't start the recording."); CaptureService.stop(a); return; }
         try {
@@ -97,8 +98,10 @@ public class AudioCapBridge {
             final AudioRecord r = rec;
             final FileOutputStream out = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
             pump = new Thread(() -> {
-                byte[] b = new byte[3200]; // 100 ms
-                try { while (running) { int n = r.read(b, 0, b.length); if (n > 0) out.write(b, 0, n); } } catch (Exception ignored) { }
+                byte[] b = new byte[3200]; long last = 0; double peak = 0; // 100 ms
+                try { while (running) { int n = r.read(b, 0, b.length); if (n <= 0) continue; out.write(b, 0, n);
+                    double s2 = 0; for (int i = 0; i + 1 < n; i += 2) { int v = (short) ((b[i] & 0xff) | (b[i + 1] << 8)); s2 += (double) v * v; } peak = Math.max(peak, Math.sqrt(s2 / Math.max(1, n / 2)) / 32768.0);
+                    long now = System.currentTimeMillis(); if (now - last > 500) { last = now; ev("level", String.format(java.util.Locale.US, "%.4f", peak)); peak = 0; } } } catch (Exception ignored) { }
                 try { out.close(); } catch (Exception ignored) { }
             }, "video-audio");
             pump.start();
@@ -114,7 +117,9 @@ public class AudioCapBridge {
     void listen() {
         if (!running) return;
         try { if (sr != null) sr.destroy(); } catch (Exception ignored) { }
-        sr = Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(a) ? SpeechRecognizer.createOnDeviceSpeechRecognizer(a) : SpeechRecognizer.createSpeechRecognizer(a);
+        Object[] rc = Recog.create(a, true); // on-device, else Google's service (handles recorded audio), else the default
+        if (rc == null) { ev("state", "error:This phone has no speech recognition service that can listen to the video."); end(); return; }
+        sr = (SpeechRecognizer) rc[0]; if (!String.valueOf(rc[1]).equals(engine)) { engine = String.valueOf(rc[1]); ev("state", "engine:" + engine); }
         sr.setRecognitionListener(new RecognitionListener() {
             String best(Bundle b) { ArrayList<String> r = b == null ? null : b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); return r == null || r.isEmpty() ? "" : r.get(0); }
             @Override public void onReadyForSpeech(Bundle p) { }

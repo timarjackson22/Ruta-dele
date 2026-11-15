@@ -4,6 +4,7 @@ const { chromium, devices } = require("playwright");
 const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (!ok && info != null ? "  " + info : "")); };
 const SPEECH = () => { class U { constructor(t) { this.text = t; } } window.SpeechSynthesisUtterance = U; const ss = { speaking: false, pending: false, paused: false, getVoices: () => [{ name: "es-ES", lang: "es-ES", localService: true, voiceURI: "es" }], speak(u) { ss.speaking = true; setTimeout(() => { u.onstart && u.onstart({}); }, 30); u.__t = setTimeout(() => { ss.speaking = false; u.onend && u.onend({}); }, 2600); ss.cur = u; }, cancel() { ss.speaking = false; if (ss.cur) clearTimeout(ss.cur.__t); }, pause() {}, resume() {}, addEventListener() {} }; Object.defineProperty(window, "speechSynthesis", { value: ss, configurable: true });
   window.__ac = 0; const AC = window.AudioContext; window.AudioContext = function () { window.__ac++; return new AC(); }; };
+const innerHeightOf = () => 915; // Pixel 7
 (async () => {
   const b = await chromium.launch(); const shots = process.argv[2];
   for (const scheme of ["light", "dark"]) {
@@ -16,6 +17,8 @@ const SPEECH = () => { class U { constructor(t) { this.text = t; } } window.Spee
       rec("Pane spans the full width, edge to edge (visible at both screen edges)", a.left === 0 && a.right === a.w && edge.l && edge.r, JSON.stringify({ a, edge }));
       rec("…with no border, corners or shadow", /^0px0px$/.test(a.bw) && a.rad === "0px" && a.shadow === "none", JSON.stringify(a));
       rec("A valley with a stream whose surface flows", a.valley && a.anim === "lhflow", JSON.stringify(a));
+      rec("The pane takes at most a quarter of the screen", a.h <= innerHeightOf(p) * 0.25 + 1, a.h + " of " + (await p.evaluate(() => innerHeight)));
+      rec("The background-sound switch is at the top of the pane", await p.evaluate(() => { const b = document.querySelector("#lhead .lh-top .lamb"); return !!b && /stream/i.test(b.getAttribute("aria-label")); }));
     }
     if (shots) await p.screenshot({ path: shots + "-" + scheme + "-top.png" });
     await p.click("#pl-play"); await p.waitForTimeout(1200);
@@ -31,9 +34,10 @@ const SPEECH = () => { class U { constructor(t) { this.text = t; } } window.Spee
     await p.click("#pl-play"); await p.waitForTimeout(1200);
     rec("[" + scheme + "] Pausing stops the stream sound", !(await p.evaluate(() => window.__lStream())));
     if (scheme === "light") {
-      await p.click('[data-act="pl-more"]'); await p.waitForTimeout(200); await p.click('[data-act="l-stream"]'); await p.waitForTimeout(200);
-      const lab = await p.textContent('[data-act="l-stream"]'); await p.click('[data-act="pl-more"]').catch(() => {}); await p.mouse.click(200, 500); await p.click("#pl-play"); await p.waitForTimeout(1200);
-      rec("Stream sound: off (▾ menu) keeps it silent while reading", /off/.test(lab) && !(await p.evaluate(() => window.__lStream())), lab);
+      await p.click('[data-act="l-amb"]'); await p.waitForTimeout(150); await p.click("#pl-play"); await p.waitForTimeout(1200);
+      rec("Tap once: birdsong while reading", (await p.evaluate(() => window.__lAmb())) === "birds", await p.evaluate(() => window.__lAmb()));
+      await p.click('[data-act="l-amb"]'); await p.waitForTimeout(400);
+      rec("Tap again: background sound off, straight away (even mid-reading)", !(await p.evaluate(() => window.__lStream())) && /off/i.test(await p.getAttribute('[data-act="l-amb"]', "aria-label")));
       await p.click("#pl-play");
       const ov = await p.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
       rec("No sideways scroll", !ov);
@@ -41,6 +45,8 @@ const SPEECH = () => { class U { constructor(t) { this.text = t; } } window.Spee
     rec("[" + scheme + "] No script errors", !er.length, er.join(" | "));
     await c.close();
   }
+  for (const dev of ["iPhone SE", "iPhone 13"]) { const c2 = await b.newContext({ ...devices[dev], serviceWorkers: "block" }); const q2 = await c2.newPage(); await q2.goto("http://localhost:8766/#reading-b1-01"); await q2.waitForTimeout(1200);
+    const hh = await q2.evaluate(() => [document.getElementById("lhead").getBoundingClientRect().height, innerHeight]); rec(dev + ": the pane takes at most a quarter of the screen", hh[0] <= hh[1] * 0.25 + 1, hh.join(" of ")); await c2.close(); }
   const rm = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block", reducedMotion: "reduce" }); const q = await rm.newPage(); await q.goto("http://localhost:8766/#reading-b1-01"); await q.waitForTimeout(1200);
   rec("Reduced motion: the stream is still", (await q.evaluate(() => getComputedStyle(document.querySelector(".lh-valley .fl")).animationName)) === "none");
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close();

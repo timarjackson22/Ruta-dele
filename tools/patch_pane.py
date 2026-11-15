@@ -20,21 +20,32 @@ NEW = ('<svg class="lh-land lh-valley" viewBox="0 0 400 90" preserveAspectRatio=
 rep(OLD, NEW)
 CSS = r'''
 /* ===== title pane v3: never collapses, borderless, edge to edge; the text starts at its bottom edge ===== */
-#litem .lhead { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding: 16px calc(50vw - 50% + 16px) 92px !important; margin-top: -8px; margin-bottom: 0 }
+#litem .lhead { border: 0 !important; border-radius: 0 !important; box-shadow: none !important; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding: 10px calc(50vw - 50% + 16px) 50px !important; margin-top: -8px; margin-bottom: 0 }
 #litem .lhead::before { display: none }
 body:has(#litem) { overflow-x: clip }
-#litem .lh-land { height: 86px; transition: none }
+#litem .lh-land { height: 46px; transition: none }
+/* at most a quarter of the screen: compact chips, title up to two lines, subtitle one line */
+#litem .lh-top { gap: 8px; align-items: center } #litem .lh-chips { gap: 5px } #litem .lh-chip { font-size: 9.5px; padding: 1px 6px } #litem .lh-ic { width: 26px !important; height: 26px !important } #litem .lh-ic svg { width: 14px !important; height: 14px !important }
+#litem .lh-sub { font-size: .86rem !important; margin: 2px 0 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+#litem .lhead .ltitle { display: -webkit-box !important; -webkit-box-orient: vertical !important; -webkit-line-clamp: 2 !important; overflow: hidden !important }
+#litem .lh-chips { flex: 1; min-width: 0; flex-wrap: nowrap !important; overflow: hidden; }
+#litem .lh-chip { flex: none }
+@media (max-height: 760px) { #litem .lh-sub { display: none !important } #litem .lhead .ltitle { -webkit-line-clamp: 1 !important; margin: 6px 0 0 !important }
+  #litem .lhead, body.lplaying #litem .lhead { padding-top: 8px !important; padding-bottom: 36px !important } #litem .lh-land, body.lplaying #litem .lh-land { height: 32px !important } #litem .lprog { margin-top: 4px !important } }
+@media (max-height: 620px) { #litem .lhead .ltitle { font-size: 1.12rem !important; margin: 4px 0 0 !important } #litem .lhead, body.lplaying #litem .lhead { padding-bottom: 30px !important } #litem .lh-land, body.lplaying #litem .lh-land { height: 26px !important } #litem .lamb { width: 28px; height: 28px; font-size: 14px } #litem .lh-ic { width: 22px !important; height: 22px !important } }
+.lamb { margin-left: auto; flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--rule) 70%, transparent); background: color-mix(in srgb, var(--par1) 70%, transparent); font-size: 16px; line-height: 1; display: grid; place-items: center; cursor: pointer }
+.lamb + .lh-opts { margin-left: 6px }
 /* frozen while reading: the same pane, stuck under the top bar; nothing shrinks or hides */
-body.lplaying #litem .lhead { position: sticky; top: var(--hdrH, 56px); z-index: 6; padding: 16px calc(50vw - 50% + 16px) 92px !important; border-radius: 0 !important; box-shadow: none !important }
-#litem .lhead .ltitle { font-size: clamp(1.7rem, 7vw, 2.4rem) !important; line-height: 1.2 !important }
-body.lplaying #litem .lhead .ltitle { font-size: clamp(1.7rem, 7vw, 2.4rem) !important; line-height: 1.2 !important; margin: 14px 0 6px !important; display: block !important; -webkit-line-clamp: unset !important; overflow: visible !important }
-body.lplaying #litem .lh-sub { display: block !important }
-body.lplaying #litem .lh-ic { width: 32px !important; height: 32px !important } body.lplaying #litem .lh-ic svg { width: 18px !important; height: 18px !important }
-body.lplaying #litem .lh-land { height: 86px !important } body.lplaying #litem .lh-land .m1 { opacity: .55 !important }
+body.lplaying #litem .lhead { position: sticky; top: var(--hdrH, 56px); z-index: 6; padding: 10px calc(50vw - 50% + 16px) 50px !important; border-radius: 0 !important; box-shadow: none !important }
+#litem .lhead .ltitle { font-size: clamp(1.25rem, 5.2vw, 1.65rem) !important; line-height: 1.2 !important; margin: 8px 0 2px !important; font-variation-settings: "opsz" 40 }
+body.lplaying #litem .lhead .ltitle { font-size: clamp(1.25rem, 5.2vw, 1.65rem) !important; line-height: 1.2 !important; margin: 8px 0 2px !important }
+body.lplaying #litem .lh-sub { display: block }
+
+body.lplaying #litem .lh-land { height: 46px !important } body.lplaying #litem .lh-land .m1 { opacity: .55 !important }
 /* lines fade as they reach the pane, never while they're being read (the spoken word sits ~half an inch below) */
 body.lplaying #litem .lhead::after { content: none !important; display: none !important }
 /* same height playing or paused: the progress line and the Options button keep their places */
-#litem .lprog { display: block !important; visibility: hidden; margin-top: 8px !important; position: relative; z-index: 1 } body.lplaying #litem .lprog { visibility: visible }
+#litem .lprog { display: block !important; visibility: hidden; margin-top: 6px !important; position: relative; z-index: 1 } body.lplaying #litem .lprog { visibility: visible }
 body.lplaying #litem .lh-opts { display: inline-flex !important; visibility: hidden }
 /* the stream flows */
 .lh-valley .w1 { fill: var(--w1); opacity: .95 }
@@ -43,7 +54,7 @@ body.lplaying #litem .lh-opts { display: inline-flex !important; visibility: hid
 body.lplaying .lh-valley .fl { animation-duration: 1.7s } body.lplaying .lh-valley .f2 { animation-duration: 2.2s } body.lplaying .lh-valley .f3 { animation-duration: 1.4s }
 @keyframes lhflow { to { stroke-dashoffset: -32 } }
 @media (prefers-reduced-motion: reduce) { .lh-valley .fl { animation: none } }
-#pmenu .lstream[aria-pressed="true"] { background: color-mix(in srgb, var(--w1) 22%, transparent) }
+
 '''
 k = s.rindex("</style>", 0, s.index("</head>")); s = s[:k] + CSS + s[k:]
 # the read-along glide: the spoken word ~48 px (half an inch) below the title pane, not a third of the way down the screen
@@ -54,25 +65,42 @@ rep('''if (r.top < 90 || r.bottom > innerHeight - (UI.cues !== false ? 260 : 170
     '''const pane = document.body.classList.contains("lplaying") ? document.querySelector("#litem .lhead") : null, top = pane ? pane.getBoundingClientRect().bottom + 48 : 90;
       if (r.top < top || r.bottom > innerHeight - (UI.cues !== false ? 260 : 170)) { if (pane && !FOL.free) scrollTo({ top: Math.max(0, scrollY + r.top - top), behavior: "smooth" }); else followTo(el); } } }''')
 # the soft sound of a stream while the text is read (made in the page: no file, nothing downloaded); on/off in the player's ▾ menu
-rep('''  function lhState() {''', '''  const LSA = { c: null, g: null };
+rep('''  function lhState() {''', '''  // background sound while the text is read, made in the page (no files): a gentle stream, birdsong, or nothing; switch at the top of the pane
+  const LSA = { c: null, g: null, mode: null, tm: null };
+  const lAmb = () => (UI.amb === "birds" || UI.amb === "off" ? UI.amb : "stream");
+  const LAMB = { stream: ["🌊", "Background sound: gentle stream. Tap for birdsong"], birds: ["🐦", "Background sound: birdsong. Tap to turn it off"], off: ["🔇", "Background sound off. Tap for a gentle stream"] };
+  const lambHTML = () => '<button type="button" class="lamb" data-act="l-amb" aria-label="' + LAMB[lAmb()][1] + '" title="' + LAMB[lAmb()][1] + '">' + LAMB[lAmb()][0] + "</button>";
+  function lNoise(c, sec) { const n = c.sampleRate * sec, buf = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); let b = 0; for (let i = 0; i < n; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = b * 3.5; } } return buf; }
+  function lChirp(c, out) { // one little phrase of 2–5 notes, high and short, at a random pitch
+    const t0 = c.currentTime + 0.05, f = 2600 + Math.random() * 1600, k = 2 + Math.floor(Math.random() * 4);
+    for (let i = 0; i < k; i++) { const o = c.createOscillator(), g = c.createGain(), t = t0 + i * (0.09 + Math.random() * 0.05), d = 0.06 + Math.random() * 0.05; o.type = "sine";
+      o.frequency.setValueAtTime(f * (0.9 + Math.random() * 0.2), t); o.frequency.exponentialRampToValueAtTime(f * (1.15 + Math.random() * 0.35), t + d);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.5, t + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t + d); o.connect(g); g.connect(out); o.start(t); o.stop(t + d + 0.02); } }
   function lStream(on) {
-    on = !!on && UI.stream !== false && !document.hidden;
-    if (on && !LSA.c) { try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = new C(), n = c.sampleRate * 6, buf = c.createBuffer(2, n, c.sampleRate);
-        for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); let b = 0; for (let i = 0; i < n; i++) { b = (b + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = b * 3.5; } }
-        const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
-        const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 160; const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1000;
-        const lfo = c.createOscillator(); lfo.frequency.value = 0.21; const lg = c.createGain(); lg.gain.value = 260; lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
-        const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 2600; bp.Q.value = 1.2; const tg = c.createGain(); tg.gain.value = 0.25; const lfo2 = c.createOscillator(); lfo2.frequency.value = 1.7; const l2 = c.createGain(); l2.gain.value = 0.18; lfo2.connect(l2); l2.connect(tg.gain); lfo2.start();
-        const g = c.createGain(); g.gain.value = 0; src.connect(hp); hp.connect(lp); lp.connect(g); src.connect(bp); bp.connect(tg); tg.connect(g); g.connect(c.destination); src.start();
-        g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(0.045, c.currentTime + 2); LSA.c = c; LSA.g = g; } catch (e) {} }
-    else if (!on && LSA.c) { const c = LSA.c, g = LSA.g; LSA.c = null; try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(g.gain.value, c.currentTime); g.gain.linearRampToValueAtTime(0, c.currentTime + 0.7); setTimeout(() => { try { c.close(); } catch (e) {} }, 900); } catch (e) {} }
+    const mode = on && !document.hidden ? lAmb() : "off";
+    if (mode === LSA.mode) return;
+    if (LSA.c) { const c = LSA.c, g = LSA.g; clearTimeout(LSA.tm); LSA.c = null; try { g.gain.cancelScheduledValues(c.currentTime); g.gain.setValueAtTime(g.gain.value, c.currentTime); g.gain.linearRampToValueAtTime(0, c.currentTime + 0.8); setTimeout(() => { try { c.close(); } catch (e) {} }, 1000); } catch (e) {} }
+    LSA.mode = mode; if (mode === "off") return;
+    try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return; const c = new C(), g = c.createGain(); g.gain.value = 0; g.connect(c.destination);
+      // the stream: soft low water, slowly rising and falling (much quieter and duller than before)
+      const src = c.createBufferSource(); src.buffer = lNoise(c, 8); src.loop = true; const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 110; const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 520; lp.Q.value = 0.3;
+      const bed = c.createGain(); bed.gain.value = mode === "birds" ? 0.35 : 1; const lfo = c.createOscillator(); lfo.frequency.value = 0.09; const lg = c.createGain(); lg.gain.value = 0.18; lfo.connect(lg); lg.connect(bed.gain); lfo.start();
+      src.connect(hp); hp.connect(lp); lp.connect(bed); bed.connect(g); src.start();
+      g.gain.setValueAtTime(0, c.currentTime); g.gain.linearRampToValueAtTime(mode === "birds" ? 0.02 : 0.016, c.currentTime + 2.5);
+      LSA.c = c; LSA.g = g;
+      if (mode === "birds") { const birds = c.createGain(); birds.gain.value = 0.045; birds.connect(c.destination); const sing = () => { if (LSA.c !== c) return; lChirp(c, birds); LSA.tm = setTimeout(sing, 1400 + Math.random() * 4200); }; LSA.tm = setTimeout(sing, 900); }
+    } catch (e) {}
   }
-  window.__lStream = () => !!LSA.c;
+  window.__lStream = () => !!LSA.c; window.__lAmb = () => LSA.mode;
   document.addEventListener("visibilitychange", () => { if (document.hidden) lStream(false); });
   addEventListener("hashchange", () => lStream(false));
-  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="l-stream"]'); if (!t) return; UI.stream = UI.stream === false; try { uiSave(); } catch (x) { try { localStorage.setItem("rd-ui", JSON.stringify(UI)); } catch (y) {} } t.setAttribute("aria-pressed", String(UI.stream !== false)); t.textContent = "Stream sound: " + (UI.stream !== false ? "on" : "off"); try { lStream(PL.playing && !!document.getElementById("litem")); } catch (x) {} });
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="l-amb"]'); if (!t) return; UI.amb = { stream: "birds", birds: "off", off: "stream" }[lAmb()]; try { uiSave(); } catch (x) {} t.outerHTML = lambHTML(); try { lStream(PL.playing && !!document.getElementById("litem")); } catch (x) {} });
+  function lhFit() { try { const cc = document.querySelector("#lhead .lh-chips"); if (!cc) return; const kids = [...cc.children]; kids.forEach((c) => (c.style.display = "")); const R = cc.getBoundingClientRect().right; kids.forEach((c) => { if (c.getBoundingClientRect().right > R + 1) c.style.display = "none"; }); } catch (e) {} }
+  addEventListener("hashchange", () => setTimeout(lhFit, 60)); addEventListener("resize", () => lhFit()); setTimeout(lhFit, 300);
   function lhState() {
-    try { const pm = document.getElementById("pmenu"); if (pm && !pm.querySelector(".lstream")) { const b = document.createElement("button"); b.type = "button"; b.className = "btn small lstream"; b.dataset.act = "l-stream"; b.setAttribute("aria-pressed", String(UI.stream !== false)); b.textContent = "Stream sound: " + (UI.stream !== false ? "on" : "off"); pm.appendChild(b); } } catch (e) {}
+    lhFit();
     try { lStream(typeof PL !== "undefined" && PL.playing && !!document.getElementById("litem")); } catch (e) {}''')
+# the sound switch sits in the pane's top row
+rep('''      (opts ? '<button class="lh-opts" data-act="lh-opts"''', '''      lambHTML() + (opts ? '<button class="lh-opts" data-act="lh-opts"''')
 open(p, "w", encoding="utf-8").write(s)
 print("pane ok")
