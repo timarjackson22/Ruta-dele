@@ -1,0 +1,1325 @@
+{
+ "entries": 814137,
+ "phrases_kept": 15155,
+ "labelled_words_kept": 9033,
+ "size_mb": 2.09,
+ "phrases_by_register": {
+  "col": 548,
+  "vul": 201,
+  "slg": 59,
+  "arc": 59,
+  "der": 53,
+  "net": 44,
+  "hum": 39,
+  "eup": 35,
+  "old": 32,
+  "rar": 16,
+  "aff": 1
+ },
+ "places_top": {
+  "w:Mexico": 1553,
+  "w:Spain": 1087,
+  "w:El Salvador": 1003,
+  "w:Latin America": 930,
+  "w:Chile": 830,
+  "w:Honduras": 718,
+  "w:Venezuela": 621,
+  "w:Colombia": 598,
+  "w:Peru": 570,
+  "w:Nicaragua": 566,
+  "w:Rioplatense": 533,
+  "w:Bolivia": 471,
+  "w:Argentina": 456,
+  "w:Guatemala": 454,
+  "w:Cuba": 426,
+  "w:Ecuador": 373,
+  "w:Dominican Republic": 368,
+  "w:Canary Islands": 366,
+  "w:Costa Rica": 352,
+  "w:Puerto Rico": 306,
+  "w:Paraguay": 295,
+  "w:Central America": 260,
+  "Spain": 260,
+  "w:Panama": 246,
+  "w:Philippines": 224,
+  "Mexico": 182,
+  "w:US": 170,
+  "w:South America": 146,
+  "w:Uruguay": 133,
+  "Chile": 117,
+  "El Salvador": 116,
+  "w:Andalusia": 114,
+  "Latin America": 108,
+  "w:Andes": 92,
+  "w:Caribbean": 85,
+  "Argentina": 63,
+  "Peru": 54,
+  "Rioplatense": 54,
+  "Honduras": 51,
+  "Venezuela": 40
+ },
+ "coverage": {
+  "app_text_strings": 7017,
+  "word_tokens": 91910,
+  "known_before": 97.5,
+  "known_after": 98.26,
+  "expressions_found_before": 24,
+  "expressions_found_after": 3538,
+  "distinct_expressions_after": 853,
+  "top_expressions": [
+   [
+    "por favor",
+    91
+   ],
+   [
+    "en casa",
+    83
+   ],
+   [
+    "por qué",
+    65
+   ],
+   [
+    "me gusta",
+    60
+   ],
+   [
+    "un poco",
+    51
+   ],
+   [
+    "después de",
+    49
+   ],
+   [
+    "cerca de",
+    45
+   ],
+   [
+    "por la noche",
+    38
+   ],
+   [
+    "fin de semana",
+    36
+   ],
+   [
+    "sin embargo",
+    32
+   ],
+   [
+    "la vida",
+    32
+   ],
+   [
+    "por eso",
+    30
+   ],
+   [
+    "por ciento",
+    30
+   ],
+   [
+    "con tal de",
+    29
+   ],
+   [
+    "con tal de que",
+    29
+   ],
+   [
+    "se puede",
+    28
+   ],
+   [
+    "caso de",
+    27
+   ],
+   [
+    "y qué",
+    27
+   ],
+   [
+    "me llamo",
+    26
+   ],
+   [
+    "con el fin de",
+    26
+   ],
+   [
+    "a fin de",
+    24
+   ],
+   [
+    "de acuerdo",
+    23
+   ],
+   [
+    "en caso de",
+    23
+   ],
+   [
+    "al lado",
+    22
+   ],
+   [
+    "tiempo libre",
+    22
+   ],
+   [
+    "siempre que",
+    21
+   ],
+   [
+    "dónde está",
+    21
+   ],
+   [
+    "a menos que",
+    20
+   ],
+   [
+    "ya que",
+    20
+   ],
+   [
+    "al día",
+    20
+   ],
+   [
+    "muy bien",
+    20
+   ],
+   [
+    "por fin",
+    19
+   ],
+   [
+    "hasta que",
+    18
+   ],
+   [
+    "como si",
+    18
+   ],
+   [
+    "si bien",
+    18
+   ],
+   [
+    "siempre y cuando",
+    17
+   ],
+   [
+    "puesto que",
+    17
+   ],
+   [
+    "una de",
+    17
+   ],
+   [
+    "de repente",
+    16
+   ],
+   [
+    "buenos días",
+    16
+   ],
+   [
+    "así que",
+    16
+   ],
+   [
+    "en aras de",
+    16
+   ],
+   [
+    "para qué",
+    16
+   ],
+   [
+    "primera vez",
+    16
+   ],
+   [
+    "por un lado",
+    15
+   ],
+   [
+    "a fin de que",
+    15
+   ],
+   [
+    "inteligencia artificial",
+    15
+   ],
+   [
+    "de la casa",
+    15
+   ],
+   [
+    "al lado de",
+    14
+   ],
+   [
+    "dado que",
+    14
+   ],
+   [
+    "casco antiguo",
+    14
+   ],
+   [
+    "ya no",
+    14
+   ],
+   [
+    "en el trabajo",
+    14
+   ],
+   [
+    "en conclusión",
+    14
+   ],
+   [
+    "sobre todo",
+    13
+   ],
+   [
+    "en cuanto",
+    13
+   ],
+   [
+    "aire acondicionado",
+    13
+   ],
+   [
+    "al principio",
+    13
+   ],
+   [
+    "en definitiva",
+    13
+   ],
+   [
+    "a casa",
+    13
+   ]
+  ],
+  "unknown_words_top": [
+   [
+    "esp",
+    61
+   ],
+   [
+    "españa",
+    34
+   ],
+   [
+    "méxico",
+    30
+   ],
+   [
+    "daniel",
+    24
+   ],
+   [
+    "tom",
+    23
+   ],
+   [
+    "ana",
+    22
+   ],
+   [
+    "toronto",
+    19
+   ],
+   [
+    "américa",
+    19
+   ],
+   [
+    "david",
+    18
+   ],
+   [
+    "chitré",
+    18
+   ],
+   [
+    "madrid",
+    17
+   ],
+   [
+    "perú",
+    14
+   ],
+   [
+    "juan",
+    12
+   ],
+   [
+    "chiriquí",
+    11
+   ],
+   [
+    "valeria",
+    11
+   ],
+   [
+    "subjunctive",
+    11
+   ],
+   [
+    "inés",
+    10
+   ],
+   [
+    "centroamérica",
+    10
+   ],
+   [
+    "carlos",
+    10
+   ],
+   [
+    "bogotá",
+    9
+   ],
+   [
+    "europa",
+    9
+   ],
+   [
+    "always",
+    9
+   ],
+   [
+    "never",
+    9
+   ],
+   [
+    "rodrigo",
+    8
+   ],
+   [
+    "subj",
+    8
+   ],
+   [
+    "cusco",
+    8
+   ],
+   [
+    "xx",
+    8
+   ],
+   [
+    "uruguay",
+    7
+   ],
+   [
+    "garcía",
+    7
+   ],
+   [
+    "taboga",
+    7
+   ],
+   [
+    "guatemala",
+    7
+   ],
+   [
+    "albrook",
+    7
+   ],
+   [
+    "inf",
+    7
+   ],
+   [
+    "josé",
+    6
+   ],
+   [
+    "pedro",
+    6
+   ],
+   [
+    "santiago",
+    6
+   ],
+   [
+    "andrés",
+    6
+   ],
+   [
+    "andrea",
+    6
+   ],
+   [
+    "needs",
+    6
+   ],
+   [
+    "leccion",
+    6
+   ],
+   [
+    "raspao",
+    6
+   ],
+   [
+    "words",
+    6
+   ],
+   [
+    "sofía",
+    5
+   ],
+   [
+    "diego",
+    5
+   ],
+   [
+    "héctor",
+    5
+   ],
+   [
+    "xix",
+    5
+   ],
+   [
+    "feminine",
+    5
+   ],
+   [
+    "york",
+    5
+   ],
+   [
+    "xvi",
+    5
+   ],
+   [
+    "portobelo",
+    5
+   ],
+   [
+    "unesco",
+    5
+   ],
+   [
+    "montevideo",
+    5
+   ],
+   [
+    "frida",
+    5
+   ],
+   [
+    "márquez",
+    5
+   ],
+   [
+    "evaristo",
+    5
+   ],
+   [
+    "ignacio",
+    5
+   ],
+   [
+    "indicative",
+    5
+   ],
+   [
+    "return",
+    5
+   ],
+   [
+    "pablo",
+    4
+   ],
+   [
+    "francisco",
+    4
+   ],
+   [
+    "barú",
+    4
+   ],
+   [
+    "gatún",
+    4
+   ],
+   [
+    "miami",
+    4
+   ],
+   [
+    "same",
+    4
+   ],
+   [
+    "infinitive",
+    4
+   ],
+   [
+    "opposite",
+    4
+   ],
+   [
+    "mary",
+    4
+   ],
+   [
+    "next",
+    4
+   ],
+   [
+    "what",
+    4
+   ],
+   [
+    "latinoamérica",
+    4
+   ],
+   [
+    "méx",
+    4
+   ],
+   [
+    "yala",
+    4
+   ],
+   [
+    "barranquilla",
+    4
+   ],
+   [
+    "raymi",
+    4
+   ],
+   [
+    "valparaíso",
+    4
+   ],
+   [
+    "mariela",
+    4
+   ],
+   [
+    "but",
+    4
+   ],
+   [
+    "takes",
+    4
+   ],
+   [
+    "transport",
+    4
+   ],
+   [
+    "preposition",
+    4
+   ]
+  ],
+  "newly_known_top": [
+   [
+    "unos",
+    40,
+    "un|uno"
+   ],
+   [
+    "buenos",
+    30,
+    "bueno"
+   ],
+   [
+    "resultados",
+    16,
+    "resultado"
+   ],
+   [
+    "i",
+    13,
+    "ilustre"
+   ],
+   [
+    "ceviche",
+    12,
+    "cebiche"
+   ],
+   [
+    "os",
+    12,
+    "vosotros|ox"
+   ],
+   [
+    "usados",
+    9,
+    "usado"
+   ],
+   [
+    "estados",
+    8,
+    "estado"
+   ],
+   [
+    "convertirse",
+    8,
+    "convertir"
+   ],
+   [
+    "ia",
+    7,
+    "inteligencia artificial|incidencia acumulada"
+   ],
+   [
+    "apuntarse",
+    6,
+    "apuntar"
+   ],
+   [
+    "ponte",
+    6,
+    "poner"
+   ],
+   [
+    "ponerte",
+    6,
+    "poner"
+   ],
+   [
+    "hacerlo",
+    5,
+    "hacer"
+   ],
+   [
+    "whatsapp",
+    5,
+    "whatsapp"
+   ],
+   [
+    "invitados",
+    5,
+    "invitado"
+   ],
+   [
+    "llámame",
+    4,
+    "llamar"
+   ],
+   [
+    "pedidos",
+    4,
+    "pedido"
+   ],
+   [
+    "invítelo",
+    4,
+    "invitar"
+   ],
+   [
+    "recogerlo",
+    4,
+    "recoger"
+   ],
+   [
+    "ayudarme",
+    4,
+    "ayudar"
+   ],
+   [
+    "miguelito",
+    4,
+    ""
+   ],
+   [
+    "place",
+    4,
+    "placer"
+   ],
+   [
+    "preguntarse",
+    4,
+    "preguntar"
+   ],
+   [
+    "fuese",
+    4,
+    "ir|ser"
+   ],
+   [
+    "visitarla",
+    3,
+    "visitar"
+   ],
+   [
+    "verlo",
+    3,
+    "ver"
+   ],
+   [
+    "cerrados",
+    3,
+    "cerrado"
+   ],
+   [
+    "usarlo",
+    3,
+    "usar"
+   ],
+   [
+    "feriado",
+    3,
+    "día feriado|feriar"
+   ],
+   [
+    "tómate",
+    3,
+    "tomar"
+   ],
+   [
+    "limitados",
+    3,
+    "limitado"
+   ],
+   [
+    "lávate",
+    3,
+    "lavar"
+   ],
+   [
+    "role",
+    3,
+    "rolar"
+   ],
+   [
+    "vídeos",
+    3,
+    "vídeo"
+   ],
+   [
+    "cusqueños",
+    3,
+    "cusqueño"
+   ],
+   [
+    "veintiún",
+    3,
+    "veintiuno"
+   ],
+   [
+    "darle",
+    3,
+    "dar"
+   ],
+   [
+    "ferry",
+    3,
+    "ferri"
+   ],
+   [
+    "vernos",
+    3,
+    "ver"
+   ],
+   [
+    "bicis",
+    3,
+    "bici"
+   ],
+   [
+    "aprobarse",
+    3,
+    "aprobar"
+   ],
+   [
+    "escríbele",
+    3,
+    "escribir"
+   ],
+   [
+    "inscribirse",
+    2,
+    "inscribir"
+   ],
+   [
+    "hágale",
+    2,
+    "hacer"
+   ],
+   [
+    "pídale",
+    2,
+    "pedir"
+   ],
+   [
+    "incluidos",
+    2,
+    "incluido"
+   ],
+   [
+    "arreglarlo",
+    2,
+    "arreglar"
+   ],
+   [
+    "pregúntele",
+    2,
+    "preguntar"
+   ],
+   [
+    "proponerle",
+    2,
+    "proponer"
+   ],
+   [
+    "eva",
+    2,
+    "etilvinilacetato"
+   ],
+   [
+    "presentarle",
+    2,
+    "presentar"
+   ],
+   [
+    "hacerse",
+    2,
+    "hacer"
+   ],
+   [
+    "bici",
+    2,
+    "bicicleta"
+   ],
+   [
+    "fíjate",
+    2,
+    "fijar"
+   ],
+   [
+    "protegerse",
+    2,
+    "proteger"
+   ],
+   [
+    "compraste",
+    2,
+    "comprar"
+   ],
+   [
+    "aparearse",
+    2,
+    "aparear"
+   ],
+   [
+    "independizarse",
+    2,
+    "independizar"
+   ],
+   [
+    "someterse",
+    2,
+    "someter"
+   ]
+  ],
+  "forms_total": 668047,
+  "forms_new_to_app": 92387,
+  "colloquial_words_in_app": [
+   [
+    "tú",
+    46,
+    "you (second-person singular pronoun); expletive"
+   ],
+   [
+    "ustedes",
+    37,
+    "you (plural), you guys, y'all, yous, yinz, ye"
+   ],
+   [
+    "calor",
+    29,
+    "heat"
+   ],
+   [
+    "alquiler",
+    25,
+    "rent (a payment made in exchange for something bor"
+   ],
+   [
+    "bulo",
+    15,
+    "canard, hoax (false or misleading report or story,"
+   ],
+   [
+    "chile",
+    11,
+    "a chili pepper; penis; lie"
+   ],
+   [
+    "estacionamiento",
+    10,
+    "parking; car park, parking lot"
+   ],
+   [
+    "súper",
+    8,
+    "superb, great"
+   ],
+   [
+    "costo",
+    7,
+    "cost; hashish"
+   ],
+   [
+    "web",
+    5,
+    "web (Internet); webpage, website"
+   ],
+   [
+    "computadora",
+    5,
+    "computer"
+   ],
+   [
+    "mesero",
+    5,
+    "waiter"
+   ],
+   [
+    "whatsapp",
+    5,
+    "WhatsApp (a message on WhatsApp); WhatsApp (an acc"
+   ],
+   [
+    "vosotros",
+    5,
+    "you, you guys; second person plural personal prono"
+   ],
+   [
+    "camarero",
+    4,
+    "waiter"
+   ],
+   [
+    "miguelito",
+    4,
+    "synonym of mí (me)"
+   ],
+   [
+    "x",
+    3,
+    "someone"
+   ],
+   [
+    "aparcamiento",
+    3,
+    "parking; parking garage; car park, parking lot"
+   ],
+   [
+    "ají",
+    3,
+    "pepper"
+   ],
+   [
+    "chacra",
+    3,
+    "small farm; field used for cultivation; small maiz"
+   ],
+   [
+    "torta",
+    3,
+    "cake; tart, pie; submarine sandwich"
+   ],
+   [
+    "ciclovía",
+    3,
+    "bicycle path, cycle path"
+   ],
+   [
+    "banana",
+    3,
+    "banana (fruit); an idiot; smartass"
+   ],
+   [
+    "plomero",
+    2,
+    "plumber"
+   ],
+   [
+    "fontanero",
+    2,
+    "plumber"
+   ],
+   [
+    "básquet",
+    2,
+    "basketball (sport)"
+   ],
+   [
+    "güiro",
+    2,
+    "gourd; guiro; seaweed; kid"
+   ],
+   [
+    "panelista",
+    2,
+    "panelist"
+   ],
+   [
+    "laptop",
+    2,
+    "laptop"
+   ],
+   [
+    "ma",
+    2,
+    "mum; mom"
+   ],
+   [
+    "miguel",
+    1,
+    "synonym of mí (me)"
+   ],
+   [
+    "salamanca",
+    1,
+    "natural caves in some hills where according to pop"
+   ],
+   [
+    "tito",
+    1,
+    "uncle; unkie; someone older than you, boss; grandf"
+   ],
+   [
+    "guácala",
+    1,
+    "ew, yuck indicates displeasure, disgust, or revuls"
+   ],
+   [
+    "cuara",
+    1,
+    "quarter (25 cent coin)"
+   ],
+   [
+    "pedo",
+    1,
+    "fart; drunkenness; party; drunk, high, intoxicated"
+   ],
+   [
+    "platicar",
+    1,
+    "to chat, to talk, to tell, to say"
+   ],
+   [
+    "cimarrón",
+    1,
+    "feral (having returned to the wild); rural; campes"
+   ],
+   [
+    "camote",
+    1,
+    "sweet potato; bulge, swelling on the body"
+   ],
+   [
+    "choclo",
+    1,
+    "corncob; corn (cereal plant)"
+   ],
+   [
+    "quirquincho",
+    1,
+    "armadillo"
+   ],
+   [
+    "frijol",
+    1,
+    "bean, bean seed; bean plant"
+   ],
+   [
+    "milpa",
+    1,
+    "cornfield"
+   ],
+   [
+    "micro",
+    1,
+    "minibus; public bus; public bus"
+   ],
+   [
+    "parquear",
+    1,
+    "to park (to bring a vehicle to a halt in a specifi"
+   ],
+   [
+    "comal",
+    1,
+    "comal"
+   ],
+   [
+    "culantro",
+    1,
+    "culantro (Eryngium foetidum); butt, buttocks; bunc"
+   ],
+   [
+    "chichí",
+    1,
+    "pee"
+   ],
+   [
+    "hallaca",
+    1,
+    "Venezuelan Christmas dish made with corn dough, of"
+   ],
+   [
+    "básquetbol",
+    1,
+    "basketball (the sport)"
+   ],
+   [
+    "chombo",
+    1,
+    "an anglophone black person; Dark-skinned"
+   ],
+   [
+    "boleta",
+    1,
+    "ticket (e.g. parking ticket); bill, receipt; death"
+   ],
+   [
+    "enhorabuena",
+    1,
+    "congratulations; congratulation"
+   ],
+   [
+    "like",
+    1,
+    "like"
+   ],
+   [
+    "fake",
+    1,
+    "fake"
+   ],
+   [
+    "flipar",
+    1,
+    "to be high, under the influence of drugs; to be as"
+   ],
+   [
+    "chungo",
+    1,
+    "crappy, dodgy, cheap (of bad quality, or in a bad "
+   ],
+   [
+    "finde",
+    1,
+    "weekend"
+   ],
+   [
+    "downtown",
+    1,
+    "downtown"
+   ],
+   [
+    "td",
+    1,
+    "todo"
+   ]
+  ]
+ },
+ "samples": {
+  "slang": [
+   "cum [] = cum, semen",
+   "amigo [Rioplatense] = penis",
+   "baby [Colombia,Cuba,Dominican Republic,Puerto Rico,Venezuela] = girl, love",
+   "hueso [Colombia,Mexico,Spain] = political position (appointed or elected); a corny",
+   "dar [Argentina,Ecuador,El Salvador,Mexico,Spain] = to press, activate; to ruin; mess up; to pretend t",
+   "banana [Andes,Argentina,Bolivia,Costa Rica,Dominican Republic,Guatemala,Honduras,Rioplatense,Uruguay] = banana (fruit); an idiot; smartass",
+   "chocolate [] = hashish (the leaves of the Indian hemp plant)",
+   "god [] = fire; cool, amazing; excellent",
+   "burro [] = a dunce, an idiot; a well-hung man",
+   "we [Mexico] = dude, guy, buddy; chump, punk, dumbass, idiot, jer",
+   "mariposa [] = male homosexual",
+   "mariquita [] = queer, faggot (US), poof (UK)",
+   "re [Argentina] = very, so, super; a lot, really (used with verbs)",
+   "pato [Dominican Republic,Nicaragua,Panama,Puerto Rico,Venezuela] = homosexual, faggot",
+   "huevo [Peru] = testicle; guts, balls, courage; a lot, loads",
+   "pollo [] = fuss, scene; twink (a young, attractive, slim man)",
+   "pollo [Chile] = inexperienced",
+   "leche [] = cum, semen",
+   "conejo [Central America,Mexico,Spain] = detective; contracted biceps (having athletic or s",
+   "pay [Colombia,Ecuador,Mexico,Panama,Peru] = pie (food); A highly attractive person, typically,",
+   "crush [] = crush (an infatuation with somebody one is not dat",
+   "beta [Venezuela] = matter, issue, thing, situation, gossip",
+   "bicicleta [Peru] = diarrhea",
+   "ship [] = ship",
+   "pisa [] = brothel"
+  ],
+  "Panama words": [
+   "pato = homosexual, faggot",
+   "rata = percentage; ratio; rate",
+   "central = a sugar mill",
+   "pay = pie (food); A highly attractive person, typically, but not e",
+   "cute = buzzard; Disease characterized by pigmented lesions on the s",
+   "cesta = laundry basket, hamper (made of plastic); laundry basket, ha",
+   "popcorn = popcorn",
+   "video = video; VHS player, videocassette recorder, VCR; video rental",
+   "tape = Scotch tape, tape",
+   "parar = to stand up; to put something in a vertical position; to put",
+   "queso = foot; sexual desire; nosy, intrusive",
+   "lighter = lighter",
+   "borra = coffee grounds",
+   "cholo = of mixed indigenous and European or mestizo descent; uncultu",
+   "salame = salami",
+   "ladino = mestizo",
+   "plena = a type of music from the island of Puerto Rico featuring a c",
+   "salón = operating room",
+   "salón = hairdresser",
+   "bocadillo = sandwich; guava jelly/jam",
+   "zafacón = wastebasket, trashcan, garbage can, waste container",
+   "zumbar = to screw, shag (have sex); to throw (cause an object to move",
+   "pájaro = homosexual; penis; person of questionable or shady character",
+   "décimo = participation in the lottery; 10-centésimo coin",
+   "soda = eatery; cheap, casual restaurant",
+   "taco = billiards; billiards player; pool hall",
+   "medio = medio, half-real (a former coin); medio, half-peso (a former",
+   "forro = condom; said to refer to people that are obnoxious, sometime",
+   "bodega = warehouse (building where goods are stored); storeroom; stoc",
+   "toque = a punch; toke, puff of marijuana; a blunt",
+   "paco = police officer",
+   "chucha = cunt, vagina; body odor; female dog",
+   "chucha = fuck!",
+   "defensa = bumper",
+   "pipa = gun; shooter; A protruding belly",
+   "bomba = drunkenness; firecracker; petrol station",
+   "codo = selfish, avaricious, stingy, cheap",
+   "goma = rubber tree; teether; boob; tit",
+   "chichi = baby; kid",
+   "botar = to throw, throw away; to fire, dismiss; to lie down (to assu"
+  ],
+  "Panama phrases": [
+   "petit pois = pea (the vegetable)",
+   "pan de Dios = a godsend (person)",
+   "manjar blanco = a dish made of chicken breast, sugar, milk, and rice flour; ",
+   "gato solo = a solitary adult male white-nosed coati (Nasua narica)",
+   "luego de = right after, following",
+   "fruta de pan = breadfruit",
+   "gato de espinas = porcupine",
+   "conejo pintado = lowland paca",
+   "bolsa de dormir = sleeping bag",
+   "faltar calle = to be lacking in experience, touch grass",
+   "parar bola = to pay attention to (someone).; to accept (someone)'s feelin",
+   "bajar al pozo = to perform cunnilingus"
+  ]
+ }
+}
