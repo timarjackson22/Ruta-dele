@@ -33,9 +33,18 @@ public class WakeBridge {
     String lang = "es-US";
     int errs = 0, gen = 0;
 
-    WakeBridge(MainActivity a, WebView web) { this.a = a; this.web = web; }
+    WakeBridge(MainActivity a, WebView web) { this.a = a; this.web = web; vosk = new VoskWake(a, this::ev); }
+    /** the dedicated offline wake listener (VoskWake), used whenever its model is on the phone */
+    final VoskWake vosk; boolean useVosk = false;
+    @JavascriptInterface
+    public String voskState() { return VoskWake.state(a); }
+    @JavascriptInterface
+    public void voskDownload() { VoskWake.download(a, this::ev); }
+    @JavascriptInterface
+    public void voskDelete() { main.post(() -> { halt(); VoskWake.model = null; VoskWake.del(VoskWake.dir(a)); ev("vosk", "deleted"); }); }
 
     void ev(String type, String text) {
+        if ("state".equals(type) && "error".equals(text)) main.post(() -> { on = false; }); // let the page start it again later
         final String t = text == null ? "null" : JSONObject.quote(text);
         main.post(() -> web.evaluateJavascript("window.__awake && __awake.ev('" + type + "'," + t + ")", null));
     }
@@ -43,10 +52,11 @@ public class WakeBridge {
     static boolean onDevice(MainActivity a) { return Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(a); }
 
     boolean online = false, pendingMic = false;
-    void onPermission(boolean ok) { if (!pendingMic) return; pendingMic = false; if (ok) { on = true; errs = 0; gen++; listen(); } else ev("state", "no-mic"); }
+    void onPermission(boolean ok) { if (!pendingMic) return; pendingMic = false; if (ok) { on = true; errs = 0; gen++; go(); } else ev("state", "no-mic"); }
+    void go() { useVosk = VoskWake.ready(a); if (useVosk) vosk.start(); else listen(); }
     /** ok: on-device listening; online: only an online recogniser (Google's or the phone's) is available, used if the learner allows it */
     @JavascriptInterface
-    public String status() { return !a.hasMic() ? "no-mic" : onDevice(a) ? "ok" : (Recog.hasGoogle(a) || SpeechRecognizer.isRecognitionAvailable(a)) ? "online" : "no-ondevice"; }
+    public String status() { return !a.hasMic() ? "no-mic" : VoskWake.ready(a) || onDevice(a) ? "ok" : (Recog.hasGoogle(a) || SpeechRecognizer.isRecognitionAvailable(a)) ? "online" : "no-ondevice"; }
 
     @JavascriptInterface
     public String info() { return Recog.info(a); }
@@ -69,11 +79,11 @@ public class WakeBridge {
         main.post(() -> {
             if (!on) online = allowOnline;
             lang = language == null || language.isEmpty() ? "es-US" : language;
-            if (!onDevice(a) && !online) { ev("state", "no-ondevice"); return; }
+            if (!VoskWake.ready(a) && !onDevice(a) && !online) { ev("state", "no-ondevice"); return; }
             if (!a.hasMic()) { pendingMic = true; a.askMic(); return; } // ask; onPermission() carries on
             if (on) return;
             on = true; errs = 0; gen++;
-            listen();
+            go();
         });
     }
 
@@ -85,6 +95,7 @@ public class WakeBridge {
 
     void halt() {
         boolean was = on; on = false; gen++;
+        vosk.halt();
         if (sr != null) { try { sr.cancel(); sr.destroy(); } catch (Exception ignored) { } sr = null; }
         if (was) ev("state", "stopped");
     }

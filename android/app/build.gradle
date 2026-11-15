@@ -36,4 +36,7 @@ dependencies {
     // Gemma 4 and other .litertlm models (the newer on-device engine)
     implementation 'com.google.ai.edge.litertlm:litertlm-android:latest.release'
     implementation 'com.google.mlkit:translate:17.0.3'
+    // "Ok Profe": a small offline wake-word listener (Vosk, Apache 2.0); its Spanish model is downloaded when hands-free is switched on
+    implementation 'net.java.dev.jna:jna:5.13.0@aar'
+    implementation 'com.alphacephei:vosk-android:0.3.47@aar'
 }
