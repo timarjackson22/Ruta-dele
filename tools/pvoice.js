@@ -18,6 +18,14 @@
     s = s.replace(/\b(please|por favor|porfa|porfavor)\b/g, " ").replace(/^\s*(can|could|would|will) you (please )?/, "").replace(/^\s*(me )?(puedes|podrias)\s+/, "")
       .replace(/^\s*(i want to|i would like to|id like to|i wanna|quiero|me gustaria)\s+(?=(open|go|see|start|abrir|ir|ver|empezar|continuar|seguir)\b)/, "");
     s = s.replace(/^\s*(lets|let us|can we|could we|shall we|should we)\s+(?=(do|go|play|read|review|practi[cs]e|start|watch|open|try|hear|listen|quiz|drill|run)\b)/, ""); // "let's do my travel words" = "do my travel words"
+    // what recognisers write for "level A1 flashcards" (S24 log, Nov 2026: «open the left with ayo one flashcards», «open deliver e one flashcards»)
+    s = s.replace(/\bflash ?cards?\b/g, "flashcards");
+    if (/\b(flashcards|cards|vocab|vocabulary|words|level|nivel|unit|lesson|exam|tarjetas|vocabulario|left with|deliver)\b/.test(s)) {
+      s = s.replace(/\b(left with|deliver|lever|label|lebel|leble)\b(?= (a|ay|ayo|eh|hey|e|be|bee|b|v|ve|ce|c|se|see|sea|si)\s*(uno|one|1|dos|two|2)\b)/g, "level");
+      s = s.replace(/\b(ay|ayo|eh|hey|e)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "a" + (/uno|one|1/.test(n) ? "1" : "2"));
+      s = s.replace(/\b(bee|v|ve)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "b" + (/uno|one|1/.test(n) ? "1" : "2"));
+      s = s.replace(/\b(see|sea|si)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => "c" + (/uno|one|1/.test(n) ? "1" : "2"));
+    }
     s = s.replace(/\b(a|be|b|ce|c|se)\s+(uno|one|1|dos|two|2)\b/g, (m, l, n) => ({ a: "a", be: "b", b: "b", ce: "c", c: "c", se: "c" }[l]) + (/uno|one|1/.test(n) ? "1" : "2"));
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema)\s+(number|numero|no|nr)\s+/g, "$1 ");
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema|number|numero|question|pregunta)\s+([a-z]+)\b/g, (m, x, n) => (PV_NUM[n] ? x + " " + PV_NUM[n] : m));
@@ -69,6 +77,8 @@
       if (/^play\./.test(a.id) && c.tutor) continue; // with Profe open, "slower" means Profe's voice
       if (hit(a)) return { a, s };
     }
+    // the first word lost after the wake beep (S24 log): «me to flash cards» = «take me to flashcards»
+    if (/^(me )?to (the |my )?\S/.test(s) && !/^take /.test(s)) { const m2 = pvMatch("take me to " + s.replace(/^(me )?to /, ""), c); if (m2) { pvLog("start cut off; read as «take me to " + s.replace(/^(me )?to /, "") + "»"); return m2; } }
     return null;
   }
 
@@ -207,7 +217,8 @@
       if (/^(answer|my answer|its my answer|respuesta|es mi respuesta|mi respuesta|la respuesta)$/.test(s)) { pvAnswer(q.raw, origin); return true; }
       if (PV_YES.test(s) || q.a.re.some((re) => re.test(s)) || /^(command|go back|do it|comando)$/.test(s)) { pvExec(q.a, q.s, origin); return true; } }
     if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
-    const m = pvMatch(raw, c); if (!m) return pvSeqTry(raw, origin);
+    const m = pvMatch(raw, c);
+    if (!m) return pvSeqTry(raw, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
     if (origin !== "hf" && m.a.id === "hf.stop" && !engaged && !(typeof listening !== "undefined" && listening) && !hfSpeaking() && !DR.on) return false; // "gracias" in a chat is just thanks
     // command or answer? a bare Spanish word while a question waits for an answer is the answer, or we ask
@@ -318,7 +329,8 @@
     HF.lastWake = Date.now(); HF.wokeN = (HF.wokeN || 0) + 1; hfWakeStop(); HF.engaged = true; pvLog("woke «" + cmd + "»");
     hfStopOthers();
     if (cmd && cmd.split(" ").length >= 1 && pvNorm(cmd)) { hfHandle(cmd); return; }
-    hfBeep(); hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 });
+    // the mic opens first and the beep plays while it starts: people talk right after "Ok Profe", and the first word was being lost (S24 log)
+    hfCapture((t) => { if (t) hfHandle(t); else hfSay("What would you like to do?", () => hfCapture((t2) => (t2 ? hfHandle(t2) : hfEnd()), { startMs: 7000 })); }, { startMs: 4000 }); hfBeep();
   }
   function hfHandle(text) {
     HF.engaged = true; pvLog("heard «" + text + "»");

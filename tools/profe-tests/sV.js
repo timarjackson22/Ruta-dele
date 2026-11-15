@@ -83,6 +83,8 @@ const HELD = [
   ["speed up", "play", "play.faster"], ["what does that mean", "home", "profe.explain"], ["no entiendo", "home", "profe.explain"], ["one more example", "home", "profe.example"], ["say that again", "tutor", "profe.repeat"],
   ["never mind", "home", "hf.stop"], ["olvídalo", "home", "hf.stop"], ["what are my options", "home", "meta.here"], ["me gustaría ir al cine el sábado", "tutor", null], ["can you help me with my homework", "home", null],
 ];
+// REAL PHONE (S24 log, 15 Nov 2026): what the recogniser actually wrote. Before the fix: 0/3.
+const REAL = [["Okay profe open the left with ayo One flashcards", "home", "nav.cards"], ["Okay profe Open deliver e One flashcards", "home", "nav.cards"], ["me to flash cards", "home", "nav.review"]];
 // HELD-OUT 3: the instructions in the learner's own brief (tools/PROFE_EVAL_BRIEF.md). Before stage 1: 1/9.
 const HELD3 = [["Play the video in this lesson.", "video", "video.play"], ["Pause that.", "videoplay", "play.pause"], ["Go back ten seconds.", "video", "video.seek"], ["Play my food vocabulary list.", "home", "vocab.drill"],
   ["Read each Spanish word, give me the English meaning, and leave time for me to repeat.", "home", "vocab.drill"], ["Repeat the last word more slowly.", "vdrill", "drill.repeat"], ["Explain that in English.", "tutor", "profe.explain"],
@@ -123,7 +125,7 @@ const HELD2 = [
   const h2ok = h2.filter((r) => r[2] === r[3]).length, h2bad = h2.filter((r) => r[2] === null && r[3]), h2wrong = h2.filter((r) => r[2] && r[3] && r[2] !== r[3]);
   h2.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("HELD-OUT-2 MISS [" + c + "] «" + t + "» expected " + e + " got " + g));
   console.log("INFO Held-out 2 (first measured 33/40 = 83% before its general fixes): " + h2ok + "/" + h2.length + " (" + ((h2ok / h2.length) * 100).toFixed(0) + "%) · conversation taken as a command: " + h2bad.length + " · wrong action: " + h2wrong.length);
-  for (const [name, set] of [["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
+  for (const [name, set] of [["Real phone transcripts (0/3 before)", REAL], ["Held-out 3 (the learner's brief; 1/9 before stage 1)", HELD3], ["Held-out 4 (first measured 13/18 = 72% before its general fixes)", HELD4]]) {
     const hr = await p.evaluate(([corpus, C]) => corpus.map(([t, c, e]) => { const base = { unit: false, runner: false, "runner-mc": false, "runner-text": false, "runner-fb": false, "runner-open": false, guide: false, playing: false, paused: false, player: false, tutor: false, drill: false, video: false, vdrill: false }; return [t, c, e, window.__pv.match(t, Object.assign(base, C[c]))]; }), [set, C]);
     hr.filter((r) => r[2] !== r[3]).forEach(([t, c, e, g]) => console.log("MISS (" + name.split(" (")[0] + ") [" + c + "] «" + t + "» expected " + e + " got " + g));
     console.log("INFO " + name + ": " + hr.filter((r) => r[2] === r[3]).length + "/" + hr.length); }
