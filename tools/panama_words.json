@@ -1,158 +1,1457 @@
-{"about": "Curated Panamanian Spanish for Ruta DELE (tools/PANAMA_WORDS_BRIEF.md). Meanings written for this app and checked against at least two sources: Día a Día (diaadia.com.pa, 'conoce a fondo la jerga panameña'), PortalPanamá, Detalles de Panamá, Lingo To Go, Language Learning Institute's Panamanian guide. r: col = colloquial, slg = street slang, rude = mildly rude, reg = regional within Panama, std = standard word with a Panamanian meaning. c: 1 = distinctive enough to colour in captions (never set on everyday words like 'chino' or 'real'). Sexual terms and slurs are left out on purpose.",
+{
+"about": "Curated Panamanian Spanish for Ruta DELE (tools/PANAMA_WORDS_BRIEF.md). Meanings written for this app and checked against at least two sources: Día a Día (diaadia.com.pa, 'conoce a fondo la jerga panameña'), PortalPanamá, Detalles de Panamá, Lingo To Go, Language Learning Institute's Panamanian guide. r: col = colloquial, slg = street slang, rude = mildly rude, reg = regional within Panama, std = standard word with a Panamanian meaning. c: 1 = distinctive enough to colour in captions (never set on everyday words like 'chino' or 'real'). Sexual terms and slurs are left out on purpose.",
 "words": [
-["qué xopá", "what's up? (pasó said backwards)", "col", 1, ["¿Qué xopá, fren? ¿Todo bien?", "What's up, friend? All good?"], ["qué sopá", "xopá", "qué xopa"]],
-["qué es lo que es", "what's up? what's going on?", "slg", 1, ["¿Qué es lo que es, mopri?", "What's up, cousin?"]],
-["guapin", "what's up? hi (from 'what's happening')", "slg", 1, null, ["juatapin"]],
-["ofi", "OK, sure, got it", "col", 1, ["—¿Nos vemos a las ocho? —Ofi.", "—See you at eight? —Sure."]],
-["tatai", "bye! (with a certain tone: 'yeah, right!')", "col", 1, ["Bueno, tatai, nos vemos mañana.", "OK, bye, see you tomorrow."]],
-["chuleta", "wow! damn! (surprise, admiration or annoyance)", "col", 1, ["¡Chuleta, qué calor hace hoy!", "Wow, it's so hot today!"]],
-["chuzo", "wow! damn! (surprise)", "col", 1, ["¡Chuzo, mira ese carro!", "Wow, look at that car!"]],
-["ayala vida", "oh my God! no way! (surprise or dismay)", "col", 1, ["¡Ayala vida, se me quedaron las llaves!", "Oh no, I left my keys behind!"], ["ayala", "áshala"]],
-["ñecks", "darn! (a polite swear word)", "col", 1, null, ["ñeck"]],
-["meto", "wow, great (said in Chiriquí)", "reg", 1, null],
-["priti", "nice, cool, pretty (from English 'pretty')", "col", 1, ["La fiesta estuvo priti.", "The party was really nice."], ["prity", "pritty"]],
-["ta cool", "it's cool, it's all good", "col", 1, ["—¿Te molesta? —No, ta cool.", "—Does it bother you? —No, it's all good."], ["ta' cool"]],
-["sólido", "great, solid, excellent", "std", 0, ["Ese concierto estuvo sólido.", "That concert was great."]],
-["de agencia", "brand new, spotless (like straight from the dealer)", "col", 1, ["Tu carro está de agencia.", "Your car looks brand new."]],
-["chilin", "relaxed, chilling", "col", 1, ["Estamos chilin en la playa.", "We're chilling at the beach."], ["chillin"]],
-["vaina", "thing, stuff; a situation or problem", "col", 0, ["Pásame esa vaina, porfa.", "Pass me that thing, please."]],
-["qué vaina", "what a pain! what a mess!", "col", 1, ["¡Qué vaina, se fue la luz otra vez!", "What a pain, the power's gone again!"]],
-["de a vaina", "only just, by a hair", "col", 1, ["Pasé el examen de a vaina.", "I only just passed the exam."], ["de a vainilla"]],
-["buco", "a lot, loads", "col", 1, ["Había buco gente en la playa.", "There were loads of people at the beach."], ["bucu"]],
-["rantan", "a ton, loads", "col", 1, ["Tengo rantan trabajo hoy.", "I've got a ton of work today."], ["tarrantan"]],
-["fren", "friend, mate (from English 'friend')", "col", 1, ["Este es mi fren Carlos.", "This is my friend Carlos."], ["frenes"]],
-["mopri", "cousin; close buddy (primo said backwards)", "slg", 1, ["¿Qué xopá, mopri?", "What's up, cousin?"]],
-["paciero", "close friend, party buddy", "slg", 1, ["Salí con mis pacieros anoche.", "I went out with my buddies last night."], ["pasiero", "pacieros"]],
-["man", "guy, dude (any person; also a filler)", "col", 0, ["Ese man es mi vecino.", "That guy is my neighbour."]],
-["pelao", "kid, young person (from 'pelado')", "col", 1, ["Los pelaos están jugando afuera.", "The kids are playing outside."], ["pelaíto", "pelá", "pelaos"]],
-["laopé", "kid (pelao said backwards)", "slg", 1, null],
-["guial", "girl, woman (from English 'girl')", "slg", 1, null, ["guiales"]],
-["yeyé", "posh rich kid, snob who throws English words around", "col", 1, ["Esa discoteca está llena de yeyés.", "That club is full of posh kids."], ["yeyés", "yy"]],
-["rabiblanco", "member of Panama's old upper class, the elite", "col", 1, null, ["rabiblanca", "rabiblancos"]],
-["montado", "well-off, loaded (with money)", "col", 0, null, ["montada"]],
-["fulo", "blond, fair-haired", "col", 1, ["Su hija es fula como el papá.", "His daughter is blonde like her dad."], ["fula", "fulos", "fulas"]],
-["ficha", "a big shot, an important person", "std", 0, null],
-["bulto", "dead weight: someone who's there but doesn't help", "col", 0, null],
-["botella", "someone paid for a (government) job they don't do", "std", 0, ["Ese puesto es una botella.", "That post is a paid job with no work."]],
-["paracaídas", "party crasher", "col", 0, null],
-["violinista", "third wheel", "col", 0, ["No quiero ir de violinista.", "I don't want to go as the third wheel."]],
-["arrabalero", "rough, rowdy, a troublemaker", "col", 1, null, ["arrabalera"]],
-["salao", "unlucky, jinxed", "col", 1, ["Estoy salao esta semana.", "I'm out of luck this week."], ["salado", "salá", "sala'o"]],
-["chambón", "clumsy, bungling", "col", 1, null, ["chambona"]],
-["ahuevao", "dumb, slow, clueless (rude)", "rude", 1, null, ["ahuevado", "ahuevá", "ahueva'o"]],
-["ahuevazón", "a stupid thing, a silly mess (rude)", "rude", 1, null],
-["juma", "drunk; also a drinking binge", "col", 1, ["Llegó juma a la fiesta.", "He showed up drunk to the party."]],
-["limpio", "broke, out of money", "std", 0, ["No puedo salir, estoy limpio.", "I can't go out, I'm broke."]],
-["en tuco", "completely broke", "col", 1, null],
-["limado", "worn out, exhausted", "col", 1, ["Terminé limado después del turno.", "I was worn out after the shift."]],
-["tallao", "dressed up, well dressed", "col", 1, null, ["tallado", "tallá"]],
-["chaneado", "dressed up, looking sharp", "col", 1, null, ["chaneada"]],
-["pilar", "to study hard, to cram", "col", 0, ["Tengo que pilar para el examen.", "I have to cram for the exam."]],
-["pilón", "know-it-all, top student", "col", 1, null, ["pilona"]],
-["berraco", "really good at something; also furious", "col", 1, null, ["berraca"]],
-["perro", "a womaniser (an insult)", "std", 0, null],
-["rándom", "a random person, someone nobody knows", "col", 1, null, ["random"]],
-["chichí", "baby; sweetheart (affectionate)", "col", 1, null],
-["zambito", "little boy (said in Herrera and Los Santos)", "reg", 1, null, ["zambita"]],
-["buay", "boy (Afro-Antillean, from English)", "reg", 1, null],
-["guachimán", "security guard, watchman", "col", 1, null, ["wachiman", "guachiman"]],
-["palanca", "bus driver", "col", 0, null],
-["biencuidao", "man who watches parked cars for a tip", "col", 1, null, ["bien cuidao"]],
-["chantin", "home, house", "slg", 1, ["Me voy pa'l chantin.", "I'm heading home."]],
-["yapla", "beach (playa said backwards)", "slg", 1, null],
-["llesca", "street (calle said backwards)", "slg", 1, null],
-["chino", "the corner shop (often Chinese-owned)", "std", 0, ["Voy al chino a comprar pan.", "I'm going to the corner shop for bread."], ["chinito"]],
-["diablo rojo", "old American school bus painted bright colours, used as a city bus", "col", 1, null, ["diablos rojos"]],
-["chiva", "minibus", "col", 0, null],
-["guagua", "an old banger (car)", "col", 0, null],
-["nevera", "fridge; an air-conditioned bus", "std", 0, null],
-["tinaco", "trash can", "col", 1, null],
-["láiter", "lighter (from English)", "col", 1, null, ["laiter"]],
-["millo", "popcorn", "col", 1, ["Compramos millo para la película.", "We bought popcorn for the film."], ["millos", "porcón"]],
-["chicha", "homemade fruit drink (in Panama, not alcoholic)", "std", 0, ["Una chicha de tamarindo, por favor.", "A tamarind drink, please."]],
-["chicha de piña", "a piece of cake, super easy", "col", 1, ["Ese examen fue chicha de piña.", "That exam was a piece of cake."], ["chicha e piña"]],
-["raspao", "shaved ice with syrup and condensed milk", "col", 1, null, ["raspado", "raspaos"]],
-["chicheme", "sweet drink of corn, milk and cinnamon", "std", 1, null],
-["hojaldra", "Panamanian fried dough, eaten at breakfast", "std", 1, null, ["hojaldras", "hojaldre"]],
-["carimañola", "fried yuca roll filled with meat", "std", 1, null, ["carimañolas"]],
-["bollo", "corn dough boiled in leaves", "std", 0, null],
-["guacho", "thick rice stew with meat and vegetables", "std", 0, null],
-["seco", "Panama's sugarcane spirit (seco herrerano)", "std", 0, null],
-["conflei", "any breakfast cereal (from Corn Flakes)", "col", 1, null],
-["culei", "instant fruit drink (from Kool-Aid)", "col", 1, null],
-["chingongo", "chewing gum", "col", 1, null],
-["pinta", "a beer", "col", 0, ["Vamos por unas pintas.", "Let's go for a few beers."]],
-["fría", "a cold beer", "col", 0, ["Pásame una fría.", "Pass me a cold one."]],
-["pescuezona", "a big bottle of beer", "col", 1, null],
-["guaro", "booze, liquor", "col", 1, null],
-["chupar", "to drink (alcohol)", "col", 0, null],
-["cuara", "a quarter, 25 cents", "col", 1, null],
-["dain", "a dime, 10 cents", "col", 1, null],
-["real", "five cents", "std", 0, null],
-["peso", "a 50-cent coin", "std", 0, null],
-["chen chen", "money, cash", "slg", 1, null],
-["vaca", "a whip-round: everyone chips in", "col", 0, ["Hagamos una vaca para la pizza.", "Let's all chip in for the pizza."]],
-["ñapa", "a little extra, thrown in free", "col", 0, null],
-["chonta", "head", "col", 1, ["Me duele la chonta.", "My head hurts."]],
-["cocoa", "gossip, a juicy story", "col", 0, null],
-["bochinche", "gossip", "col", 0, null],
-["bate", "a lame excuse, a tall tale; also a stroke of luck", "col", 0, null],
-["meter un bate", "to spin a tall tale, give a lame excuse", "col", 1, ["Le metió un bate al jefe y se lo creyó.", "He gave the boss a lame excuse and he bought it."]],
-["qué bate", "amazing! what a thing!", "col", 1, null],
-["batería", "a cheat sheet (for an exam)", "col", 0, null],
-["arranque", "a party, a night out", "col", 0, ["Este viernes hay arranque en casa de Ana.", "There's a party at Ana's this Friday."]],
-["parkear", "to hang out", "col", 1, ["Vamos a parkear en la plaza.", "Let's hang out in the square."], ["parquear"]],
-["parking", "a get-together, a hangout", "col", 1, null, ["parkin"]],
-["sarao", "a (school) party", "col", 0, null],
-["chifear", "to ignore someone, to leave them out", "col", 1, ["Me chifearon del grupo.", "They left me out of the group."], ["chifeao", "chifeado"]],
-["joder", "to tease, to mess with (can be rude)", "rude", 0, null],
-["chotear", "to tease; to greet with friendly slaps", "col", 1, null],
-["vidajenear", "to poke into other people's lives, to snoop", "col", 1, null],
-["pillar", "to grab, to catch; to look", "col", 0, ["Pilla esto.", "Check this out."]],
-["chequear", "to check", "col", 0, null],
-["tildear", "to freeze, break down (a machine or phone)", "col", 1, ["Se me tildeó el celular.", "My phone froze."], ["tildeó", "tildeado"]],
-["ponchar", "to puncture (a tyre); to strike out (baseball)", "std", 0, null],
-["botar", "to throw away; to fire (someone)", "std", 0, null],
-["pedir un bote", "to ask for a ride", "col", 1, ["Le pedí un bote a mi vecino.", "I asked my neighbour for a ride."]],
-["dar un bote", "to give someone a ride", "col", 1, null],
-["birria", "a casual game played just for fun, again and again", "col", 0, ["Echamos una birria de fútbol.", "We played a casual football game."]],
-["ñampearse", "to go crazy", "col", 1, null],
-["ñamería", "madness, nonsense", "col", 1, null],
-["grubear", "to hang out with someone, no strings attached", "slg", 1, null],
-["echar pa'lante", "to push on, to keep going", "col", 1, ["Hay que echar pa'lante.", "You've got to keep going."]],
-["ir al choque", "to face something head on", "col", 1, null],
-["juega vivo", "street smarts, cunning (often bending the rules)", "col", 1, ["Ese tiene mucho juega vivo.", "He's very crafty."]],
-["agarrar los mangos bajitos", "to take the easy way out", "col", 1, null],
-["arroz con mango", "a mess, chaos", "col", 1, ["Eso se volvió un arroz con mango.", "That turned into a total mess."]],
-["ponchera", "a racket, chaos, a mess", "col", 1, null],
-["zaperoco", "a big fuss, uproar", "col", 1, null],
-["trepaquesube", "a huge mess or row", "col", 1, null],
-["vale cebo", "that's unfair, that sucks", "col", 1, null],
-["flintin", "a quarrel, a fight (often between a couple)", "slg", 1, null],
-["culillo", "fear, the jitters", "col", 1, ["Me dio culillo.", "I got scared."]],
-["ñáñara", "the creeps, fear", "col", 1, null],
-["patatús", "a fainting fit, a turn", "col", 0, null],
-["tranque", "a traffic jam", "col", 1, ["Hay un tranque en la Transístmica.", "There's a traffic jam on the Transístmica."], ["tranques"]],
-["picando", "trendy, in fashion", "col", 0, null],
-["chiquishow", "a scene, drama to get attention", "col", 1, null],
-["de one", "right away (from 'de una')", "col", 1, null],
-["falta de todo", "totally disrespectful, rude", "col", 1, null],
-["no me parece", "I don't like that, I'm not OK with that", "col", 0, null],
-["sabrosón", "great, fun, enjoyable", "col", 0, null],
-["guillao", "excited, pumped; also high", "col", 1, null, ["guillado"]],
-["rakataka", "tacky, lowbrow (person or style)", "col", 1, null, ["racataca", "rakataca"]],
-["focop", "ugly, beat-up", "slg", 1, null, ["focóp"]],
-["gallo", "cheap, poor quality", "col", 0, null],
-["brujo", "cheap, knock-off", "col", 0, null],
-["pifioso", "flashy, a show-off", "col", 1, ["Llegó todo pifioso con su carro nuevo.", "He showed up showing off his new car."], ["pifiosa"]],
-["tirar lírica", "to sweet-talk, to talk someone round", "col", 1, null],
-["a la orden", "you're welcome; at your service", "col", 0, ["—Gracias. —A la orden.", "—Thanks. —You're welcome."]],
-["regálame", "can I have…? (polite request in shops)", "col", 0, ["Regálame un café, por favor.", "Can I have a coffee, please?"]],
-["ahorita", "in a bit, shortly (not always right now)", "col", 0, null],
-["allá onde uno", "back home in the countryside, the interior", "col", 1, null],
-["plena", "Panamanian reggae (reggae en español); a really good song", "col", 0, null],
-["cholo", "in the interior: friend; in the city: someone from the interior (can be pejorative)", "col", 0, null],
-["pana", "buddy, friend", "col", 1, null, ["panas"]],
-["chévere", "great, cool", "col", 1, null],
-["xopá", "what's up?", "col", 1, null]
-]}
+[
+"qué xopá",
+"what's up? (pasó said backwards)",
+"col",
+1,
+[
+"¿Qué xopá, fren? ¿Todo bien?",
+"What's up, friend? All good?"
+],
+[
+"qué sopá",
+"xopá",
+"qué xopa"
+]
+],
+[
+"qué es lo que es",
+"what's up? what's going on?",
+"slg",
+1,
+[
+"¿Qué es lo que es, mopri?",
+"What's up, cousin?"
+]
+],
+[
+"guapin",
+"what's up? hi (from 'what's happening')",
+"slg",
+1,
+null,
+[
+"juatapin"
+]
+],
+[
+"ofi",
+"OK, sure, got it",
+"col",
+1,
+[
+"—¿Nos vemos a las ocho? —Ofi.",
+"—See you at eight? —Sure."
+]
+],
+[
+"tatai",
+"bye! (with a certain tone: 'yeah, right!')",
+"col",
+1,
+[
+"Bueno, tatai, nos vemos mañana.",
+"OK, bye, see you tomorrow."
+]
+],
+[
+"chuleta",
+"wow! damn! (surprise, admiration or annoyance)",
+"col",
+1,
+[
+"¡Chuleta, qué calor hace hoy!",
+"Wow, it's so hot today!"
+]
+],
+[
+"chuzo",
+"wow! damn! (surprise)",
+"col",
+1,
+[
+"¡Chuzo, mira ese carro!",
+"Wow, look at that car!"
+]
+],
+[
+"ayala vida",
+"oh my God! no way! (surprise or dismay)",
+"col",
+1,
+[
+"¡Ayala vida, se me quedaron las llaves!",
+"Oh no, I left my keys behind!"
+],
+[
+"ayala",
+"áshala"
+]
+],
+[
+"ñecks",
+"darn! (a polite swear word)",
+"col",
+1,
+null,
+[
+"ñeck"
+]
+],
+[
+"meto",
+"wow, great (said in Chiriquí)",
+"reg",
+1,
+null
+],
+[
+"priti",
+"nice, cool, pretty (from English 'pretty')",
+"col",
+1,
+[
+"La fiesta estuvo priti.",
+"The party was really nice."
+],
+[
+"prity",
+"pritty"
+]
+],
+[
+"ta cool",
+"it's cool, it's all good",
+"col",
+1,
+[
+"—¿Te molesta? —No, ta cool.",
+"—Does it bother you? —No, it's all good."
+],
+[
+"ta' cool"
+]
+],
+[
+"sólido",
+"great, solid, excellent",
+"std",
+0,
+[
+"Ese concierto estuvo sólido.",
+"That concert was great."
+]
+],
+[
+"de agencia",
+"brand new, spotless (like straight from the dealer)",
+"col",
+1,
+[
+"Tu carro está de agencia.",
+"Your car looks brand new."
+]
+],
+[
+"chilin",
+"relaxed, chilling",
+"col",
+1,
+[
+"Estamos chilin en la playa.",
+"We're chilling at the beach."
+],
+[
+"chillin"
+]
+],
+[
+"vaina",
+"thing, stuff; a situation or problem",
+"col",
+0,
+[
+"Pásame esa vaina, porfa.",
+"Pass me that thing, please."
+]
+],
+[
+"qué vaina",
+"what a pain! what a mess!",
+"col",
+1,
+[
+"¡Qué vaina, se fue la luz otra vez!",
+"What a pain, the power's gone again!"
+]
+],
+[
+"de a vaina",
+"only just, by a hair",
+"col",
+1,
+[
+"Pasé el examen de a vaina.",
+"I only just passed the exam."
+],
+[
+"de a vainilla"
+]
+],
+[
+"buco",
+"a lot, loads",
+"col",
+1,
+[
+"Había buco gente en la playa.",
+"There were loads of people at the beach."
+],
+[
+"bucu"
+]
+],
+[
+"rantan",
+"a ton, loads",
+"col",
+1,
+[
+"Tengo rantan trabajo hoy.",
+"I've got a ton of work today."
+],
+[
+"tarrantan"
+]
+],
+[
+"fren",
+"friend, mate (from English 'friend')",
+"col",
+1,
+[
+"Este es mi fren Carlos.",
+"This is my friend Carlos."
+],
+[
+"frenes"
+]
+],
+[
+"mopri",
+"cousin; close buddy (primo said backwards)",
+"slg",
+1,
+[
+"¿Qué xopá, mopri?",
+"What's up, cousin?"
+]
+],
+[
+"paciero",
+"close friend, party buddy",
+"slg",
+1,
+[
+"Salí con mis pacieros anoche.",
+"I went out with my buddies last night."
+],
+[
+"pasiero",
+"pacieros"
+]
+],
+[
+"man",
+"guy, dude (any person; also a filler)",
+"col",
+0,
+[
+"Ese man es mi vecino.",
+"That guy is my neighbour."
+]
+],
+[
+"pelao",
+"kid, young person (from 'pelado')",
+"col",
+1,
+[
+"Los pelaos están jugando afuera.",
+"The kids are playing outside."
+],
+[
+"pelaíto",
+"pelá",
+"pelaos"
+]
+],
+[
+"laopé",
+"kid (pelao said backwards)",
+"slg",
+1,
+null
+],
+[
+"guial",
+"girl, woman (from English 'girl')",
+"slg",
+1,
+null,
+[
+"guiales"
+]
+],
+[
+"yeyé",
+"posh rich kid, snob who throws English words around",
+"col",
+1,
+[
+"Esa discoteca está llena de yeyés.",
+"That club is full of posh kids."
+],
+[
+"yeyés",
+"yy"
+]
+],
+[
+"rabiblanco",
+"member of Panama's old upper class, the elite",
+"col",
+1,
+null,
+[
+"rabiblanca",
+"rabiblancos"
+]
+],
+[
+"montado",
+"well-off, loaded (with money)",
+"col",
+0,
+null,
+[
+"montada"
+]
+],
+[
+"fulo",
+"blond, fair-haired",
+"col",
+1,
+[
+"Su hija es fula como el papá.",
+"His daughter is blonde like her dad."
+],
+[
+"fula",
+"fulos",
+"fulas"
+]
+],
+[
+"ficha",
+"a big shot, an important person",
+"std",
+0,
+null
+],
+[
+"bulto",
+"dead weight: someone who's there but doesn't help",
+"col",
+0,
+null
+],
+[
+"botella",
+"someone paid for a (government) job they don't do",
+"std",
+0,
+[
+"Ese puesto es una botella.",
+"That post is a paid job with no work."
+]
+],
+[
+"paracaídas",
+"party crasher",
+"col",
+0,
+null
+],
+[
+"violinista",
+"third wheel",
+"col",
+0,
+[
+"No quiero ir de violinista.",
+"I don't want to go as the third wheel."
+]
+],
+[
+"arrabalero",
+"rough, rowdy, a troublemaker",
+"col",
+1,
+null,
+[
+"arrabalera"
+]
+],
+[
+"salao",
+"unlucky, jinxed",
+"col",
+1,
+[
+"Estoy salao esta semana.",
+"I'm out of luck this week."
+],
+[
+"salado",
+"salá",
+"sala'o"
+]
+],
+[
+"chambón",
+"clumsy, bungling",
+"col",
+1,
+null,
+[
+"chambona"
+]
+],
+[
+"ahuevao",
+"dumb, slow, clueless (rude)",
+"rude",
+1,
+null,
+[
+"ahuevado",
+"ahuevá",
+"ahueva'o"
+]
+],
+[
+"ahuevazón",
+"a stupid thing, a silly mess (rude)",
+"rude",
+1,
+null
+],
+[
+"juma",
+"drunk; also a drinking binge",
+"col",
+1,
+[
+"Llegó juma a la fiesta.",
+"He showed up drunk to the party."
+]
+],
+[
+"limpio",
+"broke, out of money",
+"std",
+0,
+[
+"No puedo salir, estoy limpio.",
+"I can't go out, I'm broke."
+]
+],
+[
+"en tuco",
+"completely broke",
+"col",
+1,
+null
+],
+[
+"limado",
+"worn out, exhausted",
+"col",
+1,
+[
+"Terminé limado después del turno.",
+"I was worn out after the shift."
+]
+],
+[
+"tallao",
+"dressed up, well dressed",
+"col",
+1,
+null,
+[
+"tallado",
+"tallá"
+]
+],
+[
+"chaneado",
+"dressed up, looking sharp",
+"col",
+1,
+null,
+[
+"chaneada"
+]
+],
+[
+"pilar",
+"to study hard, to cram",
+"col",
+0,
+[
+"Tengo que pilar para el examen.",
+"I have to cram for the exam."
+]
+],
+[
+"pilón",
+"know-it-all, top student",
+"col",
+1,
+null,
+[
+"pilona"
+]
+],
+[
+"berraco",
+"really good at something; also furious",
+"col",
+1,
+null,
+[
+"berraca"
+]
+],
+[
+"perro",
+"a womaniser (an insult)",
+"std",
+0,
+null
+],
+[
+"rándom",
+"a random person, someone nobody knows",
+"col",
+1,
+null,
+[
+"random"
+]
+],
+[
+"chichí",
+"baby; sweetheart (affectionate)",
+"col",
+1,
+null
+],
+[
+"zambito",
+"little boy (said in Herrera and Los Santos)",
+"reg",
+1,
+null,
+[
+"zambita"
+]
+],
+[
+"buay",
+"boy (Afro-Antillean, from English)",
+"reg",
+1,
+null
+],
+[
+"guachimán",
+"security guard, watchman",
+"col",
+1,
+null,
+[
+"wachiman",
+"guachiman"
+]
+],
+[
+"palanca",
+"bus driver",
+"col",
+0,
+null
+],
+[
+"biencuidao",
+"man who watches parked cars for a tip",
+"col",
+1,
+null,
+[
+"bien cuidao"
+]
+],
+[
+"chantin",
+"home, house",
+"slg",
+1,
+[
+"Me voy pa'l chantin.",
+"I'm heading home."
+]
+],
+[
+"yapla",
+"beach (playa said backwards)",
+"slg",
+1,
+null
+],
+[
+"llesca",
+"street (calle said backwards)",
+"slg",
+1,
+null
+],
+[
+"chino",
+"the corner shop (often Chinese-owned)",
+"std",
+0,
+[
+"Voy al chino a comprar pan.",
+"I'm going to the corner shop for bread."
+],
+[
+"chinito"
+]
+],
+[
+"diablo rojo",
+"old American school bus painted bright colours, used as a city bus",
+"col",
+1,
+null,
+[
+"diablos rojos"
+]
+],
+[
+"chiva",
+"minibus",
+"col",
+0,
+null
+],
+[
+"guagua",
+"an old banger (car)",
+"col",
+0,
+null
+],
+[
+"nevera",
+"fridge; an air-conditioned bus",
+"std",
+0,
+null
+],
+[
+"tinaco",
+"trash can",
+"col",
+1,
+null
+],
+[
+"láiter",
+"lighter (from English)",
+"col",
+1,
+null,
+[
+"laiter"
+]
+],
+[
+"millo",
+"popcorn",
+"col",
+1,
+[
+"Compramos millo para la película.",
+"We bought popcorn for the film."
+],
+[
+"millos",
+"porcón"
+]
+],
+[
+"chicha",
+"homemade fruit drink (in Panama, not alcoholic)",
+"std",
+0,
+[
+"Una chicha de tamarindo, por favor.",
+"A tamarind drink, please."
+]
+],
+[
+"chicha de piña",
+"a piece of cake, super easy",
+"col",
+1,
+[
+"Ese examen fue chicha de piña.",
+"That exam was a piece of cake."
+],
+[
+"chicha e piña"
+]
+],
+[
+"raspao",
+"shaved ice with syrup and condensed milk",
+"col",
+1,
+null,
+[
+"raspado",
+"raspaos"
+]
+],
+[
+"chicheme",
+"sweet drink of corn, milk and cinnamon",
+"std",
+1,
+null
+],
+[
+"hojaldra",
+"Panamanian fried dough, eaten at breakfast",
+"std",
+1,
+null,
+[
+"hojaldras",
+"hojaldre"
+]
+],
+[
+"carimañola",
+"fried yuca roll filled with meat",
+"std",
+1,
+null,
+[
+"carimañolas"
+]
+],
+[
+"bollo",
+"corn dough boiled in leaves",
+"std",
+0,
+null
+],
+[
+"guacho",
+"thick rice stew with meat and vegetables",
+"std",
+0,
+null
+],
+[
+"seco",
+"Panama's sugarcane spirit (seco herrerano)",
+"std",
+0,
+null
+],
+[
+"conflei",
+"any breakfast cereal (from Corn Flakes)",
+"col",
+1,
+null
+],
+[
+"culei",
+"instant fruit drink (from Kool-Aid)",
+"col",
+1,
+null
+],
+[
+"chingongo",
+"chewing gum",
+"col",
+1,
+null
+],
+[
+"pinta",
+"a beer",
+"col",
+0,
+[
+"Vamos por unas pintas.",
+"Let's go for a few beers."
+]
+],
+[
+"fría",
+"a cold beer",
+"col",
+0,
+[
+"Pásame una fría.",
+"Pass me a cold one."
+]
+],
+[
+"pescuezona",
+"a big bottle of beer",
+"col",
+1,
+null
+],
+[
+"guaro",
+"booze, liquor",
+"col",
+1,
+null
+],
+[
+"chupar",
+"to drink (alcohol)",
+"col",
+0,
+null
+],
+[
+"cuara",
+"a quarter, 25 cents",
+"col",
+1,
+null
+],
+[
+"dain",
+"a dime, 10 cents",
+"col",
+1,
+null
+],
+[
+"real",
+"five cents",
+"std",
+0,
+null
+],
+[
+"peso",
+"a 50-cent coin",
+"std",
+0,
+null
+],
+[
+"chen chen",
+"money, cash",
+"slg",
+1,
+null
+],
+[
+"vaca",
+"a whip-round: everyone chips in",
+"col",
+0,
+[
+"Hagamos una vaca para la pizza.",
+"Let's all chip in for the pizza."
+]
+],
+[
+"ñapa",
+"a little extra, thrown in free",
+"col",
+0,
+null
+],
+[
+"chonta",
+"head",
+"col",
+1,
+[
+"Me duele la chonta.",
+"My head hurts."
+]
+],
+[
+"cocoa",
+"gossip, a juicy story",
+"col",
+0,
+null
+],
+[
+"bochinche",
+"gossip",
+"col",
+0,
+null
+],
+[
+"bate",
+"a lame excuse, a tall tale; also a stroke of luck",
+"col",
+0,
+null
+],
+[
+"meter un bate",
+"to spin a tall tale, give a lame excuse",
+"col",
+1,
+[
+"Le metió un bate al jefe y se lo creyó.",
+"He gave the boss a lame excuse and he bought it."
+]
+],
+[
+"qué bate",
+"amazing! what a thing!",
+"col",
+1,
+null
+],
+[
+"batería",
+"a cheat sheet (for an exam)",
+"col",
+0,
+null
+],
+[
+"arranque",
+"a party, a night out",
+"col",
+0,
+[
+"Este viernes hay arranque en casa de Ana.",
+"There's a party at Ana's this Friday."
+]
+],
+[
+"parkear",
+"to hang out",
+"col",
+1,
+[
+"Vamos a parkear en la plaza.",
+"Let's hang out in the square."
+],
+[
+"parquear"
+]
+],
+[
+"parking",
+"a get-together, a hangout",
+"col",
+1,
+null,
+[
+"parkin"
+]
+],
+[
+"sarao",
+"a (school) party",
+"col",
+0,
+null
+],
+[
+"chifear",
+"to ignore someone, to leave them out",
+"col",
+1,
+[
+"Me chifearon del grupo.",
+"They left me out of the group."
+],
+[
+"chifeao",
+"chifeado"
+]
+],
+[
+"joder",
+"to tease, to mess with (can be rude)",
+"rude",
+0,
+null
+],
+[
+"chotear",
+"to tease; to greet with friendly slaps",
+"col",
+1,
+null
+],
+[
+"vidajenear",
+"to poke into other people's lives, to snoop",
+"col",
+1,
+null
+],
+[
+"pillar",
+"to grab, to catch; to look",
+"col",
+0,
+[
+"Pilla esto.",
+"Check this out."
+]
+],
+[
+"chequear",
+"to check",
+"col",
+0,
+null
+],
+[
+"tildear",
+"to freeze, break down (a machine or phone)",
+"col",
+1,
+[
+"Se me tildeó el celular.",
+"My phone froze."
+],
+[
+"tildeó",
+"tildeado"
+]
+],
+[
+"ponchar",
+"to puncture (a tyre); to strike out (baseball)",
+"std",
+0,
+null
+],
+[
+"botar",
+"to throw away; to fire (someone)",
+"std",
+0,
+null
+],
+[
+"pedir un bote",
+"to ask for a ride",
+"col",
+1,
+[
+"Le pedí un bote a mi vecino.",
+"I asked my neighbour for a ride."
+]
+],
+[
+"dar un bote",
+"to give someone a ride",
+"col",
+1,
+null
+],
+[
+"birria",
+"a casual game played just for fun, again and again",
+"col",
+0,
+[
+"Echamos una birria de fútbol.",
+"We played a casual football game."
+]
+],
+[
+"ñampearse",
+"to go crazy",
+"col",
+1,
+null
+],
+[
+"ñamería",
+"madness, nonsense",
+"col",
+1,
+null
+],
+[
+"grubear",
+"to hang out with someone, no strings attached",
+"slg",
+1,
+null
+],
+[
+"echar pa'lante",
+"to push on, to keep going",
+"col",
+1,
+[
+"Hay que echar pa'lante.",
+"You've got to keep going."
+]
+],
+[
+"ir al choque",
+"to face something head on",
+"col",
+1,
+null
+],
+[
+"juega vivo",
+"street smarts, cunning (often bending the rules)",
+"col",
+1,
+[
+"Ese tiene mucho juega vivo.",
+"He's very crafty."
+]
+],
+[
+"agarrar los mangos bajitos",
+"to take the easy way out",
+"col",
+1,
+null
+],
+[
+"arroz con mango",
+"a mess, chaos",
+"col",
+1,
+[
+"Eso se volvió un arroz con mango.",
+"That turned into a total mess."
+]
+],
+[
+"ponchera",
+"a racket, chaos, a mess",
+"col",
+1,
+null
+],
+[
+"zaperoco",
+"a big fuss, uproar",
+"col",
+1,
+null
+],
+[
+"trepaquesube",
+"a huge mess or row",
+"col",
+1,
+null
+],
+[
+"vale cebo",
+"that's unfair, that sucks",
+"col",
+1,
+null
+],
+[
+"flintin",
+"a quarrel, a fight (often between a couple)",
+"slg",
+1,
+null
+],
+[
+"culillo",
+"fear, the jitters",
+"col",
+1,
+[
+"Me dio culillo.",
+"I got scared."
+]
+],
+[
+"ñáñara",
+"the creeps, fear",
+"col",
+1,
+null
+],
+[
+"patatús",
+"a fainting fit, a turn",
+"col",
+0,
+null
+],
+[
+"tranque",
+"a traffic jam",
+"col",
+1,
+[
+"Hay un tranque en la Transístmica.",
+"There's a traffic jam on the Transístmica."
+],
+[
+"tranques"
+]
+],
+[
+"picando",
+"trendy, in fashion",
+"col",
+0,
+null
+],
+[
+"chiquishow",
+"a scene, drama to get attention",
+"col",
+1,
+null
+],
+[
+"de one",
+"right away (from 'de una')",
+"col",
+1,
+null
+],
+[
+"falta de todo",
+"totally disrespectful, rude",
+"col",
+1,
+null
+],
+[
+"no me parece",
+"I don't like that, I'm not OK with that",
+"col",
+0,
+null
+],
+[
+"sabrosón",
+"great, fun, enjoyable",
+"col",
+0,
+null
+],
+[
+"guillao",
+"excited, pumped; also high",
+"col",
+1,
+null,
+[
+"guillado"
+]
+],
+[
+"rakataka",
+"tacky, lowbrow (person or style)",
+"col",
+1,
+null,
+[
+"racataca",
+"rakataca"
+]
+],
+[
+"focop",
+"ugly, beat-up",
+"slg",
+1,
+null,
+[
+"focóp"
+]
+],
+[
+"gallo",
+"cheap, poor quality",
+"col",
+0,
+null
+],
+[
+"brujo",
+"cheap, knock-off",
+"col",
+0,
+null
+],
+[
+"pifioso",
+"flashy, a show-off",
+"col",
+1,
+[
+"Llegó todo pifioso con su carro nuevo.",
+"He showed up showing off his new car."
+],
+[
+"pifiosa"
+]
+],
+[
+"tirar lírica",
+"to sweet-talk, to talk someone round",
+"col",
+1,
+null
+],
+[
+"a la orden",
+"you're welcome; at your service",
+"col",
+0,
+[
+"—Gracias. —A la orden.",
+"—Thanks. —You're welcome."
+]
+],
+[
+"regálame",
+"can I have…? (polite request in shops)",
+"col",
+0,
+[
+"Regálame un café, por favor.",
+"Can I have a coffee, please?"
+]
+],
+[
+"ahorita",
+"in a bit, shortly (not always right now)",
+"col",
+0,
+null
+],
+[
+"allá onde uno",
+"back home in the countryside, the interior",
+"col",
+1,
+null
+],
+[
+"plena",
+"Panamanian reggae (reggae en español); a really good song",
+"col",
+0,
+null
+],
+[
+"cholo",
+"in the interior: friend; in the city: someone from the interior (can be pejorative)",
+"col",
+0,
+null
+],
+[
+"pana",
+"buddy, friend",
+"col",
+1,
+null,
+[
+"panas"
+]
+],
+[
+"chévere",
+"great, cool",
+"col",
+1,
+null
+],
+[
+"xopá",
+"what's up?",
+"col",
+1,
+null
+]
+],
+"extra_about": "Caribbean and Latin American urban slang heard in songs and videos that Wiktionary lacks. Same format plus a 7th field: places.",
+"extra": [
+[
+"estar a ley de",
+"to be just one step away from, only need one more thing (for something to happen)",
+"col",
+1,
+[
+"Estoy a ley de una señal.",
+"I'm just one sign away (one signal is all it takes)."
+],
+[],
+[
+"Caribbean",
+"Dominican Republic",
+"Colombia"
+]
+],
+[
+"a ley de",
+"just one step away from, only … left",
+"col",
+1,
+null,
+[],
+[
+"Caribbean",
+"Dominican Republic",
+"Colombia"
+]
+]
+]
+}

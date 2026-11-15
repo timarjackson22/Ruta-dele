@@ -115,7 +115,9 @@
     if (VCAP.id !== id) VL.tried = {};
     VCAP.id = id; VCAP.cues = []; VCAP.cur = -1; VCAP.word = -1; VCAP.overlayOff = false;
     const box = document.getElementById("vcapw"); if (!box) return;
-    if (!window.AndroidCap) { vcState("app"); return; }
+    if (!window.AndroidCap) { // web and iPhone: YouTube's captions can't be read here, but a song's lyrics can (LRCLIB allows it)
+      if (vlMusic(id) && !vlOff(id)) { vcState("loading"); VL.tried[id] = 1; vlTry(id).then((ok) => { if (!ok && VCAP.id === id) vcState("app"); }); return; }
+      vcState("app"); return; }
     let hit = vcCache.get(id); if (!hit) try { const j = localStorage.getItem("vcap:" + id); if (j) hit = JSON.parse(j); } catch (e) {}
     if (hit) { vcGot(id, hit); if (hit.secs) return; } // older saved copies have no video length: fetch again quietly to get it (the ad check needs it)
     else vcState("loading");
@@ -145,7 +147,7 @@
   }
   function vcState(st, why) {
     const w = document.getElementById("vcap"), n = document.getElementById("vcap-note"); if (!w) return;
-    const msg = { app: "The caption window works in the Ruta DELE app for Android. Here, YouTube's Spanish subtitles are shown on the video.", loading: "Loading the Spanish captions…", none: "This video has no Spanish captions on YouTube, so there's nothing to read along. Listen and catch words by ear.", error: "Couldn't load the captions" + (why ? " (" + String(why).slice(0, 80) + ")" : "") + "." }[st];
+    const msg = { app: "Here, YouTube's Spanish subtitles are shown on the video. Songs get their lyrics in this window everywhere; for other videos the caption window needs the Ruta DELE app for Android.", loading: "Loading the Spanish captions…", none: "This video has no Spanish captions on YouTube, so there's nothing to read along. Listen and catch words by ear.", error: "Couldn't load the captions" + (why ? " (" + String(why).slice(0, 80) + ")" : "") + "." }[st];
     w.classList.add("vcap-empty"); w.querySelector("#vcap-in").innerHTML = '<p class="vcap-msg">' + esc(msg) + (st === "error" ? ' <button class="btn small" data-act="vc-retry">Try again</button>' : "") + "</p>";
     if (n) n.textContent = ""; w.dataset.state = st;
   }

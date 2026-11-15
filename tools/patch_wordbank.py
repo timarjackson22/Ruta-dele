@@ -10,7 +10,7 @@ def rep(a, b, n=1):
 xp = open("/home/claude/app/xpbank.js", encoding="utf-8").read()
 import json as _j
 _pan = _j.load(open("/home/claude/ruta-dele/tools/panama_words.json", encoding="utf-8"))
-xp = xp.replace("/*PANAMA_W*/", "const PANAMA_W = " + _j.dumps({"words": _pan["words"]}, ensure_ascii=False, separators=(",", ":")) + ";")
+xp = xp.replace("/*PANAMA_W*/", "const PANAMA_W = " + _j.dumps({"words": _pan["words"], "extra": _pan.get("extra", [])}, ensure_ascii=False, separators=(",", ":")) + ";")
 rep("  function route() {\n", xp + "\n  function route() {\n")
 
 # base forms: the app's table first, then the bank's
@@ -48,6 +48,7 @@ rep('''      if (nx && VPHRASE[lower[i] + " " + nx]) { const ph = lower[i] + " "
 rep('''    const key = spans.length + ":" + (c.en ? 1 : 0); if (c.gl && c.glk === key) return;
     c.glk = key; c.gl = []; c.grp = []; c.ctx = [];''', '''    const key = spans.length + ":" + (c.en ? 1 : 0) + (XP ? ":x" : ""); if (c.gl && c.glk === key) return;
     c.glk = key; c.gl = []; c.grp = []; c.ctx = [];
+    if (!XP) try { loadXP().catch(() => {}); } catch (e) {} // captions on screen: fetch the bank now, not in 6 s
     try { if (XP) { const ws = spans.map((s) => vcWord(s).toLowerCase().replace(/’/g, "'"));
       for (const m of xpFind(ws.join(" "))) { if (m.n < 2 || m.a + m.n > spans.length) continue; const inf = spans[m.a].dataset.inf ? JSON.parse(spans[m.a].dataset.inf) : null;
         c.gl[m.a] = inf && inf.ph ? inf.mean : xpFirst(m.e[2]); c.ctx[m.a] = "phrase"; c.grp[m.a] = m.a; for (let q = m.a + 1; q < m.a + m.n; q++) { c.grp[q] = m.a; c.gl[q] = ""; } } } } catch (e) {}''')
