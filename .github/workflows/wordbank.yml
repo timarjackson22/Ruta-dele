@@ -1,6 +1,7 @@
 name: wordbank
 # Spanish word bank from Wiktionary (kaikki.org, CC BY-SA): expressions, slang and regional words, plus a coverage report. tools/WORDBANK_BRIEF.md
 on: { workflow_dispatch: {} }
+permissions: { contents: write }
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -8,10 +9,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: |
           set -e
-          curl -sSL -o es.jsonl.gz https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl.gz || true
-          if ! gzip -t es.jsonl.gz 2>/dev/null; then rm -f es.jsonl.gz; curl -sSL -o es.jsonl https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl; ls -l es.jsonl; python3 tools/wordbank.py es.jsonl out; else ls -l es.jsonl.gz; python3 tools/wordbank.py es.jsonl.gz out; fi
-          zcat -f es.jsonl* | grep -m1 '"word": "echar una mano"' | cut -c1-1500 || true
-          zcat -f es.jsonl* | grep -m1 '"word": "chévere"' | cut -c1-1500 || true
+          curl -sSL -o es.jsonl.gz https://kaikki.org/dictionary/Spanish/kaikki.org-dictionary-Spanish.jsonl.gz
+          gzip -t es.jsonl.gz; ls -l es.jsonl.gz
+          python3 tools/wordbank.py es.jsonl.gz out
           ls -l out
-      - uses: actions/upload-artifact@v4
-        with: { name: wordbank, path: out }
+      - name: save the bank on the wordbank-data branch (the app's build copies it in)
+        run: |
+          git config user.name "wordbank bot"; git config user.email "actions@github.com"
+          git checkout --orphan wordbank-data; git rm -rq --cached . ; mkdir -p wb; cp out/* wb/
+          git add wb; git commit -qm "word bank $(date -u +%F)"; git push -fq origin wordbank-data
