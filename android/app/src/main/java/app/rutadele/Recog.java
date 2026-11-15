@@ -27,15 +27,22 @@ final class Recog {
 
     static boolean onDevice(Context c) { return Build.VERSION.SDK_INT >= 31 && SpeechRecognizer.isOnDeviceRecognitionAvailable(c); }
 
-    static boolean hasGoogle(Context c) {
-        try { Intent i = new Intent(RecognitionService.SERVICE_INTERFACE); i.setComponent(GOOGLE); return !c.getPackageManager().queryIntentServices(i, 0).isEmpty(); } catch (Exception e) { return false; }
+    /** a Google speech recognition service on this phone, whatever its internal name (the Google app or Speech Services by Google) */
+    static ComponentName google(Context c) {
+        try {
+            List<ResolveInfo> l = c.getPackageManager().queryIntentServices(new Intent(RecognitionService.SERVICE_INTERFACE), 0);
+            ComponentName best = null;
+            for (ResolveInfo r : l) { String pk = r.serviceInfo.packageName; if (!pk.startsWith("com.google.android")) continue; ComponentName cn = new ComponentName(pk, r.serviceInfo.name); if (pk.equals(GOOGLE.getPackageName())) return cn; if (best == null) best = cn; }
+            return best;
+        } catch (Exception e) { return null; }
     }
+    static boolean hasGoogle(Context c) { return google(c) != null; }
 
     /** returns [recogniser, label] or null when nothing allowed is available */
     static Object[] create(Context c, boolean allowOnline) {
         if (onDevice(c)) return new Object[]{ SpeechRecognizer.createOnDeviceSpeechRecognizer(c), "on-device" };
         if (!allowOnline) return null;
-        if (hasGoogle(c)) return new Object[]{ SpeechRecognizer.createSpeechRecognizer(c, GOOGLE), "google" };
+        ComponentName g = google(c); if (g != null) return new Object[]{ SpeechRecognizer.createSpeechRecognizer(c, g), "google" };
         if (SpeechRecognizer.isRecognitionAvailable(c)) return new Object[]{ SpeechRecognizer.createSpeechRecognizer(c), "default" };
         return null;
     }
@@ -45,7 +52,7 @@ final class Recog {
         try {
             JSONObject o = new JSONObject();
             o.put("android", Build.VERSION.SDK_INT); o.put("phone", Build.MANUFACTURER + " " + Build.MODEL);
-            o.put("onDevice", onDevice(c)); o.put("google", hasGoogle(c)); o.put("any", SpeechRecognizer.isRecognitionAvailable(c));
+            o.put("onDevice", onDevice(c)); ComponentName g = google(c); o.put("google", g == null ? "none" : g.flattenToShortString()); o.put("any", SpeechRecognizer.isRecognitionAvailable(c));
             JSONArray a = new JSONArray();
             List<ResolveInfo> l = c.getPackageManager().queryIntentServices(new Intent(RecognitionService.SERVICE_INTERFACE), PackageManager.GET_META_DATA);
             for (ResolveInfo r : l) a.put(r.serviceInfo.packageName + "/" + r.serviceInfo.name);

@@ -122,5 +122,18 @@ rep("</head>", '''<style>
 .exbar{flex-wrap:wrap}.expbar{flex-basis:100%;height:4px;border-radius:99px;background:var(--line,#e3e3e3);overflow:hidden;margin-top:6px}.expbar i{display:block;height:100%;background:var(--accent,#1d6f5f);transition:width 1s linear}.expbar i.low{background:#e0a72e}
 @media (prefers-reduced-motion:reduce){.exrdot{animation:none}}
 </style></head>''')
+# Samsung's recogniser restarts after each pause without confirming the phrase it was hearing: keep that phrase instead of
+# letting the next one replace it (the same guard Profe's own mic uses)
+rep('''    const base = String(EX.txt[ti] || ""), t0 = Date.now(); let heard = "", closed = false, err = "";''',
+    '''    const base = String(EX.txt[ti] || ""), t0 = Date.now(); let heard = "", closed = false, err = "", kept = "", prevI = "", prevN = 0, lastT = 0;''')
+rep('''      for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
+      EX.txt[ti] = (base + " " + f).trim(); EX.live[ti] = im.trim(); heard = (f + im).trim();''',
+    '''      let nf = 0; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) { nf++; f += x + " "; } else im += x + " "; }
+      im = im.trim(); const now = Date.now(), pw = prevI.split(" "), iw = im.split(" ");
+      if (nf > prevN) prevI = ""; // the phone confirmed it: nothing to keep
+      else if (prevI && im && (iw.length < pw.length || now - lastT > 1200) && iw[0].toLowerCase() !== pw[0].toLowerCase()) kept = (kept + " " + prevI).trim(); // a new phrase began: keep the unconfirmed one
+      prevN = nf; lastT = now; if (im) prevI = im;
+      EX.txt[ti] = (base + " " + kept + " " + f).replace(/\s+/g, " ").trim(); EX.live[ti] = im; heard = (kept + " " + f + im).replace(/\s+/g, " ").trim();''')
+rep('''exPaintCtl(ti); exStat(ti, "Listening…");''', '''exPaintCtl(ti); exStat(ti, "Listening… (live words: this phone can't record and transcribe here)");''')
 open(p, "w", encoding="utf-8").write(s)
 print("exam v2 ok")
