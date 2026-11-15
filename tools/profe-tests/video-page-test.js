@@ -1,7 +1,7 @@
 // Video page: controls under the video, Profe tucks with the menu, scroll on play, ads hold the captions
 const { chromium, devices } = require("playwright"); const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
-const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
+const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const src = fs.readFileSync(__dirname + "/vcap.js", "utf8"); const CAPS = new Function(src.slice(src.indexOf("const LINES"), src.indexOf("(async () =>")) + "; return CAPS;")();
 (async () => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
@@ -52,9 +52,7 @@ const src = fs.readFileSync(__dirname + "/vcap.js", "utf8"); const CAPS = new Fu
   const L = await p.evaluate(() => window.__yt.log.splice(0));
   rec("Ad over: note goes, controls come back", await p.evaluate(() => document.getElementById("vadchip").hidden && [...document.querySelectorAll(".vctl .btn")].every((b) => !b.disabled)));
   rec("…then the video plays from 0:00: no jump to your last place", !L.some((x) => x[0] === "seek"), JSON.stringify(L));
-  const cb = await p.$('[data-act="v-cont"]'); rec("…and a 'Continue from 1:40' button is offered instead", !!cb && /Continue from 1:40/.test(await cb.textContent()));
-  await cb.click(); await p.waitForTimeout(200); const L2 = await p.evaluate(() => window.__yt.log.splice(0));
-  rec("…which jumps there when you tap it", L2.some((x) => x[0] === "seek" && Math.abs(x[1] - 97) < 0.6) && !(await p.$('[data-act="v-cont"]')), JSON.stringify(L2));
+  rec("…and no 'Continue from' button (removed to free space)", !(await p.$('[data-act="v-cont"]')));
   await p.evaluate(() => { window.__yt.p.t = 0; });
   await p.evaluate(() => { window.__yt.p.t = 4; window.__yt.p.st = 2; }); await p.waitForTimeout(500);
   rec("…and the captions follow the video", /^Está chévere/.test(await onTxt()), await onTxt());

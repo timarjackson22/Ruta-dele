@@ -132,7 +132,7 @@
     app.innerHTML = '<div class="stack vpage"><div><p class="eyebrow">' + esc([v.cat && !v.mine ? VCL[v.cat][1] : "", v.ch, v.lvl].filter(Boolean).join(" · ") || "Your video") + "</p><h1>" + esc(v.t) + "</h1>" + (v.note ? '<p class="muted">' + esc(v.note) + "</p>" : "") + '<p class="small vpage-act">' + (v.clip ? '<span class="muted">Clip: ' + mmss(v.clip[0]) + "–" + mmss(v.clip[1]) + "</span> " : "") + (v.mine ? '<button class="btn small" data-act="v-rename">Rename</button> ' : "") + '<button class="btn small" data-act="v-remove">' + IC("cross") + (v.mine ? " Delete video" : " Remove from my list") + "</button></p>" + "</div>" +
       '<div class="vframe"><div id="vplayer"></div><div class="vfail" id="vfail" hidden><p>This video can\'t play inside the app here (the owner may only allow it on YouTube, or you\'re offline). The exercises below still work.</p><a class="btn primary" href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a></div></div>' +
       '<p class="vslow small" id="vslow" hidden>Not playing? <a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener">Open in YouTube</a>, then come back for the exercises.</p>' +
-      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false">' + IC("repeat") + ' Replay sentence</button><button class="btn small" data-act="v-rate" aria-pressed="false" aria-label="Playback speed">Speed 1×</button><button class="btn small primary" data-act="v-catch">' + IC("pen") + " Catch a word</button></div>" +
+      '<div class="vctl"><button class="btn small" data-act="v-back5" aria-label="Back 5 seconds">' + IC("back") + ' 5 s</button><button class="btn small" data-act="v-loop" aria-pressed="false" aria-label="Replay sentence" title="Replay sentence">' + IC("repeat") + ' Replay</button><button class="btn small" data-act="v-rate" aria-pressed="false" aria-label="Playback speed">Speed 1×</button></div>' +
       '<form class="vcatch" id="vcatch" hidden><label class="small" for="vcin">What did you hear? <span class="muted" id="vcat-t"></span></label><div class="row"><input id="vcin" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type the word or phrase"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-act="v-catch-x">Cancel</button></div><p class="small muted" id="vcat-mean"></p></form>' +
       '<p class="vad-chip small" id="vadchip" hidden role="status">Ad playing · the video and captions start right after it</p>' +
       vcHTML() +
@@ -180,7 +180,9 @@
   }
   // play: bring the video's top edge to the top so the video, controls and caption window are all on screen
   function vFrameTop() { const f = document.querySelector(".vframe"), h = document.querySelector("header.top"); if (!f) return; const y = f.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 0) - 8; if (Math.abs(scrollY - y) > 30) scrollTo({ top: Math.max(0, y), behavior: "smooth" }); }
-  function vContinue(d) { const at = d.at || 0, el = document.querySelector(".vctl"); if (!el || d.w || at < vpLo() + 20 || at > vpHi() - 10) return; el.insertAdjacentHTML("beforeend", '<button class="btn small" data-act="v-cont" data-t="' + Math.max(0, at - 3) + '">Continue from ' + mmss(at) + "</button>"); }
+  function vContinue(d) { return; // removed to free space (Nov 2026): the video starts from the beginning; words are caught from the captions
+  }
+  function vContinueOld(d) { const at = d.at || 0, el = document.querySelector(".vctl"); if (!el || d.w || at < vpLo() + 20 || at > vpHi() - 10) return; el.insertAdjacentHTML("beforeend", '<button class="btn small" data-act="v-cont" data-t="' + Math.max(0, at - 3) + '">Continue from ' + mmss(at) + "</button>"); }
   function vWatched(id) { const d = vData(id); if (d.w) return; d.w = Date.now(); save(); try { actAdd(5); S.tot = S.tot || {}; S.tot.video = (S.tot.video || 0) + 1; qBump("listen"); } catch (e) {} try { coachToast("Video watched · +5 points. Now try the exercises below."); } catch (e) {} }
   function vMeaning(es) {
     const w = es.toLowerCase().trim().replace(/[¿?¡!.,;:]/g, ""); if (!w) return "";
@@ -189,7 +191,7 @@
     return "";
   }
   function vCaughtHTML(d) {
-    if (!d.c.length) return '<li class="muted small vempty">Nothing yet. While you watch, tap <b>Catch a word</b> when you hear something new.</li>';
+    if (!d.c.length) return '<li class="muted small vempty">Nothing yet. While you watch, tap a word in the captions and choose <b>Catch it</b>.</li>';
     return d.c.map((c, k) => '<li><button class="vts" data-act="v-seek" data-t="' + c.t + '">' + mmss(c.t) + '</button><span class="vw"><b lang="es">' + esc(c.es) + "</b>" + (c.en ? "<small>" + esc(c.en) + "</small>" : "") + (c.sc != null ? '<small class="vsc ' + (c.sc >= 70 ? "ok" : "") + '">Said it: ' + c.sc + "%</small>" : "") + "</span>" + (CAN_MIC ? '<button class="btn small" data-act="v-shadow" data-k="' + k + '" aria-label="Replay and say it">' + IC("mic") + " Say it</button>" : "") + '<button class="vx" data-act="v-del" data-k="' + k + '" aria-label="Remove">✕</button></li>').join("");
   }
   const vShuf = (q, i) => { const o = q[1].map((x, j) => [x, j]); let s = i * 7 + q[0].length; for (let a = o.length - 1; a > 0; a--) { s = (s * 9301 + 49297) % 233280; const b = s % (a + 1); [o[a], o[b]] = [o[b], o[a]]; } return o; };
