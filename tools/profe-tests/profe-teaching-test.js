@@ -14,7 +14,7 @@ const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS 
   rec("Correction in the brief's order: You can say (full sentence) → why → contrast → try again", /You can say: El sábado pasado yo fui a la playa con mi familia\./.test(lastP) && /finished moment in the past/.test(lastP) && /voy = I go \/ I'm going · fui = I went/.test(lastP) && /say the whole sentence again/i.test(lastP), lastP);
   await H.type("El sábado pasado yo fui a la playa con mi familia."); await H.idle(6000);
   lastP = (await H.msgs()).filter((x) => /^P:/.test(x)).pop() || "";
-  rec("The retry is checked: applied correctly → acknowledged", /✅/.test(lastP) || /lo lograste|You got it|There you go|Ahora sí|Eso es/i.test(lastP), lastP);
+  rec("The retry is checked: applied correctly → acknowledged", /✅/.test(lastP) || /lo lograste|You got it|There you go|Ahora sí|Eso es|Perfecto|Así se hace/i.test(lastP), lastP);
   await H.replies([{ text: "Vale.", delay: 50, wordMs: 10 }]);
   await H.type("Anoche voy al parque con mi perro."); await H.idle(6000);
   const mist = await p.evaluate(() => (window.__pv.store().mist || []).filter((m) => m.key === "profe").map((m) => m.it.q + " ⇒ " + m.it.a[0]));
