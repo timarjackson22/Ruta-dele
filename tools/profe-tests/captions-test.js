@@ -2,7 +2,7 @@
 const { chromium, devices } = require("playwright");
 const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
-const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
+const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const LINES = [
   [0, "Hola, ¿qué tal? Hoy vamos pa' la playa.", "Hi, how are you? Today we're going to the beach."],
   [3, "Está chévere, mae, pero el agua está fría.", "It's great, dude, but the water is cold."],
@@ -21,6 +21,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
 (async () => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.route("**/www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: MOCK }));
+  await c.route("**/lrclib.net/**", (r) => r.fulfill({ contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: "[]" }));
   await c.route("**/i.ytimg.com/**", (r) => r.fulfill({ status: 404, body: "" }));
   const page0 = await c.newPage(); const er = []; page0.on("pageerror", (x) => er.push(x.message));
   await page0.goto("http://localhost:8766/#video-WLXiu-qp8Lw"); await page0.waitForTimeout(1200);

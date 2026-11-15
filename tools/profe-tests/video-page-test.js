@@ -1,11 +1,12 @@
 // Video page: controls under the video, Profe tucks with the menu, scroll on play, ads hold the captions
 const { chromium, devices } = require("playwright"); const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
-const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
+const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const src = fs.readFileSync(__dirname + "/vcap.js", "utf8"); const CAPS = new Function(src.slice(src.indexOf("const LINES"), src.indexOf("(async () =>")) + "; return CAPS;")();
 (async () => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.route("**/www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: MOCK }));
+  await c.route("**/lrclib.net/**", (r) => r.fulfill({ contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: "[]" }));
   await c.route("**/i.ytimg.com/**", (r) => r.fulfill({ status: 404, body: "" }));
   await c.addInitScript((CAPS) => { window.AndroidCap = { fetch(id, vid) { setTimeout(() => window.__acap.ev(id, JSON.stringify(CAPS[vid] || { none: true }), ""), 80); } }; }, CAPS);
   const p = await c.newPage(); const er = []; p.on("pageerror", (x) => er.push(x.message));

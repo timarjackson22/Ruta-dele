@@ -87,6 +87,8 @@
     return out;
   }
   function vcSentences(cues, en, kind) {
+    if (kind === "lyrics") return cues.map((c, i) => { const ws = c.text.split(/\s+/).filter(Boolean), e = cues[i + 1] ? Math.min(cues[i + 1].s, c.e) : c.e, tot = ws.reduce((a, b) => a + b.length + 1, 0), dur = Math.max(0.5, (e - c.s) * 0.85); let acc = 0;
+      const words = ws.map((w) => { const t = c.s + (dur * acc) / tot; acc += w.length + 1; return { t, w }; }); const txt = c.text.replace(/^([¿¡"«]?)(\p{Ll})/u, (m, a, b) => a + b.toUpperCase()); return { s: c.s, e, words: words.map((x, k) => ({ t: x.t, w: k === 0 ? x.w.replace(/^([¿¡"«]?)(\p{Ll})/u, (m, a, b) => a + b.toUpperCase()) : x.w })), text: txt }; });
     const W = [];
     cues.forEach((c) => {
       if (c.words && c.words.length) c.words.forEach((x) => W.push({ t: x.t, w: x.w }));
@@ -110,6 +112,7 @@
   }
   const vcCache = new Map();
   function vcLoad(id) {
+    if (VCAP.id !== id) VL.tried = {};
     VCAP.id = id; VCAP.cues = []; VCAP.cur = -1; VCAP.word = -1; VCAP.overlayOff = false;
     const box = document.getElementById("vcapw"); if (!box) return;
     if (!window.AndroidCap) { vcState("app"); return; }
@@ -130,6 +133,8 @@
     try { window.AndroidCap.fetch(rid, id); } catch (e) { vcState("error", String(e)); }
   }
   function vcGot(id, r) {
+    if (+r.secs > 0) VP.secs = +r.secs;
+    if (r.kind !== "manual" && r.kind !== "lyrics" && !VL.tried[id] && !vlOff(id) && vlMusic(id)) { VL.tried[id] = 1; vlTry(id).then((ok) => { if (!ok && VCAP.id === id) vcGot(id, r); }); return; }
     const es = vcParse(r.es), en = vcParse(r.en), v = vFind(id), hi = v && v.clip ? v.clip[1] : 1e9, lo = v && v.clip ? v.clip[0] : 0;
     VCAP.kind = r.kind; if (+r.secs > 0) VP.secs = +r.secs;
     const dd = vData(id); if (dd.cap !== r.kind && r.kind !== "audio") { dd.cap = r.kind; save(); }
@@ -166,8 +171,8 @@
     const w = document.getElementById("vcap"); if (!w) return; const P = vcPref();
     w.classList.remove("vcap-empty"); w.dataset.state = "ready"; w.classList.toggle("show-en", !!P.en); w.classList.toggle("hide-text", !!P.hide);
     w.querySelector("#vcap-in").innerHTML = '<div class="vcap-pad"></div>' + VCAP.cues.map((c, i) => '<div class="vcue' + (c.mark ? " mark" : "") + '" data-i="' + i + '"><div class="vcl"><p class="ves" lang="es">' + vcWords(c.text) + '</p><p class="ven" lang="en">' + esc(c.en || "") + "</p></div></div>").join("") + '<div class="vcap-pad end"></div><div class="vtip" id="vtip" hidden role="status"></div>';
-    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + esc(VCAP.kind === "audio" ? "Captions made from the video's sound on this phone" + (VCAP.addedP ? ", punctuation added by the app" : "") + "." : VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.") +
-      (vaOk() && VCAP.kind !== "manual" ? ' <button class="lnk" data-act="' + (VCAP.kind === "audio" ? "va-redo" : "va-start") + '">' + (VCAP.kind === "audio" ? "Make them again from the audio" : "Make captions from the audio instead") + "</button>" : "") + ' <button class="lnk" data-act="v-report">Report a playback problem</button>';
+    const n = document.getElementById("vcap-note"); if (n) n.innerHTML = '<span class="vkey"><i aria-hidden="true"></i>Informal word</span> ' + (VCAP.kind === "lyrics" ? (() => { const x = vlGet(VCAP.id) || {}; return esc("The song's lyrics (LRCLIB" + (x.artist ? ": " + x.artist + " – " + x.track : "") + "), timed to the recording.") + ' <span class="vlsync"><b>' + (x.guessed ? "Words early or late? " : "Sync:") + '</b> <button class="btn small" data-act="vl-early" aria-label="Lyrics earlier">−½ s</button><button class="btn small" data-act="vl-late" aria-label="Lyrics later">+½ s</button><button class="btn small" data-act="vl-tap">Tap at the first line</button>' + (vaOk() ? '<button class="btn small" data-act="vl-auto">Auto-sync from the sound</button>' : "") + '<button class="lnk" data-act="vl-off">Use YouTube/audio captions instead</button></span> '; })() : "") + esc(VCAP.kind === "lyrics" ? "" : VCAP.kind === "audio" ? "Captions made from the video's sound on this phone" + (VCAP.addedP ? ", punctuation added by the app" : "") + "." : VCAP.kind === "asr" ? "YouTube's automatic Spanish captions" + (VCAP.addedP ? ", punctuation added by the app" : "") + ": a word can be misheard now and then." : "The channel's own Spanish captions.") +
+      (vaOk() && VCAP.kind !== "manual" && VCAP.kind !== "lyrics" ? ' <button class="lnk" data-act="' + (VCAP.kind === "audio" ? "va-redo" : "va-start") + '">' + (VCAP.kind === "audio" ? "Make them again from the audio" : "Make captions from the audio instead") + "</button>" : "") + ' <button class="lnk" data-act="v-report">Report a playback problem</button>';
     VCAP.cur = -1; VCAP.word = -1; vcTick(true);
   }
   // the video's clock, smoothed between the player's updates so lines and words change on time

@@ -133,6 +133,8 @@ CSS = r'''
 .vcap.hide-text .vcl { filter: blur(7px); user-select: none } .vcap.hide-text .vcl * { pointer-events: none }
 .vcap.hide-text .vcap-listen { display: flex }
 .vcap-note { margin: 6px 0 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center }
+.vlsync { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; margin-top: 4px }
+.vlsync b { font-weight: 600; color: var(--ink, inherit) }
 .vcue.mark .ves { font-size: 14px; font-style: italic; color: var(--muted) }
 .vtip { position: absolute; z-index: 3; max-width: 220px; padding: 5px 10px; border-radius: 10px; background: var(--ink); color: var(--surface); font-size: 13.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   box-shadow: 0 6px 16px rgba(0,0,0,.22); transition: left .28s cubic-bezier(.22,.61,.36,1), top .28s cubic-bezier(.22,.61,.36,1); pointer-events: none }

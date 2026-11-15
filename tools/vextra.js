@@ -20,6 +20,7 @@
   function vaXml(cues) { return "<transcript>" + cues.map((c) => '<text start="' + c.s.toFixed(2) + '" dur="' + Math.max(0.5, c.e - c.s).toFixed(2) + '">' + esc(c.text) + "</text>").join("") + "</transcript>"; }
   function vaUse(id, keepYt) { const x = vaGet(id); if (!x) return; VCAP.fromAudio = true; vcGot(id, { kind: "audio", es: vaXml(x.cues), en: "", secs: VP.secs || 0 }); vData(id).cap = "audio"; save(); }
   function vcNoCaps(id) {
+    if (!VL.tried[id] && !vlOff(id) && vlMusic(id)) { VL.tried[id] = 1; vlTry(id).then((ok) => { if (!ok && VCAP.id === id) vcNoCaps(id); }); return; }
     if (vaHas(id)) { vaUse(id); return; }
     vcState("none");
     const w = document.querySelector("#vcap .vcap-msg"); if (!w) return;
@@ -33,7 +34,8 @@
     try { const L = S.region === "es" ? "es-ES" : "es-US"; if (window.AndroidAud.startMode) window.AndroidAud.startMode(L, mode); else window.AndroidAud.start(L); } catch (e) { vaBanner("Couldn't start: " + e, true); }
   }
   // which recogniser makes captions from the sound: on the phone (offline) or Google online (often catches more words)
-  const vaMode = () => { try { return localStorage.getItem("ruta-va-mode") || "phone"; } catch (e) { return "phone"; } };
+  // default: Google's online recogniser, which catches clearly more words of real video speech than the phone's offline model (S24 report, Nov 2026); "Redo on the phone (offline)" switches
+  const vaMode = () => { try { return localStorage.getItem("ruta-va-mode") || "online"; } catch (e) { return "online"; } };
   function vaRedoOnline() { try { localStorage.setItem("ruta-va-mode", "online"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
   function vaRedoPhone() { try { localStorage.setItem("ruta-va-mode", "phone"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="va-online"],[data-act="va-phone"]'); if (!t) return; if (t.dataset.act === "va-online") vaRedoOnline(); else vaRedoPhone(); });
@@ -52,7 +54,8 @@
     if (type === "level") { const x = +text || 0; VA.levels++; if (!VP.ad) VA.peak = Math.max(VA.peak || 0, x); return; }
     if (type === "state" && /^engine:/.test(text)) { VA.engine = text.slice(7); return; }
     if (type === "state") {
-      if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
+      if (text === "listening" && VA.sync) { VA.on = true; vaBanner("Listening to the singing to line up the lyrics (up to a minute)…"); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} }
+      else if (text === "listening") { VA.on = true; vaBanner("Listening to the video. Captions appear as they're spoken."); try { vpSeek(vpLo()); vpPlay(); } catch (e) {} vcState("loading"); const m = document.querySelector("#vcap .vcap-msg"); if (m) m.textContent = "Captions will appear here as the video speaks…"; }
       else if (text === "asking") vaBanner("Android will ask to record: choose Start (the app only listens to its own video).");
       else if (text === "stopped") { VA.on = false; vaFinish(); }
       else if (text === "error:no-lang") { VA.on = false; vaBanner("Spanish speech recognition isn't downloaded on this phone, and no online speech service answered.", true); const b = document.getElementById("vabar"); if (b && window.__pvModelDl) b.insertAdjacentHTML("beforeend", ' <button class="btn small primary" data-act="pv-model-dl">Download Spanish</button>'); }
@@ -61,9 +64,10 @@
     }
     if (VP.ad) { VA.seg = null; return; } // an ad: not part of the video
     const t = vpT();
-    if (type === "partial") { if (VA.seg == null) VA.seg = Math.max(vpLo(), t - 1.2); VA.live = text; vaShowLive(); return; }
+    if (type === "partial") { if (VA.seg == null) VA.seg = Math.max(vpLo(), t - 1.2); VA.live = VA.sync ? "" : text; vaShowLive(); return; }
     if (type === "final") {
       const s = VA.seg != null ? VA.seg : Math.max(vpLo(), t - Math.min(6, 0.35 * text.split(/\s+/).length)); VA.seg = null; VA.live = "";
+      if (VA.sync) { vlSyncHit(text, s); vaShowLive(); return; }
       VA.cues.push({ s, e: Math.max(s + 0.6, t), text: vcClean(text) }); VA.cues.sort((a, b) => a.s - b.s);
       try { localStorage.setItem(vaKey(VA.id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: false })); } catch (e) {}
       vcGot(VA.id, { kind: "audio", es: vaXml(VA.cues), en: "", secs: VP.secs || 0 }); vaShowLive();
@@ -72,6 +76,7 @@
   function vaShowLive() { const inn = document.getElementById("vcap-in"); if (!inn) return; let l = document.getElementById("valive"); if (!VA.live) { if (l) l.remove(); return; } if (!l) { inn.insertAdjacentHTML("beforeend", '<p class="valive" id="valive" aria-live="polite"></p>'); l = document.getElementById("valive"); } l.textContent = VA.live + " …"; }
   function vaFinish() {
     const id = VA.id; if (!id) return; VA.on = false;
+    if (VA.sync || VL.sync) { VA.id = null; if (VL.sync) vlSyncEnd(false); return; }
     if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); { const b = document.getElementById("vabar"); if (b) b.insertAdjacentHTML("beforeend", VA.mode === "online" ? ' <button class="btn small" data-act="va-phone">Redo on the phone (offline)</button>' : ' <button class="btn small" data-act="va-online">Missed words? Redo with Google online</button>'); } setTimeout(() => { const b = document.getElementById("vabar"); if (b && !b.querySelector("[data-act=va-online],[data-act=va-phone]")) vaBanner(""); }, 5000); if (VP.id === id) vWordCheck(id); }
     else if (VA.levels > 4 && (VA.peak || 0) < 0.003) vaBanner("The video's sound didn't reach the app: Android passed it silence. Turn the media volume up (not muted), start again and choose Start on Android's prompt. If it still happens, this phone doesn't allow the app to record its own video sound.", true);
     else if (!(window.AndroidApp && window.AndroidApp.version)) vaBanner("The sound reached the app but no Spanish speech was recognised. Your Android app is an older version: update it (Settings › App shows the version; download the latest from the Ruta DELE page) — the new one uses Google's speech service, which works with Samsung phones.", true);
@@ -138,3 +143,57 @@
     openSheet('<div class="row" style="justify-content:space-between"><b>Playback report</b><button class="btn small" data-act="l-close">Close</button></div><p class="small muted">What the YouTube player reported over the last minutes (times, lengths, ads). Copy it and send it in the chat if the captions or the start time go wrong.</p><textarea id="vrep" class="extxt" rows="8" readonly>' + esc(txt) + '</textarea><div class="row" style="margin-top:8px"><button class="btn primary small" data-act="v-copyrep">Copy</button></div>');
   }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="w-inf"], [data-act="w-type"]'); if (!t) return; if (t.dataset.act === "w-inf") { e.stopImmediatePropagation(); WV.inf = !WV.inf; if (WV.inf) WV.types = []; wordsView(); } else WV.inf = false; }, true);
+  /* ===== songs: real synced lyrics as captions (LRCLIB, free and open; tools/VIDEO_LYRICS_BRIEF.md) ===== */
+  const VL = { tried: {}, sync: null };
+  const vlKey = (id) => "lrc:" + id;
+  function vlGet(id) { try { return JSON.parse(localStorage.getItem(vlKey(id)) || "null"); } catch (e) { return null; } }
+  function vlPut(id, x) { try { localStorage.setItem(vlKey(id), JSON.stringify(x)); } catch (e) {} }
+  // is this a song? the library's music, or a video whose title/channel says so
+  function vlMusic(id) { const v = vFind(id) || {}; return v.cat === "musica" || /\b(official (music )?video|video oficial|videoclip|lyrics?|letra|ft\.|feat\.|vevo|music)\b/i.test((v.t || "") + " " + (v.ch || "")); }
+  function vlQuery(id) { const v = vFind(id) || {};
+    const track = String(v.t || "").replace(/\((?:en vivo|live|official[^)]*|video oficial|videoclip|lyrics?|letra|audio)\)/gi, "").replace(/\s*[-–|].*$/, "").replace(/\s+/g, " ").trim();
+    const artist = String(v.ch || "").split(/,|&| y | ft\.| feat\./i)[0].replace(/\b(music|vevo|official)\b/gi, "").replace(/\s+/g, " ").trim();
+    return { track, artist }; }
+  function vlParse(lrc) { const out = []; String(lrc || "").split("\n").forEach((ln) => { const m = ln.match(/^\[(\d+):(\d+(?:\.\d+)?)\]\s*(.*)$/); if (m && m[3].trim()) out.push({ t: +m[1] * 60 + +m[2], text: m[3].trim() }); }); return out; }
+  // the closest recording to this video: synced lyrics, length nearest the video's
+  async function vlFetch(id) {
+    const q = vlQuery(id); if (!q.track) return null;
+    const L = VP.secs || VP.dur || 0, get = async (p) => { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 7000); const r = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(p), { signal: ac.signal, headers: { "Lrclib-Client": "RutaDELE (https://github.com/timarjackson22/Ruta-dele)" } }); clearTimeout(tm); return r.ok ? r.json() : []; };
+    let rows = []; try { rows = await get({ track_name: q.track, artist_name: q.artist }); if (!rows.some((x) => x.syncedLyrics)) rows = rows.concat(await get({ q: q.track + " " + q.artist })); } catch (e) { pvl("lyrics lookup failed: " + e); return null; }
+    const ok = rows.filter((x) => x.syncedLyrics && vlParse(x.syncedLyrics).length > 4); if (!ok.length) return null;
+    ok.sort((a, b) => (L ? Math.abs(a.duration - L) - Math.abs(b.duration - L) : 0));
+    const best = ok[0], lines = vlParse(best.syncedLyrics);
+    // a music video is often longer than the record (an intro): first guess, the extra length if the song would otherwise start before the music
+    const extra = L && best.duration ? L - best.duration : 0, off = extra > 2 && extra < 40 && lines[0].t < 3 ? Math.round(extra * 10) / 10 : 0;
+    return { src: best.id, track: best.trackName, artist: best.artistName, dur: best.duration, lines, off, guessed: !!off || Math.abs(extra) > 2, at: Date.now() };
+  }
+  const pvl = (x) => { try { window.__pvLog && window.__pvLog("lyrics " + x); } catch (e) {} };
+  async function vlTry(id) {
+    let x = vlGet(id);
+    if (!x) { x = await vlFetch(id); if (x) vlPut(id, x); }
+    if (!x || VCAP.id !== id) { pvl(x ? "page changed" : "none found for " + JSON.stringify(vlQuery(id))); return false; }
+    pvl("using LRCLIB #" + x.src + " " + x.artist + " – " + x.track + " (offset " + x.off + "s)");
+    vlShow(id, x); return true;
+  }
+  function vlShow(id, x) {
+    const L = x.lines, xml = "<transcript>" + L.map((l, i) => { const s = l.t + (x.off || 0), e = L[i + 1] ? L[i + 1].t + (x.off || 0) : s + 4; return '<text start="' + Math.max(0, s).toFixed(2) + '" dur="' + Math.max(0.6, e - s).toFixed(2) + '">' + esc(l.text) + "</text>"; }).join("") + "</transcript>";
+    vcGot(id, { kind: "lyrics", es: xml, en: "", secs: VP.secs || 0 });
+  }
+  function vlNudge(d) { const id = VCAP.id, x = vlGet(id); if (!x) return; x.off = Math.round(((x.off || 0) + d) * 10) / 10; x.guessed = false; vlPut(id, x); const keep = VCAP.cur; vlShow(id, x); vlSaid("Lyrics " + (d > 0 ? "later" : "earlier") + " · offset " + x.off.toFixed(1) + " s"); }
+  // tap when you hear the first sung line: that line starts now
+  function vlTapFirst() { const id = VCAP.id, x = vlGet(id); if (!x) return; const t = vpT(); x.off = Math.round((t - x.lines[0].t - 0.3) * 10) / 10; x.guessed = false; vlPut(id, x); vlShow(id, x); vlSaid("Synced: the first line starts at " + Math.max(0, t - 0.3).toFixed(1) + " s"); }
+  function vlSaid(m) { try { coachToast("🎵 " + m); } catch (e) {} }
+  // automatic sync: listen to a little of the sound, match what is heard to the lyrics, set the offset from the agreeing matches
+  const vlNorm = (s) => String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ ]/g, " ").split(/\s+/).filter((w) => w.length > 2);
+  function vlSyncStart() { const x = vlGet(VCAP.id); if (!x || !vaOk()) return; VL.sync = { id: VCAP.id, hits: [], t0: Date.now() }; VA.sync = true; vaStart(); vlSaid("Listening for the singing to line up the lyrics…"); setTimeout(() => { if (VL.sync && Date.now() - VL.sync.t0 >= 75000) vlSyncEnd(false); }, 76000); }
+  function vlSyncHit(text, s) {
+    const S2 = VL.sync; if (!S2) return; const x = vlGet(S2.id); if (!x) return; const hw = vlNorm(text); if (hw.length < 2) return;
+    let best = -1, bs = 0; x.lines.forEach((l, i) => { const lw = vlNorm(l.text); if (!lw.length) return; const set = new Set(lw); const k = hw.filter((w) => set.has(w)).length / Math.max(3, Math.min(hw.length, lw.length)); if (k > bs) { bs = k; best = i; } });
+    if (best < 0 || bs < 0.5) return; S2.hits.push(s - x.lines[best].t); pvl("sync hit «" + text + "» ≈ line " + (best + 1) + " → " + (s - x.lines[best].t).toFixed(1) + "s");
+    const H = S2.hits.slice().sort((a, b) => a - b), med = H[Math.floor(H.length / 2)], agree = H.filter((h) => Math.abs(h - med) < 1.5).length;
+    if (agree >= 2) { x.off = Math.round(med * 10) / 10; x.guessed = false; vlPut(S2.id, x); vlSyncEnd(true); }
+  }
+  function vlSyncEnd(ok) { const S2 = VL.sync; VL.sync = null; VA.sync = false; VA.id = null; VA.on = false; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} try { vaBanner(""); } catch (e) {} const x = S2 && vlGet(S2.id); if (ok && x && VCAP.id === S2.id) { vlShow(S2.id, x); vlSaid("Lyrics lined up with the video (offset " + x.off.toFixed(1) + " s)."); } else if (!ok) vlSaid("Couldn't line the lyrics up from the sound. Use “Tap at the first line”."); }
+  document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act^=vl-]"), a = t && t.dataset.act; if (!a) return;
+    if (a === "vl-early") vlNudge(-0.5); else if (a === "vl-late") vlNudge(0.5); else if (a === "vl-tap") vlTapFirst(); else if (a === "vl-auto") vlSyncStart(); else if (a === "vl-off") { const id = VCAP.id; try { localStorage.setItem("lrc-off:" + id, "1"); } catch (x) {} VL.tried[id] = 1; vcLoad(id); } });
+  const vlOff = (id) => { try { return localStorage.getItem("lrc-off:" + id) === "1"; } catch (e) { return false; } };
