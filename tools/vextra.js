@@ -40,6 +40,7 @@
     b.innerHTML = (VA.on ? '<i aria-hidden="true"></i>' : "") + "<span>" + esc(msg) + "</span>" + (VA.on ? ' <button class="btn small" data-act="va-stop">Stop</button>' : "");
   }
   window.__aaud = { ev(type, text) {
+    try { if (type !== "partial" && window.__pvLog && (type !== "level" || (VA.lvN = (VA.lvN || 0) + 1) % 10 === 1)) window.__pvLog("video-audio " + type + " " + String(text || "").slice(0, 60) + (type === "level" ? " (peak so far " + (VA.peak || 0).toFixed(3) + ")" : "")); } catch (e) {}
     if (!VA.id || VA.id !== VP.id) return;
     if (type === "level") { const x = +text || 0; VA.levels++; if (!VP.ad) VA.peak = Math.max(VA.peak || 0, x); return; }
     if (type === "state" && /^engine:/.test(text)) { VA.engine = text.slice(7); return; }
