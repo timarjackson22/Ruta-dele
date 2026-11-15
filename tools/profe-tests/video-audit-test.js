@@ -1,7 +1,7 @@
 // Video audit (tools/VIDEO_AUDIT_BRIEF.md): cleanup, captions from the audio, word check, Words › Informal, start at 0, replay sentence, library
 const { chromium, devices } = require("playwright"); const fs = require("fs");
 const R = []; const rec = (n, ok, info) => { R.push(ok); console.log((ok ? "PASS " : "FAIL ") + n + (info ? "  " + info : "")); };
-const MOCK = fs.readFileSync(__dirname + "/vid.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
+const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const MOCK = `([\s\S]*?)`;/)[1];
 const X = (lines) => '<?xml version="1.0" encoding="utf-8" ?><transcript>' + lines.map(([s, d, t]) => '<text start="' + s + '" dur="' + d + '">' + t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</text>").join("") + "</transcript>";
 const CAPS = {
   // YouTube automatic captions full of tags, an unknown slang word and a name mid-sentence
@@ -11,6 +11,7 @@ const CAPS = {
 (async () => {
   const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
   await c.route("**/www.youtube.com/iframe_api", (r) => r.fulfill({ contentType: "text/javascript", body: MOCK }));
+  await c.route("**/lrclib.net/**", (r) => r.fulfill({ contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: "[]" }));
   await c.route("**/i.ytimg.com/**", (r) => r.fulfill({ status: 404, body: "" }));
   await c.addInitScript((CAPS) => {
     window.AndroidCap = { fetch(id, vid) { setTimeout(() => window.__acap.ev(id, JSON.stringify(CAPS[vid] || { none: true }), ""), 60); } };

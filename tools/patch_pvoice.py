@@ -37,7 +37,7 @@ rep('''      if (t && !done) { done = true; listening = false; try { me.abort();
 # Practice › Speak opens Profe already listening (voice chat), instead of only opening the panel
 rep('''["speak", "Speak", "Hablar", "", "t-open", "#9b6bff", "#6a3fd8"]''', '''["speak", "Speak", "Hablar", "", "t-speak", "#9b6bff", "#6a3fd8"]''')
 # settings: hands-free and mic diagnostics in Profe › History & settings
-rep('''body = settingsHTML()''', '''body = settingsHTML() + pvSettingsHTML()''')
+rep('''return '<div class="tscroll">' +''', '''return '<div class="tscroll">' + pvSettingsHTML() +''')
 rep("</head>", '''<style>
 #hfpill{position:fixed;left:12px;bottom:calc(var(--tabh,64px) + 18px + env(safe-area-inset-bottom));z-index:60;display:flex;align-items:center;gap:2px;background:var(--surface,#fff);border:1px solid var(--line,#ddd);border-radius:999px;box-shadow:0 4px 18px rgba(0,0,0,.14);padding:3px}
 body.no-tabs #hfpill{bottom:calc(18px + env(safe-area-inset-bottom))}
@@ -53,6 +53,27 @@ body.no-tabs #hfpill{bottom:calc(18px + env(safe-area-inset-bottom))}
 @media (prefers-reduced-motion:reduce){#hfpill .hfdot{animation:none!important}}
 body.tutor-open #hfpill{bottom:auto;top:calc(10px + env(safe-area-inset-top));left:auto;right:64px}
 .pvset pre{white-space:pre-wrap;max-height:240px;overflow:auto;background:var(--chip,#f3f3f3);padding:8px;border-radius:8px}
+.pvset{margin:4px 0 18px;padding:14px 14px 10px;border:1px solid var(--line,#dde);border-radius:16px;background:var(--surface,#fff);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.pvhead{display:flex;align-items:center;gap:12px}.pvhead>div{flex:1;min-width:0}
+.pvico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--chip,#eef1f8);font-size:1.25rem;flex:none}
+.pvset h3{margin:0;font:700 1.05rem/1.2 var(--body,inherit);display:flex;align-items:center;gap:8px}
+.pvbeta{font:600 .68rem/1 var(--body,inherit);text-transform:uppercase;letter-spacing:.04em;padding:3px 6px;border-radius:6px;background:#fdf0d5;color:#8a5a00}
+.pvst{display:block;font-size:.85rem;color:var(--muted,#667);margin-top:2px}.pvst[data-on=true]{color:#1f7a4f;font-weight:600}
+.pvsw{flex:none;width:52px;height:32px;border-radius:999px;border:0;background:#c7ccd6;position:relative;cursor:pointer;transition:background .2s}
+.pvsw i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.pvsw[aria-checked=true]{background:#2e9e6b}.pvsw[aria-checked=true] i{transform:translateX(20px)}
+.pvsw:focus-visible{outline:3px solid var(--accent,#1f4fa3);outline-offset:2px}
+.pvintro{margin:10px 0 8px;line-height:1.45}
+.pvrows{list-style:none;margin:6px 0;padding:0;border-top:1px solid var(--line,#e4e6ee)}
+.pvrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line,#e4e6ee)}
+.pvi{width:24px;height:24px;border-radius:50%;flex:none;display:grid;place-items:center;font:700 .8rem/1 var(--body,inherit);background:#e3e6ec;color:#556}
+.pvrow.ok .pvi{background:#dff3e8;color:#1f7a4f}.pvrow.warn .pvi{background:#fdecd2;color:#a05a00}
+.pvl{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:.9rem}.pvv{font-size:.82rem;color:var(--muted,#667)}
+.pvbar{display:inline-block;vertical-align:middle;width:90px;height:6px;border-radius:3px;background:#e3e6ec;overflow:hidden}.pvbar i{display:block;height:100%;background:#2e9e6b}
+.pvchk{display:flex;gap:8px;align-items:flex-start;font-size:.85rem;margin:8px 0}
+.pvtry{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 6px}.pvq{padding:4px 9px;border-radius:999px;background:var(--chip,#eef1f8);font-size:.8rem}
+.pvdiag{margin-top:6px}.pvdiag summary{cursor:pointer;font-size:.85rem;color:var(--muted,#667);padding:6px 0}
+.ttabs{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;gap:6px}.ttabs::-webkit-scrollbar{display:none}.ttabs .btn{flex:none;white-space:nowrap}
 </style></head>''')
 # hands-free speaks from any screen (speakMixed stays silent while the panel is closed, except for hands-free)
 rep('''if (tp && tp.hidden && !document.getElementById("litem") && !(typeof PR !== "undefined" && PR)) { if (onDone) onDone(); return; } }''', '''if (tp && tp.hidden && !document.getElementById("litem") && !(typeof PR !== "undefined" && PR) && !window.__pvSayOK) { if (onDone) onDone(); return; } }''')
