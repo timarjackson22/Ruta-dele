@@ -60,6 +60,14 @@ public class AppBridge {
         if (a instanceof MainActivity) a.runOnUiThread(() -> ((MainActivity) a).askNotifications());
     }
 
+    /** Study-plan reminders: replaces all of them with this JSON list. Returns "OK n" or "ERR". Asks for notification permission if needed. */
+    @JavascriptInterface
+    public String setPlanReminders(String json) {
+        int n = PlanReminderReceiver.setAll(a, json);
+        if (n > 0 && a instanceof MainActivity) a.runOnUiThread(() -> ((MainActivity) a).askNotifications());
+        return n < 0 ? "ERR bad list" : "OK " + n;
+    }
+
     @JavascriptInterface
     public void cancelReminder() {
         prefs().edit().putBoolean("on", false).apply();

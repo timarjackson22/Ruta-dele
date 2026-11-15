@@ -82,5 +82,12 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   rec("With one paper per skill: a readiness range with uncertainty and no guarantee", /Readiness estimate/.test(xp2) && /–/.test(xp2) && /not a prediction/.test(xp2) && /estimate/.test(xp2), xp2.slice(0, 900));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
+  // Android: reminders handed to the native scheduler; status says "set" only when the phone accepted them and notifications are allowed
+  for (const allowed of [true, false]) {
+    const H2 = await open({ hash: "#plan", noOpen: true, init: "window.AndroidApp = Object.assign(window.AndroidApp || {}, { setPlanReminders(j) { window.__rem = JSON.parse(j); return 'OK ' + window.__rem.length; }, notificationsAllowed() { return " + allowed + "; } });" });
+    const r2 = await H2.p.evaluate(() => { const P = window.__plan, d = P.blank(); d.target = "a2"; d.current = "a1"; for (let i = 0; i < 7; i++) { d.avail[i] = [{ s: "08:00", e: "21:00" }]; d.want[i] = 60; } d.exam.date = new Date(Date.now() + 40 * 864e5).toISOString().slice(0, 10); P.commit(P.generate(d, true)); return { rem: P.state().rem, n: (window.__rem || []).length, kinds: [...new Set((window.__rem || []).map((x) => x.id.split(":")[0]))], fields: window.__rem && window.__rem[0] && Object.keys(window.__rem[0]).sort().join() }; });
+    rec("Android (" + (allowed ? "notifications allowed" : "notifications off") + "): list handed over with time, title, text and link; status " + (allowed ? "says set" : "doesn't claim it"), r2.n > 5 && /at/.test(r2.fields) && /hash/.test(r2.fields) && r2.rem.ok === allowed && (allowed || /turned off/.test(r2.rem.channel)), JSON.stringify(r2).slice(0, 300));
+    await H2.close();
+  }
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); process.exit(R.every(Boolean) ? 0 : 1);
 })();
