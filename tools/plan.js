@@ -403,7 +403,7 @@
     else if (a === "pl-odel") { D.off.splice(+t.dataset.i, 1); plSaveDraft(D); planPage(); }
     else if (a === "pl-review") { PLUI.view = "review"; planPage(); }
     else if (a === "pl-gen") { const g = plGenerate(D, true); if (!g.ok) { PLUI.view = "setup"; planPage(); return; } const ok = plCommit(g); PLUI.view = "agenda"; planPage(); try { coachToast(ok ? "✓ Study plan saved · " + g.sessions.filter((s) => s.date >= plToday()).length + " sessions" : "✗ The plan couldn't be saved (storage full?). Your answers are kept as a draft."); } catch (x) {} }
-    else if (a === "pl-replan" || a === "pl-catchup") { PLUI.view = "review"; if (A) { S.plan.draft = JSON.parse(JSON.stringify(Object.assign({}, A.profile, plState().draft && S.plan.draftAt > A.created ? plState().draft : {}))); save(); } planPage(); }
+    else if (a === "pl-replan" || a === "pl-catchup") { PLUI.view = "review"; if (A) { S.plan.draft = JSON.parse(JSON.stringify(Object.assign({}, A.profile, plState().draft && S.plan.draftAt > A.created ? plState().draft : {}))); save(); } if (location.hash !== "#plan") location.hash = "#plan"; else planPage(); }
     else if (a === "pl-start") plStart(t.dataset.id);
     else if (a === "pl-done") { plMark(t.dataset.id, "done"); planPage(); }
     else if (a === "pl-undo") { plMark(t.dataset.id, "undo"); planPage(); }

@@ -867,6 +867,7 @@
   "voice": "unsuitable",
   "why": "opens the video page's option menu (its options have their own voice commands)"
  },
+ "v-next": "video.next",
  "v-open": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
@@ -922,6 +923,10 @@
  "v-showhid": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
+ },
+ "v-tapplay": {
+  "voice": "unsuitable",
+  "why": "shown only when the browser blocks autoplay: a real tap is what unblocks it"
  },
  "v-top": {
   "voice": "unsuitable",
