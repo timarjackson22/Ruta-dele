@@ -4,7 +4,7 @@
   var XP = null, XPP = null;
   // Panamanian Spanish, curated for this app (tools/panama_words.json, tools/PANAMA_WORDS_BRIEF.md): [term, English, register, colour in captions, example, variants]
   /*PANAMA_W*/
-  const PAN = new Map(); try { PANAMA_W.words.forEach((e) => { const o = { t: e[0], en: e[1], r: e[2], c: e[3], ex: e[4] }; [e[0]].concat(e[5] || []).forEach((v) => { if (!PAN.has(v)) PAN.set(v, o); }); }); } catch (e) {}
+  const PAN = new Map(); try { PANAMA_W.words.concat(PANAMA_W.extra || []).forEach((e) => { const o = { t: e[0], en: e[1], r: e[2], c: e[3], ex: e[4], pl: e[6] || ["Panama"] }; [e[0]].concat(e[5] || []).forEach((v) => { if (!PAN.has(v)) PAN.set(v, o); }); }); } catch (e) {}
   const PAN_TAG = { col: ["col"], slg: ["slg"], rude: ["rude"], reg: [], std: [] };
   const XP_TAG = { rude: "rude", col: "colloquial", slg: "slang", vul: "vulgar", der: "offensive", hum: "humorous", eup: "euphemism", net: "internet", aff: "affectionate", old: "dated", arc: "old-fashioned", rar: "rare" };
   const XP_INF = new Set(["col", "slg", "vul", "der"]);
@@ -16,7 +16,7 @@
       XP = { P, H, W: b.W || {}, F: f || {} };
       // Panama first: its words and expressions join the bank, their Panamanian meaning ahead of any other
       PAN.forEach((o, k) => {
-        if (k.includes(" ")) { const e = [k, "phrase", o.en, PAN_TAG[o.r] || [], ["Panama"], o.ex || null]; e.risky = false; e.pan = 1; P.set(k, e); const h = k.split(" ")[0]; (H.get(h) || H.set(h, []).get(h)).unshift(e); return; }
+        if (k.includes(" ")) { const e = [k, "phrase", o.en, PAN_TAG[o.r] || [], o.pl, o.ex || null]; e.risky = false; e.pan = 1; P.set(k, e); const h = k.split(" ")[0]; (H.get(h) || H.set(h, []).get(h)).unshift(e); return; }
         const w = XP.W[k], pl = ["Panama"].concat(w ? w[3].filter((x) => x !== "Panama") : []);
         XP.W[k] = ["", o.en + (w ? "; " + w[1] : ""), (PAN_TAG[o.r] || []).concat(w ? w[2] : []), pl, w ? w[4] : [], !!o.c, o.ex || null, 1];
       });
@@ -84,7 +84,7 @@
   // Profe: "what does … mean" for expressions and informal words
   function xpMeaning(q) {
     q = String(q || "").toLowerCase().replace(/[¿?¡!.,"“”«»]/g, "").trim();
-    { const o = PAN.get(q); if (o) return "🇵🇦 **" + o.t + "** = " + o.en + " *(Panama" + (o.r === "rude" ? " · rude" : o.r === "slg" ? " · street slang" : o.r === "col" ? " · colloquial" : "") + ")*" + (o.ex ? "\n\n«" + o.ex[0] + "» = " + o.ex[1] : ""); }
+    { const o = PAN.get(q); if (o) return (o.pl[0] === "Panama" ? "🇵🇦 " : "") + "**" + o.t + "** = " + o.en + " *(" + o.pl.slice(0, 3).join(", ") + (o.r === "rude" ? " · rude" : o.r === "slg" ? " · street slang" : o.r === "col" ? " · colloquial" : "") + ")*" + (o.ex ? "\n\n«" + o.ex[0] + "» = " + o.ex[1] : ""); }
     if (!XP) return null;
     let e = XP.P.get(q);
     if (!e) { const f = xpFind(q)[0]; if (f && f.n === q.split(/\s+/).length) e = f.e; }

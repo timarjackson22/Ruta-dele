@@ -25,7 +25,7 @@ const CAPS = { "WLXiu-qp8Lw": { lang: "es", kind: "manual", es: srv1(1), en: srv
   await c.route("**/i.ytimg.com/**", (r) => r.fulfill({ status: 404, body: "" }));
   const page0 = await c.newPage(); const er = []; page0.on("pageerror", (x) => er.push(x.message));
   await page0.goto("http://localhost:8766/#video-WLXiu-qp8Lw"); await page0.waitForTimeout(1200);
-  rec("Web/iPhone (no Android app): the window explains captions need the Android app", /works in the Ruta DELE app for Android/.test(await page0.textContent("#vcap")));
+  rec("Web/iPhone (no Android app): the window explains captions need the Android app", /caption window needs the Ruta DELE app for Android/.test(await page0.textContent("#vcap")));
   await page0.close();
   await c.addInitScript((CAPS) => {
     window.__capCalls = 0;

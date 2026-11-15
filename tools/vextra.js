@@ -167,7 +167,7 @@
   // the closest recording to this video: synced lyrics, length nearest the video's
   async function vlFetch(id) {
     const Q = vlQueries(id); if (!Q.length) return null; const v = vFind(id) || {};
-    const L = VP.secs || VP.dur || 0, get = async (p) => { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 7000); const r = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(p), { signal: ac.signal, headers: { "Lrclib-Client": "RutaDELE (https://github.com/timarjackson22/Ruta-dele)" } }); clearTimeout(tm); return r.ok ? r.json() : []; };
+    const L = VP.secs || VP.dur || 0, get = async (p) => { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 7000); const r = await fetch("https://lrclib.net/api/search?" + new URLSearchParams(p), { signal: ac.signal }); clearTimeout(tm); return r.ok ? r.json() : []; };
     const good = (rows, strict) => rows.filter((x) => x.syncedLyrics && vlParse(x.syncedLyrics).length > 4 && (!strict || !L || Math.abs((x.duration || 0) - L) < 30));
     let ok = [];
     try {
@@ -207,8 +207,9 @@
     return null;
   }
   const pvl = (x) => { try { window.__pvLog && window.__pvLog("lyrics " + x); } catch (e) {} };
+  async function vlLen() { for (let i = 0; i < 30 && !(VP.secs || VP.dur); i++) { try { VP.dur = (VP.p && VP.p.getDuration && VP.p.getDuration()) || VP.dur; } catch (e) {} if (!(VP.secs || VP.dur)) await new Promise((r) => setTimeout(r, 100)); } return VP.secs || VP.dur || 0; }
   async function vlTry(id) {
-    let x = vlGet(id);
+    let x = vlGet(id); if (!x) await vlLen();
     if (!x) { x = await vlFetch(id); if (!x && VCAP.id === id) x = await vlBorrow(id); if (x) vlPut(id, x); }
     if (!x || VCAP.id !== id) { pvl(x ? "page changed" : "none found for " + JSON.stringify(vlQuery(id))); return false; }
     pvl("using LRCLIB #" + x.src + " " + x.artist + " – " + x.track + " (offset " + x.off + "s)");

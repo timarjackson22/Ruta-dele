@@ -51,5 +51,7 @@ const MOCK = fs.readFileSync(__dirname + "/videos-test.js", "utf8").match(/const
   rec("Distinctive Panama words are coloured (chantin, buco); everyday ones are not (chino, real)", pi[0] && pi[0].where === "Panama" && pi[1] && !pi[2] && !pi[3], JSON.stringify(pi));
   const pc = await p.evaluate(() => window.__xp.lines("chino", "Voy al chino a comprar pan."));
   rec("Word card for «chino» shows its Panama meaning with an example", /In Panama/.test(pc) && /corner shop/.test(pc) && /Voy al chino/.test(pc), pc.slice(0, 200));
+  const ley = await p.evaluate(() => [window.__xp.find("Estoy a ley de una señal, márcame al celular").map((m) => m.e[0]), window.__xp.meaning("estar a ley de")]);
+  rec("Song slang «estoy a ley de una señal» (Verano Rosa) recognised: one step away", ley[0].includes("estar a ley de") && /one step away/.test(ley[1] || ""), JSON.stringify(ley));
   rec("No script errors", !er.length, er.join(" | "));
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close(); })();
