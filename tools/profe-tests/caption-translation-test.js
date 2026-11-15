@@ -10,5 +10,13 @@ const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS 
   rec("A line that is one expression gets its meaning: «A ver» → let's see (not «Really?»)", /let'?s see/i.test(r[1]), r[1]);
   rec("Other lines still use the translator", r[2] === "A little coffee", r[2]);
   rec("Panama expression as a whole line: «¡Qué xopá!» → what's up?", /what's up/i.test(r[3]), r[3]);
+  // 15 Nov 2026: on the phone, caption lines use the online translator when there's a connection (more accurate), the offline one otherwise
+  await p.route("https://api.mymemory.translated.net/**", (rt) => rt.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ responseData: { translatedText: "A little coffee, please (online)" } }) }));
+  const o = await p.evaluate(async () => [await window.__trEn("Un cafecito", { online: true }), await window.__trEn("Un cafecito")]);
+  rec("Captions online: the online translator answers first", o[0] === "A little coffee, please (online)", o[0]);
+  rec("Other uses (and offline) keep the phone's translator", o[1] === "A little coffee", o[1]);
+  await p.unroute("https://api.mymemory.translated.net/**"); await p.route("https://api.mymemory.translated.net/**", (rt) => rt.abort());
+  const f = await p.evaluate(async () => window.__trEn("Un cafecito", { online: true }));
+  rec("Online translator unreachable: falls back to the phone's translator", f === "A little coffee", f);
   rec("No script errors", !er.length, er.join(" | "));
   console.log(R.filter(Boolean).length + "/" + R.length + " passed"); await b.close(); })();

@@ -36,10 +36,10 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   // 4. not a known command but clearly for the app («of video»: the first word lost to the beep): Profe asks instead of guessing
   await hear("okay profe of video"); await H.wait(1800); if (process.env.DBG) console.log((await p.evaluate(() => [].concat(window.__pv.diag).slice(-14).join("\n"))));
   t = await said(); s = await st();
-  rec("«of video» gets a question with numbered options (not silence, not the chat)", /Did you mean/.test(t) && s.ch && s.ch.includes("acts"), t);
-  const opts = await p.evaluate(() => window.__pv.choice().acts.map((x) => x.a.id));
+  rec("«of video» gets a question with numbered options (not silence, not the chat)", /Did you mean/.test(t) && s.ch && s.ch.includes("opts"), t);
+  const opts = await p.evaluate(() => window.__pv.choice().opts.map((x) => x.run.id === "find.open" ? (x.arg.h || "control") : x.run.id));
   await p.waitForFunction(() => window.__R.on, null, { timeout: 8000 }).catch(() => {});
-  const want = opts.indexOf("media.pick") >= 0 ? opts.indexOf("media.pick") : opts.indexOf("nav.videos");
+  const want = opts.findIndex((x) => /^(media\.pick|nav\.videos|videos|video-)/.test(x));
   await H.say(["one", "two", "three"][want]); await p.waitForFunction(() => /^#video/.test(location.hash), null, { timeout: 9000 }).catch(() => {});
   s = await st(); rec("…answering with the number does that option (" + opts.join(", ") + ")", want >= 0 && (s.h === "#videos" || /^#video-/.test(s.h)), JSON.stringify(s));
   // 5. "what is on this screen" (S24: «What is on this b****») explains the page

@@ -295,10 +295,12 @@
     const cx = r.left + r.width / 2 - ir.left, left = Math.max(4, Math.min(maxL, cx - tw / 2));
     tip.style.left = left + "px"; tip.style.top = (r.top - ir.top - tip.offsetHeight - 7) + "px"; tip.style.setProperty("--ax", Math.max(10, Math.min(tw - 10, cx - left)) + "px");
   }
+  // caption lines: the online translator first when there's a connection (whole sentences, closer to what you see online), the phone's offline one otherwise (15 Nov 2026)
+  const capTr = (t) => window.__trEn(t, { online: true });
   function vcFillEn(k) { // lines YouTube didn't translate: the app's translator, a few lines ahead
     if (!window.__trEn) return;
     for (let i = Math.max(0, k); i < Math.min(VCAP.cues.length, k + 4); i++) { const c = VCAP.cues[i]; if (c.en || c.enBusy) continue; c.enBusy = 1; const id = VCAP.id;
-      window.__trEn(c.text).then((en) => { c.enBusy = 0; if (!en || VCAP.id !== id) return; c.en = en; if (i === VCAP.cur) VCAP.word = -1; const p = document.querySelector('#vcap .vcue[data-i="' + i + '"] .ven'); if (p) p.textContent = en; }).catch(() => { c.enBusy = 0; }); }
+      capTr(c.text).then((en) => { c.enBusy = 0; if (!en || VCAP.id !== id) return; c.en = en; if (i === VCAP.cur) VCAP.word = -1; const p = document.querySelector('#vcap .vcue[data-i="' + i + '"] .ven'); if (p) p.textContent = en; }).catch(() => { c.enBusy = 0; }); }
   }
   function vcWordCard(span) {
     const word = span.textContent.replace(/^['’]+|['’]+$/g, ""), inf = span.dataset.inf ? JSON.parse(span.dataset.inf) : null;

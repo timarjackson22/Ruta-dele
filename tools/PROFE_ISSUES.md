@@ -43,3 +43,13 @@ The phone ran an older APK: no `multiLang` (commands captured in es-US only) and
 
 ## Note for the build
 `tools/pvoice.js` is now the source for the voice layer: `python3 tools/sync_profe.py index.html <old pvoice snapshot>` puts it and the registry into index.html. If you rebuild from `/home/claude/app/pvoice.js`, copy `tools/pvoice.js` there first.
+
+## 15 Nov 2026, 07:34 report (new APK installed)
+| # | Area | Said / did | Expected | Observed | Cause | Fix | Check |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 20 | Names of things | «Carol G», «Shakira», «open the Panama Canal» | the video / text opens | not understood (went to the chat or "couldn't find") | Profe only knew command patterns, not the app's content | `pvIndex()` + `pvLookup()`: every screen, level, unit, text, video (with singers), guide, grammar page, writing task and the buttons on screen, with English aliases for Spanish titles; `find.open` runs a clear match, otherwise offers the closest three (`pvResolve`) | sF 12/12, held-out 7 21/22, held-out 8 15/20 direct + 4 offered, 0 wrong |
+| 21 | Hands-free fallback | unclear requests | closest options, stay hands-free | went into the chat | unmatched hands-free speech was handed to Profe's chat | only questions and conversations go to the chat; everything else gets options or an honest "can't find" | sF |
+| 22 | Wake after chat | after a voice chat with Profe | "Ok Profe" works | stopped working | `HF.engaged` could stay true after the panel's voice chat ended | reconcile resets an exchange that has been idle for 4 s | sF ("Profe left open…") |
+| 23 | Screen | talking hands-free | screen stays on | screen went dark | keep-screen-on and dimming only knew about reading aloud | hands-free and voice chat keep the screen on and never dim | sF ("keeps the screen awake") |
+| 24 | Video captions (phone) | English line under the caption | as good as online | worse than online | the phone translated every line with the offline ML Kit model | caption lines use the online translator when there's a connection, ML Kit offline | caption-translation-test 8/8 |
+| 25 | Redo questions | clear an answer (right or wrong) and redo it | anywhere | not possible per question | only whole-set resets existed | tools/patch_redo.py: "↺ Redo" on practice questions and every multiple-choice list; voice `q.redo` ("redo question 2") | sR 10/10 |

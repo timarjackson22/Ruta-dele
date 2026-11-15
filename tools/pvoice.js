@@ -226,7 +226,7 @@
     if (PV.choice && now < PV.choice.until) { const r = pvChoose(raw, s, c, origin); if (r) return true; }
     if (PV.need && now < PV.need.until && !pvMatch(raw, c)) { const n = PV.need; PV.need = null; pvExec(PVR.actions.find((a) => a.id === n.id), n.prefix + " " + s, origin); return true; }
     const m = pvMatch(raw, c);
-    if (!m) return pvSeqTry(raw, origin) || pvClarify(raw, s, c, origin);
+    if (!m) return pvSeqTry(raw, origin) || pvResolve(raw, s, c, origin);
     const engaged = origin === "hf" || (HF.on && HF.engaged);
     // a practice task is running in the chat: "let's stop here" goes to Profe, which closes the task with a short summary (sC C4)
     if (origin !== "hf" && /^(session\.end|hf\.stop)$/.test(m.a.id) && typeof tCur !== "undefined" && tCur && tCur.task && !tCur.task.done && !tCur.task.stop && document.body.classList.contains("tutor-open")) return false;
@@ -246,9 +246,13 @@
   }
   const pvConfirmText = (a, s) => a.id === "exam.reset" ? "Clear the results of exam " + pvN(s) + "?" : a.id === "q.restart" ? "Start these questions again from the beginning?" : a.purpose + "?";
   async function pvExec(a, s, origin, confirmed) {
-    pvLog("cmd " + a.id + " «" + s + "»");
+    pvLog("cmd " + a.id + " «" + (typeof s === "string" ? s : (s && s.label) || "") + "»");
+    const gen = PV.execGen = (PV.execGen || 0) + 1; // each request gets an id: a slow one that finishes after a newer request mustn't speak over it
+    PV.running = (PV.running || 0) + 1; PV.runAt = Date.now(); // while an action is still working (opening a page, waiting for a player) the exchange isn't over
     const t0 = performance.now(); let r; try { r = await PVH[a.id](s, pvCtx()); } catch (e) { r = { ok: false, say: "Something went wrong doing that." }; pvLog("cmd error " + a.id + " " + (e && e.message)); }
+    PV.running = Math.max(0, (PV.running || 1) - 1);
     r = r || { ok: false, say: "" }; if (a.route) window.__pvLat = Math.round(performance.now() - t0); pvLog("cmd " + a.id + " → " + (r.ok ? "ok" : "failed"));
+    if (gen !== PV.execGen) { pvLog("cmd " + a.id + " finished after a newer request: its reply is dropped"); return; }
     window.__pvLast = { id: a.id, ok: !!r.ok, say: r.say || "" };
     pvSess(a.id, r);
     if (r.own) return; // the action runs its own spoken loop (word list, role-play)
@@ -295,7 +299,7 @@
   const hfStatus = () => { try { return String(window.AndroidWake.status()); } catch (e) { return ""; } };
   const hfMode = () => { if (!window.AndroidWake) return CAN_MIC ? "tap" : null; const st = hfStatus(); HF.online = st === "online" && !!TS.hfOnline; return st === "ok" || st === "no-mic" || HF.online ? "wake" : CAN_MIC ? "tap" : null; };
   function hfSpeaking() { try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; } }
-  function hfBusy() { return Date.now() < (HF.hold || 0) || (typeof listening !== "undefined" && listening) || !!HF.rec || (typeof tBusy !== "undefined" && tBusy) || hfSpeaking() || HF.saying || !!(typeof EX !== "undefined" && EX && EX.recT != null) || !!(typeof VA !== "undefined" && VA && VA.on); }
+  function hfBusy() { return Date.now() < (HF.hold || 0) || ((PV.running || 0) > 0 && Date.now() - (PV.runAt || 0) < 20000) || (typeof listening !== "undefined" && listening) || !!HF.rec || (typeof tBusy !== "undefined" && tBusy) || hfSpeaking() || HF.saying || !!(typeof EX !== "undefined" && EX && EX.recT != null) || !!(typeof VA !== "undefined" && VA && VA.on); }
   function hfState() { if (!HF.on) return "off"; if (HF.paused) return "paused"; if ((typeof listening !== "undefined" && listening) || HF.rec) return "listening"; if (typeof tBusy !== "undefined" && tBusy) return "thinking"; if (hfSpeaking() || HF.saying) return "speaking"; return HF.mode === "wake" ? (HF.eng === "on" ? "wake" : "starting") : "tap"; }
   const HF_LABEL = { off: "", paused: "Paused", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", wake: "Say “Ok Profe”", starting: "Say “Ok Profe”", tap: "Tap to talk" };
   function hfPaint() {
@@ -309,6 +313,7 @@
   // one place decides whether the wake listener should run: on, not paused, app visible, nothing else using the mic or speaking
   function hfReconcile() {
     if (!HF.on || HF.mode !== "wake") { if (HF.eng === "on") hfWakeStop(); hfPaint(); return; }
+    if (HF.engaged && !hfBusy()) { HF.idle0 = HF.idle0 || Date.now(); if (Date.now() - HF.idle0 > 4000) { HF.engaged = false; HF.idle0 = 0; pvLog("wake: exchange over, listening for “Ok Profe” again"); } } else HF.idle0 = 0;
     const want = !HF.paused && !document.hidden && !hfBusy() && !HF.engaged && Date.now() > HF.settle;
     if (hfSpeaking() || HF.saying) HF.settle = Date.now() + 400; // Profe's voice has just ended: wait before listening, so the room's echo isn't heard
     if (want && HF.eng === "off") hfWakeStart(); else if (!want && HF.eng === "on") hfWakeStop();
@@ -719,6 +724,12 @@
     if (PV_NO.test(s) || /^(none|neither|nothing|ninguno|ninguna|nada|forget it|never mind|olvidalo)$/.test(s)) { PV.choice = null; pvReply("Okay.", origin); return true; }
     if (q.kinds) { for (const [re, k] of PV_MKIND) if (re.test(s)) { PV.choice = null; pvExec(PVR.actions.find((a) => a.id === "media.pick"), "play a " + (k === "news" ? "news story" : k), origin); return true; } PV.choice = null; return false; }
     let pick = null;
+    if (q.opts) {
+      const i = isN(t) ? num[t] : /^(first|primera|primero)$/.test(t) ? 0 : /^(second|segunda|segundo)$/.test(t) ? 1 : /^(third|tercera|tercero)$/.test(t) ? 2 : (PV_YES.test(s) || /^(yes|si|that one|esa|ese)$/.test(t)) && q.opts.length === 1 ? 0 : -1;
+      let j = i; if (j < 0) { let bs = 0; q.opts.forEach((o, k) => { const n = pvNorm(o.say.replace(/[«»“”]/g, "")), sc = Math.max(pvSim(n, s), pvSim(n, t), n.includes(t) && t.length >= 4 ? 0.85 : 0); if (sc > bs) { bs = sc; j = k; } }); if (bs < 0.6) j = -1; }
+      if (j >= 0 && q.opts[j]) { const o = q.opts[j]; PV.choice = null; pvExec(o.run, o.arg, origin, false, o.arg); return true; }
+      PV.choice = null; return false; // something else: handled as a new request
+    }
     if (q.acts) { // "Did you mean…": 1, 2, 3, or the option's own words
       const i = isN(t) ? num[t] : /^(first|primera|primero)$/.test(t) ? 0 : /^(second|segunda|segundo)$/.test(t) ? 1 : /^(third|tercera|tercero)$/.test(t) ? 2 : (PV_YES.test(s) && q.acts.length === 1 ? 0 : -1);
       let j = i; if (j < 0) { let bs = 0; q.acts.forEach((o, k) => { const sc = pvSim(pvNorm(o.ex), s); if (sc > bs) { bs = sc; j = k; } }); if (bs < 0.7) j = -1; }
@@ -761,3 +772,134 @@
     return true;
   }
   window.__pv.choice = () => PV.choice; window.__pv.clarify = (t) => { const c = pvCtx(); return pvClarify(t, pvNorm(t), c, "test") ? PV.choice : null; };
+  // ---- everything in the app, by name: screens, levels, units, videos (and their singers), listening and reading texts, guides, grammar pages,
+  //      writing tasks, exams, flashcards, and the buttons, filters and links on the current screen. Anything a learner names can be found here,
+  //      opened or pressed; when it isn't certain, Profe offers the closest three (S24, 15 Nov 07:26: «Carol G», «me with a music video») ----
+  const PV_SCREENS = [["hoy", "home|today|start page|inicio|hoy|main page"], ["curso", "course|the course|levels|curso"], ["practicar", "practice|practise|practicar"], ["biblioteca", "library|biblioteca"], ["escuchar", "listening|listen|escuchar|audios"],
+    ["leer", "reading|read|texts|lectura|leer"], ["escritura", "writing|write|escritura|escribir"], ["verbos", "verbs|verb list|verb dictionary|verbos"], ["verbos-reflexivos", "reflexive verbs|verbos reflexivos"], ["gramatica", "grammar|grammar map|gramatica"],
+    ["palabras", "words|dictionary|vocabulary|palabras|diccionario"], ["videos", "videos|video library|videos list"], ["repaso", "flashcards|review|cards|spaced repetition|repaso|tarjetas"], ["errores", "my mistakes|mistakes|errores|mis errores"],
+    ["nivel", "placement test|level test|find my level|prueba de nivel"], ["guias", "grammar guides|guides|guias"], ["examenes", "exams|mock exams|dele exams|examenes"], ["recursos", "resources|recursos"], ["progreso", "progress|my progress|stats|progreso"],
+    ["ajustes", "settings|options|preferences|ajustes|configuracion"], ["drill", "quick drill|drill|practice drill"]];
+  const PV_KIND_RE = { video: /\b(videos?|clips?|music videos?)\b/, song: /\b(songs?|cancion(es)?|music)\b/, podcast: /\bpodcasts?\b/, story: /\b(stor(y|ies)|historias?|cuentos?)\b/, poem: /\b(poems?|poemas?)\b/, news: /\b(news|noticias?)\b/,
+    reading: /\b(readings?|texts?|lecturas?)\b/, history: /\bhistory\b/, culture: /\bculture\b/, unit: /\b(units?|lessons?|unidad(es)?|leccion(es)?)\b/, guide: /\bguides?\b/, grammar: /\bgrammar\b/, writing: /\b(writing|essay|letter|email|escritura)\b/, exam: /\b(exams?|examen(es)?|mock)\b/, cards: /\b(flashcards|cards|tarjetas)\b/, screen: /\b(screen|page|section|tab|pantalla|seccion)\b/ };
+  const PV_LISTENK = { song: "song", podcast: "podcast", story: "story", poem: "poem", news: "news", reading: "reading", history: "history", culture: "culture" };
+  const pvToks = (t) => pvStrip(t).replace(/[^a-z0-9ñ ]+/g, " ").split(/\s+/).filter((w) => w && !/^(the|a|an|of|to|my|el|la|los|las|un|una|de|del|y|and|in|en|on|for|por|con|with|by|al|que|is|this|that|me|please)$/.test(w));
+  function pvIndex() {
+    if (PV.idx && Date.now() - PV.idxAt < 30000) return PV.idx;
+    const I = []; const add = (h, names, kind, lv, extra) => I.push(Object.assign({ h, names: names.filter(Boolean).map(String), kind, lv: lv || "", label: String(names[0] || h) }, extra || {}));
+    PV_SCREENS.forEach(([h, n]) => add(h, n.split("|"), "screen", "", { label: n.split("|")[0] }));
+    try { COURSE.forEach((L) => { const N = L.name, l = L.id; add(l, ["level " + N, N + " level", "nivel " + N, N + " course"], "level", l, { label: "level " + N });
+      (L.units || []).forEach((u, i) => add(l + "-u" + (i + 1), [u.t, u.s, "unit " + (i + 1) + " " + N, N + " unit " + (i + 1)], "unit", l, { label: N + " unit " + (i + 1) + ": " + (u.s || u.t) }));
+      add(l + "-cards", [N + " flashcards", "flashcards " + N], "cards", l); add(l + "-exam", [N + " exam", N + " test", "examen " + N], "exam", l); }); } catch (e) {}
+    try { LISTEN.forEach((x) => add(x.id, [x.t, x.en, (x.cat || "") + " " + x.t], PV_LISTENK[x.cat] || "reading", x.lvl, { label: x.t })); } catch (e) {}
+    try { (typeof MY !== "undefined" ? MY : []).forEach((x) => add(x.id, [x.t], "reading", x.lvl, { label: x.t })); } catch (e) {}
+    try { VID_START.concat(typeof vMine === "function" ? vMine() : []).forEach((v) => add("video-" + v.yt, [v.t, (v.ch || "") + " " + v.t, v.ch], "video", (v.lvl || "").toLowerCase(), { label: v.t + (v.ch ? " (" + v.ch.replace(/\s*,\s*/g, ", ").slice(0, 34) + ")" : ""), cat: v.cat, artist: v.ch || "" })); } catch (e) {}
+    try { GUIDES.forEach((g) => add("guia-" + g.id, [g.en, g.t, g.en + " guide"], "guide", g.lvl, { label: "the guide " + g.en })); } catch (e) {}
+    try { GCAT.forEach((c) => add("g-" + c.id, [c.en, c.es, c.en + " grammar"], "grammar", "", { label: "grammar: " + c.en })); } catch (e) {}
+    try { WTASKS.forEach((w) => add("escritura-" + w.id, [w.en, w.type + " " + w.lvl, (w.type || "") + " writing " + w.lvl], "writing", w.lvl, { label: "writing: " + w.type + " (" + w.lvl.toUpperCase() + ")" })); } catch (e) {}
+    // Spanish titles also answer to their English words, from the app's own dictionary: «En el mercado» ~ "the market", «En la consulta del médico» ~ "the doctor"
+    const gl = (w) => { try { const g = (typeof TG !== "undefined" && (TG[w] || TG[pvStrip(w)])) || null; return g && g[2] ? String(g[2]).split(/[;,]/)[0].replace(/^(to|a|an|the)\s+/, "").replace(/\([^)]*\)/g, "").trim() : ""; } catch (x) { return ""; } };
+    I.forEach((e) => { e.toks = e.names.map(pvToks); if (/^(story|podcast|poem|news|reading|history|culture|song|video|unit|guide)$/.test(e.kind)) { const en = pvToks(e.names[0].toLowerCase().split(/\s+/).map((w) => gl(w.replace(/[^a-záéíóúüñ]/g, ""))).filter(Boolean).join(" ")); if (en.length) e.toks.push(en); } });
+    PV.idx = I; PV.idxAt = Date.now(); return I;
+  }
+  // the controls on screen right now: buttons, filter chips, links, with what they say (or their label)
+  function pvControls() {
+    const out = []; const seen = new Set();
+    document.querySelectorAll("main button, main a[href], main [role=button], main summary, main select").forEach((el) => {
+      if (!el.offsetParent || el.disabled || el.closest("#tutor")) return;
+      const t = (el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 70); if (!t || t.length < 2) return;
+      const k = t.toLowerCase() + "|" + (el.getAttribute("href") || el.dataset.act || ""); if (seen.has(k)) return; seen.add(k);
+      out.push({ el, label: t, toks: [pvToks(t)], kind: "control", names: [t] });
+    });
+    return out;
+  }
+  const pvStem = (w) => w.replace(/ph/g, "f").replace(/th/g, "t").replace(/qu/g, "k").replace(/c(?=[aou])/g, "k").replace(/(ciones|cion|tions|tion)$/, "cion").replace(/(es|s)$/, "").replace(/[oae]$/, ""); // English/Spanish cognates: alphabet ~ alfabeto
+  const pvTokSim = (a, b) => a === b ? 1 : (a.length >= 4 && b.length >= 4 && pvStem(a) === pvStem(b)) ? 0.9 : (a.length >= 4 && b.length >= 4 && pvSim(a, b) >= 0.75) ? 0.8 : (a.length >= 4 && b.length >= 4 && (b.startsWith(a) || a.startsWith(b))) ? 0.7 : 0;
+  function pvNameScore(q, toks) { // how much of what was said is in this name, and how much of the name was said
+    if (!q.length || !toks.length) return 0; let hit = 0; q.forEach((w) => { let b = 0; toks.forEach((x) => { b = Math.max(b, pvTokSim(w, x)); }); hit += b; });
+    let cov = 0; toks.forEach((x) => { let b = 0; q.forEach((w) => { b = Math.max(b, pvTokSim(w, x)); }); cov += b; });
+    return 0.65 * (hit / q.length) + 0.35 * (cov / toks.length); }
+  const PV_FINDV = /^(please |can you |could you |i want to |i would like to |id like to |lets |let us |i wanna )?(open|play|put on|show( me)?|go to|take me to|find( me)?|search( for)?|look for|watch|listen to|hear|read( me)?|start|load|bring up|give me|get me|tap|press|click|hit|select|choose|pick|toca|pulsa|elige|escoge|abre|pon(me)?|reproduce|muestrame|ensename|busca(me)?|llevame a|ve a|ir a|quiero (ver|escuchar|leer|abrir)|lee(me)?)( on| up)? /;
+  function pvLookup(raw, s, c) {
+    let q0 = s.replace(PV_FINDV, "").replace(/^(the|a|an|el|la|los|las|un|una|some|algo de) /, "").trim();
+    const tap = /^(tap|press|click|hit|toca|pulsa)\b/.test(s), byArtist = /\b(by|de|from) ([a-z ]+)$/.exec(q0);
+    const wantK = Object.keys(PV_KIND_RE).filter((k) => PV_KIND_RE[k].test(q0)); const lv = pvLv(q0);
+    let q = tap ? pvToks(q0) : pvToks(q0).filter((w) => !/^(video|videos|clip|song|songs|cancion|canciones|music|podcast|podcasts|story|stories|historia|poem|poema|news|noticias|reading|text|unit|lesson|guide|grammar|screen|page|section|tab|button|filter|chip|something|algo|one|play|open|a1|a2|b1|b2|c1|c2|level|nivel)$/.test(w));
+    const all = []; if (!q.length) return []; // only a kind ("of video"): the registry's "play a video" / "open videos" answer that
+    const ctl = pvControls(); ctl.forEach((e) => { const sc = q.length ? Math.max(...e.toks.map((t) => pvNameScore(q, t))) : 0; if (sc > 0) all.push({ e, sc: sc + (tap ? 0.15 : 0.05) }); });
+    if (!tap) pvIndex().forEach((e) => { if (lv && e.lv && e.lv !== lv && e.kind !== "screen") return;
+      let sc = q.length ? Math.max(...e.toks.map((t) => pvNameScore(q, t))) : (wantK.includes(e.kind) ? 0.3 : 0);
+      if (e.artist && q.length) { // a singer's name alone ("Shakira", "Karol G") picks their video
+        e.artist.split(/,|&| y | and | feat\.? | ft\.? /i).forEach((a) => { const at = pvToks(a); if (!at.length) return; const v = pvNameScore(byArtist ? pvToks(byArtist[2]) : q, at); if (v >= 0.8) sc = Math.max(sc, 0.9 + 0.05 * (v - 0.8)); }); }
+      if (wantK.length) { if (wantK.includes(e.kind) || (wantK.includes("song") && e.kind === "video" && e.cat === "musica") || (wantK.includes("video") && e.kind === "video")) sc += 0.12; else if (e.kind !== "screen") sc -= 0.12; }
+      if (lv && e.lv === lv) sc += 0.05; if (sc > 0) all.push({ e, sc }); });
+    all.sort((a, b) => b.sc - a.sc);
+    const out = []; const used = new Set(); for (const x of all) { const k = x.e.h || x.e.label; if (used.has(k)) continue; used.add(k); out.push(x); if (out.length >= 5) break; }
+    return out;
+  }
+  const PV_KNAME = { video: "the video", song: "the song", podcast: "the podcast", story: "the story", poem: "the poem", news: "the news story", reading: "the text", history: "the history text", culture: "the culture text", unit: "", guide: "", grammar: "", writing: "", exam: "the exam", cards: "the flashcards", screen: "", level: "", control: "the button" };
+  const pvFoundLabel = (e) => (e.kind === "control" ? "press «" + e.label + "»" : e.kind === "screen" ? "open " + e.label : e.kind === "level" || e.kind === "unit" || e.kind === "guide" || e.kind === "grammar" || e.kind === "writing" ? "open " + e.label : (PV_KNAME[e.kind] ? PV_KNAME[e.kind] + " " : "") + "«" + e.label + "»");
+  async function pvOpenFound(e) {
+    if (e.kind === "control") { // press it, then check that something actually changed (the page, its state, or the screen) before saying it worked
+      const before = { h: location.hash, n: PV_RT.n, p: e.el.getAttribute("aria-pressed"), x: e.el.getAttribute("aria-expanded"), html: app.innerHTML.length, open: !!document.querySelector("dialog[open], .sheet:not([hidden]), #sheet:not([hidden])") };
+      try { e.el.scrollIntoView({ block: "center" }); e.el.click(); } catch (x) { return { ok: false, say: "I couldn't press «" + e.label + "»." }; }
+      const changed = await pvUntil(() => location.hash !== before.h || PV_RT.n !== before.n || (e.el.isConnected && (e.el.getAttribute("aria-pressed") !== before.p || e.el.getAttribute("aria-expanded") !== before.x)) || app.innerHTML.length !== before.html || !!document.querySelector("dialog[open], .sheet:not([hidden]), #sheet:not([hidden])") !== before.open || (typeof listening !== "undefined" && listening) || hfSpeaking(), 1500);
+      return changed ? { ok: true, say: "", quiet: 1 } : { ok: false, say: "I pressed «" + e.label + "», but nothing seemed to change." }; }
+    if (/^(video|song|podcast|story|poem|news)$/.test(e.kind)) return pvMediaPlay({ h: e.h, t: e.label.replace(/ \([^)]*\)$/, ""), kind: e.kind === "video" ? "video" : e.kind });
+    return pvGo(e.h, e.label);
+  }
+  Object.assign(PVH, {
+    "find.open": async (e, c) => { // an entry chosen from a list, or what was said ("find La camisa negra", "tap Music")
+      if (e && typeof e === "object") return pvOpenFound(e);
+      const s = String(e || ""), f = pvLookup(s, s, c || pvCtx());
+      if (f[0] && f[0].sc >= 0.6 && (!f[1] || f[0].sc - f[1].sc >= 0.1)) return pvOpenFound(f[0].e);
+      const shown = f.filter((x) => x.sc >= 0.45).slice(0, 3);
+      if (!shown.length) return { ok: false, say: "I can't find “" + s.replace(PV_FINDV, "") + "” in the app. Try another name, or say “what can I do here”." };
+      PV.choice = { opts: shown.map((x) => ({ sc: x.sc, say: pvFoundLabel(x.e), run: { id: "find.open", purpose: "open" }, arg: x.e })), until: Date.now() + 30000 };
+      return { ok: true, say: shown.length === 1 ? "Did you mean " + pvFoundLabel(shown[0].e) + "? Say yes, or another name." : "Did you mean " + shown.map((x, i) => ["one", "two", "three"][i] + ", " + pvFoundLabel(x.e)).join("; ") + "? Say the number.", keep: 1 };
+    },
+  });
+  // the fallback for anything that isn't a known command: do it when it's clear, otherwise offer the closest three; never silently into the chat
+  function pvResolve(raw, s, c, origin) {
+    if (!s) return false;
+    const conv = /^(what|how|why|when|where|who|which|is|are|do|does|can you explain|explain|tell me about|que|como|por que|cuando|donde|quien|cual|significa|what does)\b|\?\s*$/.test(s) && !/^(what can i|what is on|whats on|what am i)/.test(s);
+    const tutorOpen = document.body.classList.contains("tutor-open");
+    if (origin !== "hf" && !PV_ACTV.test(s) && !PV_APPN.test(s)) return false; // typed or panel speech without any instruction words: it's for Profe
+    if (origin === "hf" && (conv || tutorOpen) && !PV_ACTV.test(s)) return false; // a question, or a conversation already going on: Profe answers it
+    if (c.drill || c["runner-text"] || c["runner-open"]) return false;
+    const f = pvLookup(raw, s, c);
+    // registry actions whose examples are close to what was said
+    const reg = []; for (const a of PVR.actions) { if (a.voice !== "complete" || (a.when && !pvWhen(a.when, c)) || /^(hf\.|meta\.|q\.|session\.|find\.)/.test(a.id) || (a.id === "video.play" && !c.video)) continue;
+      let best = 0, ex = a.en[0]; (a.en || []).concat(a.es || []).forEach((e) => { const v = pvSim(pvNorm(e), s); if (v > best) { best = v; ex = e; } }); if (best >= 0.45) reg.push({ a, ex, sc: best - 0.05 }); }
+    reg.sort((x, y) => y.sc - x.sc);
+    const opts = f.map((x) => ({ sc: x.sc, say: pvFoundLabel(x.e), run: { id: "find.open", purpose: "open" }, arg: x.e })).concat(reg.slice(0, 2).map((x) => ({ sc: x.sc, say: "“" + x.ex + "”", run: x.a, arg: pvNorm(x.ex) })));
+    opts.sort((x, y) => y.sc - x.sc);
+    const top = opts[0], second = opts[1];
+    pvLog("find «" + s + "» → " + opts.slice(0, 3).map((o) => o.say + " " + o.sc.toFixed(2)).join(" · "));
+    if (top && top.sc >= 0.82 && (!second || top.sc - second.sc >= 0.12)) { pvExec(top.run, top.arg, origin, false, top.arg); return true; } // clear: do it
+    const shown = opts.filter((o) => o.sc >= 0.45).slice(0, 3);
+    const heard = raw.replace(/^\s*(ok(ay|ey)?|oye|hey)?\s*prof(e)?\s*,?\s*/i, "").trim();
+    if (!shown.length) {
+      if (origin !== "hf") return false;
+      pvReply("I heard “" + heard + "”, and I can't find that in the app. " + (/^[a-z]+( [a-z]+)?$/.test(s) && !PV_APPN.test(s) ? "If it's a singer or a video that isn't in the library, you can add it: open Videos and paste a YouTube link. " : "") + "Try saying it another way, or say “what can I do here”.", origin, { listen: 1 }); return true;
+    }
+    PV.choice = { opts: shown, until: Date.now() + 30000 };
+    const nm = ["one", "two", "three"];
+    const lead = origin === "hf" ? "I heard “" + heard + "”. " : "";
+    pvReply(lead + (shown.length === 1 ? "Did you mean " + shown[0].say + "? Say yes, or say it another way." : "Did you mean " + shown.map((o, i) => nm[i] + ", " + o.say).join("; ") + "? Say the number, or say it another way."), origin, { listen: 1 });
+    return true;
+  }
+  window.__pv.index = () => pvIndex(); window.__pv.find = (t) => pvLookup(t, pvNorm(t), pvCtx()).map((x) => [x.e.h || "control", x.e.label, +x.sc.toFixed(2)]);
+  // ---- "redo this question": clear one answer (right or wrong) and answer again (tools/patch_redo.py) ----
+  Object.assign(PVH, {
+    "q.redo": async (s) => {
+      if (pvQ('[data-act="px-redo"]')) { pvClick("px-redo"); const ok = await pvUntil(() => !pvQ('[data-act="px-redo"]') && !!(pvQ("#px-in") || pvQ('[data-act="px-pick"]:not([disabled])')), 1500); return ok ? { ok: true, say: "Cleared. Try it again." } : { ok: false, say: "I couldn't clear that answer." }; }
+      const all = [...document.querySelectorAll("ol.mc > li, #exf .xmc")], done = all.filter((li) => li.querySelector(".q-redo") || li.querySelector(".opt[disabled]"));
+      const nm = /question (\d+|one|two|three|four|five|six|seven|eight|nine|ten)$/.exec(s), w = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10 };
+      if (!done.length && !(nm && all.length)) return { ok: false, say: pvQ("#runner") ? "Answer the question first; then say “redo this question” to clear it." : "There's no answered question here to redo." };
+      let li = null; if (nm) { const k = +nm[1] || w[nm[1]]; li = all[k - 1]; if (!li) return { ok: false, say: "There's no question " + k + " here." }; if (!li.querySelector(".opt[disabled]")) return { ok: false, say: "Question " + k + " isn't answered yet." }; }
+      li = li || done.find((x) => { const r = x.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }) || done[done.length - 1];
+      window.__qRedo(li); const ok = !li.querySelector(".opt[disabled]");
+      return ok ? { ok: true, say: "Cleared question " + (all.indexOf(li) + 1) + ". Choose again." } : { ok: false, say: "I couldn't clear it." };
+    },
+  });

@@ -10,6 +10,8 @@ const CORPUS = [
   ["review my mistakes", "home", "review.mistakes"], ["quiz me on the ones i missed", "home", "review.mistakes"], ["repasa mis errores", "home", "review.mistakes"],
   ["play the food vocabulary", "home", "vocab.drill"], ["practise my family words", "home", "vocab.drill"], ["léeme las palabras de viajes", "home", "vocab.drill"], ["repasa el vocabulario de la comida", "home", "vocab.drill"],
   ["play the video", "home", "video.play"], ["watch the video", "video", "video.play"], ["pon el video", "video", "video.play"],
+  ["redo this question", "fb", "q.redo"], ["clear my answer", "home", "q.redo"], ["redo question 2", "home", "q.redo"], ["borra mi respuesta", "home", "q.redo"],
+  ["find La camisa negra", "home", "find.open"], ["tap Music", "home", "find.open"], ["busca Machu Picchu", "home", "find.open"], ["press the A2 filter", "home", "find.open"],
   ["play a video", "home", "media.pick"], ["play a song", "home", "media.pick"], ["play some music", "home", "media.pick"], ["surprise me with a song", "home", "media.pick"], ["pon una canción", "home", "media.pick"], ["quiero ver un video", "home", "media.pick"], ["play something", "home", "media.pick"],
   ["go back 10 seconds", "video", "video.seek"], ["rewind", "video", "video.seek"], ["skip forward 30 seconds", "video", "video.seek"], ["adelanta treinta segundos", "video", "video.seek"],
   ["replay that sentence", "video", "video.replay"], ["say that again", "video", "video.replay"], ["repite la frase", "video", "video.replay"],

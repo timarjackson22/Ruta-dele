@@ -48,6 +48,10 @@ act("media.pick", "Videos", "Play a video, song, podcast, story or poem: opens t
      "^(muestrame|abre|ensename|ver) (las canciones|la musica|los poemas|las historias|los cuentos)$",
      "^sorprendeme( con (una|un) " + MKIND + ")?$"],
     verify="the matching list opens and Profe asks which one, or the chosen item opens and plays", test="sM")
+# anything in the app by its name: titles of videos (and their singers), listening and reading texts, units, guides, grammar pages, writing tasks,
+# exams; and the buttons on the current screen ("tap Music"). Also the fallback for every request that isn't a known command (pvResolve).
+act("find.open", "Everything", "Open, play or press anything by its name (a title, a singer, a unit, a guide, a button on screen); unclear names get the closest three to choose from", ["find La camisa negra", "open the Panama Canal", "tap Music"], ["busca La camisa negra", "pulsa Música"],
+    ["^(find|search for|look for|busca|buscame) .+$", "^(tap|press|click|hit|toca|pulsa) .+$"], verify="the named page opens (hash changes and renders), the media plays, or the pressed control changes state; otherwise Profe says what it could not do", test="sF")
 act("video.play", "Videos", "Play the video on screen", ["play the video", "play the video in this lesson"], ["reproduce el vídeo", "pon el video"], ["^(play|start|watch|show me|put on) (the |this |that )?(video|clip)( again)?( in (this|the) (lesson|unit|page))?$", "^(play|start|watch) (it|the video|this|the clip) (again )?from the (start|beginning|top)$", "^(reproduce|pon|empieza) (el video )?desde el (principio|inicio)$", "^(reproduce|pon|empieza|ver|mira|ponme) (el |este )?(video|clip)$"], verify="the YouTube player reports playing")
 act("video.seek", "Videos", "Go back or forward some seconds in the video", ["go back ten seconds", "skip forward 30 seconds"], ["retrocede diez segundos", "adelanta treinta segundos"], ["^(go |skip |jump |rewind |move )?(back|backwards|backward)( by)? " + NUM + " (seconds?|secs?)$", "^rewind( it)?( (by )?" + NUM + " (seconds?|secs?))?$", "^(go |skip |jump |move )?(back|backwards|forward|ahead) (a (little )?bit|a little|a moment|a few seconds)$", "^(retrocede|atrasa|adelanta|avanza) (un poco|un poquito)$", "^(go |skip |jump |fast |move )?(forward|ahead)( by)? " + NUM + " (seconds?|secs?)$", "^(retrocede|atrasa|regresa|vuelve|ve atras|ir atras|atras|echa para atras)( unos?)? " + NUM + " segundos?$", "^(adelanta|avanza|salta|ve adelante)( unos?)? " + NUM + " segundos?$"], when="video", verify="the video time moved by that many seconds")
 act("video.replay", "Videos", "Play the sentence being said again", ["replay that sentence", "say that again"], ["repite la frase", "otra vez esa parte"], ["^(replay|repeat|play) (that|the|this) (sentence|line|bit|part|phrase)( again)?$", "^(say|play) (that|it) again$", "^(repite|repiteme) (la frase|esa frase|esa parte|lo ultimo)$", "^otra vez esa (parte|frase)$"], when="video", verify="the video jumped to the start of the current sentence and plays")
@@ -84,6 +88,10 @@ act("q.next", "Lesson questions", "Next question", ["next question", "next"], ["
 act("q.prev", "Lesson questions", "Previous question", ["previous question"], ["la pregunta anterior"], ["^(previous|previous question|go back a question|the (previous|last) question|back a question)$", "^(anterior|la anterior|pregunta anterior|la pregunta anterior)$"], act="px-prev", when="runner", verify="the previous question is shown", bare=True)
 act("q.skip", "Lesson questions", "Skip this question", ["skip this one"], ["sáltala", "pasa a la siguiente"], ["^(skip|skip (it|this|this one|this question|the question))$", "^(salta|saltala|saltar|salta(la)? esta|pasa|paso|pasa a la siguiente)$"], act="px-skip", when="runner-open", verify="the next question is shown", bare=True)
 act("q.show", "Lesson questions", "Show the answer", ["show me the answer", "I don't know"], ["no lo sé", "dime la respuesta"], ["^(show (me )?(the )?answer|tell me the answer|give me the answer|i dont know|no idea|whats the answer)$", "^(no se|no lo se|ni idea|muestra(me)? la respuesta|dime la respuesta|cual es la respuesta)$"], act="px-dunno", when="runner-open", verify="the answer is shown", bare=True)
+act("q.redo", "Lesson questions", "Clear an answered question (right or wrong) and try it again: the one on screen, or by number", ["redo this question", "clear my answer", "redo question 2"], ["borra mi respuesta", "rehaz esta pregunta"],
+    ["^(redo|retry|clear|reset|undo|erase|delete) (my |this |that |the )?(question|answer|one)( again)?$", "^(redo|retry|clear|reset) (my )?(answer to )?question (\\d+|one|two|three|four|five|six|seven|eight|nine|ten)$", "^(let me )?(try|do|answer) (this|that|the) (question|one) again$", "^(clear|delete|erase) (my|the) (answer|choice)( (to|for) (this|that) question)?$",
+     "^(borra|borrar|quita|limpia) (mi|la|esta) respuesta$", "^(rehaz|rehacer|reintenta|reintentar|vuelve a hacer|volver a hacer) (esta|la|mi) pregunta$", "^(quiero )?(intentar|hacer) (esta|la) pregunta (otra vez|de nuevo)$"],
+    act="px-redo", verify="the answer and its feedback are gone and the question can be answered again; for a video's quiz the saved answer is cleared too", test="sR")
 act("q.repeat", "Lesson questions", "Read the question again", ["repeat the question"], ["repite la pregunta"], ["^(repeat (the )?question|read (it|the question) again|say the question again|what was the question)$", "^(repite la pregunta|lee(la)? otra vez|lee la pregunta otra vez|cual era la pregunta)$"], when="runner", verify="the question is read aloud", bare=True)
 act("q.restart", "Lesson questions", "Start this unit's questions again (asks to confirm)", ["start the questions again"], ["empieza las preguntas otra vez"], ["^(start (the questions |the quiz |it )?(again|over)|restart( the (questions|quiz))?)$", "^(empieza (las preguntas |el quiz )?(otra vez|de nuevo)|reinicia( las preguntas)?|empezar de nuevo)$"], act="px-restart", when="runner", confirm=True, verify="question 1 is shown")
 # ---- playback ----
@@ -111,25 +119,26 @@ act("hf.pause", "Hands-free", "Pause hands-free listening", ["pause hands-free"]
 # ---- routes: every route in route() is covered by an action or declared ----
 ROUTES = {
   "inicio": "nav.home", "hoy": "nav.home", "curso": "nav.course", "{lv}": "nav.level", "{lv}-u{n}": "nav.unit", "{lv}-vocab": "nav.vocab", "{lv}-cards": "nav.cards",
-  "{lv}-exam": {"voice": "pending", "why": "exam guide per level: reachable by 'open A2' then touch; add when asked"},
+  "{lv}-exam": "find.open",
   "{lv}-mock": {"voice": "pending", "why": "mock test per level: same as exam guide"},
   "{lv}-examenes": "nav.exams", "{lv}-examen-{n}": "nav.exam", "{lv}-examen-{n}-{paper}": "nav.exam", "examenes": "nav.exams",
   "practicar": "nav.practice", "escuchar": "nav.listen", "leer": "nav.read", "escritura": "nav.write",
-  "escritura-{task}": {"voice": "pending", "why": "writing tasks are chosen by name on the writing page; dictating essays by voice is out of scope"},
+  "escritura-{task}": "find.open",
   "leer-add": {"voice": "unsuitable", "why": "pasting or importing a text needs the keyboard/files"},
   "verbos": "nav.verbs", "verbos-reflexivos": "nav.gcat", "verbo-{n}": {"voice": "pending", "why": "open a verb by name: needs a verb-name lookup; Profe answers conjugation questions instead"},
   "gramatica": "nav.grammar", "g-{cat}": "nav.gcat", "guias": "nav.guides", "guia-{topic}": "nav.guide",
   "palabras": "nav.words", "palabra-{w}": {"voice": "pending", "why": "word pages: Profe answers 'what does X mean' in chat instead"},
   "repaso": "nav.review", "repaso-{deck}": {"voice": "pending", "why": "a specific deck: decks have user-given names; open from Review"},
   "errores": "nav.mistakes", "nivel": "nav.placement", "esc": {"voice": "unsuitable", "why": "school mode for teachers"},
-  "recursos": "nav.resources", "videos": "nav.videos", "video-{id}": {"voice": "pending", "why": "videos by title: titles are long; open from the list"},
-  "biblioteca": "nav.library", "progreso": "nav.progress", "ajustes": "nav.settings", "drill": {"voice": "pending", "why": "quick drill: reachable from Practice"},
-  "{text}": {"voice": "pending", "why": "a listening/reading text by title; 'play'/'pause' work once it is open"},
-  "my-{id}": {"voice": "pending", "why": "your saved texts by title"},
+  "recursos": "nav.resources", "videos": "nav.videos", "video-{id}": "find.open",
+  "biblioteca": "nav.library", "progreso": "nav.progress", "ajustes": "nav.settings", "drill": "find.open",
+  "{text}": "find.open",
+  "my-{id}": "find.open",
 }
 # ---- on-screen actions (data-act): covered by an action, or declared by prefix with a status ----
 ACTS = {
   "px-pick": "q.pick", "px-submit": "q.check", "px-next": "q.next", "px-prev": "q.prev", "px-skip": "q.skip", "px-dunno": "q.show", "px-restart": "q.restart", "px-go": "lesson.quiz",
+  "px-redo": "q.redo", "q-redo": "q.redo", "px-all": {"voice": "pending", "why": "go through answered questions: 'previous question' / 'next question' work one at a time"},
   "px-retry": {"voice": "pending", "why": "retry missed questions: say 'start the questions again' for now"}, "px-review": {"voice": "pending", "why": "review links inside feedback"},
   "ex-reset": "exam.reset", "ra-start": "lesson.read", "t-open": "profe.open", "t-close": "profe.close", "t-new": "profe.new", "t-ask": "profe.explain", "l-play": "play.pause", "ra-pp": "play.pause", "l-en": "play.english",
   "hf-toggle": "hf.on", "hf-pause": "hf.pause",

@@ -77,10 +77,10 @@ rep('''    Object.entries(VJARGON).forEach(([w, m]) => rows.push([w, m, "Jargon"
 # known expression («A ver») gets the expression's meaning instead of a word-by-word guess («Really?»)
 rep('''    const d = document.createElement("textarea"); d.innerHTML = out; return d.value;''', '''    const d = document.createElement("textarea"); d.innerHTML = out; return d.value.replace(/<\\/?[a-z][^>]*>/gi, "").replace(/\\s+([.,!?;:])/g, "$1").trim();''')
 rep("\n  function route() {\n", '''
-  { const tr0 = window.__trEn; if (tr0) window.__trEn = async (t) => {
+  { const tr0 = window.__trEn; if (tr0) window.__trEn = async (t, opt) => {
     const k = String(t || "").toLowerCase().replace(/[¿?¡!.,;:"“”«»…]/g, " ").replace(/\\s+/g, " ").trim();
     try { if (k && k.split(" ").length <= 4) { const o = PAN.get(k); if (o) return o.en.replace(/\\s*\\(.*?\\)\\s*/g, " ").trim(); if (!XP) await loadXP().catch(() => {}); const e = XP && XP.P.get(k); if (e) { /* the whole line is the expression, so even a two-word one counts */ const g = xpFirst(e[2]); return g.charAt(0).toUpperCase() + g.slice(1); } } } catch (e) {}
-    const out = await tr0(t); return String(out || "").replace(/<\\/?[a-z][^>]*>/gi, "").replace(/\\s+([.,!?;:])/g, "$1").trim();
+    const out = await tr0(t, opt); return String(out || "").replace(/<\\/?[a-z][^>]*>/gi, "").replace(/\\s+([.,!?;:])/g, "$1").trim();
   }; }
   function route() {
 ''')
