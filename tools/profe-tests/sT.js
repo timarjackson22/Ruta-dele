@@ -2,7 +2,7 @@
 const { open } = require("./h.js");
 const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (!ok && info != null ? "  " + String(info).slice(0, 400) : "")); };
 (async () => {
-  const H = await open({ hash: "#a2-u3" }); const p = H.p;
+  const H = await open({ hash: "#curso" }); const p = H.p;
   await p.evaluate(async () => { await loadIndexForTest(); }).catch(() => {});
   await p.evaluate(() => new Promise((r) => { const t = setInterval(() => { if (window.__ad) { clearInterval(t); r(); } }, 50); }));
   await p.click('[data-act="t-tab"][data-v="practice"]'); await H.wait(300);

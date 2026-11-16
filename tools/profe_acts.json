@@ -1287,5 +1287,9 @@
  "wod-save": {
   "voice": "unsuitable",
   "why": "save the word of the day (a tap target on Home)"
+ },
+ "pg-read": {
+  "voice": "pending",
+  "why": "lesson flow: read this page aloud"
  }
 }

@@ -28,20 +28,53 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const pf = await p.evaluate(async () => { const r = { fab: getComputedStyle(document.getElementById("tutor-fab")).display, top: !!document.querySelector('#nb-tools [data-act="t-open"]'), mode: !!document.querySelector('#nb-tools [data-act="pg-mode"]') };
     document.getElementById("tutor-fab").hidden = false; document.getElementById("tabpeek").click(); await new Promise((x) => setTimeout(x, 100)); r.peek = getComputedStyle(document.getElementById("tutor-fab")).display; document.getElementById("tabpeek").click(); return r; });
   rec("During a lesson Profe is tucked away with the bottom menu (no P in the top bar); the ^ handle brings both back; page-mode switch in the top bar", pf.fab === "none" && !pf.top && pf.mode && pf.peek !== "none", JSON.stringify(pf));
-  // page mode
-  await p.evaluate(() => { scrollTo(0, 0); document.querySelector('[data-act="pg-mode"]').click(); }); await H.wait(700);
-  const pm = await p.evaluate(() => ({ st: window.__lf.state(), nav: !!document.getElementById("lf-nav"), hint: /Swipe/.test((document.getElementById("lf-nav") || {}).innerText || ""), docH: document.documentElement.scrollHeight <= innerHeight + 40, fixed: getComputedStyle(document.querySelector(".pg-wrap")).position === "fixed", y0: scrollY }));
-  await p.mouse.wheel(0, 600); await H.wait(200); const y1 = await p.evaluate(() => scrollY);
-  const box = await p.evaluate(() => { const r = document.querySelector(".pg-wrap").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + 200 }; });
-  const swipe = async (dx) => { await p.evaluate(([x, y, dx]) => { const w = document.querySelector(".pg-wrap"), t0 = new Touch({ identifier: 1, target: w, clientX: x, clientY: y }), t1 = new Touch({ identifier: 1, target: w, clientX: x + dx, clientY: y + 4 }); w.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, touches: [t0], changedTouches: [t0] })); w.dispatchEvent(new TouchEvent("touchend", { bubbles: true, touches: [], changedTouches: [t1] })); }, [box.x, box.y, dx]); await H.wait(450); };
-  await swipe(-160); const s1 = await p.evaluate(() => window.__lf.state().i); await swipe(-160); const s2 = await p.evaluate(() => window.__lf.state().i); await swipe(160); const s3 = await p.evaluate(() => window.__lf.state().i);
-  rec("Page mode: a fixed slide frame (the page never scrolls), one screen per page, swipe left/right turns pages, a small translucent '‹ n / N ›' indicator with a 'Swipe' hint", pm.st.on && pm.st.n > 3 && pm.nav && pm.hint && pm.fixed && y1 === pm.y0 && s1 === 1 && s2 === 2 && s3 === 1, JSON.stringify({ pm, y1, s1, s2, s3 }));
-  // read-aloud turns the page
-  const ra = await p.evaluate(async () => { const C = document.querySelector(".pg-cols"), els = [...C.querySelectorAll("p, li, td")]; const far = els.find((e) => window.__lf.state() && e.getBoundingClientRect().left - C.getBoundingClientRect().left > 4 * (C.parentElement.clientWidth + 40)); if (!far) return "no far element";
-    far.classList.add("ra-now"); await new Promise((r) => setTimeout(r, 300)); const i = window.__lf.state().i; far.classList.remove("ra-now"); return i; });
-  rec("While reading aloud, the page turns by itself to the line being read", typeof ra === "number" && ra >= 4, JSON.stringify(ra));
-  await p.evaluate(() => document.querySelector('[data-act="pg-mode"]').click()); await H.wait(300);
-  rec("Switching back to scroll view restores the normal lesson", await p.evaluate(() => !document.body.classList.contains("paged") && !document.querySelector(".pg-wrap")));
+  // page mode: pages follow the lesson's structure; switching keeps your place both ways
+  const navTop = () => p.evaluate(() => document.getElementById("lf-nav").getBoundingClientRect().top);
+  const raScroll = await p.evaluate(() => window.__raCollect().length);
+  await p.evaluate(() => { const g = document.querySelector("#s-gra .gblock h3") || document.querySelector("#s-gra"); const hdr = document.querySelector("header.top").getBoundingClientRect().bottom; scrollTo(0, g.getBoundingClientRect().top + scrollY - hdr - 4); window.__anc = g; }); await H.wait(300);
+  await p.evaluate(() => document.querySelector('[data-act="pg-mode"]').click()); await H.wait(1500);
+  const pm = await p.evaluate(() => { const st = window.__lf.state(), N = document.getElementById("lf-nav"); const vis = [...document.querySelectorAll("#app .stack *")].filter((e) => e.offsetParent !== null && e.offsetHeight > 0);
+    return { st, here: window.__lf.pageOf(window.__anc) === st.i, ancVis: window.__anc.offsetParent !== null, nav: !!N, lab: N && N.querySelector(".lf-lab").textContent, num: N && N.querySelector(".lf-num").textContent, hint: /Swipe/.test(N.innerText), bot: Math.max(...vis.map((e) => e.getBoundingClientRect().bottom)), navTop: N.getBoundingClientRect().top, cut: [...document.querySelectorAll("#app .pg-wrap, #app .pg-cols")].length }; });
+  rec("Page view keeps your place: the block at the top of the screen opens on its page; a page bar shows the section, 'Page n of N' and a hint", pm.st.on && pm.st.n > 5 && pm.here && pm.ancVis && pm.nav && /Grammar/.test(pm.lab) && /^Page \d+ of \d+$/.test(pm.num) && pm.hint && !pm.cut, JSON.stringify(pm));
+  rec("Nothing on the page sits under the page bar", pm.bot <= pm.navTop + 1, JSON.stringify({ bot: pm.bot, navTop: pm.navTop }));
+  const swipe = async (dx) => { await p.evaluate((dx) => { const w = document.querySelector("#app .stack"), x = 200, y = 300, t0 = new Touch({ identifier: 1, target: w, clientX: x, clientY: y }), t1 = new Touch({ identifier: 1, target: w, clientX: x + dx, clientY: y + 4 });
+    w.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, touches: [t0], changedTouches: [t0] })); w.dispatchEvent(new TouchEvent("touchend", { bubbles: true, touches: [], changedTouches: [t1] })); }, dx); await H.wait(350); return p.evaluate(() => window.__lf.state().i); };
+  const i0 = pm.st.i, s1 = await swipe(-160), s2 = await swipe(160);
+  await p.keyboard.press("ArrowRight"); await H.wait(300); const k1 = await p.evaluate(() => window.__lf.state().i); await p.keyboard.press("ArrowLeft"); await H.wait(300); const k2 = await p.evaluate(() => window.__lf.state().i);
+  rec("Swipe left/right and the arrow keys turn the page", s1 === i0 + 1 && s2 === i0 && k1 === i0 + 1 && k2 === i0, JSON.stringify({ i0, s1, s2, k1, k2 }));
+  // every page: nothing under the bar, nothing missing, no heading left at the foot of a page
+  const all = await p.evaluate(() => { const st = window.__lf.state(), root = document.querySelector("#app > .stack"), seen = new Set(), bad = [], cur = st.i;
+    const T = [...root.querySelectorAll("*")].filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.nodeValue.trim().length > 1) && !e.closest(".crumbs, .jump"));
+    for (let k = 0; k < st.n; k++) { window.__lf.go(k); const v = T.filter((e) => e.offsetParent !== null); v.forEach((e) => seen.add(e)); const nt = document.getElementById("lf-nav").getBoundingClientRect().top;
+      if (window.__lf.state().pages[k] > 1 && Math.max(...v.map((e) => e.getBoundingClientRect().bottom)) > nt + 1) bad.push("over " + k);
+      const hs = [...root.querySelectorAll("h2, h3, p.rule")].filter((e) => e.offsetParent !== null), last = hs[hs.length - 1]; if (last && k < st.n - 1 && !v.some((e) => e.getBoundingClientRect().top > last.getBoundingClientRect().bottom + 2)) bad.push("heading alone " + k); }
+    document.body.classList.add("pg-measure"); const miss = T.filter((e) => !seen.has(e) && e.offsetParent !== null).length; document.body.classList.remove("pg-measure"); window.__lf.go(cur); if (miss) bad.push("missing " + miss); return { n: st.n, bad }; });
+  rec("Every page fits above the bar, no text is lost to pagination, no heading is left alone at the foot of a page", !all.bad.length, JSON.stringify(all));
+  // read-aloud still reads the whole lesson, and turns to the page being read
+  const ra = await p.evaluate(async () => { const n = window.__raCollect().length; const st = window.__lf.state(); const far = [...document.querySelectorAll("#s-eje td, #s-err td")].find((e) => window.__lf.pageOf(e) > st.i + 2);
+    far.classList.add("ra-now"); await new Promise((r) => setTimeout(r, 300)); const i = window.__lf.state().i, want = window.__lf.pageOf(far), vis = far.offsetParent !== null; far.classList.remove("ra-now"); return { n, i, want, vis }; });
+  rec("Read-aloud in page view reads the whole lesson (not just this page) and turns to the page being read", ra.n === raScroll && ra.i === ra.want && ra.vis, JSON.stringify({ ra, raScroll }));
+  // a page that ends part-way through a topic says it continues; reading aloud starts at the top of the page you're on
+  const ct = await p.evaluate(async () => { const st = window.__lf.state(); let found = null;
+    for (let k = 0; k < st.n - 1 && !found; k++) { window.__lf.go(k); const c = document.getElementById("lf-cont"); if (c && getComputedStyle(c).display !== "none") { window.__lf.go(k + 1); const first = [...document.querySelectorAll("#app .pg-first")].pop(); found = { k, txt: c.textContent, nextStartsWithHeading: !!(first && first.matches("h2, h3, .shead")) }; } }
+    window.__lf.go(st.i); return found; });
+  rec("A page that ends part-way through a topic says '… continues on the next page'", ct && /continues on the next page/.test(ct.txt) && !ct.nextStartsWithHeading, JSON.stringify(ct));
+  const rp = await p.evaluate(async () => { const st = window.__lf.state(); window.__lf.go(Math.min(st.n - 2, 8)); const k = window.__lf.state().i; document.querySelector('[data-act="pg-read"]').click(); await new Promise((r) => setTimeout(r, 500));
+    const now = document.querySelector(".ra-now"); const r = { k, page: now ? window.__lf.pageOf(now) : -1, i: window.__lf.state().i }; document.querySelector('[data-act="ra-stop"]') ? document.querySelector('[data-act="ra-stop"]').click() : null; try { speechSynthesis.cancel(); } catch (e) {} return r; });
+  rec("Read aloud in page view starts at the top of the page you're on and stays in step with the pages", rp.page === rp.k && rp.i === rp.k, JSON.stringify(rp));
+  // a returning learner comes back to the same page
+  await p.evaluate(() => window.__lf.go(window.__lf.state().i + 1)); await H.wait(200); const bef = await p.evaluate(() => ({ i: window.__lf.state().i }));
+  await p.reload(); await H.wait(2600); const after = await p.evaluate(() => window.__lf.state());
+  rec("Returning learner: page view is remembered and the lesson reopens on the same page", after.on && after.i === bef.i, JSON.stringify({ bef, after }));
+  // switching back and forth keeps the same block on screen
+  const sw = await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)), out = [];
+    for (let r = 0; r < 3; r++) { const anc = [...document.querySelectorAll("#app .pg-first")].filter((e) => e.offsetHeight > 0).pop();
+      document.querySelector('[data-act="pg-mode"]').click(); await w(600); const hdr = document.querySelector("header.top").getBoundingClientRect().bottom, top = anc.getBoundingClientRect().top; const scrollOk = !document.body.classList.contains("paged") && top >= hdr - 4 && top < hdr + 220;
+      document.querySelector('[data-act="pg-mode"]').click(); await w(1500); const pageOk = document.body.classList.contains("paged") && anc.offsetParent !== null; out.push([scrollOk, pageOk, Math.round(top - hdr)]); }
+    return out; });
+  rec("Switching to scroll view and back, three times: the same block stays on screen each way", sw.every((x) => x[0] && x[1]), JSON.stringify(sw));
+  await p.evaluate(() => document.querySelector('[data-act="pg-mode"]').click()); await H.wait(400);
+  rec("Scroll view restores the whole lesson (nothing left hidden, no page bar)", await p.evaluate(() => !document.body.classList.contains("paged") && !document.querySelector("#app .pg-off") && !document.getElementById("lf-nav")));
   // drills: no meanings where they'd give the answer away; allowed on grammar prompts
   await p.evaluate(() => { location.hash = "#ejercicios/a2-u2/1"; }); await H.wait(500);
   const dr = await p.evaluate(() => { const K = window.__sk, S = K.state(); S.list = [{ type: "meaning", show: "Leía cuando llegó mi hermano", say: "x", ans: "a", opts: ["a", "b", "c"], lvl: "a2" }, { type: "acad", it: { t: "x", q: "De niño (yo) ___ en Bogotá. (vivir)", a: ["vivía"], why: "" }, lvl: "a2" }]; S.i = 0; S.st = {}; K.render();

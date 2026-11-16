@@ -5,23 +5,32 @@
 .lf-pm { margin: 4px 0 8px; font-size: .95rem; line-height: 1.4 } .lf-pr { display: flex; gap: 6px; flex-wrap: wrap }
 ::highlight(lf-word) { background-color: color-mix(in srgb, #f6c344 55%, transparent) }
 #app [lang="es"], #app .es-w, #app .drsay, #app .sk-card2 { -webkit-tap-highlight-color: transparent }
-/* page mode: a presentation-style slide in a fixed frame; the page itself never scrolls */
-html:has(body.paged), body.paged { overflow: hidden !important; height: 100% }
-body.paged header.top { position: fixed; top: 0; left: 0; right: 0; z-index: 30 }
-body.paged #app > .pg-wrap { position: fixed; left: max(12px, calc(50% - 440px)); right: max(12px, calc(50% - 440px)); bottom: calc(66px + env(safe-area-inset-bottom, 0px)); top: 80px; overflow: hidden; touch-action: pan-y;
-  padding: 28px 26px; border-radius: 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); box-shadow: 0 18px 50px rgba(20,40,80,.12), 0 2px 6px rgba(20,40,80,.05) }
-body.paged .pg-cols { column-fill: auto; transition: transform .42s cubic-bezier(.2,.7,.2,1); will-change: transform; font-size: 1.06rem; line-height: 1.75 }
-body.paged .pg-cols p, body.paged .pg-cols li { line-height: 1.75 } body.paged .pg-cols h1 { font-size: 1.7rem; line-height: 1.2 } body.paged .pg-cols h2 { margin-top: 28px; font-size: 1.35rem } body.paged .pg-cols h3 { margin-top: 22px }
-body.paged .pg-cols > * + *, body.paged .pg-cols .stack > * + *, body.paged .pg-cols section.block > * + *, body.paged .pg-cols .gblock > * + * { margin-top: 24px !important }
-body.paged .pg-cols .lhead, body.paged .pg-cols .callout, body.paged .pg-cols .gblock, body.paged .pg-cols section.block { box-shadow: none !important; background: transparent !important; border-left-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important }
-body.paged .pg-cols .sk-card, body.paged .pg-cols tr, body.paged .pg-cols li, body.paged .pg-cols .note, body.paged .pg-cols p, body.paged .pg-cols h2, body.paged .pg-cols h3 { break-inside: avoid }
-body.paged .pg-cols h2, body.paged .pg-cols h3, body.paged .pg-cols .shead { break-after: avoid }
-body.paged .pg-cols img, body.paged .pg-cols table { max-width: 100% }
-.lf-nav { position: fixed; left: 50%; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 12; display: flex; align-items: center; gap: 4px; padding: 0 4px; border-radius: 99px; background: transparent; opacity: .5; font-size: .76rem; color: var(--muted); transition: opacity .3s }
-.lf-nav:hover, .lf-nav:focus-within { opacity: .9 }
-.lf-nav button { width: 28px; height: 28px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); font-size: 1.15rem; line-height: 1; cursor: pointer } .lf-nav button[disabled] { opacity: .25 }
-.lf-num { font-variant-numeric: tabular-nums; min-width: 40px; text-align: center } .lf-hint { white-space: nowrap; font-size: .7rem; animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .35 } }
-body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { display: flex !important }
+/* page mode: the lesson's own blocks, a screenful at a time (pages follow the content's structure; nothing is cut) */
+body.paged:not(.pg-measure) .pg-off { display: none !important }
+body.paged #app { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) }
+body.paged #app > .stack { animation: none }
+body.paged #app > .stack.pg-in-r { animation: pgInR .26s cubic-bezier(.2,.7,.2,1) } body.paged #app > .stack.pg-in-l { animation: pgInL .26s cubic-bezier(.2,.7,.2,1) }
+@keyframes pgInR { from { opacity: .35; transform: translateX(18px) } } @keyframes pgInL { from { opacity: .35; transform: translateX(-18px) } }
+@media (prefers-reduced-motion: reduce) { body.paged #app > .stack.pg-in-r, body.paged #app > .stack.pg-in-l { animation: none } }
+body.paged:not(.pg-measure) #app .pg-first { margin-top: 0 !important } body.paged:not(.pg-measure) #app section.block.pg-first > .shead { margin-top: 0 }
+body.paged #app .jump { display: none } /* the page bar replaces the section buttons */
+.lf-nav { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 12; width: min(560px, calc(100% - 24px)); display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 22px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); box-shadow: 0 6px 24px rgba(20,40,80,.10); color: var(--ink) }
+.lf-nav button { flex: none; width: 44px; height: 44px; border-radius: 16px; border: 0; background: transparent; color: var(--cobalt); display: grid; place-items: center; cursor: pointer; padding: 0 }
+.lf-nav button:hover:not([disabled]) { background: color-mix(in srgb, var(--cobalt) 10%, transparent) } .lf-nav button[disabled] { color: var(--muted); opacity: .35; cursor: default }
+.lf-nav button:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 1px }
+.lf-nav svg { width: 22px; height: 22px }
+.lf-mid { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr auto; grid-template-rows: auto auto; column-gap: 10px; row-gap: 5px; align-items: center }
+.lf-lab { font-size: .8rem; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.lf-num { font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap }
+.lf-bar { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: color-mix(in srgb, var(--line) 80%, transparent); overflow: hidden } .lf-bar i { display: block; height: 100%; background: var(--cobalt); border-radius: 3px; transition: width .3s }
+.lf-hint { grid-column: 1 / -1; font-size: .72rem; color: var(--muted); animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .45 } }
+@media (prefers-reduced-motion: reduce) { .lf-hint { animation: none } .lf-bar i { transition: none } }
+body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { display: flex !important } body.paged.tabs-peek .lf-nav { display: none }
+body.paged #lf-cont, .lf-cont { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 12; margin: 0; max-width: calc(100% - 32px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 3px 12px; border-radius: 99px }
+body:not(.paged) #lf-cont, body.mastery-on #lf-cont, body.tabs-peek #lf-cont { display: none }
+body.paged #tabpeek { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important }
 /* top-bar tools on lessons; Profe's floating button tucked away during lessons and drills */
 .nb-tools { display: inline-flex; gap: 6px; margin-left: auto; align-items: center } .nb-tools button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0 }
 .nb-tools svg { width: 20px; height: 20px } .nb-tools .nb-profe { font-weight: 800; color: #fff; background: var(--cobalt); border-color: transparent } .nb-tools button[aria-pressed="true"] { border-color: var(--cobalt) }
@@ -33,9 +42,32 @@ body.lf-quiet.tabs-peek #tutor-fab:not([hidden]) { display: inline-flex !importa
 .m-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px } .m-bar b { font-size: 1.05rem }
 body.mastery-on header.top, body.mastery-on .tabbar, body.mastery-on #tabpeek, body.mastery-on .lf-nav, body.mastery-on #ra-bar { display: none !important }
 body.mastery-on #s-pra .shead h2 { display: none }
-/* flex/grid and scroll boxes can't be split across pages: in page mode they lay out as plain blocks */
-body.paged .pg-cols .stack, body.paged .pg-cols section.block, body.paged .pg-cols .gblock, body.paged .pg-cols .lx, body.paged .pg-cols .fx-pt, body.paged .pg-cols .callout { display: block !important }
-body.paged .pg-cols .stack > * + *, body.paged .pg-cols section.block > * + *, body.paged .pg-cols .gblock > * + *, body.paged .pg-cols .lx > * + * { margin-top: 14px }
-body.paged .pg-cols .tbl, body.paged .pg-cols .cr-scroll { overflow: visible !important }
 body.mastery-on { overflow: hidden } body.mastery-on #app, body.mastery-on main { visibility: hidden }
 #s-pra.m-full .shead { justify-content: flex-end } #s-pra.m-full .m-bar { position: sticky; top: 0; z-index: 2; padding: 6px 0; background: var(--bg, #eef3f9) }
+/* ---- design-system refinements (premium audit, 16 Nov 2026) ---- */
+/* word lists on wider screens: two columns of compact rows instead of one row stretched across the page */
+@media (min-width: 720px) {
+  #app table.vocab { display: block; border: 0; background: transparent }
+  #app table.vocab thead { display: block } #app table.vocab thead tr { display: flex; gap: 18px; padding: 0 4px 6px; border: 0; background: transparent }
+  #app table.vocab thead th { padding: 0; background: transparent; border: 0 } #app table.vocab thead th:empty { display: none }
+  #app table.vocab tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
+  #app table.vocab tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-height: 48px }
+  #app table.vocab tbody td { border: 0 !important; padding: 8px 12px !important; width: auto !important } #app table.vocab tbody td.sp { padding: 0 !important }
+  #app table.vocab tbody tr.gp-now, #app table.vocab tbody tr.ra-now { border-color: var(--saffron) }
+}
+/* accessibility: level badges and labels meet 4.5:1 */
+.lvb2 { background: color-mix(in srgb, var(--lc) 72%, #000) }
+.here { background: #8a5a00; color: #fff }
+.pbadges > div:not(.on) { opacity: 1 } .pbadges > div:not(.on) > span:first-child { opacity: .45; filter: grayscale(1) } .pbadges > div:not(.on) b { color: var(--muted) } .pbadges small { color: var(--muted) !important }
+.tabbar a:not([aria-current="page"]) span { color: color-mix(in srgb, var(--tc, var(--muted)) 40%, var(--ink)) }
+.tabbar a[aria-current="page"] span { color: color-mix(in srgb, var(--tc, var(--cobalt)) 72%, #000) !important }
+:root[data-theme="dark"] .tabbar a[aria-current="page"] span, :root.dark .tabbar a[aria-current="page"] span { color: color-mix(in srgb, var(--tc, var(--cobalt)) 70%, #fff) !important }
+/* visible keyboard focus everywhere */
+#app :focus-visible, .lf-nav :focus-visible, header.top :focus-visible { outline: 2.5px solid var(--cobalt); outline-offset: 2px; border-radius: 6px }
+/* small text links in section heads get a full-size touch target (WCAG 2.5.8) */
+.shead > a.small { display: inline-flex; align-items: center; min-height: 32px; padding: 4px 2px }
+/* end of the lesson, announced before the Mastery exercises */
+.lend { display: flex; gap: 14px; align-items: flex-start; padding: 18px 18px; border-radius: 18px; background: color-mix(in srgb, #2c7449 9%, var(--surface)); border: 1px solid color-mix(in srgb, #2c7449 28%, var(--line)) }
+.lend-ic { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #2c7449; color: #fff; font-weight: 800 }
+.lend p { margin: 0 } .lend-k { font-size: .74rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; color: #22603b } .lend-t { margin-top: 2px !important; font-size: 1.02rem; font-weight: 600 } .lend-n { margin-top: 4px !important; color: var(--muted); font-size: .92rem }
+:root[data-theme="dark"] .lend-k { color: #7fd3a1 }

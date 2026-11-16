@@ -29,6 +29,8 @@ If no: say so in the commit message ("costs: no impact").
 ## Lesson flow (tap-a-word meanings, page mode, Mastery full screen)
 - `tools/lessonflow.js` (+ .css) embedded by `python3 tools/patch_lessonflow.py index.html`. `node tools/profe-tests/sLF.js` must pass.
 - Word meanings must stay off where they'd give an answer away (drill types in skilldrills.js `noGloss`) and in exam mode (`lfExamLocked`).
+- Page view is semantic: pages are runs of whole blocks (PG_KEEP stays with what follows, PG_TAIL never sits alone, blocks open only at their seams). Never reintroduce CSS-column slicing.
+  After lesson/layout changes run `node /tmp/audit/pgall.js`-style checks via sLF (every page fits above the bar, no text missing, no heading alone).
 
 ## Versions
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
