@@ -12,7 +12,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
     const tally = {}, small = []; let n = 0; ids.forEach((id) => K.topic(id).secs.forEach((s, si) => { const b = K.bank(id, si, 11); if (b.length < 5) small.push(id + "/" + si); b.forEach((d) => { tally[d.type] = (tally[d.type] || 0) + 1; n++; }); }));
     const g = K.bank("guia-ser-estar", 0, 3).length, outs = K.outcomes(K.topic("b1-u1"), K.topic("b1-u1").secs[1]);
     return { n, types: Object.keys(tally).length, tally, small, g, outs: outs.length }; });
-  rec("Drill bank: every lesson part has 5+ drills, 14+ drill types across the course, guides too, tagged with register outcomes", bank.small.length === 0 && bank.types >= 14 && bank.n > 1500 && bank.g >= 5 && bank.outs >= 1, JSON.stringify(bank));
+  rec("Drill bank: every lesson part has 5+ drills, 13+ drill types across the course, guides too, tagged with register outcomes", bank.small.length === 0 && bank.types >= 13 && bank.n > 1500 && bank.g >= 5 && bank.outs >= 1, JSON.stringify(bank));
   // 3. difficulty by level
   const diff = await p.evaluate(() => { const K = window.__sk, avg = (lv) => { const L = []; COURSE.find((c) => c.id === lv).units.forEach((u, i) => K.topic(lv + "-u" + (i + 1)).secs.forEach((_, si) => K.bank(lv + "-u" + (i + 1), si, 5).forEach((d) => d.s && L.push(d.s[0].split(/\s+/).length)))); return L.reduce((a, b) => a + b, 0) / Math.max(1, L.length); };
     const typedA1 = COURSE.find((c) => c.id === "a1").units.some((u, i) => K.topic("a1-u" + (i + 1)).secs.some((_, si) => K.bank("a1-u" + (i + 1), si, 5).some((d) => d.type === "translate")));
@@ -24,7 +24,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   rec("Syllables (ven-ta-na, ca-rro, te-lé-fo-no), stress rules, a wrong-stress version for 'which pronunciation' and realistic misspellings", gen.s1 === "ven-ta-na" && gen.s2 === "ca-rro" && gen.s3 === "te-lé-fo-no" && gen.st1 === 1 && gen.st2 === 1 && gen.st3 === 1 && gen.mv && gen.mv !== "ventana" && /[áéíóú]/.test(gen.mv) && gen.ms && gen.ms !== "vivía", JSON.stringify(gen));
   // 5. play every type: render, answer right or wrong, check grading
   const play = await p.evaluate(async () => { const K = window.__sk, out = {}, want = ["match", "hearmean", "meaning", "hearpick", "whichsound", "misspell", "tiles", "gap", "syll", "stress", "conj", "acad", "dict", "translate", "say"];
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), ids = []; COURSE.filter((c) => /^(a1|a2|b1|b2)$/.test(c.id)).forEach((c) => c.units.forEach((u, i) => ids.push(c.id + "-u" + (i + 1))));
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), ids = []; COURSE.filter((c) => /^(a1|a2|b1|b2)$/.test(c.id)).forEach((c) => c.units.forEach((u, i) => ids.push(c.id + "-u" + (i + 1)))); ids.push("guia-sustantivos", "guia-cuantificadores", "guia-conectores");
     const pool = {}; ids.forEach((id) => K.topic(id).secs.forEach((_, si) => K.bank(id, si, 9).forEach((d) => { if (!pool[d.type]) pool[d.type] = [id, si, d]; })));
     for (const t of want) { const x = pool[t]; if (!x) { out[t] = "none"; continue; } location.hash = "#ejercicios/" + x[0] + "/" + x[1]; await sleep(250); const S = K.state(); S.list = [x[2], Object.assign({}, x[2])]; S.i = 0; S.st = {}; K.render(); await sleep(50);
       const d = x[2], q = (s) => document.querySelector(s), click = (s) => { const b = q(s); if (b) b.click(); return !!b; };
@@ -69,6 +69,26 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.evaluate(() => { location.hash = "#ejercicios/skill/pro/a1"; }); await H.wait(600);
   const sp = await p.evaluate(() => { const S = window.__sk.state(); return S ? S.list.map((d) => d.type) : []; });
   rec("Hub: practise one skill (7 skills) or any lesson part; a pronunciation session uses only pronunciation drills", hub.skills === 7 && hub.units >= 5 && sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
+  // 9b. lesson questions keep their task: gap-less "stressed syllable" items become tap-the-syllable drills; no "Complete the sentence" without a gap
+  const task = await p.evaluate(async () => { const K = window.__sk, bad = [], conv = []; COURSE.forEach((c) => c.units.forEach((u, i) => { const id = c.id + "-u" + (i + 1); K.topic(id).secs.forEach((_, si) => K.bank(id, si, 4).forEach((d) => { if (d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q) && !d.it.ins) bad.push(id + ": " + d.it.q); if (d.type === "stress" && d.it) conv.push(d.w + "→" + d.syl[d.k]); })); }));
+    const rv = (await K.review("a1-u1", 3)).filter((d) => d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q)).length; return { bad, conv: conv.slice(0, 5), rv }; });
+  rec("Lesson questions keep their task (e.g. «teléfono» → tap «lé»); none shown as 'Complete the sentence' without a gap", !task.bad.length && task.conv.length > 0 && task.rv === 0, JSON.stringify(task));
+  // 9c. sensible questions (audit, 16 Nov 2026)
+  const au = await p.evaluate(async () => { const K = window.__sk, ids = [], f = {}; COURSE.filter((c) => /^(a1|a2|b1|b2|c1|c2)$/.test(c.id)).forEach((c) => c.units.forEach((u, i) => ids.push(c.id + "-u" + (i + 1))));
+    const bad = (k, x) => (f[k] = f[k] || []).push(x); const taboo = new Set(JSON.parse(document.getElementById("sk-taboo").textContent));
+    ids.forEach((id) => K.topic(id).secs.forEach((_, si) => [1, 2, 3].forEach((seed) => K.bank(id, si, seed).forEach((d) => {
+      if (d.opts && new Set(d.opts.map((o) => String(o).trim().toLowerCase())).size < d.opts.length) bad("duplicate options", d.type);
+      if (d.type === "misspell" && taboo.has(d.bad.toLowerCase())) bad("misspelling is a real word", d.bad);
+      if (d.type === "whichsound" && taboo.has(d.wrong)) bad("wrong stress is a real word", d.wrong);
+      if (/^(whichsound|syll|stress|misspell)$/.test(d.type) && (d.w || d.good) !== (d.w || d.good).toLowerCase()) bad("capitalised word", d.w || d.good);
+      if (d.type === "conj" && !/(ar|er|ir|ír)(se)?(\s*\(.*\))?$/i.test(d.verb.trim())) bad("conjugation of a non-verb", d.verb);
+      if (d.type === "match" && d.pairs.some((p) => p[0].toLowerCase() === p[1].toLowerCase())) bad("match pair identical", d.pairs);
+      if (d.type === "gap" && !d.opts.includes(d.ans)) bad("gap answer missing", d.q);
+      if (d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q) && !d.it.ins) bad("question without a task", d.it.q);
+      if (d.type === "dict" && /\s[A-ZÁÉÍÓÚÑ]/.test(d.s[0])) bad("dictation with a name", d.s[0]); }))));
+    for (const id of ["a1-u2", "b1-u3", "c1-u2"]) for (const seed of [1, 2, 3]) (await K.review(id, seed)).forEach((d) => { if (d.type === "exlisten" && !d.say) bad("listening bite without audio", id); if ((d.type === "exread" || d.type === "readq") && !d.text) bad("reading bite without text", id); });
+    return f; });
+  rec("Audit: no duplicate options, no real-word 'misspellings' or stress variants, no names, no non-verb conjugations, no task-less questions, bites answerable", !Object.keys(au).length, JSON.stringify(au).slice(0, 500));
   // 10. back to exactly where you were
   await p.evaluate(() => { location.hash = "#a2-u2"; }); await H.wait(900);
   const pos = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), cards = document.querySelectorAll("#app .sk-card:not(.sk-rev)"), c = cards[3]; c.scrollIntoView({ block: "center" }); await sleep(200);

@@ -726,6 +726,10 @@
   "voice": "pending",
   "why": "skill drills: check a typed/built answer"
  },
+ "sk-claim": {
+  "voice": "pending",
+  "why": "skill drills: count a different correct translation"
+ },
  "sk-cut": {
   "voice": "unsuitable",
   "why": "skill drills: cut a word into syllables"
