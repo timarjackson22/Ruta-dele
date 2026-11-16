@@ -730,6 +730,10 @@
   "voice": "unsuitable",
   "why": "skill drills: cut a word into syllables"
  },
+ "sk-go": {
+  "voice": "pending",
+  "why": "skill drills: open the drills for a lesson part"
+ },
  "sk-lv": {
   "voice": "pending",
   "why": "skill drills: change level on the drills hub"

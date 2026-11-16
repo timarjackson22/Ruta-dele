@@ -69,6 +69,17 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.evaluate(() => { location.hash = "#ejercicios/skill/pro/a1"; }); await H.wait(600);
   const sp = await p.evaluate(() => { const S = window.__sk.state(); return S ? S.list.map((d) => d.type) : []; });
   rec("Hub: practise one skill (7 skills) or any lesson part; a pronunciation session uses only pronunciation drills", hub.skills === 7 && hub.units >= 5 && sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
+  // 10. back to exactly where you were
+  await p.evaluate(() => { location.hash = "#a2-u2"; }); await H.wait(900);
+  const pos = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), cards = document.querySelectorAll("#app .sk-card:not(.sk-rev)"), c = cards[3]; c.scrollIntoView({ block: "center" }); await sleep(200);
+    const before = c.getBoundingClientRect().top, href = c.querySelector("a.btn").getAttribute("href"); c.querySelector("a.btn").click(); await sleep(500);
+    document.querySelector('.drtop a[aria-label="Close"]').click(); await sleep(900);
+    const a = document.querySelector('#app .sk-card a[href="' + href + '"]'); const after = a.closest(".sk-card").getBoundingClientRect().top;
+    // and via "Next part" at the end: back lands on the next card
+    a.click(); await sleep(400); const K = window.__sk, S = K.state(); S.i = S.list.length; K.render(); await sleep(100); const nx = [...document.querySelectorAll(".drend a")].find((x) => /Next part/.test(x.textContent)); let nextOk = null;
+    if (nx) { const nh = nx.getAttribute("href"); nx.click(); await sleep(400); document.querySelector('.drtop a[aria-label="Close"]').click(); await sleep(900); const na = document.querySelector('#app .sk-card a[href="' + nh + '"]'); const t = na.closest(".sk-card").getBoundingClientRect().top; nextOk = t > 0 && t < innerHeight; }
+    return { before: Math.round(before), after: Math.round(after), nextOk, plain: !document.querySelector("#app .sk-card .sk-ic") }; });
+  rec("Leaving a drill session returns to the same spot in the lesson (also after 'Next part'); cards are plain text + one button", Math.abs(pos.before - pos.after) < 8 && pos.nextOk !== false && pos.plain, JSON.stringify(pos));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close(); console.log(R.filter(Boolean).length + "/" + R.length + " passed"); process.exit(R.every(Boolean) ? 0 : 1);
 })();

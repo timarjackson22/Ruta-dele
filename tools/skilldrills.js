@@ -132,20 +132,27 @@
     return out.map((d) => Object.assign(d, { src: id, si: "review", lvl: T.lvl }));
   }
   /* ---- cards shown in the lesson ---- */
+  const SK_SKW = { lis: "listening", oex: "speaking", pro: "pronunciation", wex: "spelling", gra: "grammar", voc: "vocabulary", rea: "reading" };
   function skCard(id, si) { const b = skBank(id, si, 1); if (!b.length) return "";
-    const types = [...new Set(b.map((d) => d.type))], mins = Math.max(1, Math.round(b.reduce((n, d) => n + SK_T[d.type][3], 0))), st = ((S.sk || {})[id + "|" + si]) || null;
-    return '<aside class="qchk sk-card" aria-label="Check yourself"><div class="sk-h"><b>✍️ Check yourself</b><small>' + b.length + " quick drills · about " + mins + " min</small></div>" +
-      '<p class="sk-ic">' + types.slice(0, 7).map((t) => '<span title="' + esc(SK_T[t][0]) + '">' + SK_T[t][1] + " " + esc(SK_T[t][0]) + "</span>").join("") + "</p>" +
-      '<div class="sk-row"><a class="btn primary" href="#ejercicios/' + esc(id) + "/" + si + '">' + (st ? "Practise again" : "Practise this") + "</a>" + (st ? '<span class="muted small">Last: ' + st.last + " / " + st.n + (st.last === st.n ? " ⭐" : "") + "</span>" : "") + "</div></aside>"; }
-  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null, li = SK_LV.indexOf(T.lvl);
-    const bite = ["a short DELE reading item", "a short reading or listening item and a 15-word reply", "a reading item and a 30-word written reply", "a reading item, a listening item and a 45-word reply", "exam reading, listening, a 60-word text and a short spoken answer", "exam reading, listening, an 80-word text and a spoken answer"][li];
-    return '<aside class="qchk sk-card sk-rev"><div class="sk-h"><b>🏁 Chapter challenge</b><small>Mixed review</small></div><p class="small">Questions from every part of this chapter, skill drills (listening, speaking, spelling, building sentences) and exam practice in small bites: ' + bite + ".</p>" +
-      '<div class="sk-row"><a class="btn primary" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Take it again" : "Start the challenge") + "</a>" + (st ? '<span class="muted small">Last: ' + st.last + " / " + st.n + "</span>" : "") + "</div></aside>"; }
+    const mins = Math.max(1, Math.round(b.reduce((n, d) => n + SK_T[d.type][3], 0))), st = ((S.sk || {})[id + "|" + si]) || null, w = {};
+    b.forEach((d) => Object.entries(SK_T[d.type][2]).forEach(([c, v]) => SK_SKW[c] && (w[c] = (w[c] || 0) + v)));
+    const skills = Object.entries(w).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([c]) => SK_SKW[c]).join(", ");
+    return '<aside class="qchk sk-card" aria-label="Check yourself"><div class="sk-txt"><b>Check yourself</b><small>' + b.length + " drills · ~" + mins + " min · " + skills + (st ? " · last " + st.last + "/" + st.n : "") + '</small></div><a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + "/" + si + '">' + (st ? "Again" : "Practise") + "</a></aside>"; }
+  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null;
+    return '<aside class="qchk sk-card sk-rev"><div class="sk-txt"><b>Chapter challenge</b><small>Everything in this chapter, plus DELE-style tasks' + (st ? " · last " + st.last + "/" + st.n : "") + '</small></div><a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Again" : "Start") + "</a></aside>"; }
+  /* ---- come back to exactly where you were in the lesson ---- */
+  function skMark(a) { try { const card = a.closest(".sk-card"), m = /^#ejercicios\/([a-z0-9-]+)\/(\d+|review)$/.exec(a.getAttribute("href") || ""); if (!m) return;
+    sessionStorage.setItem("sk-ret", JSON.stringify({ h: "#" + m[1], si: m[2], off: card ? card.getBoundingClientRect().top : 120, y: scrollY })); } catch (e) {} }
+  function skRestore() { let R = null; try { R = JSON.parse(sessionStorage.getItem("sk-ret") || "null"); } catch (e) {} if (!R || location.hash !== R.h) return;
+    const go = () => { const a = document.querySelector('#app .sk-card a[href="#ejercicios/' + R.h.slice(1) + "/" + R.si + '"]'); if (a) { const c = a.closest(".sk-card"); scrollTo(0, Math.max(0, c.getBoundingClientRect().top + scrollY - R.off)); } else scrollTo(0, R.y || 0); };
+    [60, 250, 600].forEach((t) => setTimeout(go, t)); setTimeout(() => { try { sessionStorage.removeItem("sk-ret"); } catch (e) {} }, 700); }
+  addEventListener("hashchange", () => { if (!/^#ejercicios/.test(location.hash)) skRestore(); });
   /* ---- the player ---- */
   async function skStart(id, si) {
     const seed = Date.now() % 100000; let list = si === "review" ? await skReview(id, seed) : skBank(id, +si, seed);
     if (!list.length) { app.innerHTML = '<div class="stack"><h1>No drills here yet</h1><p><a href="#ejercicios">All drills</a></p></div>'; return; }
     const T = skTopic(id);
+    try { const R = JSON.parse(sessionStorage.getItem("sk-ret") || "null"); if (R && R.h === "#" + id) { R.si = String(si); sessionStorage.setItem("sk-ret", JSON.stringify(R)); } else sessionStorage.setItem("sk-ret", JSON.stringify({ h: "#" + id, si: String(si), off: 140 })); } catch (e) {}
     SK = { id, si, list, i: 0, ok: 0, first: 0, st: {}, retry: [], done: {}, T, outs: skOutcomes(T, si === "review" ? null : T.secs[+si]), t0: Date.now() };
     skRender();
   }
@@ -265,6 +272,7 @@
     if (m[1]) { skSkillStart(m[2], m[3]); return; }
     skStart(m[4], m[5]); }
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-act^='sk-']"); if (!b) return; const a = b.dataset.act;
+    if (a === "sk-go") { skMark(b); return; }
     if (a === "sk-lv") { e.preventDefault(); try { S.level = b.dataset.lv; save(); } catch (x) {} skHub(); return; }
     if (!SK) return; const d = SK.list[SK.i], st = SK.st;
     if (a === "sk-play") { skSay(b.dataset.t, !!b.dataset.slow); return; }
