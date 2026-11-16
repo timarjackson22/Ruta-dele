@@ -205,7 +205,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await p.evaluate(() => { window.__pvLast = null; window.__pv.route("volver", "hf"); }); await H.wait(2000);
     rec("“volver” while a typed answer is expected: asks “answer or go back?” instead of leaving", (await p.evaluate(() => location.hash)) === before && (await H.tts()).some((e) => /your answer, or should I/.test(e.text)), JSON.stringify((await H.tts()).slice(-1)));
     await p.evaluate(() => window.__pv.route("answer", "hf")); await H.wait(700);
-    rec("…“answer”: it is submitted as the answer", await p.evaluate(() => { const P = window.__pv.px(), r = P.res[P.order[P.i]]; return !!r && /volver/.test(r.val); }));
+    rec("…“answer”: it is submitted as the answer (graded, or a hint and one more try under the answer policy)", await p.evaluate(() => { const P = window.__pv.px(), r = P.res[P.order[P.i]]; return (!!r && /volver/.test(r.val)) || (!!document.querySelector("#runner .sk-hint") && /volver/.test(P.draft || "")); }));
   } else rec("“volver” as an answer (no typed question found in A1 unit 3)", false);
   rec("No script errors (lesson)", !H.errs.length, H.errs.join(" | "));
   await H.close();

@@ -27,6 +27,30 @@
   const skClean = (s) => String(s || "").replace(/\s*\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
   const skOkSent = (s, lv) => { const n = skWords(s).length; return n >= 3 && n <= SK_P[lv].maxW && !/___|[\/\d=+→|…\[\]]/.test(s) && /[a-záéíóúñ]/i.test(s); };
   const skOkWord = (w) => /^[a-záéíóúüñ]{3,14}$/i.test(w);
+  /* ---- the app-wide answer policy (16 Nov 2026): one hint, one retry, then the answer ----
+     ansCheck → { kind: "ok" | "accent" | "near" | "wrong", hint, best }. Capitals and punctuation never count; accents always do
+     (after a hint), except in spoken answers, where speech recognition cannot hear them (opts.spoken). */
+  function skLev(a, b) { a = String(a); b = String(b); const m = a.length, n = b.length; let prev = Array.from({ length: n + 1 }, (_, j) => j);
+    for (let i = 1; i <= m; i++) { const cur = [i]; for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); prev = cur; } return prev[n]; }
+  function ansCheck(val, alts, o) { o = o || {}; const lv = o.lvl || "a1", low = /^a/.test(lv);
+    const v = norm(val || ""); alts = (alts || []).map(String).filter((a) => a.trim()); if (!v || !alts.length) return { kind: "wrong", best: alts[0] || "" };
+    if (alts.some((a) => norm(a) === v)) return { kind: "ok", best: alts.find((a) => norm(a) === v) };
+    const acc = alts.find((a) => strip(norm(a)) === strip(v));
+    if (acc) { if (o.spoken) return { kind: "ok", best: acc, spokenAccent: true };
+      const A = String(val).match(/\S+/g) || [], B = acc.match(/\S+/g) || [], cl = (w) => String(w || "").replace(/[¿?¡!.,;:«»"“”()]/g, "");
+      const bad = B.map((w, k) => (cl(w).toLowerCase() !== cl(A[k]).toLowerCase() ? cl(A[k]) : null)).filter(Boolean), nN = bad.length, enye = B.some((w, k) => /ñ/i.test(w) && !/ñ/i.test(A[k] || ""));
+      return { kind: "accent", best: acc, words: bad, hint: low && nN <= 3 ? "Check the " + (enye && nN === 1 ? "spelling" : "accents") + " on " + bad.map((w) => "«" + w + "»").join(" and ") + "." : nN + (nN === 1 ? " word needs" : " words need") + " an accent or ñ." }; }
+    const best = alts.map((a) => ({ a, d: skLev(strip(norm(a)), strip(v)) })).sort((x, y) => x.d - y.d)[0].a;
+    let d; try { d = wordDiff(String(val), best); } catch (e) { d = { pairs: [] }; }
+    const P = (d.pairs || []).map((pr) => ({ a: String(pr.from || "").replace(/[¿?¡!.,;:«»"“”()]/g, ""), b: String(pr.to || "").replace(/[¿?¡!.,;:«»"“”()]/g, "") }));
+    const nB = (best.match(/\S+/g) || []).length, ch = skLev(strip(norm(best)), strip(v)), small = ch <= Math.max(1, Math.round(strip(norm(best)).length * 0.12));
+    if (P.length === 1) { const x = P[0];
+      if (!x.a && !/\s/.test(x.b)) return { kind: "near", best, hint: "Almost: one word is missing." };
+      if (!x.b && !/\s/.test(x.a)) return { kind: "near", best, hint: "Almost: one word is not needed: «" + x.a + "»." };
+      if (x.a && x.b && !/\s/.test(x.a) && !/\s/.test(x.b)) return { kind: "near", best, hint: skLev(strip(x.a.toLowerCase()), strip(x.b.toLowerCase())) <= 2 ? "Check the spelling of «" + x.a + "»." : "Almost: one word isn't right: «" + x.a + "»." }; }
+    if (small && nB > 1) return { kind: "near", best, hint: "Very close: check the spelling, letter by letter." };
+    if (P.length === 0 && (String(val).match(/\S+/g) || []).length === nB && nB > 1) return { kind: "near", best, hint: "The words are right but the order isn't." };
+    return { kind: "wrong", best }; }
   /* ---- syllables and stress (Spanish rules) ---- */
   function skSyl(w) { try { return syllables(w.toLowerCase()); } catch (e) { return [w]; } }
   function skStress(w) { const s = skSyl(w), t = s.findIndex((x) => /[áéíóú]/.test(x)); if (t >= 0) return t; if (s.length < 2) return 0; return /[aeiouns]$/.test(w.toLowerCase()) ? s.length - 2 : s.length - 1; }
@@ -75,6 +99,8 @@
   }
   /* ---- drill generators ---- */
   function skAcad(it) { // a lesson question as a drill: never without its own task
+    const sm = /stressed syllable of\s+«?([a-záéíóúüñ]+)»?/i.exec(it.q) || (/stressed syllable/i.test(it.ins || "") && /^\s*«?([a-záéíóúüñ]+)»?\s*(:?\s*_{2,})?\s*$/i.exec(it.q));
+    if (it.t === "x" && sm) { const w = sm[1].toLowerCase(), syl = skSyl(w), k = syl.indexOf(String(it.a[0]).trim().toLowerCase()); if (syl.length > 1 && k >= 0) return { type: "stress", w, syl, k, why: it.why, it }; }
     if (it.t === "x" && !/_{2,}|…/.test(it.q)) { const w = String(it.q).trim().toLowerCase(), syl = skSyl(w), k = syl.indexOf(String(it.a[0]).trim().toLowerCase());
       if (/^[a-záéíóúüñ]+$/.test(w) && syl.length > 1 && k >= 0) return { type: "stress", w, syl, k, why: it.why, it };
       if (!it.ins) return null; }
@@ -186,7 +212,8 @@
     if (!SK) return; const total = SK.list.length;
     if (SK.i >= total) return skEnd();
     const d = SK.list[SK.i], st = SK.st, P = SK_P[d.lvl] || SK_P.a1, info = SK_T[d.type];
-    const top = '<div class="drtop"><a class="btn small" href="' + esc(SK.T.link || "#ejercicios") + '" aria-label="Close">✕</a><span class="drprog"><i style="width:' + Math.round((100 * SK.i) / total) + '%"></i></span><span class="sk-n small">' + (SK.i + 1) + "/" + total + "</span></div>";
+    const fromLesson = /^#(a1|a2|b1|b2|c1|c2)-u\d+$|^#guia-/.test(SK.T.link || "");
+    const top = '<div class="drtop"><a class="btn small sk-back" href="' + esc(SK.T.link || "#ejercicios") + '" aria-label="Close">' + (fromLesson ? "‹ Lesson" : "‹ Drills") + '</a><span class="drprog"><i style="width:' + Math.round((100 * SK.i) / total) + '%"></i></span><span class="sk-n small">' + (SK.i + 1) + "/" + total + "</span></div>";
     const tag = '<p class="sk-tag">' + info[1] + " " + esc(info[0]) + (d.retry ? " · <b>again</b>" : "") + "</p>";
     const opts = (list, picked) => '<div class="exopts">' + list.map((o, k) => '<button class="exopt' + (st.res ? (k === st.correct ? " ok" : k === picked ? " no" : "") : "") + '" data-act="sk-pick" data-k="' + k + '"' + (st.res ? " disabled" : "") + ">" + esc(o) + "</button>").join("") + "</div>";
     let body = "", needCheck = true;
@@ -220,14 +247,15 @@
       : '<div class="drfoot">' + skBtn("sk-skip", "Skip") + (needCheck ? skBtn("sk-check", "Check", " primary") : "") + "</div>";
     app.innerHTML = '<div class="stack drill sk">' + top + '<div class="drbody">' + tag + body + "</div>" + fb + "</div>";
     if (!st.played && /^(hearmean|hearpick|dict|lisq|exlisten)$/.test(d.type)) { st.played = 1; setTimeout(() => skSay(d.say || d.s[0]), 300); }
-    const inp = document.querySelector(".sk-in"); if (inp && !st.res) inp.focus();
+    const inp = document.querySelector(".sk-in"); if (inp && !st.res && (st.hinted || !matchMedia("(pointer: coarse)").matches)) { inp.focus({ preventScroll: true }); if (st.hinted) inp.select(); }
   }
-  const skInput = (st, long) => '<input class="sk-in" lang="es" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type in Spanish…" value="' + esc(st.val || "") + '"' + (st.res ? " disabled" : "") + ">" + skAccBar(st);
+  const skInput = (st, long) => (st.hinted && !st.res ? '<p class="sk-hint" role="status">💡 ' + esc(st.hint || "Almost.") + " Try again.</p>" : "") + '<input class="sk-in" lang="es" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type in Spanish…" value="' + esc(st.val || "") + '"' + (st.res ? " disabled" : "") + ">" + skAccBar(st);
   const skAccBar = (st) => st.res ? "" : '<div class="sk-acc">' + ["á", "é", "í", "ó", "ú", "ñ", "ü", "¿", "¡"].map((c) => '<button class="drtile" data-act="sk-acc" data-c="' + c + '">' + c + "</button>").join("") + "</div>";
   function skSay(t, slow) { try { speechSynthesis.cancel(); speechSynthesis.speak(utter(t, "es", slow ? 0.6 : 0.85)); } catch (e) { try { sayText(t); } catch (x) {} } }
-  function skResult(ok, note, missedItem) { const d = SK.list[SK.i], st = SK.st; if (st.res) return; st.res = ok === "skip" || ok === "skip-free" ? "skip" : ok ? "ok" : "no"; st.note = note || "";
+  function skResult(ok, note, missedItem, why2) { const d = SK.list[SK.i], st = SK.st; if (st.res) return;
+    (SK.log = SK.log || []).push({ type: d.type, ok: ok === true, first: ok === true && !d.retry && !st.hinted, hinted: !!st.hinted, kind: why2 || (ok === true ? "ok" : ok === false ? "wrong" : "skip"), retry: !!d.retry }); st.res = ok === "skip" || ok === "skip-free" ? "skip" : ok ? "ok" : "no"; st.note = note || "";
     try { if (typeof ok === "boolean") sfx(ok); } catch (e) {}
-    if (ok === true) { SK.ok++; if (!d.retry) SK.first++; }
+    if (ok === true) { SK.ok++; if (!d.retry && !st.hinted) SK.first++; }
     else if (ok !== "skip-free") { if (!d.retry && SK.retry.length < 4 && !/^(ex|readq|lisq)/.test(d.type)) SK.retry.push(Object.assign({}, d, { retry: true }));
       try { if (missedItem) mistakeAdd(missedItem, SK.id); } catch (e) {} }
     skRender(); }
@@ -239,14 +267,13 @@
     else if (d.type === "acad") { alts = d.it.a; why = d.it.why; q = d.it.q; t = d.it.t; }
     else if (d.type === "exwrite") return skWrite(d, v);
     if (!v) return;
-    const exact = alts.some((a) => skNA(a) === skNA(v)), near = !exact && alts.some((a) => skN(a) === skN(v));
-    let close = false; if (!exact && !near && (d.type === "translate" || (d.type === "acad" && d.it.t === "tr"))) { try { close = alts.some((a) => pcScore(v, a) >= 0.9); } catch (e) {} }
-    const show = "<b>" + esc(alts[0]) + "</b>" + (why ? '<br><span class="why">' + esc(why) + "</span>" : "");
+    const c = ansCheck(v, alts, { lvl: d.lvl }), show = "<b>" + esc(c.best || alts[0]) + "</b>" + (why ? '<br><span class="why">' + esc(why) + "</span>" : "");
     const mi = d.type === "acad" ? d.it : { t, k: skHash(q) % 100000, q, a: alts, why };
-    if (exact) skResult(true, why ? esc(why) : "");
-    else if (near) skResult(!P.strictAcc, (P.strictAcc ? "Watch the accents: " : "Right, but watch the accents: ") + show, P.strictAcc ? mi : null);
-    else if (close) skResult(true, "Good. A model answer: " + show);
-    else { skResult(false, "Answer: " + show, mi); if (d.type === "translate") { SK.st.claim = 1; skRender(); } } }
+    let close = false; if (c.kind === "wrong" && (d.type === "translate" || (d.type === "acad" && d.it.t === "tr"))) { try { close = alts.some((a) => pcScore(v, a) >= 0.9 && strip(norm(a)) !== strip(norm(v))); } catch (e) {} }
+    if (c.kind === "ok") skResult(true, st.hinted ? "Right on the second try." + (why ? '<br><span class="why">' + esc(why) + "</span>" : "") : why ? esc(why) : "");
+    else if ((c.kind === "accent" || c.kind === "near") && !st.hinted) { st.hinted = 1; st.hint = c.hint; st.hintKind = c.kind; try { sfx(false); } catch (e) {} skRender(); }
+    else if (close && !st.hinted) skResult(true, "Good. A model answer: " + show);
+    else { skResult(false, (st.hinted ? "Not yet. " : "") + "Answer: " + show, mi, st.hintKind || c.kind); if (d.type === "translate") { SK.st.claim = 1; skRender(); } } }
   function skWrite(d, v) { const n = skWords(v).length; if (!n) return;
     const hit = d.pts.filter((p) => (p.kw || []).some((k) => skN(v).includes(skN(k)))).length, need = Math.max(1, Math.ceil(d.pts.length * 0.6));
     const ok = n >= d.min && hit >= need;
@@ -262,6 +289,29 @@
       r.onresult = (ev) => { heard = [...ev.results].map((x) => x[0].transcript).join(" "); }; r.onerror = () => {}; r.onend = () => done(heard);
       SK.rec = r; try { r.start(); } catch (x) { st.rec = 0; skRender(); } if (d.type === "exspeak") setTimeout(() => { try { r.stop(); } catch (x) {} }, 60000); };
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK) micAsk().then((ok) => ok && go()); else go(); }
+  /* ---- Profe's 30-second debrief at the end of every drill set: praise, one thing to watch, encouragement (sandwich) ---- */
+  const SK_GRP = { listening: ["hearmean", "hearpick", "dict", "lisq", "exlisten"], speaking: ["say", "exspeak"], pronunciation: ["whichsound", "stress", "syll"], spelling: ["misspell"],
+    "sentence building": ["tiles", "gap"], grammar: ["acad", "conj"], vocabulary: ["match", "meaning"], translation: ["translate"], reading: ["readq", "exread"], writing: ["exwrite"] };
+  const SK_TIP = { listening: "replay the audio once more before you answer, and listen for the small words", speaking: "say the sentence aloud even when you're not sure: speaking is what makes it stick",
+    pronunciation: "say the word slowly and clap each syllable; the stress usually falls on the second-to-last one", spelling: "picture the word before you choose; b and v, ll and y, and missing accents are the usual traps",
+    "sentence building": "find the verb first, then build around it", grammar: "check who is doing the action and when, then choose the form", vocabulary: "say each new word aloud with its article",
+    translation: "translate the idea, not word by word", reading: "read the question first, then look for the answer in the text", writing: "cover every point of the task before you write more" };
+  function skCoach() { const L = (SK.log || []).filter((x) => !x.retry && x.kind !== "skip"), lv = SK.T.lvl || "a1", es = !/^a/.test(lv), name = (typeof TS !== "undefined" && TS.lname) ? ", " + TS.lname : "";
+    const g = Object.entries(SK_GRP).map(([k, ts]) => { const xs = L.filter((x) => ts.includes(x.type)); return { k, n: xs.length, ok: xs.filter((x) => x.first).length, hint: xs.filter((x) => x.hinted).length }; }).filter((x) => x.n);
+    const n = L.length, first = L.filter((x) => x.first).length, rate = n ? first / n : 0, acc = (SK.log || []).filter((x) => x.kind === "accent").length, near = (SK.log || []).filter((x) => x.kind === "near").length;
+    const fixed = (SK.log || []).filter((x) => x.ok && (x.hinted || x.retry)).length, skippedSpeak = (SK.log || []).filter((x) => x.type === "say" && x.kind === "skip").length;
+    const best = g.filter((x) => x.n >= 1).sort((a, b) => b.ok / b.n - a.ok / a.n || b.n - a.n)[0], worst = g.filter((x) => x.ok < x.n).sort((a, b) => a.ok / a.n - b.ok / b.n || b.n - a.n)[0];
+    const open = rate >= 0.85 ? (es ? "¡Qué bien" + name + "! " : "Great work" + name + "! ") + first + " of " + n + " right first time." : rate >= 0.6 ? (es ? "¡Buen trabajo" + name + "! " : "Good work" + name + "! ") + first + " of " + n + " right first time." : (es ? "¡Bien hecho por terminar" + name + "! " : "Well done for finishing" + name + "! ") + "That set was a stretch, and you saw it through.";
+    const strength = best && best.ok ? " Your " + best.k + " was strong" + (best.ok === best.n && best.n > 1 ? ": every one right." : ".") : fixed ? " You fixed " + fixed + " answer" + (fixed > 1 ? "s" : "") + " on the second try, which is exactly how learning works." : "";
+    let watch;
+    if (acc >= 2 || (acc && acc >= near)) watch = "One thing to watch: accents. " + acc + " answer" + (acc > 1 ? "s were" : " was") + " right except for a tilde or ñ, and the DELE counts those as spelling. Before you press Check, look at each word once more.";
+    else if (near >= 2) watch = "One thing to watch: small slips. " + near + " answers were one word or a letter away. Read your answer back once before you check it.";
+    else if (worst) watch = "One thing to watch: " + worst.k + " (" + worst.ok + " of " + worst.n + "). Tip: " + SK_TIP[worst.k] + ".";
+    else if (skippedSpeak) watch = "One thing to try next time: the speaking drills. Even a quiet try out loud helps a lot.";
+    else watch = "To push yourself, try the next part or the chapter challenge, where the exam-style tasks are.";
+    const close = rate >= 0.85 ? (es ? "¡Sigue así! " : "Keep it up! ") + "You're ready for the next part." : rate >= 0.6 ? (es ? "¡Vas muy bien! " : "You're on the right track. ") + "One more run of this set tomorrow will lock it in." : (es ? "¡Ánimo! " : "Don't worry: ") + "run this set again later today; the second round is always easier.";
+    return { open: open + strength, watch, close, say: open + strength + " " + watch + " " + close }; }
+  function skCoachSay(text) { try { window.__pvSayOK = 1; speakMixed(text, () => {}); window.__pvSayOK = 0; } catch (e) { try { speak(text); } catch (x) {} } }
   function skEnd() {
     if (SK.retry.length) { SK.list.push(...SK.retry); SK.retry = []; skRender(); return; }
     const n = SK.list.filter((d) => !d.retry).length, key = SK.id + "|" + SK.si;
@@ -269,10 +319,14 @@
       setTimeout(() => { try { celebrate(SK.first === n); } catch (e) {} }, 250); }
     const skills = {}; SK.list.forEach((d) => Object.entries(SK_T[d.type][2]).forEach(([c, w]) => (skills[c] = (skills[c] || 0) + w)));
     const T = SK.T, nextSi = typeof SK.si === "number" || /^\d+$/.test(SK.si) ? +SK.si + 1 : null, hasNext = nextSi != null && T.secs && T.secs[nextSi] && skBank(SK.id, nextSi, 1).length;
+    const C = SK.coach || (SK.coach = skCoach()), pav = (() => { try { return pAvatar(); } catch (e) { return "P"; } })();
+    const coach = '<section class="sk-coach" aria-label="Profe\'s feedback"><div class="sk-coach-h"><span class="sk-pav">' + pav + '</span><b>Profe</b><span class="row" style="margin-left:auto;gap:6px"><button class="btn small" data-act="sk-coach-play" aria-label="Play Profe\'s feedback">🔊</button><button class="btn small" data-act="sk-coach-stop" aria-label="Stop">■</button></span></div>' +
+      '<p class="sk-c1">' + esc(C.open) + '</p><p class="sk-c2">' + esc(C.watch) + '</p><p class="sk-c3">' + esc(C.close) + "</p></section>";
+    if (!SK.coachSaid) { SK.coachSaid = 1; if (!(S.skCoachMute)) setTimeout(() => skCoachSay(C.say), 700); }
     app.innerHTML = '<div class="stack drill sk"><div class="drend"><p class="dr-big">' + (SK.first === n ? "⭐" : "🎉") + "</p><h1>" + (SK.first === n ? "¡Perfecto!" : "¡Bien hecho!") + '</h1><p class="lead2">' + SK.first + " of " + n + " right first time" + (SK.ok > SK.first ? " · " + (SK.ok - SK.first) + " fixed on the second try" : "") + "</p>" +
       '<p class="sk-ic">' + Object.entries(skills).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([c]) => '<span>' + ((SK_SKILL[c] || [c, "•"])[1]) + " " + esc((SK_SKILL[c] || [{ wint: "Written interaction", oint: "Spoken interaction", dis: "Discourse", pra: "Pragmatics", med: "Mediation" }[c] || c])[0]) + "</span>").join("") + "</p>" +
       (SK.outs.length ? '<p class="muted small">Trains: ' + SK.outs.slice(0, 3).map((o) => esc(o.text)).join(" · ") + "</p>" : "") +
-      '<div class="row" style="justify-content:center;flex-wrap:wrap"><a class="btn primary" href="' + esc(T.link || "#ejercicios") + '">Back to the lesson</a>' + (hasNext ? '<a class="btn" href="#ejercicios/' + esc(SK.id) + "/" + nextSi + '">Next part</a>' : "") + skBtn("sk-again", "Practise again") + "</div></div></div>";
+      '<div class="row" style="justify-content:center;flex-wrap:wrap"><a class="btn primary" href="' + esc(T.link || "#ejercicios") + '">Back to the lesson</a>' + (hasNext ? '<a class="btn" href="#ejercicios/' + esc(SK.id) + "/" + nextSi + '">Next part</a>' : "") + skBtn("sk-again", "Practise again") + "</div>" + coach + "</div></div>";
   }
   /* ---- hub: #ejercicios ---- */
   function skHub() { const lv = (typeof curLevel === "function" ? curLevel() : "a1") || "a1", L = LV[lv];
@@ -292,6 +346,8 @@
     if (!SK) return; const d = SK.list[SK.i], st = SK.st;
     if (a === "sk-play") { skSay(b.dataset.t, !!b.dataset.slow); return; }
     if (a === "sk-again") { skRoute(location.hash.slice(1)); return; }
+    if (a === "sk-coach-play") { skCoachSay(SK.coach ? SK.coach.say : ""); return; }
+    if (a === "sk-coach-stop") { try { speechSynthesis.cancel(); } catch (x) {} return; }
     if (a === "sk-next") { SK.i++; SK.st = {}; skRender(); scrollTo(0, 0); return; }
     if (a === "sk-claim" && st.res === "no") { st.res = "ok"; st.claim = 0; SK.ok++; if (!d.retry) SK.first++; SK.retry = SK.retry.filter((x) => x.s !== d.s); st.note = "Counted as right. Your answer: «" + esc(st.val || "") + "» · model: <b>" + esc(d.s[0]) + "</b>"; try { (S.skClaims = S.skClaims || []).push({ t: Date.now(), q: d.s[1], model: d.s[0], said: st.val }); S.skClaims = S.skClaims.slice(-200); save(); } catch (e) {} skRender(); return; }
     if (st.res) return;
@@ -319,4 +375,10 @@
   });
   document.addEventListener("keydown", (e) => { if (e.key === "Enter" && SK && e.target.classList && e.target.classList.contains("sk-in") && !e.target.matches("textarea")) { e.preventDefault(); const b = document.querySelector('[data-act="sk-check"]'); if (b) b.click(); else { const n = document.querySelector('[data-act="sk-next"]'); if (n) n.click(); } } });
   document.addEventListener("input", (e) => { if (SK && e.target.classList && e.target.classList.contains("sk-in")) SK.st.val = e.target.value; });
-  window.__sk = { render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };
+  // keyboard: when it opens, keep the top of the question (and the drill's progress bar) in view instead of letting the page slide up
+  (function () { const vv = window.visualViewport; if (!vv) return; let was = false;
+    const fit = () => { const open = window.innerHeight - vv.height > 140; document.body.classList.toggle("kb-open", open); if (open && !was) setTimeout(() => { const f = document.activeElement; if (!f || !/^(INPUT|TEXTAREA)$/.test(f.tagName)) return;
+        const top = f.closest(".sk") ? document.querySelector(".sk .drtop") : f.closest("#runner") ? (f.closest("#runner").querySelector(".pxq, .pxcard, h3, p") || f) : f.closest(".drill") ? document.querySelector(".drill .drtop") : null;
+        if (top) { const y = top.getBoundingClientRect().top + scrollY - 6; scrollTo(0, Math.max(0, y)); } }, 120); was = open; };
+    vv.addEventListener("resize", fit); })();
+  window.__sk = { check: ansCheck, render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };

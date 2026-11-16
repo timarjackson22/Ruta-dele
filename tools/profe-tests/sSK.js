@@ -45,10 +45,28 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
     return out; });
   const bad = Object.entries(play).filter(([t, v]) => !/^ok/.test(v) || /\/ok$/.test(v));
   rec("All 15 drill types render and grade: right answers pass, wrong answers fail (speaking can be skipped without penalty)", !bad.length && Object.keys(play).length === 15, JSON.stringify(play));
-  // 6. accent tolerance by level, translation tolerance
-  const acc = await p.evaluate(async () => { const K = window.__sk, sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const run = async (lvl, ans, val, type) => { location.hash = "#ejercicios/a1-u5/0"; await sleep(200); const S = K.state(); const d = type === "conj" ? { type: "conj", verb: "x", person: "yo", tense: "t", ans: [ans], why: "", lvl } : { type: "translate", s: [ans, "x"], lvl }; S.list = [d]; S.i = 0; S.st = {}; K.render(); document.querySelector(".sk-in").value = val; document.querySelector('[data-act="sk-check"]').click(); return S.st.res; };
-    return { a1: await run("a1", "estáis", "estais", "conj"), b1: await run("b1", "estáis", "estais", "conj"), tr: await run("b1", "Ayer fuimos al cine con mis amigos", "ayer fuimos al cine con mis amigos", "translate") }; });
-  rec("Accents: forgiven with a note at A1–A2, counted wrong from B1; translations accept the model answer regardless of capitals", acc.a1 === "ok" && acc.b1 === "no" && acc.tr === "ok", JSON.stringify(acc));
+  // 6. the answer policy: one hint, one retry, then the answer (all levels); capitals/punctuation never count
+  const pol = await p.evaluate(async () => { const K = window.__sk, sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const run = async (lvl, ans, tries) => { location.hash = "#ejercicios/a1-u5/0"; await sleep(200); const S = K.state(); S.list = [{ type: "translate", s: [ans, "x"], alts: [ans], lvl }]; S.i = 0; S.st = {}; S.first = 0; S.ok = 0; S.log = []; K.render(); const out = [];
+      for (const v of tries) { const i = document.querySelector(".sk-in"); if (!i) break; i.value = v; document.querySelector('[data-act="sk-check"]').click(); await sleep(20); out.push(S.st.res || (document.querySelector(".sk-hint") ? "hint:" + document.querySelector(".sk-hint").textContent : "?")); }
+      return { out, first: S.first, ok: S.ok }; };
+    return { a1acc: await run("a1", "Sí, él es de España.", ["si, el es de españa", "sí, él es de España"]), b1acc2: await run("b1", "Sí, él es de España.", ["si, el es de espana", "si, el es de espana"]),
+      caps: await run("a1", "Sí, él es de España.", ["sí él es de españa"]), miss: await run("a2", "Ayer fuimos al cine con mis amigos.", ["Ayer fuimos al cine con amigos", "Ayer fuimos al cine con mis amigos"]),
+      wrong: await run("a2", "Ayer fuimos al cine con mis amigos.", ["Me gusta la playa"]), check: [window.__sk.check("esta", ["está"], { lvl: "a1" }).kind, window.__sk.check("esta", ["está"], { lvl: "a1", spoken: true }).kind, window.__sk.check("tengo frio", ["Tengo frío."], { lvl: "b1" }).hint] }; });
+  rec("Answer policy: near misses (accents, one word) get a named hint, a retry counts as right but not first-time, a second miss shows the answer; capitals never count; clear misses show the answer at once; spoken answers aren't judged on accents",
+    /^hint:.*si.* and .*el/.test(pol.a1acc.out[0]) && pol.a1acc.out[1] === "ok" && pol.a1acc.first === 0 && pol.a1acc.ok === 1 && /^hint:/.test(pol.b1acc2.out[0]) && pol.b1acc2.out[1] === "no" && pol.caps.out[0] === "ok" && pol.caps.first === 1 &&
+    /missing/.test(pol.miss.out[0]) && pol.miss.out[1] === "ok" && pol.wrong.out[0] === "no" && pol.check[0] === "accent" && pol.check[1] === "ok" && /accent/.test(pol.check[2]), JSON.stringify(pol));
+  // 6b. the same policy in the lesson's review practice (and answers spoken through Profe are not judged on accents)
+  await p.evaluate(() => { location.hash = "#a1-u5"; }); await H.wait(900);
+  const px = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), P = window.__pv.px(); if (!P) return "no runner"; const q = (x) => document.querySelector(x);
+    if (q('[data-act="px-restart"]')) q('[data-act="px-restart"]').click(); else if (q('[data-act="px-go"]')) q('[data-act="px-go"]').click(); await sleep(100);
+    for (let g = 0; g < 60; g++) { const it = P.items[P.order[P.i]]; if (!it) return "ran out";
+      if (it.t !== "mc" && /[áéíóúñ]/.test(it.a[0]) && q("#px-in")) { const noAcc = it.a[0].normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        q("#px-in").value = noAcc; q('[data-act="px-submit"]').click(); await sleep(60); const hint = !!q("#runner .sk-hint");
+        q("#px-in").value = it.a[0]; q('[data-act="px-submit"]').click(); await sleep(60); const r = P.res[P.order[P.i]]; return { hint, ok: r && r.ok, second: r && r.second }; }
+      if (it.t === "mc") q('[data-act="px-pick"]').click(); else q('[data-act="px-dunno"]').click(); await sleep(30); const n = q('[data-act="px-next"]'); if (n) n.click(); await sleep(30); }
+    return "none found"; });
+  rec("Lesson review practice follows the same policy (hint first, then 'Right on the second try')", px && px.hint && px.ok && px.second, JSON.stringify(px));
   // 7. a full session: missed drills come back, result saved, mistake logged
   const sess = await p.evaluate(async () => { const K = window.__sk, sleep = (ms) => new Promise((r) => setTimeout(r, ms)); location.hash = "#ejercicios/a2-u2/1"; await sleep(300); const S = K.state(), n = S.list.length; const before = (window.S || {}).mist ? 0 : 0;
     let guard = 0; while (K.state() && K.state().i < K.state().list.length && guard++ < 40) { const s = K.state(); const sk = document.querySelector('[data-act="sk-skip"]'); if (sk) sk.click(); else { const nm = document.querySelector('[data-act="sk-nomic"]'); if (nm) nm.click(); } await sleep(10); const nx = document.querySelector('[data-act="sk-next"]'); if (nx) nx.click(); await sleep(10); }
@@ -100,6 +118,14 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
     if (nx) { const nh = nx.getAttribute("href"); nx.click(); await sleep(400); document.querySelector('.drtop a[aria-label="Close"]').click(); await sleep(900); const na = document.querySelector('#app .sk-card a[href="' + nh + '"]'); const t = na.closest(".sk-card").getBoundingClientRect().top; nextOk = t > 0 && t < innerHeight; }
     return { before: Math.round(before), after: Math.round(after), nextOk, plain: !document.querySelector("#app .sk-card .sk-ic") }; });
   rec("Leaving a drill session returns to the same spot in the lesson (also after 'Next part'); cards are plain text + one button", Math.abs(pos.before - pos.after) < 8 && pos.nextOk !== false && pos.plain, JSON.stringify(pos));
+  // 11. Profe's debrief and the way back to the lesson
+  await p.evaluate(() => { location.hash = "#ejercicios/a2-u2/1"; }); await H.wait(500);
+  const co = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), back = document.querySelector(".sk-back").textContent.trim(); const K = window.__sk, S = K.state();
+    S.log = [{ type: "dict", ok: false, first: false, hinted: true, kind: "accent" }, { type: "translate", ok: false, first: false, hinted: true, kind: "accent" }, { type: "hearpick", ok: true, first: true, hinted: false, kind: "ok" }, { type: "hearmean", ok: true, first: true, kind: "ok" }, { type: "tiles", ok: true, first: true, kind: "ok" }];
+    S.first = 3; S.ok = 3; S.retry = []; S.i = S.list.length; S.list.forEach((d) => (d.retry = false)); K.render(); await sleep(50);
+    const c = document.querySelector(".sk-coach"); const txt = c ? c.innerText : ""; location.hash = "#ejercicios/skill/lis/a1"; await sleep(500); const back2 = (document.querySelector(".sk-back") || {}).textContent;
+    return { back, back2, has: !!c, parts: c ? c.querySelectorAll("p").length : 0, praise: /right first time|strong|Great|Good|Well done/.test(txt), watch: /accents/i.test(txt), close: /Keep|track|again|next part|lock|Don't worry|¡/.test(txt), words: txt.split(/\s+/).length }; });
+  rec("End of every drill set: Profe's 30-second debrief (praise → one thing to watch → encouragement); a 'Lesson' button when started from a lesson, 'Drills' otherwise", co.back === "‹ Lesson" && co.back2 === "‹ Drills" && co.has && co.parts === 3 && co.praise && co.watch && co.close && co.words < 110, JSON.stringify(co));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close(); console.log(R.filter(Boolean).length + "/" + R.length + " passed"); process.exit(R.every(Boolean) ? 0 : 1);
 })();

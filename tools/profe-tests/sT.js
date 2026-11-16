@@ -91,6 +91,13 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   // voice
   const vm = await p.evaluate(() => [window.__pv.match("practise translation"), window.__pv.match("vamos a practicar traducción"), window.__pv.match("practise conjugation")]);
   rec("Voice: “practise translation” / «vamos a practicar traducción» / “practise conjugation”", vm[0] === "practise.translate" && vm[1] === "practise.translate" && vm[2] === "practise.conj", JSON.stringify(vm));
+  // answer policy (16 Nov 2026): a typed answer missing only accents gets a hint and a retry; the retry passes (not first-time); spoken answers aren't judged on accents
+  const seed = (id) => p.evaluate((id) => { const PR = window.__ad.pr(); PR.kind = "tr"; PR.ask = null; PR.it = { id, dir: "en-es", src: "I ate at home yesterday.", ans: ["Ayer comí en casa."], tags: ["v:pret", "d:en-es"], len: 4, ui: 0 }; PR.tries = 0; PR.fb = null; PR.over = false; PR.accHint = 0; PR.att = []; window.__ad.render(); }, id);
+  await seed("acc1"); const fBefore = await p.evaluate(() => window.__ad.pr().first);
+  const a1 = await typeIt("Ayer comi en casa"); const s1 = await p.evaluate(() => ({ over: window.__ad.pr().over }));
+  const a2 = await typeIt("Ayer comí en casa"); const s2 = await p.evaluate(() => ({ over: window.__ad.pr().over, first: window.__ad.pr().first }));
+  await seed("acc2"); await p.evaluate(() => { window.__prTyped = 0; window.__ad.answer ? window.__ad.answer("Ayer comi en casa") : null; }); await H.wait(400); const s3 = await p.evaluate(() => ({ over: window.__ad.pr().over }));
+  rec("Profe, typed: missing accents → '¡Casi! check the accents' and a retry; the corrected answer passes (not first-time). Spoken: accents not judged", /accents on «comi»|accents on/.test(a1) && !s1.over && s2.over && s2.first === fBefore && (s3.over || !(await p.evaluate(() => !!window.__ad.answer))), JSON.stringify({ a1: a1.slice(0, 160), s1, s2, fBefore, s3 }));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
   console.log(R.every(Boolean) ? "ALL " + R.length + " PASS" : R.filter((x) => !x).length + " FAILED of " + R.length);

@@ -16,3 +16,11 @@
 .sk-unit { border: 1px solid var(--line); border-radius: 12px; margin: 6px 0; background: var(--surface) } .sk-unit summary { padding: 10px 12px; cursor: pointer } .sk-unit ul { margin: 0 0 10px; padding-left: 28px; line-height: 1.9 }
 .sk-hub a[aria-current="true"] { font-weight: 800; text-decoration: underline }
 .sk-ver { font-size: 1.05rem; padding: 12px 18px }
+.sk-hint { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--gold, #d69e2e) 16%, var(--surface)); border: 1px solid color-mix(in srgb, var(--gold, #d69e2e) 45%, transparent); font-weight: 600 }
+.sk-back { white-space: nowrap; font-weight: 700 }
+.sk-coach { text-align: left; margin: 20px auto 0; max-width: 560px; padding: 14px 16px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 6px 20px rgba(0,0,0,.06) }
+.sk-coach-h { display: flex; align-items: center; gap: 10px; margin-bottom: 6px } .sk-pav { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: inline-grid; place-items: center; background: var(--cobalt); color: #fff; font-weight: 800 } .sk-pav svg, .sk-pav img { width: 100%; height: 100% }
+.sk-coach p { margin: 6px 0; line-height: 1.5 } .sk-coach .sk-c2 { padding-left: 10px; border-left: 3px solid var(--gold, #d69e2e) }
+/* keyboard open: keep the question and the progress in view */
+body.kb-open .sk .sk-tag, body.kb-open .sk .dren + .dren { display: none } body.kb-open .sk .drq { margin: 4px 0 6px; font-size: 1.15rem } body.kb-open .sk .drsay { margin: 4px 0; font-size: 1.15rem } body.kb-open .sk .drbody { padding-top: 4px }
+body.kb-open .sk .drtop { position: sticky; top: 0; z-index: 3; background: var(--bg, #f4f6fb); padding: 6px 0 } body.kb-open .sk .sk-acc .drtile { padding: 4px 9px }

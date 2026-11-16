@@ -730,6 +730,14 @@
   "voice": "pending",
   "why": "skill drills: count a different correct translation"
  },
+ "sk-coach-play": {
+  "voice": "pending",
+  "why": "skill drills: replay/stop Profe debrief"
+ },
+ "sk-coach-stop": {
+  "voice": "pending",
+  "why": "skill drills: replay/stop Profe debrief"
+ },
  "sk-cut": {
   "voice": "unsuitable",
   "why": "skill drills: cut a word into syllables"
