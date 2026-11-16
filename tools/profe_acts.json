@@ -63,6 +63,14 @@
   "voice": "unsuitable",
   "why": "tap an answer in the cheat sheet's quick check"
  },
+ "ch-view": {
+  "voice": "unsuitable",
+  "why": "switch the cheat sheet between A4 page and phone view"
+ },
+ "ch-zoom": {
+  "voice": "unsuitable",
+  "why": "zoom the A4 page preview"
+ },
  "cst-st": {
   "voice": "complete",
   "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"

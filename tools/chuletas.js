@@ -24,7 +24,7 @@
     "perifrasis": { mem: "Three building blocks: + infinitive (future/obligation: ir a, tener que, acabar de), + gerund (ongoing: estar, seguir, llevar), + participle (result: tener, llevar hecho).", tips: ["Llevar + time + gerund («Llevo dos años estudiando español») is ideal for introductions in the speaking test.", "Gap-fills may test the preposition inside the phrase: acabar de, volver a, dejar de, ponerse a."] },
     "modismos": { mem: "Learn idioms as whole pictures: «tomar el pelo» (pull someone's leg), «estar en las nubes» (daydream). Never translate word for word.", tips: ["One well-placed idiom raises the vocabulary range score in speaking; too many sound memorised.", "Reading and listening tasks at B2+ use idioms to test inference: think about the attitude behind them."] },
   };
-  const CHUI = { q: "", lv: "", bm: false };
+  const CHUI = { q: "", lv: "", bm: false, view: (() => { try { return localStorage.getItem("ruta-chview") || "a4"; } catch (e) { return "a4"; } })(), zoom: false };
   const chBm = () => (S.chBm = S.chBm || []);
   const chSplit = (n) => { const i = String(n).indexOf("|"); return i < 0 ? ["", n] : [n.slice(0, i), n.slice(i + 1)]; };
   function chData(g) { // what a sheet shows, derived from the guide (checked by tools/profe-tests/sC.js)
@@ -41,10 +41,20 @@
       '<div class="chfilters"><input type="search" id="ch-q" placeholder="Search topics, rules, words…" value="' + esc(CHUI.q) + '" aria-label="Search cheat sheets"><div class="vchips" role="group" aria-label="Filter">' +
       [["", "All levels"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"]].map(([v, n]) => '<button class="vchip" data-act="ch-lv" data-v="' + v + '" aria-pressed="' + (CHUI.lv === v) + '">' + n + "</button>").join("") +
       '<button class="vchip" data-act="ch-bmf" aria-pressed="' + CHUI.bm + '">★ Saved (' + bm.length + ")</button></div></div>" +
-      '<div class="chgrid">' + (L.map((g) => '<a class="chcard" href="#chuleta-' + g.id + '"><span class="chlv">' + g.lvl.toUpperCase() + "</span><b>" + esc(g.en) + "</b><small>" + esc(g.t) + " · " + g.sec.length + " rules</small>" + (bm.includes(g.id) ? '<span class="chstar" aria-label="Saved">★</span>' : "") + "</a>").join("") || '<p class="muted">No sheet matches. Clear the search or filters.</p>') + "</div></div>";
+      '<div class="chgrid">' + (L.map((g) => '<a class="chcard" href="#chuleta-' + g.id + '"><span class="chhubic" aria-hidden="true">' + (CH_TOPIC_IC[g.id] || "📘") + '</span><span class="chlv">' + g.lvl.toUpperCase() + "</span><b>" + esc(g.en) + "</b><small>" + esc(g.t) + " · " + g.sec.length + " rules</small>" + (bm.includes(g.id) ? '<span class="chstar" aria-label="Saved">★</span>' : "") + "</a>").join("") || '<p class="muted">No sheet matches. Clear the search or filters.</p>') + "</div></div>";
   }
   const pcNormC = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
   // ---- the sheet: quick answer, at-a-glance comparison, rule cards with highlighted examples, decision path, ✗/✓ fixes, tips, quick check ----
+  // fun, copyright-free icons (emoji) for topics, sections and rule cards
+  const CH_TOPIC_IC = { "por-para": "🧭", "ser-estar": "🪞", "pret-imp": "🎞️", pronunciacion: "🗣️", conjugacion: "⚙️", gramatica: "🗺️", sustantivos: "🏷️", determinantes: "👉", cuantificadores: "🔢", pronombres: "👥", "reflexivos-gustar": "💖", "presente-futuro": "🔮", pasados: "⏳", subjuntivo: "🌈", imperativo: "📣", "haber-perifrasis": "🧩", preposiciones: "📍", "preguntas-comparar": "❓", conectores: "🔗", "tener-hacer-dar-echar": "🧰", perifrasis: "🚂", modismos: "🎭" };
+  const CH_GROUP_IC = { por: "🛤️", para: "🎯", ser: "🧬", estar: "📍", preterite: "📸", imperfect: "🎞️", tener: "🤲", hacer: "🛠️", dar: "🎁", echar: "🪣" };
+  const CH_CARD_IC = [[/time|hour|date|day|deadline|clock|cuando|tiempo|when/i, "⏰"], [/place|location|position|route|movement|direction|destination|where|lugar|giving directions/i, "📍"], [/cause|motive|reason|why|causa/i, "💡"], [/price|exchange|money|work|employer|dinero/i, "💰"],
+    [/feeling|emotion|emocion|gustar|love/i, "❤️"], [/means|channel|phone|communication/i, "📱"], [/purpose|goal|aim|finalidad/i, "🎯"], [/opinion|standard|valorac/i, "💬"], [/weather|clima/i, "☀️"], [/food|comida|cocina/i, "🍽️"], [/body|cuerpo|ropa/i, "🖐️"], [/animal/i, "🐾"],
+    [/number|cardinal|ordinal|n[uú]mero|quantit|mucho|poco/i, "🔢"], [/question|pregunta|qu[eé] vs|exclamation/i, "❓"], [/compar|superlativ|equality|inequality/i, "⚖️"], [/plural/i, "👯"], [/accent|tilde|stress/i, "✏️"], [/sound|vowel|pronunc|letter|alphabet|^[a-z, ]+ and [a-z]+$/i, "🔊"],
+    [/future|futuro|plan/i, "🔮"], [/past|pasad|preterite|indefinido|pluscuam/i, "⏪"], [/habit|repeat|repeated|usually/i, "🔁"], [/story|narrat|chain/i, "📖"], [/command|imperativ|negative|softening|suavizar/i, "📣"], [/wish|desire|deseo|influenc/i, "🌠"], [/doubt|duda|denial|negaci/i, "🤷"],
+    [/condition|si-clause|if/i, "🔀"], [/contrast|concession|aunque|but/i, "↔️"], [/idiom|saying|refr[aá]n|expression/i, "🎭"], [/progress|gerund|continuing|in progress/i, "▶️"], [/result|participle/i, "✅"], [/identity|profession|category/i, "🪪"], [/origin|material|possession/i, "🌍"], [/characteristic|description|describ/i, "🎨"],
+    [/gender|g[eé]nero/i, "🚻"], [/pronoun|pronombre|subject/i, "👤"], [/article|art[ií]culo/i, "📰"], [/demonstrat/i, "👉"], [/possess/i, "🔑"], [/reflex/i, "🪞"], [/agent|passive/i, "🏗️"], [/recipient/i, "🎁"], [/start|begin|empez/i, "🚦"], [/finish|stop|end/i, "🏁"], [/obligation|must|deber/i, "📌"]];
+  const chCardIcon = (t, fallback) => { for (const [re, ic] of CH_CARD_IC) if (re.test(t)) return ic; return fallback; };
   const CH_PAL = ["#2563eb", "#ea580c", "#059669", "#9333ea", "#db2777", "#0891b2"];
   const chGroupKey = (t) => { const m = /^([^:]{2,30}):\s/.exec(t); return m ? m[1].split(/\s+/)[0].toLowerCase() : ""; };
   function chGroups(g) { // two-way topics (por/para, ser/estar, preterite/imperfect…): sections grouped by their prefix
@@ -68,32 +78,48 @@
     const first = (String(g.intro || "").match(/^[^.!?]+[.!?]/) || [""])[0];
     const ex = (e, keys) => e ? '<p class="chex"><span lang="es">' + chHL(e[0], keys) + '</span><small>' + esc(e[1]) + "</small></p>" : "";
     const card = (s, i) => { const gr = grpOf(s), col = gr ? gr.c : CH_PAL[i % CH_PAL.length], title = gr ? s.t.replace(/^[^:]+:\s*/, "") : s.t, notes = (s.n || []).slice(0, 2).map((n) => chSplit(n));
-      return '<li class="chcard2" style="--c:' + col + '"><div class="chct">' + (gr ? '<span class="chtag">' + esc(gr.label) + "</span>" : '<span class="chnum">' + (i + 1) + "</span>") + "<b>" + esc(title) + '</b></div><p class="chrule">' + esc(s.r) + "</p>" +
+      return '<li class="chcard2" style="--c:' + col + '"><div class="chct">' + (gr ? '<span class="chtag">' + esc(gr.label) + "</span>" : '<span class="chnum">' + (i + 1) + "</span>") + '<span class="chic" aria-hidden="true">' + chCardIcon(title, CH_TOPIC_IC[g.id] || "📘") + "</span><b>" + esc(title) + '</b></div><p class="chrule">' + esc(s.r) + "</p>" +
         (notes.length ? '<div class="chnotes">' + notes.map(([k, v]) => '<p class="chnote">' + (k ? "<b>" + esc(k) + "</b> " : "") + esc(v) + "</p>").join("") + "</div>" : "") + ex((s.e || [])[0], chKeys(s, gr)) + "</li>"; };
     // at a glance: side-by-side for two-way topics
-    const glance = G ? '<section class="chglance" aria-label="At a glance"><h2>At a glance</h2><div class="chvs" style="--n:' + G.length + '">' + G.map((gr) => '<div class="chside" style="--c:' + gr.c + '"><h3>' + esc(gr.label) + '</h3><ul>' + gr.secs.map((s) => "<li>" + esc(s.t.replace(/^[^:]+:\s*/, "")) + "</li>").join("") + "</ul></div>").join('<span class="chvsx" aria-hidden="true">vs</span>') + "</div></section>" : "";
+    const glance = G ? '<section class="chglance" aria-label="At a glance"><h2>👀 At a glance</h2><div class="chvs" style="--n:' + G.length + '">' + G.map((gr) => '<div class="chside" style="--c:' + gr.c + '"><h3><span aria-hidden="true">' + (CH_GROUP_IC[gr.k] || "✨") + "</span> " + esc(gr.label) + '</h3><ul>' + gr.secs.map((s) => "<li>" + esc(s.t.replace(/^[^:]+:\s*/, "")) + "</li>").join("") + "</ul></div>").join('<span class="chvsx" aria-hidden="true">vs</span>') + "</div></section>" : "";
     const ansCol = (a) => { if (!G) return ""; const m = G.find((gr) => new RegExp("^" + gr.label + "\\b", "i").test(a.trim())); return m ? ' style="--c:' + m.c + '"' : ""; };
-    const path = d.decide.length ? '<section class="chpath"><h2>Ask yourself</h2><ol>' + d.decide.map((x) => { const [q, a] = x.split(/\s*→\s*/); return "<li><span class=\"chq\">" + esc(q) + "</span>" + (a ? '<span class="cha"' + ansCol(a) + ">" + esc(a) + "</span>" : "") + "</li>"; }).join("") + "</ol></section>" : "";
-    const fixes = d.fix.length ? '<section class="chfix"><h2>Common mistakes</h2><ul>' + d.fix.slice(0, 5).map((f) => '<li><p class="chno" lang="es"><span aria-label="wrong">✗</span> ' + esc(f[0]) + '</p><p class="chyes" lang="es"><span aria-label="right">✓</span> ' + esc(String(f[1]).split("|").join(" / ")) + "</p><small>" + esc(f[2]) + "</small></li>").join("") + "</ul></section>" : "";
+    const path = d.decide.length ? '<section class="chpath"><h2>🤔 Ask yourself</h2><ol>' + d.decide.map((x) => { const [q, a] = x.split(/\s*→\s*/); return "<li><span class=\"chq\">" + esc(q) + "</span>" + (a ? '<span class="cha"' + ansCol(a) + ">" + esc(a) + "</span>" : "") + "</li>"; }).join("") + "</ol></section>" : "";
+    const fixes = d.fix.length ? '<section class="chfix"><h2>🩹 Common mistakes</h2><ul>' + d.fix.slice(0, 5).map((f) => '<li><p class="chno" lang="es"><span aria-label="wrong">✗</span> ' + esc(f[0]) + '</p><p class="chyes" lang="es"><span aria-label="right">✓</span> ' + esc(String(f[1]).split("|").join(" / ")) + "</p><small>" + esc(f[2]) + "</small></li>").join("") + "</ul></section>" : "";
     const watch = d.exc.length ? '<section class="chwatch"><h2>⚠️ Watch out</h2><ul>' + d.exc.slice(0, 4).map((x) => "<li>" + (x.k ? "<b>" + esc(x.k) + "</b> " : "") + esc(x.v) + "</li>").join("") + "</ul></section>" : "";
     const tips = d.tips.length ? '<section class="chtips2"><h2>🎯 In the DELE</h2><ul>' + d.tips.map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul></section>" : "";
-    const mc = (g.mc || []).slice(0, 3), quiz = mc.length ? '<section class="chquiz noprint"><h2>Quick check</h2>' + mc.map((q, qi) => '<div class="chqz" data-q="' + qi + '"><p lang="es">' + esc(q[0]) + '</p><div class="chopts">' + q[1].map((o, oi) => '<button class="btn small" data-act="ch-qz" data-id="' + id + '" data-q="' + qi + '" data-v="' + oi + '">' + esc(o) + "</button>").join("") + '</div><p class="chwhy" hidden></p></div>').join("") + "</section>" : "";
-    app.innerHTML = '<div class="ui-page chpage"><div class="chtools noprint"><a class="btn small" href="#chuletas">‹ All sheets</a><button class="btn small" data-act="ch-bm" data-id="' + id + '" aria-pressed="' + on + '">' + (on ? "★ Saved" : "☆ Save") + '</button><button class="btn small" data-act="ch-print">⎙ Print / PDF</button><a class="btn small" href="#guia-' + id + '">Open the full guide ›</a></div>' +
-      '<article class="chsheet chs2" aria-label="Cheat sheet: ' + esc(g.en) + '"><header class="chhero"><span class="chlv">' + (CH_LVN[g.lvl] || g.lvl.toUpperCase()) + "</span><h1>" + esc(g.en) + ' <small lang="es">' + esc(g.t) + "</small></h1>" + (first ? '<p class="chlead">' + esc(first) + "</p>" : "") +
-      '<div class="chquick"><b>Quick answer</b><p>' + esc(d.mem) + "</p></div></header>" + glance +
-      '<div class="chcols"><section class="chrulesec"><h2>The rules</h2><ol class="chcards">' + d.rules.map((r, i) => card(g.sec[i], i)).join("") + "</ol></section>" +
-      "<section>" + path + watch + "</section><section>" + fixes + tips + "</section></div>" + quiz +
+    const mc = (g.mc || []).slice(0, 3), quiz = mc.length ? '<section class="chquiz noprint"><h2>🧠 Quick check</h2>' + mc.map((q, qi) => '<div class="chqz" data-q="' + qi + '"><p lang="es">' + esc(q[0]) + '</p><div class="chopts">' + q[1].map((o, oi) => '<button class="btn small" data-act="ch-qz" data-id="' + id + '" data-q="' + qi + '" data-v="' + oi + '">' + esc(o) + "</button>").join("") + '</div><p class="chwhy" hidden></p></div>').join("") + "</section>" : "";
+    const tools = '<div class="chtools noprint"><a class="btn small" href="#chuletas">‹ All sheets</a><div class="seg2 chview" role="group" aria-label="View"><button class="btn small" data-act="ch-view" data-v="a4" aria-pressed="' + (CHUI.view === "a4") + '">A4 page</button><button class="btn small" data-act="ch-view" data-v="phone" aria-pressed="' + (CHUI.view !== "a4") + '">Phone view</button></div><button class="btn small" data-act="ch-bm" data-id="' + id + '" aria-pressed="' + on + '">' + (on ? "★ Saved" : "☆ Save") + '</button><button class="btn small" data-act="ch-print">⎙ Print / PDF</button><a class="btn small" href="#guia-' + id + '">Full guide ›</a></div>';
+    const hero = '<header class="chhero"><span class="chbadge" aria-hidden="true">' + (CH_TOPIC_IC[g.id] || "📘") + '</span><span class="chlv">' + (CH_LVN[g.lvl] || g.lvl.toUpperCase()) + "</span><h1>" + esc(g.en) + ' <small lang="es">' + esc(g.t) + "</small></h1>" + (first ? '<p class="chlead">' + esc(first) + "</p>" : "") + '<div class="chquick"><b>⚡ Quick answer</b><p>' + esc(d.mem) + "</p></div></header>";
+    const rules = '<section class="chrulesec"><h2>📘 The rules</h2><ol class="chcards">' + d.rules.map((r, i) => card(g.sec[i], i)).join("") + "</ol></section>";
+    if (CHUI.view === "a4") { // A4 landscape pages: three columns flowing from page to page, exactly as they print
+      const flow = '<div class="chflowa4 chsheet chs2">' + hero + glance + rules + path + watch + fixes + tips + '<p class="chfoot">Ruta DELE · Revision Cheat Sheet · ' + esc(g.t) + "</p></div>";
+      app.innerHTML = '<div class="ui-page chpage chpage-a4">' + tools + '<p class="small muted noprint chzoomhint">A4 landscape · <button class="lnk" data-act="ch-zoom">' + (CHUI.zoom ? "Fit to screen" : "Zoom to 100%") + '</button></p><div class="chpages' + (CHUI.zoom ? " zoom" : "") + '" id="chpages" aria-label="Cheat sheet: ' + esc(g.en) + ', A4 landscape pages"><div class="chpg"><div class="chpgin">' + flow + '</div><span class="chpgno">1</span></div></div>' + quiz + "</div>";
+      chPaginate(); return;
+    }
+    app.innerHTML = '<div class="ui-page chpage">' + tools + '<article class="chsheet chs2" aria-label="Cheat sheet: ' + esc(g.en) + '">' + hero + glance +
+      '<div class="chcols">' + rules + "<section>" + path + watch + "</section><section>" + fixes + tips + "</section></div>" + quiz +
       '<footer class="small muted">Ruta DELE · Revision Cheat Sheet · from the Guide «' + esc(g.t) + "»</footer></article></div>";
   }
+  const CH_PW = 1123, CH_PH = 794, CH_STEP = 1072; // A4 landscape at 96 dpi; one page of columns = inner width (1054) + gap (18)
+  function chPaginate() {
+    const box = document.getElementById("chpages"); if (!box) return; const fl = box.querySelector(".chflowa4"); if (!fl) return;
+    const n = Math.max(1, Math.min(6, Math.ceil((fl.scrollWidth + 18) / CH_STEP - 0.02)));
+    const html = fl.outerHTML; box.innerHTML = Array.from({ length: n }, (_, p) => '<div class="chpg" aria-label="Page ' + (p + 1) + " of " + n + '"><div class="chpgin">' + html.replace('class="chflowa4', 'style="transform:translateX(-' + p * CH_STEP + 'px)" ' + (p ? 'aria-hidden="true" ' : "") + 'class="chflowa4') + '</div><span class="chpgno">' + (p + 1) + " / " + n + "</span></div>").join("");
+    box.dataset.pages = n; chFit();
+  }
+  function chFit() { const box = document.getElementById("chpages"); if (!box) return; const w = box.parentElement.clientWidth, sc = CHUI.zoom ? 1 : Math.min(1, w / CH_PW); box.style.setProperty("--s", sc); }
+  window.addEventListener("resize", () => { if (/^#chuleta-/.test(location.hash)) chFit(); });
   document.addEventListener("input", (e) => { if (e.target && e.target.id === "ch-q") { CHUI.q = e.target.value; const pos = e.target.selectionStart; chHub(); const i = document.getElementById("ch-q"); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (x) {} } } });
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"); if (!t || !/^ch-/.test(t.dataset.act)) return; const a = t.dataset.act;
     if (a === "ch-lv") { CHUI.lv = t.dataset.v; chHub(); }
     else if (a === "ch-bmf") { CHUI.bm = !CHUI.bm; chHub(); }
     else if (a === "ch-bm") { const b = chBm(), i = b.indexOf(t.dataset.id); if (i >= 0) b.splice(i, 1); else b.push(t.dataset.id); save(); chSheet(t.dataset.id); }
+    else if (a === "ch-view") { CHUI.view = t.dataset.v; try { localStorage.setItem("ruta-chview", CHUI.view); } catch (x) {} chSheet(location.hash.slice(9)); }
+    else if (a === "ch-zoom") { CHUI.zoom = !CHUI.zoom; chSheet(location.hash.slice(9)); }
     else if (a === "ch-qz") { const g = GUIDES.find((x) => x.id === t.dataset.id), q = g && g.mc[+t.dataset.q]; if (!q) return; const box = t.closest(".chqz"), right = +t.dataset.v === q[2];
       box.querySelectorAll("button").forEach((b, bi) => { b.disabled = true; if (bi === q[2]) b.classList.add("ok"); }); if (!right) t.classList.add("no"); const w = box.querySelector(".chwhy"); w.hidden = false; w.textContent = (right ? "✓ Right. " : "✗ Not quite. ") + q[3]; }
-    else if (a === "ch-print") { document.body.classList.add("ch-printing"); setTimeout(() => { try { window.print(); } catch (x) {} setTimeout(() => document.body.classList.remove("ch-printing"), 500); }, 50); }
+    else if (a === "ch-print") { document.body.classList.add(document.getElementById("chpages") ? "ch-print-a4" : "ch-printing"); setTimeout(() => { try { window.print(); } catch (x) {} setTimeout(() => document.body.classList.remove("ch-printing", "ch-print-a4"), 500); }, 50); }
   });
-  window.__ch = { data: chData, extra: CH_EXTRA, ui: CHUI, guides: () => GUIDES };
+  window.__ch = { paginate: chPaginate, data: chData, extra: CH_EXTRA, ui: CHUI, guides: () => GUIDES };
   /* ==/CHULETAS== */

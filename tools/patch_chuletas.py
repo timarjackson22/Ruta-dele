@@ -95,6 +95,56 @@ CSS = """
   body.ch-printing .chs2 :is(.chtag, .chnum) { font-size: 6pt !important } body.ch-printing .chs2 footer { display: none } body.ch-printing .chcard2 { border-top-width: 2px }
   body.ch-printing .chcard2, body.ch-printing .chex, body.ch-printing .chside, body.ch-printing .chex mark, body.ch-printing .chnum, body.ch-printing .chtag, body.ch-printing .cha { -webkit-print-color-adjust: exact; print-color-adjust: exact }
 }
+/* cheat sheet: A4 landscape pages (297 × 210 mm = 1123 × 794 px), three columns flowing page to page */
+.chpage-a4 { max-width: none }
+.chview { display: inline-flex }
+.chzoomhint { margin: -4px 0 8px }
+.chpages { --s: 1; overflow: hidden; padding-bottom: 4px }
+.chpages.zoom { overflow-x: auto }
+.chpg { zoom: var(--s); width: 1123px; height: 794px; margin: 0 auto 14px; position: relative; overflow: hidden; border-radius: 4px; background: #fff; color: #1b2230; box-shadow: 0 4px 22px rgba(20, 30, 60, .16), 0 0 0 1px rgba(20, 30, 60, .06);
+  --surface: #fff; --line: #e1e5ee; --muted: #5b6474; --cobalt: #1f5fd6; --ink: #1b2230 }
+.chpgin { position: absolute; inset: 34px; overflow: hidden }
+.chpgno { position: absolute; right: 18px; bottom: 10px; font-size: 10px; color: #8a93a3 }
+.chflowa4.chsheet.chs2 { width: 1054px; height: 726px; column-count: 3; column-gap: 18px; column-fill: auto; font-size: 10.5px; line-height: 1.3; border: 0; padding: 0; background: none; border-radius: 0; overflow: visible; color: #1b2230 }
+.chflowa4.chs2 > * { margin-left: 0 !important; margin-right: 0 !important }
+.chflowa4 .chhero { padding: 0 0 6px; background: none; border-bottom: 3px solid #e07b00; margin-bottom: 4px; break-inside: avoid }
+.chflowa4 .chhero h1 { font-size: 22px; margin: 2px 0 } .chflowa4 .chhero h1 small { display: inline; font-size: 14px; margin-left: 6px }
+.chflowa4 .chlv { font-size: 9px } .chflowa4 .chlead { font-size: 10px; margin: 2px 0 5px }
+.chflowa4 .chquick { padding: 5px 8px; box-shadow: none; background: #fff7ec; border-left-width: 4px } .chflowa4 .chquick b { font-size: 8.5px } .chflowa4 .chquick p { font-size: 10.5px }
+.chflowa4.chsheet.chs2 h2 { font-size: 9px !important; margin: 8px 0 4px; break-after: avoid }
+.chflowa4 .chvs { grid-template-columns: 1fr 1fr !important; gap: 4px } .chflowa4 .chvsx { display: none !important }
+.chflowa4 .chside { padding: 5px 7px; border-radius: 8px; break-inside: avoid } .chflowa4 .chside h3 { font-size: 12px; margin: 0 0 2px } .chflowa4 .chside ul { font-size: 9.5px; padding-left: 12px } .chflowa4 .chside li { margin: 0 }
+.chflowa4 .chcards { gap: 5px } .chflowa4 .chcard2 { padding: 5px 8px; border-radius: 8px; border-top-width: 3px; break-inside: avoid; box-shadow: none }
+.chflowa4 :is(.chct b, .chrule, .chq, .chno, .chyes, .chex, .chwatch ul, .chtips2 ul) { font-size: 10px !important; line-height: 1.28 }
+.chflowa4 :is(.chnotes, .chex small, .chfix small, .cha) { font-size: 9px !important }
+.chflowa4 :is(.chtag, .chnum) { font-size: 8px !important } .chflowa4 .chnum { width: 16px; height: 16px }
+.chflowa4 .chrule { margin: 0 0 3px } .chflowa4 .chnotes { margin: 0 0 3px } .chflowa4 .chnote { margin: 1px 0 }
+.chflowa4 .chex { padding: 3px 6px; border-radius: 6px }
+.chflowa4 .chpath li { padding: 3px 4px 3px 24px; break-inside: avoid } .chflowa4 .chpath li::before { width: 16px; height: 16px; left: -9px; top: 3px; font-size: 8px }
+.chflowa4 .cha { margin-top: 2px; padding: 1px 6px }
+.chflowa4 .chfix ul { gap: 4px } .chflowa4 .chfix li { padding: 4px 7px; border-radius: 8px; break-inside: avoid }
+.chflowa4 .chwatch ul, .chflowa4 .chtips2 ul { padding: 5px 8px 5px 20px; border-radius: 8px } .chflowa4 .chwatch li, .chflowa4 .chtips2 li { margin: 2px 0 }
+.chflowa4 .chfoot { font-size: 8.5px; color: #8a93a3; margin: 8px 0 0; break-inside: avoid }
+.chflowa4 * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
+@media print {
+  body.ch-print-a4 > *:not(main), body.ch-print-a4 main > *:not(#app), body.ch-print-a4 .noprint, body.ch-print-a4 .tabbar, body.ch-print-a4 #tutor, body.ch-print-a4 header.top, body.ch-print-a4 .crumb, body.ch-print-a4 .ui-title, body.ch-print-a4 .chquiz { display: none !important }
+  body.ch-print-a4 #app, body.ch-print-a4 main { margin: 0 !important; padding: 0 !important; max-width: none !important }
+  body.ch-print-a4 .chpages { overflow: visible; padding: 0 } body.ch-print-a4 .chpage-a4 { margin: 0 !important; padding: 0 !important }
+  body.ch-print-a4 .chpg { zoom: 1 !important; width: 1054px; height: 720px; margin: 0; border-radius: 0; box-shadow: none; break-after: page; page-break-after: always }
+  body.ch-print-a4 .chpg:last-child { break-after: auto; page-break-after: auto }
+  body.ch-print-a4 .chpgin { inset: 0 } body.ch-print-a4 .chpgno { right: 0; bottom: -2px }
+}
+/* fun icons */
+.chhero { position: relative; overflow: hidden }
+.chhero::before, .chhero::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; opacity: .5 }
+.chhero::before { width: 120px; height: 120px; right: -30px; top: -40px; background: radial-gradient(circle, #ffd27a 0 40%, transparent 41%), radial-gradient(circle at 20% 80%, #9cc2ff 0 12%, transparent 13%) }
+.chhero::after { width: 70px; height: 70px; right: 90px; bottom: -30px; background: radial-gradient(circle, #ffb3c7 0 35%, transparent 36%) }
+.chbadge { position: absolute; right: 14px; top: 12px; z-index: 1; width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; font-size: 32px; background: #fff; box-shadow: 0 4px 14px rgba(20, 30, 60, .14); transform: rotate(6deg) }
+.chhero h1, .chhero .chlead { padding-right: 70px }
+.chic { font-size: 1.05em; line-height: 1; flex: none }
+.chhubic { position: absolute; right: 10px; bottom: 8px; font-size: 26px; opacity: .9 } .chcard { padding-right: 44px }
+.chflowa4 .chbadge { width: 40px; height: 40px; font-size: 22px; border-radius: 12px; right: 4px; top: 0; box-shadow: 0 2px 8px rgba(20, 30, 60, .12) }
+.chflowa4 .chhero::before, .chflowa4 .chhero::after { display: none } .chflowa4 .chhero h1, .chflowa4 .chhero .chlead { padding-right: 46px }
 @media print {
   @page { size: A4 landscape; margin: 9mm }
   body.ch-printing > *:not(main), body.ch-printing main > *:not(#app), body.ch-printing .noprint, body.ch-printing .tabbar, body.ch-printing #tutor, body.ch-printing header.top, body.ch-printing .crumb { display: none !important }

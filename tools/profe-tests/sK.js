@@ -25,6 +25,9 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   rec("Level filter shows only that level", n.length > 0 && n.every((x) => x === "B1"), JSON.stringify(n));
   // a sheet: links, bookmark persists
   await p.evaluate(() => { location.hash = "#chuleta-por-para"; }); await H.wait(400);
+  const a4 = await p.evaluate(() => { const b = document.getElementById("chpages"); return b ? { pages: +b.dataset.pages, pg: document.querySelectorAll(".chpg").length, w: getComputedStyle(document.querySelector(".chpg")).width, h: getComputedStyle(document.querySelector(".chpg")).height } : null; });
+  rec("A4 landscape page view is the default: 1123×794 px pages (297×210 mm), 1–2 pages", a4 && a4.w === "1123px" && Math.abs(parseFloat(a4.h) - 794) < 1 && a4.pages >= 1 && a4.pages <= 2 && a4.pg === a4.pages, JSON.stringify(a4));
+  await p.click('[data-act="ch-view"][data-v="phone"]'); await H.wait(300);
   const sh = await p.evaluate(() => ({ cols: document.querySelectorAll(".chcols > section").length, guide: !!document.querySelector('a[href="#guia-por-para"]'), flow: document.querySelectorAll(".chpath li").length, h: document.querySelector(".chsheet h1").textContent }));
   rec("Sheet: three columns, decision diagram, link to the full guide", sh.cols === 3 && sh.flow >= 3 && sh.guide && /Por vs/.test(sh.h), JSON.stringify(sh));
   await p.click('[data-act="ch-bm"]'); await H.wait(200);
@@ -36,14 +39,15 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.evaluate(() => { location.hash = "#chuleta-subjuntivo"; }); await H.wait(400);
   const ov = await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   rec("Mobile: the sheet doesn't scroll sideways", ov <= 1, ov);
-  // print: landscape, at most two pages for every topic
+  // print: landscape, at most two pages for every topic (A4 page view prints its pages as shown)
+  await p.evaluate(() => { location.hash = "#chuleta-por-para"; }); await H.wait(300); await p.click('[data-act="ch-view"][data-v="a4"]'); await H.wait(300);
   const pages = [];
   for (const g of await p.evaluate(() => window.__ch.guides().map((x) => x.id))) {
-    await p.evaluate((id) => { location.hash = "#chuleta-" + id; document.body.classList.add("ch-printing"); }, g); await H.wait(350);
+    await p.evaluate((id) => { location.hash = "#chuleta-" + id; document.body.classList.add("ch-print-a4"); }, g); await H.wait(450);
     const pdf = await p.pdf({ landscape: true, format: "A4", printBackground: false, preferCSSPageSize: true });
     const cnt = Math.max(0, ...(pdf.toString("latin1").match(/\/Count\s+(\d+)/g) || []).map((x) => +x.replace(/\D/g, ""))); pages.push([g, cnt]);
   }
-  await p.evaluate(() => document.body.classList.remove("ch-printing"));
+  await p.evaluate(() => document.body.classList.remove("ch-print-a4"));
   rec("Print: every sheet fits on one or two landscape A4 pages", pages.every(([, c]) => c >= 1 && c <= 2), JSON.stringify(pages.filter(([, c]) => c > 2 || c < 1)) + " " + JSON.stringify(pages.map((x) => x[1])));
   // Library tile and voice
   await p.evaluate(() => { location.hash = "#biblioteca"; }); await H.wait(300);
