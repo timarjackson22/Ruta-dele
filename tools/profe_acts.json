@@ -956,6 +956,10 @@
   "voice": "unsuitable",
   "why": "undo a removed video (tap toast)"
  },
+ "v-vloop": {
+  "voice": "pending",
+  "why": "loop the whole video by voice"
+ },
  "va-online": {
   "voice": "pending",
   "why": "redo captions with Google online"

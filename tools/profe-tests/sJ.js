@@ -76,6 +76,19 @@ const YT = `(() => { window.__yt = { log: [] };
   // the last video: disabled
   await p.evaluate((id) => { location.hash = "#video-" + id; }, order[order.length - 1]); await H.wait(900);
   rec("At the end of the list the button is disabled and says so", await p.evaluate(() => { const b = document.querySelector('[data-act="v-next"]'); return b.disabled && /Last video/.test(b.textContent); }));
+  // Loop key in the Replay button: sunk → the video starts again at its end; released → the end scrolls Next video into view
+  await p.evaluate((id) => { location.hash = "#video-" + id; }, order[1]); await H.wait(900);
+  const lk = await p.evaluate(() => { const r = document.querySelector(".vrep"), b = r && r.querySelector('[data-act="v-vloop"]'), rp = r && r.querySelector('[data-act="v-loop"]'); if (!b || !rp) return null; const w = r.getBoundingClientRect().width, bw = b.getBoundingClientRect().width; return { share: Math.round(100 * bw / w), dot: !!b.querySelector(".vrepdot") }; });
+  rec("Replay button has a round Loop key in about its right third", lk && lk.dot && lk.share >= 25 && lk.share <= 40, JSON.stringify(lk));
+  await p.click('[data-act="v-vloop"]'); await H.wait(150);
+  const sunk = await p.evaluate(() => { const b = document.querySelector('[data-act="v-vloop"]'); return b.getAttribute("aria-pressed") === "true" && getComputedStyle(b).transform !== "none"; });
+  await p.evaluate(() => { const P = window.__yt.p; P.st = 1; P.t = 299; window.__yt.log.length = 0; P.st = 0; P.o.events.onStateChange({ data: 0 }); }); await H.wait(600);
+  const looped = await p.evaluate(() => ({ st: window.__yt.p.getPlayerState(), t: Math.round(window.__yt.p.t), play: window.__yt.log.some((x) => x[0] === "play") }));
+  rec("Loop sunk: at the end the same video plays again from the start", sunk && looped.st === 1 && looped.t <= 2 && looped.play, JSON.stringify([sunk, looped]));
+  await p.click('[data-act="v-vloop"]'); await H.wait(150); await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)); await H.wait(200);
+  await p.evaluate(() => { const P = window.__yt.p; P.st = 0; P.o.events.onStateChange({ data: 0 }); }); await H.wait(1200);
+  const vis = await p.evaluate(() => { const r = document.querySelector(".vnextbar").getBoundingClientRect(); return { top: Math.round(r.top), released: document.querySelector('[data-act="v-vloop"]').getAttribute("aria-pressed") === "false", st: window.__yt.p.getPlayerState() }; });
+  rec("Loop released: at the end the page scrolls so Next video is visible (and the video doesn't restart)", vis.released && vis.top >= 0 && vis.top < 300 && vis.st === 0, JSON.stringify(vis));
   // voice
   await p.evaluate((id) => { location.hash = "#video-" + id; }, order[2]); await H.wait(900);
   await p.evaluate(() => window.__pv.route("next video", "chat")); await H.wait(1200);
