@@ -5,7 +5,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
 (async () => {
   const H = await open({ hash: "#a2-u2", noOpen: true }); const p = H.p; await H.wait(1500);
   // 1. cards in the lesson
-  const cards = await p.evaluate(() => ({ n: document.querySelectorAll("#app .sk-card:not(.sk-rev)").length, rev: !!document.querySelector('#app .sk-rev a[href="#ejercicios/a2-u2/review"]'), link: (document.querySelector("#app .sk-card a.btn") || {}).getAttribute && document.querySelector("#app .sk-card a.btn").getAttribute("href"), old: document.querySelectorAll("#app .qcitem").length, runner: !!document.getElementById("runner") }));
+  const cards = await p.evaluate(() => ({ n: document.querySelectorAll("#app .sk-card:not(.sk-rev)").length, rev: !!document.querySelector('#app .sk-chal a[href="#ejercicios/a2-u2/review"]'), link: (document.querySelector("#app .sk-card a.btn") || {}).getAttribute && document.querySelector("#app .sk-card a.btn").getAttribute("href"), old: document.querySelectorAll("#app .qcitem").length, runner: !!document.getElementById("runner") }));
   rec("Lesson: a 'Check yourself' drill card after each part, a chapter challenge before the review, no inline linear questions", cards.n >= 5 && cards.rev && /^#ejercicios\/a2-u2\/\d+$/.test(cards.link) && cards.old === 0 && cards.runner, JSON.stringify(cards));
   // 2. the bank: every lesson subsection, all types present, outcome tags
   const bank = await p.evaluate(() => { const K = window.__sk, ids = []; COURSE.filter((c) => /^(a1|a2|b1|b2|c1|c2)$/.test(c.id)).forEach((c) => c.units.forEach((u, i) => ids.push(c.id + "-u" + (i + 1))));

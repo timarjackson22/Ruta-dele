@@ -4,7 +4,7 @@ const { open } = require("./h.js");
 const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (!ok && info != null ? "  " + String(info).slice(0, 500) : "")); };
 (async () => {
   const H = await open({ hash: "#guia-ser-estar", noOpen: true }); const p = H.p; await H.wait(1500);
-  const g = await p.evaluate(() => { const c = [...document.querySelectorAll("#app .sk-card:not(.sk-rev)")]; return { n: c.length, after: c.filter((x) => (x.previousElementSibling || {}).classList && x.previousElementSibling.classList.contains("gblock")).length, rev: !!document.querySelector('#app .sk-rev a[href="#ejercicios/guia-ser-estar/review"]'), review: /Mastery exercises/.test(document.getElementById("app").innerText) }; });
+  const g = await p.evaluate(() => { const c = [...document.querySelectorAll("#app .sk-card:not(.sk-rev)")]; return { n: c.length, after: c.filter((x) => (x.previousElementSibling || {}).classList && x.previousElementSibling.classList.contains("gblock")).length, rev: !!document.querySelector('#app .sk-chal a[href="#ejercicios/guia-ser-estar/review"]'), review: /Mastery exercises/.test(document.getElementById("app").innerText) }; });
   rec("Guide: a drill card after the explanation parts, then the Mastery exercises and the chapter challenge", g.n >= 5 && g.after >= 4 && g.rev && g.review, JSON.stringify(g));
   await p.evaluate(() => { document.querySelector("#app .sk-card a.btn").click(); }); await H.wait(600);
   const o = await p.evaluate(() => ({ h: location.hash, n: (window.__sk.state() || { list: [] }).list.length, ui: !!document.querySelector(".drill .drprog") }));

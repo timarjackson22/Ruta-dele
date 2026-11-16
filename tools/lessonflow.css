@@ -28,7 +28,7 @@ body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { d
 body.lf-quiet #tutor-fab, body.lf-quiet .tutor-fab { display: none !important }
 body.lf-quiet.tabs-peek #tutor-fab:not([hidden]) { display: inline-flex !important } /* Profe comes back with the bottom menu */
 /* Mastery exercises full screen */
-#s-pra.m-full { position: fixed; inset: 0; z-index: 45; margin: 0; overflow-y: auto; background: var(--bg, #eef3f9); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(30px + env(safe-area-inset-bottom, 0px)); max-width: none }
+#s-pra.m-full { position: fixed; inset: 0; z-index: 70; margin: 0; overflow-y: auto; background: var(--bg, #eef3f9); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(30px + env(safe-area-inset-bottom, 0px)); max-width: none }
 #s-pra.m-full > * { max-width: 720px; margin-left: auto; margin-right: auto }
 .m-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px } .m-bar b { font-size: 1.05rem }
 body.mastery-on header.top, body.mastery-on .tabbar, body.mastery-on #tabpeek, body.mastery-on .lf-nav, body.mastery-on #ra-bar { display: none !important }
@@ -37,3 +37,5 @@ body.mastery-on #s-pra .shead h2 { display: none }
 body.paged .pg-cols .stack, body.paged .pg-cols section.block, body.paged .pg-cols .gblock, body.paged .pg-cols .lx, body.paged .pg-cols .fx-pt, body.paged .pg-cols .callout { display: block !important }
 body.paged .pg-cols .stack > * + *, body.paged .pg-cols section.block > * + *, body.paged .pg-cols .gblock > * + *, body.paged .pg-cols .lx > * + * { margin-top: 14px }
 body.paged .pg-cols .tbl, body.paged .pg-cols .cr-scroll { overflow: visible !important }
+body.mastery-on { overflow: hidden } body.mastery-on #app, body.mastery-on main { visibility: hidden }
+#s-pra.m-full .shead { justify-content: flex-end } #s-pra.m-full .m-bar { position: sticky; top: 0; z-index: 2; padding: 6px 0; background: var(--bg, #eef3f9) }

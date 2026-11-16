@@ -187,11 +187,11 @@
     const skills = Object.entries(w).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([c]) => SK_SKW[c]).join(", ");
     return '<aside class="qchk sk-card" aria-label="Check yourself"><div class="sk-txt"><b>Check yourself</b><small>' + b.length + " drills · ~" + mins + " min · " + skills + (st ? " · last " + st.last + "/" + st.n : "") + '</small></div><a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + "/" + si + '">' + (st ? "Again" : "Practise") + "</a></aside>"; }
   function skMastery(id) { const sv = (S.pr || {})[id]; if (!sv || !sv.n) return { done: 0, n: 0, ok: false }; const done = (sv.res || []).filter(Boolean).length; return { done, n: sv.n, ok: done >= sv.n }; }
-  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null, m = skMastery(id);
-    const lock = !m.ok && !st;
-    return '<aside class="qchk sk-card sk-rev' + (lock ? " sk-lock" : "") + '" data-skrev="' + esc(id) + '"><div class="sk-txt"><b>🏆 Chapter challenge</b><small>' + (lock ? "Finish the Mastery exercises first" + (m.n ? " (" + m.done + " of " + m.n + " done)" : "") + ", then put it all together with DELE-style tasks." : "Everything in this chapter, plus DELE-style tasks" + (st ? " · last " + st.last + "/" + st.n : "")) + "</small>" +
-      (lock ? '<a class="small sk-anyway" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">Start anyway</a>' : "") + "</div>" +
-      (lock ? '<span class="btn small sk-locked" aria-disabled="true">🔒 Locked</span>' : '<a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Again" : "Start") + "</a>") + "</aside>"; }
+  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null, m = skMastery(id), lock = !m.ok && !st, pc = m.n ? Math.round((100 * m.done) / m.n) : 0;
+    return '<aside class="sk-chal' + (lock ? " sk-lock" : "") + '" data-skrev="' + esc(id) + '"><div class="sk-chal-ic" aria-hidden="true">🏆</div><div class="sk-chal-b"><p class="sk-chal-k">Chapter challenge</p><h3>Put the whole chapter to the test</h3>' +
+      '<p class="small">Questions from every part, listening and speaking drills, and DELE-style exam tasks.' + (st ? " Last score: <b>" + st.last + " / " + st.n + "</b>." : "") + "</p>" +
+      (lock ? '<div class="sk-chal-prog" aria-label="Mastery progress"><i style="width:' + pc + '%"></i></div><p class="small sk-chal-l">🔒 Unlocks when you finish the Mastery exercises' + (m.n ? " (" + m.done + " of " + m.n + ")" : "") + ' · <a class="sk-anyway" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">start anyway</a></p>'
+        : '<a class="btn primary sk-chal-go" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Take the challenge again" : "Start the challenge") + " ›</a>") + "</div></aside>"; }
   // the challenge unlocks as soon as the Mastery exercises are finished
   document.addEventListener("click", (e) => { if (!e.target.closest || !e.target.closest("#runner")) return; setTimeout(() => document.querySelectorAll("[data-skrev]").forEach((c) => { const id = c.dataset.skrev, h = skReviewCard(id); if (h && c.outerHTML !== h) c.outerHTML = h; }), 400); });
   /* ---- come back to exactly where you were in the lesson ---- */

@@ -43,3 +43,10 @@ body.kb-open .sk .drtop { position: sticky; top: 0; z-index: 3; background: var(
 .sk-ins { margin: -6px 0 10px }
 .sk-lock { opacity: .92 } .sk-locked { background: var(--line) !important; color: var(--muted) !important; cursor: default; flex: none } .sk-anyway { margin-top: 4px; color: var(--muted) }
 .pxi { margin-right: 2px }
+.sk-chal { display: flex; gap: 14px; align-items: flex-start; margin: 22px 0 10px; padding: 18px 18px 16px; border-radius: 20px; color: var(--ink);
+  background: linear-gradient(135deg, color-mix(in srgb, #f6c344 30%, var(--surface)), color-mix(in srgb, #e8833a 14%, var(--surface))); border: 1.5px solid color-mix(in srgb, #d69e2e 60%, transparent); box-shadow: 0 10px 28px rgba(214,158,46,.18) }
+.sk-chal-ic { font-size: 2.4rem; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,.15)) } .sk-chal-b { flex: 1; min-width: 0 } .sk-chal-k { margin: 0; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #9c5a0d }
+.sk-chal h3 { margin: 2px 0 4px; font-size: 1.2rem } .sk-chal .small { margin: 0 0 8px } .sk-chal-go { margin-top: 4px }
+.sk-chal-prog { height: 8px; border-radius: 99px; background: color-mix(in srgb, #d69e2e 22%, transparent); overflow: hidden; margin: 6px 0 6px } .sk-chal-prog i { display: block; height: 100%; background: #d69e2e; border-radius: 99px }
+.sk-chal.sk-lock .sk-chal-ic { filter: grayscale(.35) } .sk-chal-l { color: var(--muted) } .sk-chal .sk-anyway { color: #9c5a0d; font-weight: 700 }
+.sk-chal h3 { border-left: 0 !important; padding-left: 0 !important; font-family: inherit }

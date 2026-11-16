@@ -5,7 +5,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
 (async () => {
   const H = await open({ hash: "#a2-u2", noOpen: true }); const p = H.p; await H.wait(1500);
   const o = await p.evaluate(() => { const a = document.getElementById("s-pra"), b = document.getElementById("s-chal");
-    return { order: !!(a && b && a.compareDocumentPosition(b) & 4), title: /Mastery exercises/.test(a.querySelector("h2").textContent), lock: !!b.querySelector(".sk-lock .sk-locked"), anyway: !!b.querySelector(".sk-anyway"), jump: [...document.querySelectorAll("#app a, #app button")].some((x) => x.textContent.trim() === "Mastery") }; });
+    return { order: !!(a && b && a.compareDocumentPosition(b) & 4), title: /Mastery exercises/.test(a.querySelector("h2").textContent), lock: !!b.querySelector(".sk-chal.sk-lock"), anyway: !!b.querySelector(".sk-anyway"), jump: [...document.querySelectorAll("#app a, #app button")].some((x) => x.textContent.trim() === "Mastery") }; });
   rec("Lesson ends with 🎯 Mastery exercises, then the 🏆 Chapter challenge (locked until Mastery is done, 'Start anyway' available)", o.order && o.title && o.lock && o.anyway, JSON.stringify(o));
   // tap a Spanish word in the lesson (real mouse click)
   const pt = await p.evaluate(() => { const el = [...document.querySelectorAll("#app .es-w, #app td")].find((x) => /[a-záéíóúñ]{4,}/i.test(x.textContent) && x.getBoundingClientRect().height); el.scrollIntoView({ block: "center" });

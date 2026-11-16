@@ -109,8 +109,10 @@
   function lfMOpen() { const sec = document.getElementById("s-pra"); if (!sec || sec.classList.contains("m-full")) return; LFS.mY = scrollY; LFS.mPaged = document.body.classList.contains("paged");
     if (LFS.mPaged) { LFS.busy = true; lfUnwrap(); LFS.busy = false; }
     if (!sec.querySelector(".m-bar")) { const b = document.createElement("div"); b.className = "m-bar"; b.innerHTML = '<button class="btn small sk-back" data-act="m-close">‹ Lesson</button><b>🎯 Mastery exercises</b>'; sec.prepend(b); }
-    sec.classList.add("m-full"); document.body.classList.add("mastery-on", "no-tabs"); scrollTo(0, 0); sec.scrollTop = 0; }
-  function lfMClose() { const sec = document.getElementById("s-pra"); if (!sec) return; sec.classList.remove("m-full"); const b = sec.querySelector(".m-bar"); if (b) b.remove(); document.body.classList.remove("mastery-on");
+    // lift the section out of the page while it is open, so nothing of the lesson shows behind it
+    const ph = document.createElement("div"); ph.id = "s-pra-ph"; sec.parentNode.insertBefore(ph, sec); document.body.appendChild(sec);
+    sec.classList.add("m-full"); document.body.classList.add("mastery-on", "no-tabs"); sec.scrollTop = 0; }
+  function lfMClose() { const sec = document.getElementById("s-pra"); if (!sec) return; sec.classList.remove("m-full"); const ph = document.getElementById("s-pra-ph"); if (ph) { ph.replaceWith(sec); } const b = sec.querySelector(".m-bar"); if (b) b.remove(); document.body.classList.remove("mastery-on");
     if (LFS.mPaged) { lfWrap(); lfShowEl(sec); } else scrollTo(0, LFS.mY != null ? LFS.mY : sec.getBoundingClientRect().top + scrollY - 80);
     try { document.querySelectorAll("[data-skrev]").forEach((c) => { const h = skReviewCard(c.dataset.skrev); if (h) c.outerHTML = h; }); } catch (e) {} }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="px-go"], [data-act="px-restart"], [data-act="px-retry"], [data-act="px-redo"], [data-act="m-close"]'); if (!t) return;
@@ -118,5 +120,5 @@
   // answering in the lesson (even when the exercises are already under way) opens the full-screen view too
   document.addEventListener("click", (e) => { const r = e.target.closest && e.target.closest("#s-pra #runner"); if (r && !document.getElementById("s-pra").classList.contains("m-full") && e.target.closest("[data-act^='px-']")) setTimeout(lfMOpen, 0); }, true);
   document.addEventListener("focusin", (e) => { if (e.target.id === "px-in" && !document.getElementById("s-pra").classList.contains("m-full") && !document.body.classList.contains("paged")) setTimeout(lfMOpen, 0); });
-  addEventListener("hashchange", () => document.body.classList.remove("mastery-on"));
+  addEventListener("hashchange", () => { document.body.classList.remove("mastery-on"); const sec = document.querySelector("body > #s-pra"); if (sec) sec.remove(); });
   window.__lf = { mOpen: lfMOpen, mClose: lfMClose, go: (i) => lfGo(i), state: () => ({ on: document.body.classList.contains("paged"), i: LFS.i, n: LFS.n }), showEl: lfShowEl, wordAt: lfWordAt, isEs: lfIsSpanish, show: lfShow, refresh: lfSoon, locked: lfExamLocked };
