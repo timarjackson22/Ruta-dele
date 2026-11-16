@@ -72,6 +72,11 @@
     (s.n || []).forEach((n) => { const v = chSplit(n)[1]; v.split(/[,;\/|]| or | o /).map((x) => x.replace(/\(.*?\)|[«»"“”.]/g, "").trim()).filter((x) => x && x.split(/\s+/).length <= 3).forEach((x) => out.push(x)); });
     return out;
   }
+  function chKeep(html) { // keep a section heading in the same column as its first item (columns ignore break-after: avoid)
+    const m = /^(<section[^>]*>)(<h2>[\s\S]*?<\/h2>)<(ol|ul)([^>]*)>([\s\S]*)<\/\3><\/section>$/.exec(html); if (!m) return html;
+    const f = /^<li[\s\S]*?<\/li>/.exec(m[5]); if (!f) return html; const rest = m[5].slice(f[0].length);
+    return m[1] + '<div class="chkeep">' + m[2] + "<" + m[3] + m[4] + ">" + f[0] + "</" + m[3] + "></div>" + (rest ? "<" + m[3] + m[4] + ">" + rest + "</" + m[3] + ">" : "") + "</section>";
+  }
   function chSheet(id) {
     const g = GUIDES.find((x) => x.id === id); if (!g) { app.innerHTML = '<p class="muted">That cheat sheet doesn\'t exist. <a href="#chuletas">All cheat sheets</a></p>'; return; }
     const d = chData(g), on = chBm().includes(id), G = chGroups(g), grpOf = (s) => G && G.find((x) => x.k === chGroupKey(s.t));
@@ -92,7 +97,7 @@
     const hero = '<header class="chhero"><span class="chbadge" aria-hidden="true">' + (CH_TOPIC_IC[g.id] || "📘") + '</span><span class="chlv">' + (CH_LVN[g.lvl] || g.lvl.toUpperCase()) + "</span><h1>" + esc(g.en) + ' <small lang="es">' + esc(g.t) + "</small></h1>" + (first ? '<p class="chlead">' + esc(first) + "</p>" : "") + '<div class="chquick"><b>⚡ Quick answer</b><p>' + esc(d.mem) + "</p></div></header>";
     const rules = '<section class="chrulesec"><h2>📘 The rules</h2><ol class="chcards">' + d.rules.map((r, i) => card(g.sec[i], i)).join("") + "</ol></section>";
     if (CHUI.view === "a4") { // A4 landscape pages: three columns flowing from page to page, exactly as they print
-      const flow = '<div class="chflowa4 chsheet chs2">' + hero + glance + rules + path + watch + fixes + tips + '<p class="chfoot">Ruta DELE · Revision Cheat Sheet · ' + esc(g.t) + "</p></div>";
+      const flow = '<div class="chflowa4 chsheet chs2">' + hero + glance + chKeep(rules) + chKeep(path) + watch + chKeep(fixes) + tips + '<p class="chfoot">Ruta DELE · Revision Cheat Sheet · ' + esc(g.t) + "</p></div>";
       app.innerHTML = '<div class="ui-page chpage chpage-a4">' + tools + '<p class="small muted noprint chzoomhint">A4 landscape · <button class="lnk" data-act="ch-zoom">' + (CHUI.zoom ? "Fit to screen" : "Zoom to 100%") + '</button></p><div class="chpages' + (CHUI.zoom ? " zoom" : "") + '" id="chpages" aria-label="Cheat sheet: ' + esc(g.en) + ', A4 landscape pages"><div class="chpg"><div class="chpgin">' + flow + '</div><span class="chpgno">1</span></div></div>' + quiz + "</div>";
       chPaginate(); return;
     }
@@ -109,6 +114,10 @@
   }
   function chFit() { const box = document.getElementById("chpages"); if (!box) return; const w = box.parentElement.clientWidth, sc = CHUI.zoom ? 1 : Math.min(1, w / CH_PW); box.style.setProperty("--s", sc); }
   window.addEventListener("resize", () => { if (/^#chuleta-/.test(location.hash)) chFit(); });
+  // printing from the browser menu (not only the Print button) also prints the A4 pages
+  let chPrevView = null;
+  window.addEventListener("beforeprint", () => { if (!/^#chuleta-/.test(location.hash) || document.body.classList.contains("ch-print-a4")) return; if (CHUI.view !== "a4") { chPrevView = CHUI.view; CHUI.view = "a4"; chSheet(location.hash.slice(9)); } document.body.classList.add("ch-print-a4"); });
+  window.addEventListener("afterprint", () => { if (!/^#chuleta-/.test(location.hash)) return; document.body.classList.remove("ch-print-a4", "ch-printing"); if (chPrevView) { CHUI.view = chPrevView; chPrevView = null; chSheet(location.hash.slice(9)); } });
   document.addEventListener("input", (e) => { if (e.target && e.target.id === "ch-q") { CHUI.q = e.target.value; const pos = e.target.selectionStart; chHub(); const i = document.getElementById("ch-q"); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (x) {} } } });
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"); if (!t || !/^ch-/.test(t.dataset.act)) return; const a = t.dataset.act;
@@ -119,7 +128,7 @@
     else if (a === "ch-zoom") { CHUI.zoom = !CHUI.zoom; chSheet(location.hash.slice(9)); }
     else if (a === "ch-qz") { const g = GUIDES.find((x) => x.id === t.dataset.id), q = g && g.mc[+t.dataset.q]; if (!q) return; const box = t.closest(".chqz"), right = +t.dataset.v === q[2];
       box.querySelectorAll("button").forEach((b, bi) => { b.disabled = true; if (bi === q[2]) b.classList.add("ok"); }); if (!right) t.classList.add("no"); const w = box.querySelector(".chwhy"); w.hidden = false; w.textContent = (right ? "✓ Right. " : "✗ Not quite. ") + q[3]; }
-    else if (a === "ch-print") { document.body.classList.add(document.getElementById("chpages") ? "ch-print-a4" : "ch-printing"); setTimeout(() => { try { window.print(); } catch (x) {} setTimeout(() => document.body.classList.remove("ch-printing", "ch-print-a4"), 500); }, 50); }
+    else if (a === "ch-print") { if (!document.getElementById("chpages")) { chPrevView = CHUI.view; CHUI.view = "a4"; chSheet(location.hash.slice(9)); } document.body.classList.add("ch-print-a4"); setTimeout(() => { try { window.print(); } catch (x) {} setTimeout(() => { document.body.classList.remove("ch-printing", "ch-print-a4"); if (chPrevView) { CHUI.view = chPrevView; chPrevView = null; chSheet(location.hash.slice(9)); } }, 500); }, 50); }
   });
   window.__ch = { paginate: chPaginate, data: chData, extra: CH_EXTRA, ui: CHUI, guides: () => GUIDES };
   /* ==/CHULETAS== */

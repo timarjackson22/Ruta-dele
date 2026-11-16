@@ -49,6 +49,15 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   }
   await p.evaluate(() => document.body.classList.remove("ch-print-a4"));
   rec("Print: every sheet fits on one or two landscape A4 pages", pages.every(([, c]) => c >= 1 && c <= 2), JSON.stringify(pages.filter(([, c]) => c > 2 || c < 1)) + " " + JSON.stringify(pages.map((x) => x[1])));
+  // printing from the browser menu while in phone view still prints the A4 pages, then returns to phone view; headings stay with their first item
+  await p.evaluate(() => { location.hash = "#chuleta-subjuntivo"; }); await H.wait(300); await p.click('[data-act="ch-view"][data-v="phone"]'); await H.wait(300);
+  await p.evaluate(() => window.dispatchEvent(new Event("beforeprint"))); await H.wait(200);
+  const mp = await p.evaluate(() => ({ a4: !!document.getElementById("chpages"), cls: document.body.classList.contains("ch-print-a4"), kept: [...document.querySelectorAll(".chflowa4 .chkeep")].every((k) => k.querySelector("h2") && k.querySelector("li")) }));
+  const pdf2 = await p.pdf({ landscape: true, format: "A4", preferCSSPageSize: true }); const n2 = Math.max(0, ...(pdf2.toString("latin1").match(/\/Count\s+(\d+)/g) || []).map((x) => +x.replace(/\D/g, "")));
+  await p.evaluate(() => window.dispatchEvent(new Event("afterprint"))); await H.wait(200);
+  const back = await p.evaluate(() => !document.getElementById("chpages") && !document.body.classList.contains("ch-print-a4"));
+  rec("Browser-menu print from phone view: A4 pages printed (≤ 2), headings kept with their first item, phone view restored", mp.a4 && mp.cls && mp.kept && n2 >= 1 && n2 <= 2 && back, JSON.stringify([mp, n2, back]));
+  await p.click('[data-act="ch-view"][data-v="a4"]').catch(() => {}); await H.wait(200);
   // Library tile and voice
   await p.evaluate(() => { location.hash = "#biblioteca"; }); await H.wait(300);
   rec("Library has a Revision Cheat Sheets tile", !!(await p.$('a.stile[href="#chuletas"]')));

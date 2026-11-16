@@ -62,7 +62,7 @@ CSS = """
 .chex { margin: 0; padding: 7px 10px; border-radius: 10px; background: color-mix(in srgb, var(--c) 7%, transparent); display: flex; flex-direction: column; gap: 1px }
 .chex span { font-weight: 600 } .chex small { color: var(--muted); font-style: italic }
 .chex mark { background: color-mix(in srgb, var(--c) 22%, transparent); color: inherit; padding: 0 3px; border-radius: 4px; font-weight: 800; box-shadow: inset 0 -2px 0 var(--c) }
-.chpath ol { list-style: none; margin: 0; padding: 0; counter-reset: q; display: flex; flex-direction: column; gap: 0 }
+.chpath { counter-reset: q } .chpath ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0 }
 .chpath li { counter-increment: q; position: relative; padding: 8px 10px 8px 34px; border-left: 2px dashed var(--line); margin-left: 11px }
 .chpath li::before { content: counter(q); position: absolute; left: -12px; top: 8px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); border: 2px solid var(--cobalt); color: var(--cobalt); font-size: .72rem; font-weight: 800 }
 .chq { display: block; font-size: .88rem } .cha { display: inline-block; margin-top: 4px; font-size: .8rem; font-weight: 800; padding: 2px 9px; border-radius: 8px; color: var(--c, #0f7a4f); background: color-mix(in srgb, var(--c, #0f7a4f) 12%, transparent) } .cha::before { content: "→ " }
@@ -125,12 +125,14 @@ CSS = """
 .chflowa4 .chfix ul { gap: 4px } .chflowa4 .chfix li { padding: 4px 7px; border-radius: 8px; break-inside: avoid }
 .chflowa4 .chwatch ul, .chflowa4 .chtips2 ul { padding: 5px 8px 5px 20px; border-radius: 8px } .chflowa4 .chwatch li, .chflowa4 .chtips2 li { margin: 2px 0 }
 .chflowa4 .chfoot { font-size: 8.5px; color: #8a93a3; margin: 8px 0 0; break-inside: avoid }
+.chkeep { break-inside: avoid } .chflowa4 .chkeep > ol, .chflowa4 .chkeep > ul { margin-bottom: 5px } .chflowa4 :is(.chwatch, .chtips2, .chglance) { break-inside: avoid }
 .chflowa4 * { -webkit-print-color-adjust: exact; print-color-adjust: exact }
 @media print {
+  @page { size: A4 landscape; margin: 12mm }
   body.ch-print-a4 > *:not(main), body.ch-print-a4 main > *:not(#app), body.ch-print-a4 .noprint, body.ch-print-a4 .tabbar, body.ch-print-a4 #tutor, body.ch-print-a4 header.top, body.ch-print-a4 .crumb, body.ch-print-a4 .ui-title, body.ch-print-a4 .chquiz { display: none !important }
   body.ch-print-a4 #app, body.ch-print-a4 main { margin: 0 !important; padding: 0 !important; max-width: none !important }
   body.ch-print-a4 .chpages { overflow: visible; padding: 0 } body.ch-print-a4 .chpage-a4 { margin: 0 !important; padding: 0 !important }
-  body.ch-print-a4 .chpg { zoom: 1 !important; width: 1054px; height: 720px; margin: 0; border-radius: 0; box-shadow: none; break-after: page; page-break-after: always }
+  body.ch-print-a4 .chpg { zoom: .97 !important; width: 1054px; height: 720px; margin: 0; border-radius: 0; box-shadow: none; break-after: page; page-break-after: always }
   body.ch-print-a4 .chpg:last-child { break-after: auto; page-break-after: auto }
   body.ch-print-a4 .chpgin { inset: 0 } body.ch-print-a4 .chpgno { right: 0; bottom: -2px }
 }
