@@ -80,6 +80,10 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   rec("Exam preparation tab: target/date/booking, time & adherence, coverage, skills, readiness (not enough evidence), mocks, mistakes, revision", /DELE B1/.test(xp) && /Provisional/.test(xp) && /Adherence/.test(xp) && /Remaining workload/.test(xp) && /Content coverage/.test(xp) && /Not enough evidence/.test(xp) && /Mock exams/.test(xp) && /Recurring mistakes/.test(xp) && /Revision due/.test(xp) && /not a measure of how ready/.test(xp), xp.slice(0, 600));
   const xp2 = await p.evaluate(() => { const S = window.__plan.S(), k = "b1-1"; S.ex = S.ex || {}; S.ex[k] = { lectura: { sc: 18, d: 1 }, auditiva: { sc: 17, d: 1 }, escritura: { sc: 16, d: 1 }, oral: { sc: 19, d: 1 } }; window.__plan.pg.tab = "exam"; window.__plan.progress(); return document.getElementById("app").innerText; }).catch((e) => "ERR " + e.message);
   rec("With one paper per skill: a readiness range with uncertainty and no guarantee", /Readiness estimate/.test(xp2) && /–/.test(xp2) && /not a prediction/.test(xp2) && /estimate/.test(xp2), xp2.slice(0, 900));
+  // mock protection: a paper kept for a full mock warns before it is opened
+  const mk = await p.evaluate(() => { const A = window.__plan.state().active, m = A.sessions.find((x) => x.kind === "mock"); if (!m) return { none: 1 }; location.hash = m.link.replace(/-(lectura|auditiva|escritura|oral)$/, ""); return { link: m.link }; });
+  await H.wait(900);
+  rec("A paper reserved for a full mock shows a 'kept unseen' warning", mk.none || await p.evaluate(() => /keeps this exam unseen/.test(document.getElementById("app").innerText)), JSON.stringify(mk));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close();
   // Android: reminders handed to the native scheduler; status says "set" only when the phone accepted them and notifications are allowed
