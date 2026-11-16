@@ -24,3 +24,7 @@
 /* keyboard open: keep the question and the progress in view */
 body.kb-open .sk .sk-tag, body.kb-open .sk .dren + .dren { display: none } body.kb-open .sk .drq { margin: 4px 0 6px; font-size: 1.15rem } body.kb-open .sk .drsay { margin: 4px 0; font-size: 1.15rem } body.kb-open .sk .drbody { padding-top: 4px }
 body.kb-open .sk .drtop { position: sticky; top: 0; z-index: 3; background: var(--bg, #f4f6fb); padding: 6px 0 } body.kb-open .sk .sk-acc .drtile { padding: 4px 9px }
+.sk-diff { margin-top: 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: .95rem; line-height: 1.5 } .sk-diff ul { margin: 6px 0 0; padding-left: 20px } .sk-diff li { margin: 3px 0 }
+.sk-diff del { color: var(--bad); text-decoration: line-through } .sk-diff ins { color: var(--good); text-decoration: none; font-weight: 700 } .sk-diff .why { display: block; margin-top: 6px; color: var(--muted) }
+.sk-diff, .sk-diff .fxline { color: var(--ink) } .sk-diff .fxline { font-weight: 700; font-size: 1.02rem } .sk-lab { margin: 0 0 4px !important; font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted) }
+.drfb .sk-diff b { color: var(--ink) !important }

@@ -270,10 +270,13 @@
     const c = ansCheck(v, alts, { lvl: d.lvl }), show = "<b>" + esc(c.best || alts[0]) + "</b>" + (why ? '<br><span class="why">' + esc(why) + "</span>" : "");
     const mi = d.type === "acad" ? d.it : { t, k: skHash(q) % 100000, q, a: alts, why };
     let close = false; if (c.kind === "wrong" && (d.type === "translate" || (d.type === "acad" && d.it.t === "tr"))) { try { close = alts.some((a) => pcScore(v, a) >= 0.9 && strip(norm(a)) !== strip(norm(v))); } catch (e) {} }
-    if (c.kind === "ok") skResult(true, st.hinted ? "Right on the second try." + (why ? '<br><span class="why">' + esc(why) + "</span>" : "") : why ? esc(why) : "");
-    else if ((c.kind === "accent" || c.kind === "near") && !st.hinted) { st.hinted = 1; st.hint = c.hint; st.hintKind = c.kind; try { sfx(false); } catch (e) {} skRender(); }
+    if (c.kind === "ok") skResult(true, st.hinted ? "Right on the second try: <b>" + esc(c.best || v) + "</b>" + (/[.!?…]$/.test(c.best || v) ? "" : ".") + (st.firstVal ? '<div class="sk-diff">' + (() => { try { return explainAns(st.firstVal, [c.best || v], why).html.replace(/^Almost: only the accents\. /, "You fixed: "); } catch (e) { return ""; } })() + "</div>" : why ? '<br><span class="why">' + esc(why) + "</span>" : "") : why ? esc(why) : "");
+    else if ((c.kind === "accent" || c.kind === "near") && !st.hinted) { st.hinted = 1; st.firstVal = v; st.hint = c.hint; st.hintKind = c.kind; try { sfx(false); } catch (e) {} skRender(); }
     else if (close && !st.hinted) skResult(true, "Good. A model answer: " + show);
-    else { skResult(false, (st.hinted ? "Not yet. " : "") + "Answer: " + show, mi, st.hintKind || c.kind); if (d.type === "translate") { SK.st.claim = 1; skRender(); } } }
+    else { // word by word: what you wrote, what changes, and why (accent rules, verb forms, agreement…)
+      let detail = ""; try { const ex = explainAns(v, [c.best || alts[0]], why); detail = '<div class="sk-diff">' + ex.html.replace(/^Almost: only the accents\. /, "") + "</div>"; } catch (e) {}
+      const head = (st.hintKind || c.kind) === "accent" ? "Only the accents are missing now." : st.hinted ? "Not yet." : "";
+      skResult(false, (head ? "<b>" + head + "</b>" : "") + (detail ? detail.replace('<div class="sk-diff">', '<div class="sk-diff"><p class="sk-lab">Correct version, with what changes</p>') : "The answer is <b>" + esc(c.best || alts[0]) + "</b>" + (why ? '<br><span class="why">' + esc(why) + "</span>" : "")), mi, st.hintKind || c.kind); if (d.type === "translate") { SK.st.claim = 1; skRender(); } } }
   function skWrite(d, v) { const n = skWords(v).length; if (!n) return;
     const hit = d.pts.filter((p) => (p.kw || []).some((k) => skN(v).includes(skN(k)))).length, need = Math.max(1, Math.ceil(d.pts.length * 0.6));
     const ok = n >= d.min && hit >= need;
