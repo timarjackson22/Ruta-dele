@@ -14,12 +14,12 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
       if (!d.mem || d.mem.length < 40) miss.push("memory aid"); if (d.tips.length < 2) miss.push("exam tips");
       out.push([g.id, miss]); }
     return { n: GUIDES.length, cards: document.querySelectorAll(".chcard").length, bad: out.filter((x) => x[1].length), extraIds: Object.keys(window.__ch.extra).sort().join() === GUIDES.map((g) => g.id).sort().join() }; });
-  rec("Coverage: a card for every Guide topic (" + cov.n + ")", cov.cards === cov.n && cov.n === 22, JSON.stringify(cov).slice(0, 200));
+  rec("Coverage: a card for every Guide topic (" + cov.n + ")", cov.cards === cov.n && cov.n === 23, JSON.stringify(cov).slice(0, 200));
   rec("Coverage: every sheet has all guide rules (same titles, in order), examples, a decision diagram, exceptions, mistakes, memory aid, exam tips", !cov.bad.length && cov.extraIds, JSON.stringify(cov.bad));
   // search and filters
   await p.fill("#ch-q", "subjunt"); await H.wait(200);
   let n = await p.$$eval(".chcard", (x) => x.map((a) => a.getAttribute("href")));
-  rec("Search narrows the list (and keeps focus in the box)", n.length >= 1 && n.length < 22 && n.includes("#chuleta-subjuntivo") && await p.evaluate(() => document.activeElement && document.activeElement.id === "ch-q"), JSON.stringify(n));
+  rec("Search narrows the list (and keeps focus in the box)", n.length >= 1 && n.length < 23 && n.includes("#chuleta-subjuntivo") && await p.evaluate(() => document.activeElement && document.activeElement.id === "ch-q"), JSON.stringify(n));
   await p.fill("#ch-q", ""); await p.click('[data-act="ch-lv"][data-v="b1"]'); await H.wait(150);
   n = await p.$$eval(".chcard .chlv", (x) => x.map((a) => a.textContent));
   rec("Level filter shows only that level", n.length > 0 && n.every((x) => x === "B1"), JSON.stringify(n));
@@ -58,6 +58,12 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const back = await p.evaluate(() => !document.getElementById("chpages") && !document.body.classList.contains("ch-print-a4"));
   rec("Browser-menu print from phone view: A4 pages printed (≤ 2), headings kept with their first item, phone view restored", mp.a4 && mp.cls && mp.kept && n2 >= 1 && n2 <= 2 && back, JSON.stringify([mp, n2, back]));
   await p.click('[data-act="ch-view"][data-v="a4"]').catch(() => {}); await H.wait(200);
+  // the superlatives and diminutives guide (added 15 Nov 2026): guide page, cheat sheet and voice
+  await p.evaluate(() => { location.hash = "#guia-superlativos-diminutivos"; }); await H.wait(600);
+  const sg = await p.evaluate(() => { const t = document.getElementById("app").innerText; return { h: /Superlatives and diminutives/.test(t), isimo: /-ísimo/.test(t), ito: /cafecito/.test(t), azo: /golazo/.test(t) }; });
+  rec("New guide: Superlatives and diminutives opens with -ísimo, -ito and -azo sections", sg.h && sg.isimo && sg.ito && sg.azo, JSON.stringify(sg));
+  await p.evaluate(() => window.__pv.route("open the diminutives cheat sheet", "chat")); await H.wait(900);
+  rec("Voice: 'open the diminutives cheat sheet'", await p.evaluate(() => location.hash === "#chuleta-superlativos-diminutivos"), await p.evaluate(() => location.hash));
   // Library tile and voice
   await p.evaluate(() => { location.hash = "#biblioteca"; }); await H.wait(300);
   rec("Library has a Revision Cheat Sheets tile", !!(await p.$('a.stile[href="#chuletas"]')));

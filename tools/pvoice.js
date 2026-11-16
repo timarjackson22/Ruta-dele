@@ -35,7 +35,7 @@
     s = s.replace(/\b(unit|lesson|exam|test|unidad|leccion|examen|tema|number|numero|question|pregunta)\s+([a-z]+)\b/g, (m, x, n) => (PV_NUM[n] ? x + " " + PV_NUM[n] : m));
     return s.replace(/\s+/g, " ").trim();
   }
-  const PV_TOPIC = [["past tenses?|the past|past tense|pasados?|el pasado|los pasados|tiempos pasados|tiempo pasado", "pasados"], ["preterite( (vs|versus|and|or) (the )?imperfect)?|imperfect|preterito( (vs|y|o) imperfecto)?|indefinido|imperfecto", "pret-imp"],
+  const PV_TOPIC = [["superlatives?( and diminutives?)?|superlativos?( y diminutivos?)?|diminutives?|diminutivos?|augmentatives?|aumentativos?", "superlativos-diminutivos"], ["past tenses?|the past|past tense|pasados?|el pasado|los pasados|tiempos pasados|tiempo pasado", "pasados"], ["preterite( (vs|versus|and|or) (the )?imperfect)?|imperfect|preterito( (vs|y|o) imperfecto)?|indefinido|imperfecto", "pret-imp"],
     ["por (and|y|vs|versus|or|o) para|por para|para (and|y|vs|versus|or|o) por", "por-para"], ["ser (and|y|vs|versus|or|o) estar|ser estar|estar (and|y|vs|versus) ser", "ser-estar"], ["(the )?subjunctive|(el )?subjuntivo", "subjuntivo"],
     ["(the )?imperative|commands|(el )?imperativo|mandatos", "imperativo"], ["pronunciation|accents|written accents|pronunciacion|acentos|tildes", "pronunciacion"], ["conjugation|verb conjugation|conjugacion|conjugar verbos", "conjugacion"],
     ["(the )?present( tense)?|(the )?future( tense)?|(the )?conditional|(el )?presente|(el )?futuro|(el )?condicional", "presente-futuro"], ["prepositions|preposiciones", "preposiciones"], ["connectors|linking words|conectores", "conectores"],
