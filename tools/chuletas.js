@@ -44,17 +44,46 @@
       '<div class="chgrid">' + (L.map((g) => '<a class="chcard" href="#chuleta-' + g.id + '"><span class="chlv">' + g.lvl.toUpperCase() + "</span><b>" + esc(g.en) + "</b><small>" + esc(g.t) + " · " + g.sec.length + " rules</small>" + (bm.includes(g.id) ? '<span class="chstar" aria-label="Saved">★</span>' : "") + "</a>").join("") || '<p class="muted">No sheet matches. Clear the search or filters.</p>') + "</div></div>";
   }
   const pcNormC = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  // ---- the sheet: quick answer, at-a-glance comparison, rule cards with highlighted examples, decision path, ✗/✓ fixes, tips, quick check ----
+  const CH_PAL = ["#2563eb", "#ea580c", "#059669", "#9333ea", "#db2777", "#0891b2"];
+  const chGroupKey = (t) => { const m = /^([^:]{2,30}):\s/.exec(t); return m ? m[1].split(/\s+/)[0].toLowerCase() : ""; };
+  function chGroups(g) { // two-way topics (por/para, ser/estar, preterite/imperfect…): sections grouped by their prefix
+    const c = {}; g.sec.forEach((s) => { const k = chGroupKey(s.t); if (k) c[k] = (c[k] || 0) + 1; });
+    const ks = Object.keys(c).filter((k) => c[k] >= 2); if (ks.length < 2) return null;
+    const label = (k) => { const s = g.sec.find((x) => chGroupKey(x.t) === k); return /^([^:]+?)(\s+\+.*)?:/.exec(s.t)[1].split(/\s+/)[0]; };
+    return ks.slice(0, 4).map((k, i) => ({ k, label: label(k), c: CH_PAL[i], secs: g.sec.filter((s) => chGroupKey(s.t) === k) }));
+  }
+  const chRe = (w) => new RegExp("(^|[^\\p{L}])(" + w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")(?![\\p{L}])", "giu");
+  function chHL(es, keys) { // highlight the target words in a Spanish example
+    let h = esc(es); const lo = es.toLowerCase(), K = [...new Set(keys.filter((k) => k && k.length > 1 && k.length < 28 && lo.includes(k.toLowerCase())))]; (K.length ? [K[0]].concat(K.slice(1).sort((a, b) => b.length - a.length).slice(0, 3)) : []).forEach((k) => { h = h.replace(chRe(esc(k)), (m, a, w) => a + "<mark>" + w + "</mark>"); }); return h;
+  }
+  function chKeys(s, grp) { // words worth highlighting for a section: the group word (por, ser…) and short forms listed in its notes
+    const out = []; if (grp) out.push(grp.label.toLowerCase());
+    (s.n || []).forEach((n) => { const v = chSplit(n)[1]; v.split(/[,;\/|]| or | o /).map((x) => x.replace(/\(.*?\)|[«»"“”.]/g, "").trim()).filter((x) => x && x.split(/\s+/).length <= 3).forEach((x) => out.push(x)); });
+    return out;
+  }
   function chSheet(id) {
     const g = GUIDES.find((x) => x.id === id); if (!g) { app.innerHTML = '<p class="muted">That cheat sheet doesn\'t exist. <a href="#chuletas">All cheat sheets</a></p>'; return; }
-    const d = chData(g), on = chBm().includes(id), ex = (e) => e ? '<span class="che"><i lang="es">' + esc(e[0]) + "</i> <small>" + esc(e[1]) + "</small></span>" : "";
-    const diagram = d.decide.length ? '<ol class="chflow">' + d.decide.map((x) => { const [q, a] = x.split(/\s*→\s*/); return "<li><span>" + esc(q) + "</span>" + (a ? "<b>→ " + esc(a) + "</b>" : "") + "</li>"; }).join("") + "</ol>" : "";
+    const d = chData(g), on = chBm().includes(id), G = chGroups(g), grpOf = (s) => G && G.find((x) => x.k === chGroupKey(s.t));
+    const first = (String(g.intro || "").match(/^[^.!?]+[.!?]/) || [""])[0];
+    const ex = (e, keys) => e ? '<p class="chex"><span lang="es">' + chHL(e[0], keys) + '</span><small>' + esc(e[1]) + "</small></p>" : "";
+    const card = (s, i) => { const gr = grpOf(s), col = gr ? gr.c : CH_PAL[i % CH_PAL.length], title = gr ? s.t.replace(/^[^:]+:\s*/, "") : s.t, notes = (s.n || []).slice(0, 2).map((n) => chSplit(n));
+      return '<li class="chcard2" style="--c:' + col + '"><div class="chct">' + (gr ? '<span class="chtag">' + esc(gr.label) + "</span>" : '<span class="chnum">' + (i + 1) + "</span>") + "<b>" + esc(title) + '</b></div><p class="chrule">' + esc(s.r) + "</p>" +
+        (notes.length ? '<div class="chnotes">' + notes.map(([k, v]) => '<p class="chnote">' + (k ? "<b>" + esc(k) + "</b> " : "") + esc(v) + "</p>").join("") + "</div>" : "") + ex((s.e || [])[0], chKeys(s, gr)) + "</li>"; };
+    // at a glance: side-by-side for two-way topics
+    const glance = G ? '<section class="chglance" aria-label="At a glance"><h2>At a glance</h2><div class="chvs" style="--n:' + G.length + '">' + G.map((gr) => '<div class="chside" style="--c:' + gr.c + '"><h3>' + esc(gr.label) + '</h3><ul>' + gr.secs.map((s) => "<li>" + esc(s.t.replace(/^[^:]+:\s*/, "")) + "</li>").join("") + "</ul></div>").join('<span class="chvsx" aria-hidden="true">vs</span>') + "</div></section>" : "";
+    const ansCol = (a) => { if (!G) return ""; const m = G.find((gr) => new RegExp("^" + gr.label + "\\b", "i").test(a.trim())); return m ? ' style="--c:' + m.c + '"' : ""; };
+    const path = d.decide.length ? '<section class="chpath"><h2>Ask yourself</h2><ol>' + d.decide.map((x) => { const [q, a] = x.split(/\s*→\s*/); return "<li><span class=\"chq\">" + esc(q) + "</span>" + (a ? '<span class="cha"' + ansCol(a) + ">" + esc(a) + "</span>" : "") + "</li>"; }).join("") + "</ol></section>" : "";
+    const fixes = d.fix.length ? '<section class="chfix"><h2>Common mistakes</h2><ul>' + d.fix.slice(0, 5).map((f) => '<li><p class="chno" lang="es"><span aria-label="wrong">✗</span> ' + esc(f[0]) + '</p><p class="chyes" lang="es"><span aria-label="right">✓</span> ' + esc(String(f[1]).split("|").join(" / ")) + "</p><small>" + esc(f[2]) + "</small></li>").join("") + "</ul></section>" : "";
+    const watch = d.exc.length ? '<section class="chwatch"><h2>⚠️ Watch out</h2><ul>' + d.exc.slice(0, 4).map((x) => "<li>" + (x.k ? "<b>" + esc(x.k) + "</b> " : "") + esc(x.v) + "</li>").join("") + "</ul></section>" : "";
+    const tips = d.tips.length ? '<section class="chtips2"><h2>🎯 In the DELE</h2><ul>' + d.tips.map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul></section>" : "";
+    const mc = (g.mc || []).slice(0, 3), quiz = mc.length ? '<section class="chquiz noprint"><h2>Quick check</h2>' + mc.map((q, qi) => '<div class="chqz" data-q="' + qi + '"><p lang="es">' + esc(q[0]) + '</p><div class="chopts">' + q[1].map((o, oi) => '<button class="btn small" data-act="ch-qz" data-id="' + id + '" data-q="' + qi + '" data-v="' + oi + '">' + esc(o) + "</button>").join("") + '</div><p class="chwhy" hidden></p></div>').join("") + "</section>" : "";
     app.innerHTML = '<div class="ui-page chpage"><div class="chtools noprint"><a class="btn small" href="#chuletas">‹ All sheets</a><button class="btn small" data-act="ch-bm" data-id="' + id + '" aria-pressed="' + on + '">' + (on ? "★ Saved" : "☆ Save") + '</button><button class="btn small" data-act="ch-print">⎙ Print / PDF</button><a class="btn small" href="#guia-' + id + '">Open the full guide ›</a></div>' +
-      '<article class="chsheet" aria-label="Cheat sheet: ' + esc(g.en) + '"><header><span class="chlv">' + (CH_LVN[g.lvl] || g.lvl.toUpperCase()) + "</span><h1>" + esc(g.en) + ' <small lang="es">' + esc(g.t) + '</small></h1><p class="chmem"><b>Memory aid</b> ' + esc(d.mem) + "</p></header>" +
-      '<div class="chcols"><section><h2>Rules &amp; examples</h2><ul class="chrules">' + d.rules.map((r) => "<li><b>" + esc(r.t) + "</b> " + esc(r.r) + ex(r.e) + "</li>").join("") + "</ul></section>" +
-      "<section><h2>How to decide</h2>" + diagram + "<h2>Watch out / exceptions</h2><ul class=\"chexc\">" + d.exc.map((x) => "<li>" + (x.k ? "<b>" + esc(x.k) + ":</b> " : "") + esc(x.v) + "</li>").join("") + "</ul></section>" +
-      '<section><h2>Common mistakes</h2><ul class="chpit">' + d.fix.slice(0, 6).map((f) => '<li><s lang="es">' + esc(f[0]) + '</s> <b lang="es">' + esc(String(f[1]).split("|").join(" / ")) + "</b><small>" + esc(f[2]) + "</small></li>").join("") + "</ul>" +
-      '<h2>Exam tips</h2><ul class="chtips">' + d.tips.map((t) => "<li>" + esc(t) + "</li>").join("") + "</ul></section></div>" +
-      '<footer class="small muted">Ruta DELE · Revision Cheat Sheet · from the Guide «' + esc(g.t) + '» · ruta-dele</footer></article></div>';
+      '<article class="chsheet chs2" aria-label="Cheat sheet: ' + esc(g.en) + '"><header class="chhero"><span class="chlv">' + (CH_LVN[g.lvl] || g.lvl.toUpperCase()) + "</span><h1>" + esc(g.en) + ' <small lang="es">' + esc(g.t) + "</small></h1>" + (first ? '<p class="chlead">' + esc(first) + "</p>" : "") +
+      '<div class="chquick"><b>Quick answer</b><p>' + esc(d.mem) + "</p></div></header>" + glance +
+      '<div class="chcols"><section class="chrulesec"><h2>The rules</h2><ol class="chcards">' + d.rules.map((r, i) => card(g.sec[i], i)).join("") + "</ol></section>" +
+      "<section>" + path + watch + "</section><section>" + fixes + tips + "</section></div>" + quiz +
+      '<footer class="small muted">Ruta DELE · Revision Cheat Sheet · from the Guide «' + esc(g.t) + "»</footer></article></div>";
   }
   document.addEventListener("input", (e) => { if (e.target && e.target.id === "ch-q") { CHUI.q = e.target.value; const pos = e.target.selectionStart; chHub(); const i = document.getElementById("ch-q"); if (i) { i.focus(); try { i.setSelectionRange(pos, pos); } catch (x) {} } } });
   document.addEventListener("click", (e) => {
@@ -62,6 +91,8 @@
     if (a === "ch-lv") { CHUI.lv = t.dataset.v; chHub(); }
     else if (a === "ch-bmf") { CHUI.bm = !CHUI.bm; chHub(); }
     else if (a === "ch-bm") { const b = chBm(), i = b.indexOf(t.dataset.id); if (i >= 0) b.splice(i, 1); else b.push(t.dataset.id); save(); chSheet(t.dataset.id); }
+    else if (a === "ch-qz") { const g = GUIDES.find((x) => x.id === t.dataset.id), q = g && g.mc[+t.dataset.q]; if (!q) return; const box = t.closest(".chqz"), right = +t.dataset.v === q[2];
+      box.querySelectorAll("button").forEach((b, bi) => { b.disabled = true; if (bi === q[2]) b.classList.add("ok"); }); if (!right) t.classList.add("no"); const w = box.querySelector(".chwhy"); w.hidden = false; w.textContent = (right ? "✓ Right. " : "✗ Not quite. ") + q[3]; }
     else if (a === "ch-print") { document.body.classList.add("ch-printing"); setTimeout(() => { try { window.print(); } catch (x) {} setTimeout(() => document.body.classList.remove("ch-printing"), 500); }, 50); }
   });
   window.__ch = { data: chData, extra: CH_EXTRA, ui: CHUI, guides: () => GUIDES };

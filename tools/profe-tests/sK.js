@@ -25,7 +25,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   rec("Level filter shows only that level", n.length > 0 && n.every((x) => x === "B1"), JSON.stringify(n));
   // a sheet: links, bookmark persists
   await p.evaluate(() => { location.hash = "#chuleta-por-para"; }); await H.wait(400);
-  const sh = await p.evaluate(() => ({ cols: document.querySelectorAll(".chcols > section").length, guide: !!document.querySelector('a[href="#guia-por-para"]'), flow: document.querySelectorAll(".chflow li").length, h: document.querySelector(".chsheet h1").textContent }));
+  const sh = await p.evaluate(() => ({ cols: document.querySelectorAll(".chcols > section").length, guide: !!document.querySelector('a[href="#guia-por-para"]'), flow: document.querySelectorAll(".chpath li").length, h: document.querySelector(".chsheet h1").textContent }));
   rec("Sheet: three columns, decision diagram, link to the full guide", sh.cols === 3 && sh.flow >= 3 && sh.guide && /Por vs/.test(sh.h), JSON.stringify(sh));
   await p.click('[data-act="ch-bm"]'); await H.wait(200);
   await p.reload(); await p.waitForTimeout(1500); await p.evaluate(() => { location.hash = "#chuletas"; }); await H.wait(400);
