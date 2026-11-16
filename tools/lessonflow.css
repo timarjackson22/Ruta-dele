@@ -5,20 +5,28 @@
 .lf-pm { margin: 4px 0 8px; font-size: .95rem; line-height: 1.4 } .lf-pr { display: flex; gap: 6px; flex-wrap: wrap }
 ::highlight(lf-word) { background-color: color-mix(in srgb, #f6c344 55%, transparent) }
 #app [lang="es"], #app .es-w, #app .drsay, #app .sk-card2 { -webkit-tap-highlight-color: transparent }
-/* page mode */
-body.paged #app > .pg-wrap { overflow: hidden; position: relative; touch-action: pan-y }
-body.paged .pg-cols { column-fill: auto; transition: transform .38s cubic-bezier(.2,.7,.2,1); will-change: transform }
-body.paged .pg-cols > * { break-inside: auto } body.paged .pg-cols .sk-card, body.paged .pg-cols tr, body.paged .pg-cols li, body.paged .pg-cols .note, body.paged .pg-cols p { break-inside: avoid }
+/* page mode: a presentation-style slide in a fixed frame; the page itself never scrolls */
+html:has(body.paged), body.paged { overflow: hidden !important; height: 100% }
+body.paged header.top { position: fixed; top: 0; left: 0; right: 0; z-index: 30 }
+body.paged #app > .pg-wrap { position: fixed; left: max(12px, calc(50% - 440px)); right: max(12px, calc(50% - 440px)); bottom: calc(66px + env(safe-area-inset-bottom, 0px)); top: 80px; overflow: hidden; touch-action: pan-y;
+  padding: 28px 26px; border-radius: 22px; background: var(--surface); border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); box-shadow: 0 18px 50px rgba(20,40,80,.12), 0 2px 6px rgba(20,40,80,.05) }
+body.paged .pg-cols { column-fill: auto; transition: transform .42s cubic-bezier(.2,.7,.2,1); will-change: transform; font-size: 1.06rem; line-height: 1.75 }
+body.paged .pg-cols p, body.paged .pg-cols li { line-height: 1.75 } body.paged .pg-cols h1 { font-size: 1.7rem; line-height: 1.2 } body.paged .pg-cols h2 { margin-top: 28px; font-size: 1.35rem } body.paged .pg-cols h3 { margin-top: 22px }
+body.paged .pg-cols > * + *, body.paged .pg-cols .stack > * + *, body.paged .pg-cols section.block > * + *, body.paged .pg-cols .gblock > * + * { margin-top: 24px !important }
+body.paged .pg-cols .lhead, body.paged .pg-cols .callout, body.paged .pg-cols .gblock, body.paged .pg-cols section.block { box-shadow: none !important; background: transparent !important; border-left-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important }
+body.paged .pg-cols .sk-card, body.paged .pg-cols tr, body.paged .pg-cols li, body.paged .pg-cols .note, body.paged .pg-cols p, body.paged .pg-cols h2, body.paged .pg-cols h3 { break-inside: avoid }
 body.paged .pg-cols h2, body.paged .pg-cols h3, body.paged .pg-cols .shead { break-after: avoid }
 body.paged .pg-cols img, body.paged .pg-cols table { max-width: 100% }
-.lf-nav { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 55%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); opacity: .85; font-size: .82rem; color: var(--muted) }
-.lf-nav button { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: pointer } .lf-nav button[disabled] { opacity: .25 }
-.lf-num { font-variant-numeric: tabular-nums; min-width: 44px; text-align: center } .lf-hint { white-space: nowrap; font-size: .74rem; animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .35 } }
-body.paged .tabbar, body.paged #tabpeek { display: none !important }
+.lf-nav { position: fixed; left: 50%; bottom: calc(34px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 12; display: flex; align-items: center; gap: 4px; padding: 0 4px; border-radius: 99px; background: transparent; opacity: .5; font-size: .76rem; color: var(--muted); transition: opacity .3s }
+.lf-nav:hover, .lf-nav:focus-within { opacity: .9 }
+.lf-nav button { width: 28px; height: 28px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); font-size: 1.15rem; line-height: 1; cursor: pointer } .lf-nav button[disabled] { opacity: .25 }
+.lf-num { font-variant-numeric: tabular-nums; min-width: 40px; text-align: center } .lf-hint { white-space: nowrap; font-size: .7rem; animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .35 } }
+body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { display: flex !important }
 /* top-bar tools on lessons; Profe's floating button tucked away during lessons and drills */
 .nb-tools { display: inline-flex; gap: 6px; margin-left: auto; align-items: center } .nb-tools button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0 }
 .nb-tools svg { width: 20px; height: 20px } .nb-tools .nb-profe { font-weight: 800; color: #fff; background: var(--cobalt); border-color: transparent } .nb-tools button[aria-pressed="true"] { border-color: var(--cobalt) }
 body.lf-quiet #tutor-fab, body.lf-quiet .tutor-fab { display: none !important }
+body.lf-quiet.tabs-peek #tutor-fab:not([hidden]) { display: inline-flex !important } /* Profe comes back with the bottom menu */
 /* Mastery exercises full screen */
 #s-pra.m-full { position: fixed; inset: 0; z-index: 45; margin: 0; overflow-y: auto; background: var(--bg, #eef3f9); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(30px + env(safe-area-inset-bottom, 0px)); max-width: none }
 #s-pra.m-full > * { max-width: 720px; margin-left: auto; margin-right: auto }

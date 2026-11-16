@@ -67,8 +67,10 @@
   function lfUnwrap() { const A = document.getElementById("app"), W = A && A.querySelector(":scope > .pg-wrap"); document.body.classList.remove("paged"); const N = document.getElementById("lf-nav"); if (N) N.remove();
     if (W) { const C = W.firstChild; [...C.children].forEach((el) => A.insertBefore(el, W)); W.remove(); } }
   function lfMeasure() { const A = document.getElementById("app"), W = A && A.querySelector(".pg-wrap"); if (!W) return; const C = W.firstChild;
-    const hdr = document.querySelector("header.top"), top = hdr ? hdr.getBoundingClientRect().bottom : 0, h = Math.max(320, innerHeight - top - 92);
-    W.style.height = h + "px"; const w = W.clientWidth, gap = 40; C.style.columnWidth = w + "px"; C.style.columnGap = gap + "px"; C.style.height = h + "px";
+    // a fixed slide between the top bar and the bottom edge; only what is inside the frame changes
+    const hdr = document.querySelector("header.top"), top = hdr ? Math.max(0, hdr.getBoundingClientRect().bottom) : 0; W.style.top = top + 12 + "px";
+    const cs = getComputedStyle(W), h = Math.max(260, W.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)), w = W.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), gap = 60;
+    C.style.columnWidth = w + "px"; C.style.columnGap = gap + "px"; C.style.height = h + "px"; C.style.width = w + "px";
     LFS.step = w + gap; LFS.n = Math.max(1, Math.round((C.scrollWidth + gap) / LFS.step)); LFS.i = Math.min(LFS.i, LFS.n - 1); lfGo(LFS.i, true); }
   function lfGo(i, silent) { const C = document.querySelector(".pg-wrap > .pg-cols"); if (!C) return; i = Math.max(0, Math.min(LFS.n - 1, i)); const moved = i !== LFS.i; LFS.i = i;
     C.style.transform = "translateX(" + -i * LFS.step + "px)"; if (moved && !silent) lfFlipSound(); lfNav(); try { S.pgAt = S.pgAt || {}; S.pgAt[location.hash] = i; } catch (e) {} }
@@ -101,7 +103,7 @@
     if (!T) { T = document.createElement("span"); T.id = "nb-tools"; T.className = "nb-tools"; nb.insertBefore(T, document.getElementById("regbtn")); }
     T.innerHTML = '<button type="button" data-act="pg-mode" aria-pressed="' + !!S.paged + '" aria-label="' + (S.paged ? "Scroll the lesson" : "Read the lesson page by page") + '" title="' + (S.paged ? "Scroll view" : "Page view") + '">' +
       (S.paged ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1 6-1 9 1 3-2 6-2 9-1v13c-3-1-6-1-9 1-3-2-6-2-9-1zM12 6.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>') +
-      '</button><button type="button" class="nb-profe" data-act="t-open" aria-label="Open Profe">P</button>'; }
+      '</button>'; }
   function lfFab() { document.body.classList.toggle("lf-quiet", lfRead() || /^#ejercicios\//.test(location.hash) || /^#drill$/.test(location.hash)); }
   /* ---- 4. Mastery exercises take the whole screen, like the drills; ‹ Lesson brings you back to the same place ---- */
   function lfMOpen() { const sec = document.getElementById("s-pra"); if (!sec || sec.classList.contains("m-full")) return; LFS.mY = scrollY; LFS.mPaged = document.body.classList.contains("paged");
