@@ -62,6 +62,11 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const rp = await p.evaluate(async () => { const st = window.__lf.state(); window.__lf.go(Math.min(st.n - 2, 8)); const k = window.__lf.state().i; document.querySelector('[data-act="pg-read"]').click(); await new Promise((r) => setTimeout(r, 500));
     const now = document.querySelector(".ra-now"); const r = { k, page: now ? window.__lf.pageOf(now) : -1, i: window.__lf.state().i }; document.querySelector('[data-act="ra-stop"]') ? document.querySelector('[data-act="ra-stop"]').click() : null; try { speechSynthesis.cancel(); } catch (e) {} return r; });
   rec("Read aloud in page view starts at the top of the page you're on and stays in step with the pages", rp.page === rp.k && rp.i === rp.k, JSON.stringify(rp));
+  const sk = await p.evaluate(async () => { const w = (ms) => new Promise((r) => setTimeout(r, ms)); const st = window.__lf.state(); window.__lf.go(Math.min(st.n - 4, 6)); document.querySelector('[data-act="pg-read"]').click(); await w(500);
+    const k0 = window.__lf.state().i; document.querySelector('[data-act="pg-next"]').click(); await w(500); const a = document.querySelector(".ra-now"), r1 = { i: window.__lf.state().i, on: document.body.classList.contains("ra-on"), page: a ? window.__lf.pageOf(a) : -1 };
+    document.querySelector('[data-act="pg-next"]').click(); await w(500); const b = document.querySelector(".ra-now"), r2 = { i: window.__lf.state().i, page: b ? window.__lf.pageOf(b) : -1 };
+    const s2 = document.querySelector('[data-act="ra-stop"]'); if (s2) s2.click(); try { speechSynthesis.cancel(); } catch (e) {} return { k0, r1, r2 }; });
+  rec("Turning the page while it reads aloud: the voice jumps to the top of the page you turned to and keeps reading", sk.r1.on && sk.r1.i === sk.k0 + 1 && sk.r1.page === sk.r1.i && sk.r2.i === sk.k0 + 2 && sk.r2.page === sk.r2.i, JSON.stringify(sk));
   // a returning learner comes back to the same page
   await p.evaluate(() => window.__lf.go(window.__lf.state().i + 1)); await H.wait(200); const bef = await p.evaluate(() => ({ i: window.__lf.state().i }));
   await p.reload(); await H.wait(2600); const after = await p.evaluate(() => window.__lf.state());

@@ -146,6 +146,12 @@
   function lfGo(i, silent) { if (!LFS.pages) return; i = Math.max(0, Math.min(LFS.n - 1, i)); const moved = i !== LFS.i, dir = i > LFS.i ? 1 : -1; LFS.i = i;
     lfApply(); if (moved) { scrollTo(0, 0); if (!silent) { lfFlipSound(); const R = LFS.root; if (R && !matchMedia("(prefers-reduced-motion: reduce)").matches) { R.classList.remove("pg-in-l", "pg-in-r"); void R.offsetWidth; R.classList.add(dir > 0 ? "pg-in-r" : "pg-in-l"); } } }
     LFS.anchor = (LFS.pages[i] || [])[0]; lfNav(); lfContLine(); try { S.pgAt = S.pgAt || {}; S.pgAt[location.hash] = LFS.leaves.indexOf(LFS.anchor); save(); } catch (e) {} }
+  // you turned the page yourself: if the lesson is being read aloud, the voice jumps to the top of the page you are now on
+  function lfUserGo(i) { const was = LFS.i; lfGo(i); if (LFS.i === was) return;
+    try { if (typeof RA === "undefined" || !RA.on || !RA.q || !RA.q.length) return; const k = LFS.i;
+      let j = RA.q.findIndex((it) => lfPageOf(it.el) === k); if (j < 0) j = RA.q.findIndex((it) => lfPageOf(it.el) > k); if (j < 0) return;
+      RA.i = j; if (RA.paused) { if (RA.el) RA.el.classList.remove("ra-now"); RA.el = RA.q[j].el; try { raPlayerUI(); } catch (e) {} return; }
+      try { speechSynthesis.cancel(); } catch (e) {} raPlay(); } catch (e) {} }
   function lfWrap() { if (LFS.busy) return; LFS.busy = true; try { if (!lfPaged()) { lfUnwrap(); return; } lfBuild(); } finally { setTimeout(() => { LFS.busy = false; }, 0); } }
   function lfUnwrap() { document.body.classList.remove("paged", "pg-measure"); const N = document.getElementById("lf-nav"); if (N) N.remove(); const C = document.getElementById("lf-cont"); if (C) C.remove(); const root = lfRoot(); if (root) root.querySelectorAll(".pg-off").forEach((e) => e.classList.remove("pg-off")); LFS.pages = null; LFS.tag = new Map(); }
   // a page that ends part-way through a topic says so: "Los números continues on the next page"
@@ -187,14 +193,14 @@
   // swipe
   let lfX = null, lfY = null; document.addEventListener("touchstart", (e) => { if (!document.body.classList.contains("paged") || !e.target.closest("#app") || e.target.closest(".tbl, .cr-scroll, input, textarea")) return; lfX = e.touches[0].clientX; lfY = e.touches[0].clientY; }, { passive: true });
   document.addEventListener("touchend", (e) => { if (lfX == null) return; const dx = e.changedTouches[0].clientX - lfX, dy = e.changedTouches[0].clientY - lfY; lfX = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfGo(LFS.i + (dx < 0 ? 1 : -1)); } }, { passive: true });
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i + (dx < 0 ? 1 : -1)); } }, { passive: true });
   document.addEventListener("keydown", (e) => { if (!document.body.classList.contains("paged") || e.altKey || e.ctrlKey || e.metaKey || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || "")) return;
-    if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); lfGo(LFS.i + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); lfGo(LFS.i - 1); } });
+    if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); lfUserGo(LFS.i + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); lfUserGo(LFS.i - 1); } });
   document.addEventListener("focusin", (e) => { if (document.body.classList.contains("paged") && !e.target.closest(".lf-nav")) lfShowEl(e.target); });
   // section buttons and in-page links go to the page that holds the target
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-act='pg-prev'], [data-act='pg-next'], [data-act='pg-mode'], [data-act='pg-read'], [data-act='jump'], .lesson-jump a, a[href^='#s-']"); if (!b) return;
     const act = b.dataset && b.dataset.act;
-    if (act === "pg-prev") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfGo(LFS.i - 1); } else if (act === "pg-next") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfGo(LFS.i + 1); }
+    if (act === "pg-prev") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i - 1); } else if (act === "pg-next") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i + 1); }
     else if (act === "pg-mode") lfToggle();
     else if (act === "pg-read") { try { raStop(true); raStart(0); } catch (x) {} }
     else if (document.body.classList.contains("paged")) { const id = act === "jump" ? "s-" + b.dataset.to : (b.getAttribute("href") || "").slice(1), el = id && document.getElementById(id);
