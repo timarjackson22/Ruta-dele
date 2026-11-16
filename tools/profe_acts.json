@@ -71,6 +71,54 @@
   "voice": "unsuitable",
   "why": "zoom the A4 page preview"
  },
+ "cr-audit-dl": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-brief": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-cell": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-csv": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-iss": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-out": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-pack": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-print": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-profe": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-reval": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-val": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
+ "cr-xlsx": {
+  "voice": "unsuitable",
+  "why": "admin curriculum dashboard control (not a learner action)"
+ },
  "cst-st": {
   "voice": "complete",
   "why": "costs dashboard stage chips (Testing, Soft launch…): pressed by name through find.open, e.g. “tap Growth”"

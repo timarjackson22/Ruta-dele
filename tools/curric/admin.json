@@ -1,0 +1,4 @@
+{
+ "hash": "8ea0a431728dcc10f2df230c848de4704b4cbd9a377caa8a0f63df7bd3af6a6f",
+ "note": "SHA-256 of \"ruta-dele:\" + passcode. Change the passcode: python3 tools/curric/patch_curric.py index.html --passcode NEW"
+}

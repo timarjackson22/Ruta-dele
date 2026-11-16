@@ -1,0 +1,37 @@
+.cr .cr-meta { margin: 0 0 8px } .cr .linkbtn { background: none; border: 0; padding: 0; color: var(--cobalt); text-decoration: underline; cursor: pointer; font: inherit }
+.cr-tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); margin: 6px 0 14px; padding-bottom: 2px; scrollbar-width: thin }
+.cr-tabs a { white-space: nowrap; padding: 7px 11px; border-radius: 10px 10px 0 0; text-decoration: none; color: var(--muted); font-weight: 700; font-size: .9rem }
+.cr-tabs a[aria-selected="true"] { color: var(--ink); background: var(--surface); box-shadow: inset 0 -3px 0 var(--cobalt) }
+.cr-body h2 { font-size: 1.1rem; margin: 18px 0 8px } .cr-body section + section { border-top: 1px solid var(--line); margin-top: 14px }
+.cr-filters { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 8px 0 }
+.cr-f { display: grid; gap: 2px; font-size: .78rem; font-weight: 700; color: var(--muted); min-width: 140px; flex: 1 1 150px } .cr-f select, .cr-f input { font: inherit; font-size: .9rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; width: 100% }
+.cr-q { margin: 6px 0 10px; max-width: 520px }
+.cr-scroll { overflow-x: auto; margin: 6px 0 } .cr-tbl { width: 100%; border-collapse: collapse; font-size: .86rem; font-variant-numeric: tabular-nums }
+.cr-tbl th, .cr-tbl td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top } .cr-tbl th { font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted) }
+.cr-tbl tr.cr-tot td { font-weight: 800 } .cr-tbl tr.cr-flag td { background: color-mix(in srgb, #e53e3e 8%, transparent) } .cr-tbl td.cr-lo { color: #c53030; font-weight: 800 }
+.cr-bar { display: block; height: 5px; border-radius: 99px; background: var(--line); margin-top: 3px; overflow: hidden; min-width: 50px } .cr-bar i { display: block; height: 100%; background: var(--cobalt) }
+.cr-q4 { display: grid; gap: 6px 0 } .cr-q4 dt { font-weight: 800; margin-top: 6px } .cr-q4 dd { margin: 0 0 4px; font-size: .92rem }
+.cr-heat { border-collapse: separate; border-spacing: 3px; width: auto } .cr-heat th, .cr-heat td { background: none !important; border: 0 !important; padding: 2px !important }
+.cr-heat th { font-size: .78rem !important; text-transform: none !important; letter-spacing: 0 !important; font-weight: 700; color: var(--ink) !important; white-space: normal; max-width: 112px; text-align: left; line-height: 1.2 } .cr-heat thead th { text-align: center }
+.cr-heat tbody th { position: sticky; left: 0; background: var(--bg, #f4f6fb) !important; z-index: 1 }
+.cr-hc { display: inline-block; min-width: 46px; padding: 7px 3px; border-radius: 9px; border: 2px solid transparent; font: inherit; font-size: .8rem; font-weight: 800; text-align: center; cursor: pointer; color: #1a202c }
+.cr-hc.cr-full { background: #9ae6b4 } .cr-hc.cr-partial { background: #fbd38d } .cr-hc.cr-missing { background: #feb2b2 } .cr-hc.cr-na { background: var(--line); color: var(--muted) }
+.cr-hc.cr-pend { background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.13) 0 3px, transparent 3px 8px) } .cr-hc[aria-pressed="true"] { border-color: var(--ink) }
+.cr-leg { display: flex; flex-wrap: wrap; gap: 6px } .cr-leg .cr-hc { cursor: default; min-width: 0; padding: 4px 8px }
+.cr-oc { border: 1px solid var(--line); border-radius: 12px; margin: 6px 0; background: var(--surface) } .cr-oc > summary { padding: 9px 10px; cursor: pointer; font-size: .92rem; list-style-position: inside }
+.cr-ocb { padding: 0 12px 10px } .cr-cov { font-size: .7rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; white-space: nowrap; color: #1a202c } .cr-cov.cr-full { background: #9ae6b4 } .cr-cov.cr-partial { background: #fbd38d } .cr-cov.cr-missing { background: #feb2b2 }
+.cr-dim { display: inline-block; margin-right: 8px; font-weight: 700 } .cr-dim.ok { color: #2f855a } .cr-dim.no { color: #c53030 } .cr-dim.na { color: var(--muted) }
+.cr-vst { font-size: .72rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; background: var(--line) } .cr-v-validated, .cr-v-source-checked { background: #c6f6d5; color: #22543d } .cr-v-pending { background: #fefcbf; color: #744210 } .cr-v-needs-update, .cr-v-needs-reassessment, .cr-v-rejected { background: #fed7d7; color: #742a2a }
+.cr-dl { display: grid; grid-template-columns: minmax(110px, 160px) 1fr; gap: 4px 10px; margin: 8px 0; font-size: .88rem } .cr-dl dt { font-weight: 700; color: var(--muted) } .cr-dl dd { margin: 0 }
+@media (max-width: 560px) { .cr-dl { grid-template-columns: 1fr } .cr-dl dt { margin-top: 4px } }
+.cr-ev { display: inline-block; margin: 0 8px 4px 0; font-size: .85rem } .cr-warn { color: #c53030 } .cr-acts { gap: 6px; flex-wrap: wrap }
+.cr-gaps { list-style: none; padding: 0; margin: 6px 0 } .cr-g { border: 1px solid var(--line); border-left: 5px solid var(--line); border-radius: 10px; padding: 8px 10px; margin: 6px 0; background: var(--surface) }
+.cr-g p { margin: 4px 0 } .cr-s-critical { border-left-color: #9b2c2c } .cr-s-high { border-left-color: #e53e3e } .cr-s-medium { border-left-color: #dd6b20 } .cr-s-low { border-left-color: #a0aec0 }
+.cr-sev { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 99px; background: var(--line) } span.cr-sev.cr-s-critical { background: #9b2c2c; color: #fff } span.cr-sev.cr-s-high { background: #e53e3e; color: #fff } span.cr-sev.cr-s-medium { background: #dd6b20; color: #fff }
+.cr-ist { font-size: .72rem; font-weight: 800; padding: 2px 7px; border-radius: 99px; background: #bee3f8; color: #2a4365 }
+.cr-total { display: flex; gap: 14px; align-items: center; margin: 10px 0 } .cr-big { font-size: 2.4rem; font-weight: 900; font-variant-numeric: tabular-nums }
+.cr-rep { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 } .cr-brief { white-space: pre-wrap; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px; font-size: .82rem }
+.cr-log { max-height: 260px; overflow: auto } .cr-login { display: grid; gap: 10px; max-width: 360px } .cr-login label { display: grid; gap: 4px; font-weight: 700 } .cr-login input { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink) }
+.cr-dele tr.cr-missing td:last-child { color: #c53030; font-weight: 800 } .cr-dele tr.cr-partial td:last-child { color: #c05621; font-weight: 800 } .cr-dele tr.cr-aligned td:last-child { color: #2f855a; font-weight: 800 }
+.cr-pack .cr-small { font-size: .74rem } .cr-pack h2 { break-after: avoid }
+@media print { .cr-pack .noprint, header, nav, .bottom-nav, #pv-fab, .pv-fab { display: none !important } .cr-pack { max-width: none } .cr-pack .cr-tbl { font-size: 8pt } .cr-pack .cr-tbl tr { break-inside: avoid } }

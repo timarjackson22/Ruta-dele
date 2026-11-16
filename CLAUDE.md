@@ -17,6 +17,11 @@ If no: say so in the commit message ("costs: no impact").
 ## Exams
 - Exam data is generated: `python3 tools/exgen/gen.py <level>` from `tools/exgen/<level>_part*.py`. Update `EXREADY` and `sw.js` when adding exams.
 
+## Curriculum coverage dashboard (Settings › Admin, route #cobertura)
+- Register: `tools/curric/build_register.py` (sources, outcomes, DELE tasks, skills mapping); embed with `python3 tools/curric/patch_curric.py index.html`.
+- New lesson or guide: add its id to `tools/curric/topics.json` (and targets if not the default) or it is flagged "needs its own skills mapping".
+- Exam format changes: update the DELE task rows/sources in build_register.py. `node tools/profe-tests/sCR.js` must pass. Method: tools/curric/METRICS.md.
+
 ## Versions
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").
