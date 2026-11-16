@@ -1,0 +1,41 @@
+/* Reading comfort (lessons and guides), 15 Nov 2026: 17px body, 1.62 line height, ~68ch measure,
+   space between sections, headings with an accent, examples stacked Spanish-first on phones. */
+body.read-page #app { --read-ink: var(--ink); --read-soft: color-mix(in srgb, var(--muted) 80%, var(--ink)) }
+body.read-page #app :is(p.rule, .note-body, .notes li, .fx-card li, .fx-card p, .callout li, .callout p, .gblock > p, .gblock li, .lx-body p, .lx-body li, .pits li) { font-size: 17px; line-height: 1.62; letter-spacing: .003em; color: var(--read-ink) }
+body.read-page #app :is(p, li) { max-width: 68ch }
+body.read-page #app :is(table, .notes2, .fx-cards, .ptiles) :is(p, li) { max-width: none }
+body.read-page #app p + p { margin-top: .7em }
+body.read-page #app :is(.notes li, .fx-card li, .gblock li, .callout li) + li { margin-top: 8px }
+/* sections breathe; headings carry an accent so the page is easy to scan */
+body.read-page #app section.block { margin-top: 34px }
+body.read-page #app section.block > .shead { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--line) }
+body.read-page #app section.block > .shead h2 { font-size: 23px; line-height: 1.25; letter-spacing: -.01em }
+body.read-page #app section.block > .shead h2 .es { font-size: .7em; font-weight: 400; color: var(--read-soft) }
+body.read-page #app .gblock { gap: 12px; margin-top: 30px }
+body.read-page #app .gblock > h3, body.read-page #app section.block h3 { font-size: 19.5px; line-height: 1.3; margin: 0 0 2px; padding-left: 12px; border-left: 4px solid var(--saffron, #f2a516); letter-spacing: -.005em }
+body.read-page #app .gblock:nth-of-type(3n+2) > h3 { border-left-color: var(--cobalt) } body.read-page #app .gblock:nth-of-type(3n+3) > h3 { border-left-color: var(--good, #16a36a) }
+/* the lesson's opening */
+body.read-page #app .fx-lead { font-size: 19px !important; line-height: 1.5 !important }
+body.read-page #app .fx-card { padding: 14px 16px }
+body.read-page #app .fx-h { font-size: 17.5px; line-height: 1.4; margin-bottom: 6px }
+/* rule boxes and notes: a little more padding, labels more readable */
+body.read-page #app .gblock > p.rule { padding: 12px 14px; border-radius: 12px }
+body.read-page #app .note2 { padding: 12px 14px }
+body.read-page #app .note2 .nl { font-size: 12px; margin-bottom: 4px }
+/* Spanish inside English text stands out without shouting */
+body.read-page #app .es-w { color: var(--es-ink, #1d4fb8); font-style: italic }
+/* example tables: Spanish first and stacked on phones (no three-word columns) */
+@media (max-width: 700px) {
+  body.read-page #app table.extbl, body.read-page #app table.extbl tbody { display: block }
+  body.read-page #app table.extbl thead { display: none }
+  body.read-page #app table.extbl tr { display: flex; flex-direction: column-reverse; gap: 3px; padding: 12px 14px; border-bottom: 1px solid var(--line) }
+  body.read-page #app table.extbl tr:last-child { border-bottom: 0 }
+  body.read-page #app table.extbl td { display: block; width: auto !important; padding: 0; border: 0 }
+  body.read-page #app table.extbl td.exes b { font-size: 17.5px; line-height: 1.45; font-weight: 600 }
+  body.read-page #app table.extbl td.exes .say { vertical-align: -3px; margin-right: 6px }
+  body.read-page #app table.extbl td.exen { font-size: 15px; line-height: 1.45; color: var(--read-soft); font-style: italic; padding-left: 44px }
+  body.read-page #app .tbl:has(table.extbl) { overflow: visible }
+}
+/* vocabulary and decision tables: roomier rows */
+body.read-page #app table.vocab td, body.read-page #app table.dectbl td { padding-top: 11px; padding-bottom: 11px; line-height: 1.45 }
+body.read-page #app table.vocab td.es { font-size: 17px }
