@@ -26,6 +26,10 @@ If no: say so in the commit message ("costs: no impact").
 - `tools/skilldrills.js` (+ .css) embedded by `python3 tools/patch_skill.py index.html`; generated from lesson/guide content, so new content gets drills automatically.
 - `node tools/profe-tests/sSK.js` must pass (every drill type renders and grades; difficulty by level).
 
+## Lesson flow (tap-a-word meanings, page mode, Mastery full screen)
+- `tools/lessonflow.js` (+ .css) embedded by `python3 tools/patch_lessonflow.py index.html`. `node tools/profe-tests/sLF.js` must pass.
+- Word meanings must stay off where they'd give an answer away (drill types in skilldrills.js `noGloss`) and in exam mode (`lfExamLocked`).
+
 ## Versions
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").

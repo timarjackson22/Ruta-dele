@@ -1,0 +1,31 @@
+/* word meanings */
+.lf-pop { position: fixed; z-index: 60; padding: 10px 12px; border-radius: 14px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0,0,0,.18); animation: lfin .14s ease-out }
+@keyframes lfin { from { opacity: 0; transform: translateY(4px) } }
+.lf-pw { display: flex; align-items: center; gap: 8px } .lf-pw b { font-size: 1.1rem; color: var(--es-ink, #1d4fb8) } .lf-x { margin-left: auto; border: 0; background: none; color: var(--muted); font-size: 1rem; cursor: pointer }
+.lf-pm { margin: 4px 0 8px; font-size: .95rem; line-height: 1.4 } .lf-pr { display: flex; gap: 6px; flex-wrap: wrap }
+::highlight(lf-word) { background-color: color-mix(in srgb, #f6c344 55%, transparent) }
+#app [lang="es"], #app .es-w, #app .drsay, #app .sk-card2 { -webkit-tap-highlight-color: transparent }
+/* page mode */
+body.paged #app > .pg-wrap { overflow: hidden; position: relative; touch-action: pan-y }
+body.paged .pg-cols { column-fill: auto; transition: transform .38s cubic-bezier(.2,.7,.2,1); will-change: transform }
+body.paged .pg-cols > * { break-inside: auto } body.paged .pg-cols .sk-card, body.paged .pg-cols tr, body.paged .pg-cols li, body.paged .pg-cols .note, body.paged .pg-cols p { break-inside: avoid }
+body.paged .pg-cols h2, body.paged .pg-cols h3, body.paged .pg-cols .shead { break-after: avoid }
+body.paged .pg-cols img, body.paged .pg-cols table { max-width: 100% }
+.lf-nav { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 40; display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 99px; background: color-mix(in srgb, var(--surface) 55%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--line) 60%, transparent); opacity: .85; font-size: .82rem; color: var(--muted) }
+.lf-nav button { width: 32px; height: 32px; border-radius: 50%; border: 0; background: transparent; color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: pointer } .lf-nav button[disabled] { opacity: .25 }
+.lf-num { font-variant-numeric: tabular-nums; min-width: 44px; text-align: center } .lf-hint { white-space: nowrap; font-size: .74rem; animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .35 } }
+body.paged .tabbar, body.paged #tabpeek { display: none !important }
+/* top-bar tools on lessons; Profe's floating button tucked away during lessons and drills */
+.nb-tools { display: inline-flex; gap: 6px; margin-left: auto; align-items: center } .nb-tools button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0 }
+.nb-tools svg { width: 20px; height: 20px } .nb-tools .nb-profe { font-weight: 800; color: #fff; background: var(--cobalt); border-color: transparent } .nb-tools button[aria-pressed="true"] { border-color: var(--cobalt) }
+body.lf-quiet #tutor-fab, body.lf-quiet .tutor-fab { display: none !important }
+/* Mastery exercises full screen */
+#s-pra.m-full { position: fixed; inset: 0; z-index: 45; margin: 0; overflow-y: auto; background: var(--bg, #eef3f9); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px calc(30px + env(safe-area-inset-bottom, 0px)); max-width: none }
+#s-pra.m-full > * { max-width: 720px; margin-left: auto; margin-right: auto }
+.m-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px } .m-bar b { font-size: 1.05rem }
+body.mastery-on header.top, body.mastery-on .tabbar, body.mastery-on #tabpeek, body.mastery-on .lf-nav, body.mastery-on #ra-bar { display: none !important }
+body.mastery-on #s-pra .shead h2 { display: none }
+/* flex/grid and scroll boxes can't be split across pages: in page mode they lay out as plain blocks */
+body.paged .pg-cols .stack, body.paged .pg-cols section.block, body.paged .pg-cols .gblock, body.paged .pg-cols .lx, body.paged .pg-cols .fx-pt, body.paged .pg-cols .callout { display: block !important }
+body.paged .pg-cols .stack > * + *, body.paged .pg-cols section.block > * + *, body.paged .pg-cols .gblock > * + *, body.paged .pg-cols .lx > * + * { margin-top: 14px }
+body.paged .pg-cols .tbl, body.paged .pg-cols .cr-scroll { overflow: visible !important }

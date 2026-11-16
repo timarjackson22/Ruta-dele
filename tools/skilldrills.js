@@ -186,13 +186,19 @@
     b.forEach((d) => Object.entries(SK_T[d.type][2]).forEach(([c, v]) => SK_SKW[c] && (w[c] = (w[c] || 0) + v)));
     const skills = Object.entries(w).sort((x, y) => y[1] - x[1]).slice(0, 3).map(([c]) => SK_SKW[c]).join(", ");
     return '<aside class="qchk sk-card" aria-label="Check yourself"><div class="sk-txt"><b>Check yourself</b><small>' + b.length + " drills · ~" + mins + " min · " + skills + (st ? " · last " + st.last + "/" + st.n : "") + '</small></div><a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + "/" + si + '">' + (st ? "Again" : "Practise") + "</a></aside>"; }
-  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null;
-    return '<aside class="qchk sk-card sk-rev"><div class="sk-txt"><b>Chapter challenge</b><small>Everything in this chapter, plus DELE-style tasks' + (st ? " · last " + st.last + "/" + st.n : "") + '</small></div><a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Again" : "Start") + "</a></aside>"; }
+  function skMastery(id) { const sv = (S.pr || {})[id]; if (!sv || !sv.n) return { done: 0, n: 0, ok: false }; const done = (sv.res || []).filter(Boolean).length; return { done, n: sv.n, ok: done >= sv.n }; }
+  function skReviewCard(id) { const T = skTopic(id); if (!T) return ""; const st = ((S.sk || {})[id + "|review"]) || null, m = skMastery(id);
+    const lock = !m.ok && !st;
+    return '<aside class="qchk sk-card sk-rev' + (lock ? " sk-lock" : "") + '" data-skrev="' + esc(id) + '"><div class="sk-txt"><b>🏆 Chapter challenge</b><small>' + (lock ? "Finish the Mastery exercises first" + (m.n ? " (" + m.done + " of " + m.n + " done)" : "") + ", then put it all together with DELE-style tasks." : "Everything in this chapter, plus DELE-style tasks" + (st ? " · last " + st.last + "/" + st.n : "")) + "</small>" +
+      (lock ? '<a class="small sk-anyway" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">Start anyway</a>' : "") + "</div>" +
+      (lock ? '<span class="btn small sk-locked" aria-disabled="true">🔒 Locked</span>' : '<a class="btn primary small" data-act="sk-go" href="#ejercicios/' + esc(id) + '/review">' + (st ? "Again" : "Start") + "</a>") + "</aside>"; }
+  // the challenge unlocks as soon as the Mastery exercises are finished
+  document.addEventListener("click", (e) => { if (!e.target.closest || !e.target.closest("#runner")) return; setTimeout(() => document.querySelectorAll("[data-skrev]").forEach((c) => { const id = c.dataset.skrev, h = skReviewCard(id); if (h && c.outerHTML !== h) c.outerHTML = h; }), 400); });
   /* ---- come back to exactly where you were in the lesson ---- */
   function skMark(a) { try { const card = a.closest(".sk-card"), m = /^#ejercicios\/([a-z0-9-]+)\/(\d+|review)$/.exec(a.getAttribute("href") || ""); if (!m) return;
     sessionStorage.setItem("sk-ret", JSON.stringify({ h: "#" + m[1], si: m[2], off: card ? card.getBoundingClientRect().top : 120, y: scrollY })); } catch (e) {} }
   function skRestore() { let R = null; try { R = JSON.parse(sessionStorage.getItem("sk-ret") || "null"); } catch (e) {} if (!R || location.hash !== R.h) return;
-    const go = () => { const a = document.querySelector('#app .sk-card a[href="#ejercicios/' + R.h.slice(1) + "/" + R.si + '"]'); if (a) { const c = a.closest(".sk-card"); scrollTo(0, Math.max(0, c.getBoundingClientRect().top + scrollY - R.off)); } else scrollTo(0, R.y || 0); };
+    const go = () => { const a = document.querySelector('#app .sk-card a[href="#ejercicios/' + R.h.slice(1) + "/" + R.si + '"]'); if (a && document.body.classList.contains("paged") && window.__lf) { window.__lf.showEl(a.closest(".sk-card")); return; } if (a) { const c = a.closest(".sk-card"); scrollTo(0, Math.max(0, c.getBoundingClientRect().top + scrollY - R.off)); } else scrollTo(0, R.y || 0); };
     [60, 250, 600].forEach((t) => setTimeout(go, t)); setTimeout(() => { try { sessionStorage.removeItem("sk-ret"); } catch (e) {} }, 700); }
   addEventListener("hashchange", () => { if (!/^#ejercicios/.test(location.hash)) skRestore(); });
   /* ---- the player ---- */
@@ -258,7 +264,8 @@
     else if (d.type === "exspeak") { needCheck = false; body = '<p class="sk-exam">DELE ' + d.lvl.toUpperCase() + ' · Expresión oral · micro task</p><h2 class="drq" lang="es">' + esc(d.task) + '</h2><ul class="small">' + (d.points || []).slice(0, 4).map((p) => "<li>" + esc(Array.isArray(p) ? p[0] : p.es || p) + "</li>").join("") + '</ul><p class="muted small">Speak for about ' + Math.round(d.min / 2) + "+ seconds (" + d.min + '+ words).</p><div class="row sk-c"><button class="drplay sk-mic' + (st.rec ? " rec" : "") + '" data-act="sk-mic" aria-label="Speak"' + (st.res ? " disabled" : "") + ">🎤</button></div>" + (st.heard ? '<p class="small">You said: «' + esc(st.heard) + "»</p>" : "") + (st.res ? "" : '<p class="sk-c">' + skBtn("sk-nomic", "Can't speak now", " small") + "</p>"); }
     const fb = st.res ? '<div class="drfb ' + (st.res === "ok" ? "ok" : "no") + '" role="status"><b>' + (st.res === "ok" ? ["¡Muy bien!", "¡Correcto!", "¡Perfecto!", "¡Eso es!"][SK.i % 4] : st.res === "skip" ? "Skipped" : "Casi…") + "</b>" + (st.note ? "<p>" + st.note + "</p>" : "") + (st.claim && st.res === "no" ? skBtn("sk-claim", "My answer is also right", " small") : "") + skBtn("sk-next", "Continue", " primary") + "</div>"
       : '<div class="drfoot">' + skBtn("sk-skip", "Skip") + (needCheck ? skBtn("sk-check", "Check", " primary") : "") + "</div>";
-    app.innerHTML = '<div class="stack drill sk">' + top + '<div class="drbody">' + tag + body + "</div>" + fb + "</div>";
+    const noGloss = /^(match|meaning|hearmean|hearpick|tiles|misspell|whichsound|gap|translate|dict|syll|stress)$/.test(d.type); // tapping a word here would give the answer away
+    app.innerHTML = '<div class="stack drill sk">' + top + '<div class="drbody"' + (noGloss ? ' data-gloss="off"' : "") + ">" + tag + body + "</div>" + fb + "</div>";
     if (!st.played && /^(hearmean|hearpick|dict|lisq|exlisten)$/.test(d.type)) { st.played = 1; setTimeout(() => skSay(d.say || d.s[0]), 300); }
     const inp = document.querySelector(".sk-in"); if (inp && !st.res && (st.hinted || !matchMedia("(pointer: coarse)").matches)) { inp.focus({ preventScroll: true }); if (st.hinted) inp.select(); }
   }

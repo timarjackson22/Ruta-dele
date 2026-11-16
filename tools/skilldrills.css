@@ -41,3 +41,5 @@ body.kb-open .sk .drtop { position: sticky; top: 0; z-index: 3; background: var(
 .drill.sk { display: flex; flex-direction: column; min-height: calc(100dvh - 150px) } .sk .drbody { flex: 0 0 auto } .sk .drfoot, .sk .drfb { margin-top: auto }
 .sk-use { margin: 0 0 6px; font-size: .95rem; color: var(--muted) } .sk-use b { display: inline-block; margin-left: 4px; padding: 2px 10px; border-radius: 99px; background: color-mix(in srgb, var(--cobalt) 12%, var(--surface)); color: var(--ink); font-size: 1rem }
 .sk-ins { margin: -6px 0 10px }
+.sk-lock { opacity: .92 } .sk-locked { background: var(--line) !important; color: var(--muted) !important; cursor: default; flex: none } .sk-anyway { margin-top: 4px; color: var(--muted) }
+.pxi { margin-right: 2px }

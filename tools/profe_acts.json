@@ -373,6 +373,18 @@
   "voice": "pending",
   "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
  },
+ "lf-close": {
+  "voice": "pending",
+  "why": "lesson flow: close a word meaning"
+ },
+ "lf-more": {
+  "voice": "pending",
+  "why": "lesson flow: full dictionary entry"
+ },
+ "lf-say": {
+  "voice": "pending",
+  "why": "lesson flow: hear a word"
+ },
  "lh-opts": {
   "voice": "unsuitable",
   "why": "headline options menu (rename/delete need typing)"
@@ -384,6 +396,10 @@
  "lq-where": {
   "voice": "unsuitable",
   "why": "visual navigation helpers"
+ },
+ "m-close": {
+  "voice": "pending",
+  "why": "close the Mastery exercises and return to the lesson"
  },
  "mc": {
   "voice": "unsuitable",
@@ -476,6 +492,18 @@
  "pc-skip": {
   "voice": "complete",
   "why": "pronunciation check is itself voice-driven"
+ },
+ "pg-mode": {
+  "voice": "pending",
+  "why": "lesson flow: switch page/scroll view"
+ },
+ "pg-next": {
+  "voice": "pending",
+  "why": "lesson flow: next page"
+ },
+ "pg-prev": {
+  "voice": "pending",
+  "why": "lesson flow: previous page"
  },
  "pg-tab": {
   "voice": "pending",

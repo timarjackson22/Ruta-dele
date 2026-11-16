@@ -14,7 +14,7 @@ if "/* ==SKILL-CSS== */" in s: s = re.sub(r"/\* ==SKILL-CSS== \*/\n[\s\S]*?/\* =
 else: rep("/* ==READABLE== */", cb + "/* ==READABLE== */")
 if "else if (/^ejercicios" not in s:
     rep('    else if (h === "costes") { setSec("hoy"); navChips(null); costsView(); }', '    else if (h === "costes") { setSec("hoy"); navChips(null); costsView(); }\n    else if (/^ejercicios(\\/[a-z0-9\\/-]+)?$/.test(h)) { setSec("practicar"); navChips(null); skRoute(h); }')
-if "skReviewCard(qkey)" not in s:
+if "skReviewCard(" not in s.split("/* ==SKILL== */")[0] and "skReviewCard(" not in s.split("/* ==/SKILL== */")[-1]:
     rep('''"</span>" : "") + "</div>" + pxHTML(u, u.xi) + "</section>";''', '''"</span>" : "") + "</div>" + skReviewCard(qkey) + pxHTML(u, u.xi) + "</section>";''')
     rep('''"</span>" : "") + "</div>" + pxHTML(g, "Fill in the blank.") + "</section></div>";''', '''"</span>" : "") + "</div>" + skReviewCard("guia-" + g.id) + pxHTML(g, "Fill in the blank.") + "</section></div>";''')
 if 'href="#ejercicios"><span class="qp2i"' not in s:
