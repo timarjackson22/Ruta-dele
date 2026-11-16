@@ -617,6 +617,14 @@
  "px-show": "q.show",
  "px-skip": "q.skip",
  "px-submit": "q.check",
+ "qc-pick": {
+  "voice": "pending",
+  "why": "answer a Check yourself question by voice (the end-of-lesson practice works by voice)"
+ },
+ "qc-show": {
+  "voice": "unsuitable",
+  "why": "reveal one inline answer"
+ },
  "ra-next": {
   "voice": "pending",
   "why": "read-aloud controls beyond start/pause/resume"

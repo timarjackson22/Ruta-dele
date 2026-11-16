@@ -137,6 +137,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const during = await p.evaluate(() => ({ heard: window.__hear("ok profe show my progress", true), on: window.__W.on }));
   await H.wait(300); rec("While Profe speaks the wake listener is off, so its own voice can't trigger it", !during.on && !during.heard && (await p.evaluate(() => location.hash)) === "#curso", JSON.stringify(during));
   await H.idle(9000); await H.wait(900); await p.evaluate(() => { window.__T.wps = 5; });
+  await p.waitForFunction(() => window.__W.on, null, { timeout: 6000 }).catch(() => {});
   rec("…and it comes back after Profe finishes (with a short pause)", await p.evaluate(() => window.__W.on));
   // duplicate activation
   await p.waitForFunction(() => window.__W.on && !window.__R.on && !window.speechSynthesis.speaking, null, { timeout: 8000 }).catch(() => {}); await H.wait(3000);
