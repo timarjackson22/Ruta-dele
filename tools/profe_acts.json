@@ -1291,5 +1291,13 @@
  "pg-read": {
   "voice": "pending",
   "why": "lesson flow: read this page aloud"
+ },
+ "lf-top": {
+  "voice": "pending",
+  "why": "lesson flow: go to the start of the lesson"
+ },
+ "lf-end": {
+  "voice": "pending",
+  "why": "lesson flow: go to the end of the lesson"
  }
 }

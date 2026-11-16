@@ -108,7 +108,8 @@
   // tag every leaf and every container on its path with the pages it spans
   function lfTag(root) { LFS.tag = new Map(); LFS.pages.forEach((pg, k) => pg.forEach((el) => { let e = el; while (e && e !== root) { const r = LFS.tag.get(e); if (r) { r[0] = Math.min(r[0], k); r[1] = Math.max(r[1], k); } else LFS.tag.set(e, [k, k]); e = e.parentElement; } })); }
   // check each page as it really draws (a table's header, the padding of the boxes) and move blocks on until it fits above the page bar
-  function lfFit(root) { lfTag(root); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 14 - 8 - 30; // 30: room for the 'continues on the next page' line
+  function lfFit(root) { LFS.fitting = true; try { lfFit0(root); } finally { LFS.fitting = false; } }
+  function lfFit0(root) { lfTag(root); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 14 - 8;
     for (let k = 0; k < LFS.pages.length && k < 400; k++) { LFS.i = k; lfApply(); scrollTo(0, 0);
       const pg = LFS.pages[k]; let guard = 0;
       while (pg.length > 1 && guard++ < 60) { const last = pg[pg.length - 1], bot = Math.max(0, ...pg.filter((e) => e.offsetHeight).map((e) => e.getBoundingClientRect().bottom)); if (window.__lfDbg) console.log('fit', k, pg.length, Math.round(bot), Math.round(limit), last.className || last.tagName);
@@ -133,19 +134,23 @@
     for (let k = 1; k < LFS.pages.length; k++) { const pg = LFS.pages[k], pv = LFS.pages[k - 1];
       if (!pg.every((e) => e.matches(PG_TAIL)) || lfSec(pg[0], root) !== lfSec(pv[pv.length - 1], root)) continue;
       const take = []; while (take.length < 2 && pv.length > 3 && /^(TR|LI)$/.test(pv[pv.length - 1].tagName) && pv[pv.length - 1].parentElement === pv[pv.length - 2].parentElement) take.unshift(pv.pop());
-      if (take.length) { pg.unshift(...take); lfTag(root); LFS.i = k; lfApply(); scrollTo(0, 0); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 52;
+      if (take.length) { pg.unshift(...take); lfTag(root); LFS.i = k; lfApply(); scrollTo(0, 0); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 22;
         if (Math.max(...pg.map((e) => e.getBoundingClientRect().bottom)) > limit) { pv.push(...pg.splice(0, take.length)); lfTag(root); } } }
     LFS.i = -1; }
   function lfLabel(el, root) { const sec = lfSec(el, root); let s = ""; try { const h = sec && sec.querySelector(".shead h2, h2"); s = h ? h.childNodes[0].textContent.trim() : ""; } catch (e) {}
     let sub = ""; const gb = el.closest && el.closest(".gblock"); if (gb) { const h3 = gb.querySelector("h3"); if (h3 && !(el === h3 || el.contains(h3))) sub = h3.textContent.trim(); }
     if (!s) { const h1 = root.querySelector("h1"); s = h1 ? h1.textContent.trim() : ""; } return sub ? s + " · " + sub : s; }
   function lfApply() { const k = LFS.i; if (!LFS.tag) return; LFS.tag.forEach((r, e) => e.classList.toggle("pg-off", k < r[0] || k > r[1]));
+    // the screen never slides in page view: a single block taller than the page scrolls inside its own box
+    document.querySelectorAll(".pg-tall").forEach((e) => { e.classList.remove("pg-tall"); e.style.maxHeight = ""; });
+    if (!LFS.fitting && !document.body.classList.contains("pg-measure") && LFS.pages && LFS.pages[k]) { const N = document.getElementById("lf-nav"), lim = innerHeight - (N ? N.offsetHeight : 74) - 22;
+      LFS.pages[k].forEach((e) => { if (!e.offsetHeight) return; const r = e.getBoundingClientRect(); if (r.bottom > lim + 1 && r.top < lim) { e.classList.add("pg-tall"); e.style.maxHeight = Math.max(160, lim - r.top) + "px"; } }); }
     // the first thing on a page sits at the top of the page, without the gap it had below the block before it
     const R = LFS.root; if (!R) return; R.querySelectorAll(".pg-first").forEach((e) => e.classList.remove("pg-first")); let e = R;
     for (let d = 0; d < 6 && e; d++) { const c = [...e.children].find((x) => !x.classList.contains("pg-off") && !x.matches("script, style, .crumbs") && getComputedStyle(x).display !== "none"); if (!c) break; c.classList.add("pg-first"); e = c; } }
   function lfGo(i, silent) { if (!LFS.pages) return; i = Math.max(0, Math.min(LFS.n - 1, i)); const moved = i !== LFS.i, dir = i > LFS.i ? 1 : -1; LFS.i = i;
     lfApply(); if (moved) { scrollTo(0, 0); if (!silent) { lfFlipSound(); const R = LFS.root; if (R && !matchMedia("(prefers-reduced-motion: reduce)").matches) { R.classList.remove("pg-in-l", "pg-in-r"); void R.offsetWidth; R.classList.add(dir > 0 ? "pg-in-r" : "pg-in-l"); } } }
-    LFS.anchor = (LFS.pages[i] || [])[0]; lfNav(); lfContLine(); try { S.pgAt = S.pgAt || {}; S.pgAt[location.hash] = LFS.leaves.indexOf(LFS.anchor); save(); } catch (e) {} }
+    LFS.anchor = (LFS.pages[i] || [])[0]; lfNav(); try { S.pgAt = S.pgAt || {}; S.pgAt[location.hash] = LFS.leaves.indexOf(LFS.anchor); save(); } catch (e) {} }
   // you turned the page yourself: if the lesson is being read aloud, the voice jumps to the top of the page you are now on
   function lfUserGo(i) { const was = LFS.i; lfGo(i); if (LFS.i === was) return;
     try { if (typeof RA === "undefined" || !RA.on || !RA.q || !RA.q.length) return; const k = LFS.i;
@@ -178,6 +183,7 @@
   function lfToggle() { if (S.paged) { const a = ((LFS.pages || [])[LFS.i] || []).find((e) => e.offsetHeight > 0) || LFS.anchor; S.paged = false; try { save(); } catch (x) {} lfUnwrap(); lfTools(); lfFab();
       if (a && a.isConnected) { const hdr = document.querySelector("header.top"), off = (hdr ? hdr.getBoundingClientRect().bottom : 0) + 12; scrollTo(0, Math.max(0, a.getBoundingClientRect().top + scrollY - off)); } }
     else { const a = lfTopLeaf(); S.paged = true; try { save(); } catch (x) {} LFS.busy = true; try { lfBuild(a); } finally { setTimeout(() => { LFS.busy = false; }, 0); } lfTools(); lfFab(); }
+    try { if (typeof RA !== "undefined" && RA.on) { raPlayer(); raPlayerUI(); } } catch (e) {} // the player's buttons turn pages in page view, skip parts in scroll view
     try { coachToast(S.paged ? "Page view: one idea at a time" : "Scroll view"); } catch (e) {} }
   let lfT = null; const lfSoon = () => { clearTimeout(lfT); lfT = setTimeout(() => { if (document.body.classList.contains("mastery-on")) return; if (lfPaged()) { lfWrap(); } else if (document.body.classList.contains("paged")) lfUnwrap(); lfTools(); lfFab(); try { lfA11y(); } catch (e) {} }, 60); };
   const LF_FOLLOW = /(^|\s)(ra-now|playing|gp-now)(\s|$)/;
@@ -189,6 +195,7 @@
     if (ms.some((m) => m.type === "childList" && [...m.addedNodes].some((n) => n.nodeType === 1 && LFS.tag && (m.target === LFS.root || (LFS.tag.has(m.target) && !LFS.leaves.includes(m.target))) && !LFS.leaves.includes(n)))) { clearTimeout(LFS.mt); LFS.mt = setTimeout(() => { if (lfPaged() && !document.body.classList.contains("mastery-on")) { LFS.busy = true; try { lfBuild(LFS.anchor); } finally { setTimeout(() => { LFS.busy = false; }, 0); } } }, 120); } });
   addEventListener("load", () => { const A = document.getElementById("app"); if (A) lfObs.observe(A, { childList: true, subtree: true, attributes: true, attributeOldValue: true, attributeFilter: ["class"] }); lfSoon(); });
   addEventListener("hashchange", lfSoon);
+  addEventListener("scroll", () => { if (document.body.classList.contains("paged") && !document.body.classList.contains("pg-measure") && scrollY !== 0) scrollTo(0, 0); }, { passive: true });
   let lfRz = null; addEventListener("resize", () => { if (!document.body.classList.contains("paged") || document.body.classList.contains("kb-open")) return; clearTimeout(lfRz); lfRz = setTimeout(() => { LFS.busy = true; try { lfBuild(LFS.anchor); } finally { setTimeout(() => { LFS.busy = false; }, 0); } }, 200); });
   // swipe
   let lfX = null, lfY = null; document.addEventListener("touchstart", (e) => { if (!document.body.classList.contains("paged") || !e.target.closest("#app") || e.target.closest(".tbl, .cr-scroll, input, textarea")) return; lfX = e.touches[0].clientX; lfY = e.touches[0].clientY; }, { passive: true });
@@ -198,10 +205,14 @@
     if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); lfUserGo(LFS.i + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); lfUserGo(LFS.i - 1); } });
   document.addEventListener("focusin", (e) => { if (document.body.classList.contains("paged") && !e.target.closest(".lf-nav")) lfShowEl(e.target); });
   // section buttons and in-page links go to the page that holds the target
-  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-act='pg-prev'], [data-act='pg-next'], [data-act='pg-mode'], [data-act='pg-read'], [data-act='jump'], .lesson-jump a, a[href^='#s-']"); if (!b) return;
+  document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-act='pg-prev'], [data-act='pg-next'], [data-act='pg-mode'], [data-act='pg-read'], [data-act='lf-top'], [data-act='lf-end'], [data-act='jump'], .lesson-jump a, a[href^='#s-']"); if (!b) return;
     const act = b.dataset && b.dataset.act;
     if (act === "pg-prev") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i - 1); } else if (act === "pg-next") { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i + 1); }
     else if (act === "pg-mode") lfToggle();
+    else if (act === "lf-top" || act === "lf-end") { const end = act === "lf-end", tgt = end ? document.getElementById("s-end") : null;
+      if (document.body.classList.contains("paged") && LFS.pages) lfUserGo(end ? (tgt ? lfPageOf(tgt) : LFS.n - 1) : 0);
+      else { const hdr = document.querySelector("header.top"), y = !end ? 0 : tgt ? tgt.getBoundingClientRect().top + scrollY - (hdr ? hdr.getBoundingClientRect().bottom : 0) - 12 : document.documentElement.scrollHeight;
+        const far = Math.abs(y - scrollY) > innerHeight * 2; scrollTo({ top: y, behavior: far || matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); } }
     else if (act === "pg-read") { try { raStop(true); raStart(0); } catch (x) {} }
     else if (document.body.classList.contains("paged")) { const id = act === "jump" ? "s-" + b.dataset.to : (b.getAttribute("href") || "").slice(1), el = id && document.getElementById(id);
       if (el) { e.preventDefault(); e.stopPropagation(); lfShowEl(el.querySelector(".shead") || el); } } }, true);
@@ -211,7 +222,9 @@
   function lfTools() { const nb = document.querySelector("header.top .nb"); if (!nb) return; let T = document.getElementById("nb-tools");
     if (!lfRead()) { if (T) T.remove(); return; }
     if (!T) { T = document.createElement("span"); T.id = "nb-tools"; T.className = "nb-tools"; nb.insertBefore(T, document.getElementById("regbtn")); }
-    T.innerHTML = '<button type="button" data-act="pg-mode" aria-pressed="' + !!S.paged + '" aria-label="' + (S.paged ? "Scroll the lesson" : "Read the lesson page by page") + '" title="' + (S.paged ? "Scroll view" : "Page view") + '">' +
+    T.innerHTML = '<button type="button" data-act="lf-top" aria-label="Go to the start of the lesson" title="Start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M7 13l5-5 5 5M7 19l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<button type="button" data-act="lf-end" aria-label="Go to the end of the lesson" title="End"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 19h12M7 11l5 5 5-5M7 5l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>' +
+      '<button type="button" data-act="pg-mode" aria-pressed="' + !!S.paged + '" aria-label="' + (S.paged ? "Scroll the lesson" : "Read the lesson page by page") + '" title="' + (S.paged ? "Scroll view" : "Page view") + '">' +
       (S.paged ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M5 12h14M5 18h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1 6-1 9 1 3-2 6-2 9-1v13c-3-1-6-1-9 1-3-2-6-2-9-1zM12 6.5v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>') +
       '</button>'; }
   function lfFab() { document.body.classList.toggle("lf-quiet", lfRead() || /^#ejercicios\//.test(location.hash) || /^#drill$/.test(location.hash)); }

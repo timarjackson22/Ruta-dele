@@ -7,7 +7,8 @@
 #app [lang="es"], #app .es-w, #app .drsay, #app .sk-card2 { -webkit-tap-highlight-color: transparent }
 /* page mode: the lesson's own blocks, a screenful at a time (pages follow the content's structure; nothing is cut) */
 body.paged:not(.pg-measure) .pg-off { display: none !important }
-body.paged #app { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)) }
+html:has(body.paged:not(.pg-measure)), body.paged:not(.pg-measure) { overflow: hidden; overscroll-behavior: none } /* page view: the screen itself never slides */
+body.paged:not(.pg-measure) #app { padding-bottom: 0 } body.paged #app .pg-tall { overflow-y: auto; overscroll-behavior: contain }
 body.paged #app > .stack { animation: none }
 body.paged #app > .stack.pg-in-r { animation: pgInR .26s cubic-bezier(.2,.7,.2,1) } body.paged #app > .stack.pg-in-l { animation: pgInL .26s cubic-bezier(.2,.7,.2,1) }
 @keyframes pgInR { from { opacity: .35; transform: translateX(18px) } } @keyframes pgInL { from { opacity: .35; transform: translateX(-18px) } }
@@ -26,6 +27,7 @@ body.paged #app .jump { display: none } /* the page bar replaces the section but
 .lf-bar { grid-column: 1 / -1; height: 3px; border-radius: 3px; background: color-mix(in srgb, var(--line) 80%, transparent); overflow: hidden } .lf-bar i { display: block; height: 100%; background: var(--cobalt); border-radius: 3px; transition: width .3s }
 .lf-hint { grid-column: 1 / -1; font-size: .72rem; color: var(--muted); animation: lfpulse 2.4s ease-in-out 3 } @keyframes lfpulse { 50% { opacity: .45 } }
 @media (prefers-reduced-motion: reduce) { .lf-hint { animation: none } .lf-bar i { transition: none } }
+body.paged.ra-on .lf-nav { display: none } /* while reading, the player's own arrows turn the pages */
 body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { display: flex !important } body.paged.tabs-peek .lf-nav { display: none }
 body.paged #lf-cont, .lf-cont { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 12; margin: 0; max-width: calc(100% - 32px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 3px 12px; border-radius: 99px }
