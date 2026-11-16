@@ -65,6 +65,11 @@
       pushItems(T, g.lvl, items, link, items.map((_, k) => (secOf[k] != null ? secOf[k] : null)));
       if (pro) T.recs.forEach((rid) => { const r = recs.find((x) => x.id === rid); if (r && r.role === "practice") r.comp = { pro: .5, wex: .25, rea: .25 }; });
     });
+    // interactive skill drills (tools/skilldrills.js): the bank for every lesson and guide subsection
+    if (window.__sk) topics.forEach((T) => T.secs.forEach((_, si) => { let B = []; try { B = window.__sk.bank(T.id, si, "bank"); } catch (e) {}
+      B.forEach((d) => { const info = window.__sk.types[d.type]; if (!info || d.type === "acad") return; // academic items are already counted
+        const txt = [d.s ? d.s.join(" ") : "", d.say || "", d.w || "", d.q || "", d.verb || "", d.tense || "", (d.pairs || []).map((p) => p.join(" ")).join(" ")].join(" ");
+        T.recs.push(add({ role: "practice", type: "drill-" + d.type, lvl: T.lvl, topic: T.id, link: "#ejercicios/" + T.id + "/" + si, sec: si, text: txt, comp: info[2], min: info[3], why: true, err: [], mech: [], title: info[0] }).id); }); }));
     // level-wide activities
     (typeof LISTEN !== "undefined" ? LISTEN : []).forEach((x) => { const rd = x.cat === "reading", qs = (x.q || []);
       const r = add({ role: "practice", type: rd ? "read" : "listen", lvl: x.lvl, topic: null, link: "#escuchar", text: [x.t, x.s, (x.paras || []).map((p) => (typeof p === "string" ? p : p.es || p.t || JSON.stringify(p))).join(" ")].join(" "), comp: AC[rd ? "read" : "listen"], min: EF[rd ? "read" : "listen"], why: true, err: [], mech: [], title: x.t, nq: qs.length });
@@ -227,9 +232,9 @@
     const grp = {}, gadd = (key, sev, title, detail, rec, T, extra) => { const g = grp[key] = grp[key] || { sev, title, detail, rec, topics: [], extra: [] }; g.topics.push(T); if (extra) g.extra.push(extra); if (sev === "high" || (sev === "medium" && g.sev === "low")) g.sev = sev; };
     inv.topics.forEach((T) => { const B = crBalance(inv, T.id), has = (t) => B.recs.some((r) => r.type === t);
       if (!B.recs.length) { add("no-practice", T.id, "high", "No practice: " + T.title, T.lvl.toUpperCase(), "Add practice items.", [{ h: T.link, t: T.title }]); return; }
-      if (!has("tr") && !has("write") && !has("speak")) gadd("no-productive", "medium", "Topics with no free productive exercise", "Only gap-fill, correction and multiple choice: no translation, writing or speaking.", "Add 3+ items where the learner writes or says a full sentence.", T);
+      if (!["tr", "write", "speak", "drill-say", "drill-translate", "drill-dict"].some(has)) gadd("no-productive", "medium", "Topics with no free productive exercise", "Only gap-fill, correction and multiple choice: no translation, writing or speaking.", "Add 3+ items where the learner writes or says a full sentence.", T);
       if (B.mcShare > R.qa.thresholds.mc_share_max) gadd("mc-heavy", "medium", "Topics that rely on multiple choice", "More than " + Math.round(R.qa.thresholds.mc_share_max * 100) + "% of practice time is multiple choice.", "Replace some multiple choice with typed or spoken answers.", T, Math.round(B.mcShare * 100) + "%");
-      if ((B.target.pro || 0) > 0 && !has("listen") && !has("speak") && !has("roleplay")) gadd("pron-no-audio", T.gid === "pronunciacion" ? "high" : "low", "Pronunciation targets with no audio activity in the topic", "The mapping plans pronunciation practice, but the topic has no listen-and-repeat or speaking activity.", "Add a listen-and-repeat or record-and-compare activity inside the topic.", T);
+      if ((B.target.pro || 0) > 0 && !["listen", "speak", "roleplay", "drill-say", "drill-whichsound", "drill-stress", "drill-syll"].some(has)) gadd("pron-no-audio", T.gid === "pronunciacion" ? "high" : "low", "Pronunciation targets with no audio activity in the topic", "The mapping plans pronunciation practice, but the topic has no listen-and-repeat or speaking activity.", "Add a listen-and-repeat or record-and-compare activity inside the topic.", T);
       if (!B.mapped) gadd("unmapped-topic", "medium", "Topics without their own skills mapping", "They use the default target and are not marked fully aligned until mapped.", "Add each topic to tools/curric/topics.json and set its targets in build_register.py, then rebuild.", T);
       B.rows.filter((r) => r.flag && r.target > 0).forEach((r) => gadd("imbalance:" + r.c, Math.abs(r.dev) >= 30 ? "medium" : "low", "Exercise mix off target: " + cname(r.c), (r.dev < 0 ? "Below" : "Above") + " the mapped target by " + R.qa.thresholds.deviation_flag + "+ points.", r.dev < 0 ? "Add " + cname(r.c).toLowerCase() + " practice to these topics (or link a matching activity)." : "Shift some of this practice to under-served skills.", T, r.actual + "% vs " + r.target + "%"));
     });

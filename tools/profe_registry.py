@@ -167,6 +167,7 @@ ROUTES = {
   "recursos": "nav.resources", "videos": "nav.videos", "video-{id}": "find.open",
   "biblioteca": "nav.library", "plan": "nav.plan", "chuletas": "nav.cheats", "chuleta-{topic}": "nav.cheat", "progreso": "nav.progress", "ajustes": "nav.settings", "drill": "find.open",
   "{text}": "find.open", "costes": "find.open",
+  "ejercicios": {"voice": "pending", "why": "skill drills hub and drill player (tap-based; Profe can open it by URL later)"},
   "cobertura": {"voice": "unsuitable", "why": "admin-only curriculum coverage dashboard (tables, filters, exports)"},
   "my-{id}": "find.open",
 }

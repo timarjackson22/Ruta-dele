@@ -1,0 +1,17 @@
+.sk-card { border-style: solid !important } .sk-card .sk-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap } .sk-card .sk-h small { color: var(--muted) }
+.sk-ic { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 } .sk-ic span { font-size: .78rem; font-weight: 700; padding: 3px 9px; border-radius: 99px; background: color-mix(in srgb, var(--cobalt) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--cobalt) 25%, transparent); white-space: nowrap }
+.sk-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap } .sk-rev { border-color: color-mix(in srgb, var(--gold, #d69e2e) 55%, var(--line)) !important }
+.sk .sk-tag { margin: 0 0 6px; font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted) } .sk .sk-n { color: var(--muted); font-variant-numeric: tabular-nums }
+.sk .sk-c { justify-content: center; gap: 12px; display: flex; flex-wrap: wrap; align-items: center } .sk .exopt.ok { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)) } .sk .exopt.no { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)) }
+.sk-in { width: 100%; font: inherit; font-size: 1.1rem; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--surface); color: var(--ink); margin-top: 10px; box-sizing: border-box } .sk-ta { min-height: 130px; resize: vertical; line-height: 1.5 }
+.sk-acc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px } .sk-acc .drtile { padding: 6px 11px; min-height: 0; font-size: 1rem }
+.sk-syl { font-size: 2rem; font-weight: 800; letter-spacing: .02em; text-align: center; margin: 18px 0; display: flex; justify-content: center; align-items: center; flex-wrap: wrap }
+.sk-cut { width: 18px; height: 44px; margin: 0 1px; border: 0; border-radius: 6px; background: color-mix(in srgb, var(--cobalt) 8%, transparent); cursor: pointer; position: relative } .sk-cut.on { background: var(--cobalt) } .sk-cut.on::after { content: ""; position: absolute; left: 8px; top: 4px; bottom: 4px; width: 2px; background: #fff }
+.sk-sylopts { display: flex !important; flex-wrap: wrap; justify-content: center; gap: 8px } .sk-sylopts .exopt { min-width: 70px; text-align: center; font-size: 1.2rem }
+.sk-mic.rec { animation: skpulse 1s infinite; background: var(--bad) !important; color: #fff } @keyframes skpulse { 50% { transform: scale(1.08) } }
+.sk-text { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; max-height: 46vh; overflow: auto; line-height: 1.6; font-size: .98rem; margin: 8px 0 }
+.sk-exam { margin: 0 0 4px; font-size: .74rem; font-weight: 800; color: #b7791f; text-transform: uppercase; letter-spacing: .04em }
+.sk-skills { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px } .sk-skill { display: flex; gap: 8px; align-items: center; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); text-decoration: none; color: var(--ink); font-weight: 700 } .sk-skill span { font-size: 1.4rem }
+.sk-unit { border: 1px solid var(--line); border-radius: 12px; margin: 6px 0; background: var(--surface) } .sk-unit summary { padding: 10px 12px; cursor: pointer } .sk-unit ul { margin: 0 0 10px; padding-left: 28px; line-height: 1.9 }
+.sk-hub a[aria-current="true"] { font-weight: 800; text-decoration: underline }
+.sk-ver { font-size: 1.05rem; padding: 12px 18px }

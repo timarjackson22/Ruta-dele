@@ -714,6 +714,62 @@
   "voice": "unsuitable",
   "why": "reveal answer in older widgets"
  },
+ "sk-acc": {
+  "voice": "unsuitable",
+  "why": "skill drills: type an accented letter"
+ },
+ "sk-again": {
+  "voice": "pending",
+  "why": "skill drills: repeat the drill set"
+ },
+ "sk-check": {
+  "voice": "pending",
+  "why": "skill drills: check a typed/built answer"
+ },
+ "sk-cut": {
+  "voice": "unsuitable",
+  "why": "skill drills: cut a word into syllables"
+ },
+ "sk-lv": {
+  "voice": "pending",
+  "why": "skill drills: change level on the drills hub"
+ },
+ "sk-m": {
+  "voice": "unsuitable",
+  "why": "skill drills: match pairs by tapping"
+ },
+ "sk-mic": {
+  "voice": "unsuitable",
+  "why": "skill drills: speak the sentence (uses the mic itself)"
+ },
+ "sk-next": {
+  "voice": "pending",
+  "why": "skill drills: next drill"
+ },
+ "sk-nomic": {
+  "voice": "pending",
+  "why": "skill drills: skip a speaking drill"
+ },
+ "sk-pick": {
+  "voice": "pending",
+  "why": "skill drills: choose an option"
+ },
+ "sk-play": {
+  "voice": "pending",
+  "why": "skill drills: replay the drill audio"
+ },
+ "sk-skip": {
+  "voice": "pending",
+  "why": "skill drills: skip a drill"
+ },
+ "sk-tile": {
+  "voice": "unsuitable",
+  "why": "skill drills: build a sentence from tiles"
+ },
+ "sk-un": {
+  "voice": "unsuitable",
+  "why": "skill drills: remove a tile"
+ },
  "sr-30": {
   "voice": "pending",
   "why": "flashcard grading by voice (again/hard/good/easy) is planned"

@@ -22,6 +22,10 @@ If no: say so in the commit message ("costs: no impact").
 - New lesson or guide: add its id to `tools/curric/topics.json` (and targets if not the default) or it is flagged "needs its own skills mapping".
 - Exam format changes: update the DELE task rows/sources in build_register.py. `node tools/profe-tests/sCR.js` must pass. Method: tools/curric/METRICS.md.
 
+## Skill drills (Check yourself cards, #ejercicios)
+- `tools/skilldrills.js` (+ .css) embedded by `python3 tools/patch_skill.py index.html`; generated from lesson/guide content, so new content gets drills automatically.
+- `node tools/profe-tests/sSK.js` must pass (every drill type renders and grades; difficulty by level).
+
 ## Versions
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").

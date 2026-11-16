@@ -12,15 +12,9 @@
     out.forEach((o) => o.sort((a, b) => a - b));
     return out;
   }
-  function qcBuild(key, o, secs) { // returns one HTML string per section ("" when it has no questions)
-    const items = pxItems(o); if (!items.length) return secs.map(() => ""); const A = qcAssign(items, secs);
-    QC[key] = { items, key };
-    return A.map((ks, si) => { // from the third section on, one question from two sections back comes round again
-      const back = si >= 2 ? (A[si - 2] || [])[0] : undefined, list = ks.map((k) => [k, 0]).concat(back != null && ks.length ? [[back, 1]] : []);
-      if (!list.length) return "";
-      return '<aside class="qchk" aria-label="Check yourself"><div class="qchk-h"><b>✍️ Check yourself</b><small>' + list.length + " question" + (list.length > 1 ? "s" : "") + " on what you just read</small></div>" +
-        list.slice(0, 3).map(([k, rev]) => qcItem(key, k, items[k], rev)).join("") + (list.length > 3 ? '<details class="qcmore"><summary>' + (list.length - 3) + " more question" + (list.length - 3 > 1 ? "s" : "") + "</summary>" + list.slice(3).map(([k, rev]) => qcItem(key, k, items[k], rev)).join("") + "</details>" : "") + "</aside>";
-    });
+  function qcBuild(key, o, secs) { // 15 Nov 2026: one "Check yourself" card per section, opening interactive skill drills for it (tools/skilldrills.js)
+    QC[key] = { items: pxItems(o), key };
+    return secs.map((_, si) => { try { return skCard(key, si); } catch (e) { return ""; } });
   }
   function qcItem(key, k, it, rev) {
     const head = '<p class="qcq"><span class="qct">' + (rev ? "↺ From earlier · " : "") + PXT[it.t][0] + "</span>" + blanks(it.q) + "</p>";

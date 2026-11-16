@@ -17,6 +17,9 @@ Requested 15 Nov 2026. Built on the app's existing stack: one embedded block, no
 
 ## Data model
 
+Since v192 the inventory also includes the **interactive skill-drill bank** (`tools/skilldrills.js`). Each drill counts as practice in its lesson part, with its own competency shares and minutes (for example: say it = speaking/pronunciation 0.6 min; which pronunciation = pronunciation/listening 0.4 min). Academic drills are not counted twice.
+
+
 - **Content records** are built live from what the app actually ships:
   - lessons (vocabulary, grammar blocks, intro, pitfalls, pronunciation notes and every practice item)
   - guides (sections and practice items)
