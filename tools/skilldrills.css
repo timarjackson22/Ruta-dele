@@ -28,3 +28,16 @@ body.kb-open .sk .drtop { position: sticky; top: 0; z-index: 3; background: var(
 .sk-diff del { color: var(--bad); text-decoration: line-through } .sk-diff ins { color: var(--good); text-decoration: none; font-weight: 700 } .sk-diff .why { display: block; margin-top: 6px; color: var(--muted) }
 .sk-diff, .sk-diff .fxline { color: var(--ink) } .sk-diff .fxline { font-weight: 700; font-size: 1.02rem } .sk-lab { margin: 0 0 4px !important; font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted) }
 .drfb .sk-diff b { color: var(--ink) !important }
+/* drill layout: prompt card, inline answer, compact accent keys, action bar pinned to the bottom (16 Nov 2026) */
+.sk .drbody { padding-bottom: 8px } .sk .drq { font-size: 1.35rem; line-height: 1.25; margin: 4px 0 12px }
+.sk-card2 { font-size: 1.35rem; font-weight: 700; line-height: 1.7; padding: 16px 18px; margin: 6px 0 4px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 2px 10px rgba(0,0,0,.04); text-align: left }
+.sk-inline { display: inline-block; width: auto; margin: 0 4px; padding: 2px 8px !important; font-size: 1.2rem !important; font-weight: 700; border: 0 !important; border-bottom: 3px solid var(--cobalt) !important; border-radius: 6px 6px 0 0 !important; background: color-mix(in srgb, var(--cobalt) 7%, var(--surface)) !important; vertical-align: baseline }
+.sk .sk-in:not(.sk-inline) { margin-top: 12px }
+.sk-acc { gap: 6px; margin-top: 10px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px } .sk-acc .drtile { flex: 0 0 auto; min-width: 38px; padding: 6px 0 !important; font-size: .98rem; border-bottom-width: 3px }
+.sk .drfoot { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 4; display: flex; gap: 10px; margin-top: 18px; padding: 10px 0 0; background: linear-gradient(to top, var(--bg, #eef3f9) 70%, transparent) }
+.sk .drfoot .btn { min-height: 52px; font-size: 1.05rem } .sk .drfoot .btn.primary { flex: 1 }
+.sk .drfb { position: sticky; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 4; box-shadow: 0 -4px 24px rgba(0,0,0,.08) }
+.sk .exopts { display: grid; gap: 10px } .sk .exopt { min-height: 52px; font-size: 1.05rem; text-align: left; padding: 12px 16px }
+.drill.sk { display: flex; flex-direction: column; min-height: calc(100dvh - 150px) } .sk .drbody { flex: 0 0 auto } .sk .drfoot, .sk .drfb { margin-top: auto }
+.sk-use { margin: 0 0 6px; font-size: .95rem; color: var(--muted) } .sk-use b { display: inline-block; margin-left: 4px; padding: 2px 10px; border-radius: 99px; background: color-mix(in srgb, var(--cobalt) 12%, var(--surface)); color: var(--ink); font-size: 1rem }
+.sk-ins { margin: -6px 0 10px }
