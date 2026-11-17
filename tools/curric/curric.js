@@ -28,7 +28,7 @@
     const checkTxt = (s) => { const t = String(s || ""), e = []; if (/¿/.test(t) && (t.match(/¿/g) || []).length > (t.match(/\?/g) || []).length) e.push("¿ without ?"); if (/¡/.test(t) && (t.match(/¡/g) || []).length > (t.match(/!/g) || []).length) e.push("¡ without !"); if (/\b(\w{3,}) \1\b/i.test(t)) e.push("doubled word"); return e; };
     const val = (it) => { const e = [];
       if (!String(it.q || "").trim()) e.push("empty question");
-      if (it.t === "mc") { if (!Array.isArray(it.opts) || it.opts.length < 2) e.push("fewer than 2 options"); else { if (!(Number.isInteger(it.c) && it.c >= 0 && it.c < it.opts.length)) e.push("answer key out of range"); if (new Set(it.opts.map((x) => String(x).trim().toLowerCase())).size < it.opts.length) e.push("duplicate options"); } }
+      if (it.t === "mc") { if (!Array.isArray(it.opts) || it.opts.length < 2) e.push("fewer than 2 options"); else { if (!(Number.isInteger(it.c) && it.c >= 0 && it.c < it.opts.length)) e.push("answer key out of range"); if (new Set(it.opts.map((x) => /stress|syllable|s[ií]laba|t[oó]nica/i.test(it.q || it.p || "") ? String(x).trim() : String(x).trim().toLowerCase())).size < it.opts.length) e.push("duplicate options"); } }
       else { if (!(it.a || []).some((x) => String(x).trim())) e.push("no answer"); const raw = (x) => String(x).trim().toLowerCase().replace(/\s+/g, " "); if (it.t === "fix" && (it.a || []).some((x) => raw(x) === raw(it.q))) e.push("the correction equals the mistake"); }
       return e; };
     const pushItems = (topic, lvl, items, link, sec) => items.forEach((it, k) => { const e = val(it), m = checkTxt([it.q].concat(it.a || [], it.opts || []).join(" "));
@@ -85,7 +85,7 @@
     // assessment: mock exam papers
     const papers = {};
     CR_LV.forEach((lv) => { const D = EX && EX[lv]; if (!D) return; papers[lv] = D;
-      D.exams.forEach((e, ei) => ["lectura", "auditiva", "escritura", "oral"].forEach((pr) => (e[pr] || []).forEach((t) => { const n = parseInt(String(t.t).replace(/\D+/g, ""), 10) || 0, tid = "dele-" + lv + "-" + pr + "-t" + n;
+      D.exams.forEach((e, ei) => ["lectura", "auditiva", "escritura", "oral"].forEach((pr) => (e[pr] || []).filter((t) => !t.extra).forEach((t) => { /* labelled extra practice is not part of the exam */ const n = parseInt(String(t.t).replace(/\D+/g, ""), 10) || 0, tid = "dele-" + lv + "-" + pr + "-t" + n;
         const off = R.tasks.find((x) => x.id === tid), comp = off ? { [off.comp]: 1 } : pr === "lectura" ? { rea: 1 } : pr === "auditiva" ? { lis: 1 } : pr === "escritura" ? { wex: 1 } : { oex: 1 };
         const qs = t.q || [], txt = [t.ins, t.en, t.task, JSON.stringify(t.texts || ""), (t.audio || []).join(" "), qs.map((q) => q.q + " " + (q.o || []).join(" ")).join(" "), JSON.stringify(t.points || "")].join(" ");
         const r = add({ role: "assess", type: pr === "escritura" ? "exam-write" : pr === "oral" ? "exam-oral" : "exam-q", lvl: lv, topic: null, link: "#examenes", text: txt, comp, min: pr === "escritura" ? R.effort["exam-write"] : pr === "oral" ? R.effort["exam-oral"] : qs.length * R.effort["exam-q"], why: true, err: [], mech: [], paper: ei + 1, prueba: pr, n, task: tid, nq: qs.length, words: t.words, speak: t.speak, prep: t.prep, pts: (t.points || []).length || (t.ask || []).length || (t.form ? 1 : 0), model: !!t.model, reg: t.reg,

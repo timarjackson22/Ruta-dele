@@ -25,7 +25,7 @@ const D = JSON.parse(fs.readFileSync("/home/claude/ruta-dele/examdata/a1.json", 
     X.oral.forEach((t) => { if (!(+t.speak > 0) || t.prep == null || !(t.words && t.words.length === 2)) bad.push(e + " speaking " + t.t + " lacks timing/words"); });
     if (!X.oral.some((t) => t.ask && t.ask.length)) bad.push(e + " no conversation task");
   });
-  const m = D.format.mins; if (!(m.lectura === 45 && m.auditiva === 20 && m.escritura === 25 && m.oral === 15)) bad.push("format minutes " + JSON.stringify(m));
+  const m = D.format.mins; if (!(m.lectura === 45 && m.auditiva === 25 && m.escritura === 25 && m.oral === 10)) bad.push("format minutes " + JSON.stringify(m));
   rec("Data: 15 exams, 4 papers each, 25+25 questions, every answer key valid, audio, words and points, timing", !bad.length, bad.join(" | "));
 })();
 
@@ -120,7 +120,7 @@ const INIT = () => {
   rec("Speaking time bar is shown while recording", !!(await p.$("#ex-tb-0")) && /\d:\d\d \/ 1:30/.test(await p.textContent("#ex-tt-0")), await p.textContent("#ex-rec-0").catch(() => "none"));
   // Finish while still recording, with the phrase never marked final (the Android case)
   await p.click('[data-act="ex-submit"]'); await W(100);
-  rec("Speaking: finishing with empty tasks warns (names them)", /Tarea 2, Tarea 3, Tarea 4 have no answer yet/.test(await p.textContent('[data-act="ex-submit"]')), await p.textContent('[data-act="ex-submit"]'));
+  rec("Speaking: finishing with empty tasks warns (names them)", /Tarea 2, Tarea 3, Práctica extra have no answer yet/.test(await p.textContent('[data-act="ex-submit"]')), await p.textContent('[data-act="ex-submit"]'));
   await p.click('[data-act="ex-submit"]'); await p.waitForFunction(() => window.__ex().phase === "result"); await W(200);
   let res = await p.evaluate(() => { const R = JSON.parse(JSON.stringify(window.__ex())); return null; });
   const t0 = await p.evaluate(() => { for (const key of Object.keys(localStorage)) { try { const j = JSON.parse(localStorage.getItem(key)); if (j && j.ex && j.ex["a1-1"] && j.ex["a1-1"].oral) return j.ex["a1-1"].oral.tasks[0]; } catch (e) {} } return null; });
@@ -206,7 +206,7 @@ const INIT = () => {
 
   // ---------- screenshot issues: formatting, the speaking clock, the header ----------
   await go("a1-examen-1-oral"); await again().catch(() => {}); await go("a1-examen-1-oral");
-  rec("Speaking clock includes the 15 min preparation (Start · 30 min)", /Start · 30 min/.test(await p.textContent('[data-act="ex-start"]:not([data-free])')), await p.textContent('[data-act="ex-start"]:not([data-free])'));
+  rec("Speaking clock includes the 10 min preparation (Start · 20 min, DELE A1 v2020)", /Start · 20 min/.test(await p.textContent('[data-act="ex-start"]:not([data-free])')), await p.textContent('[data-act="ex-start"]:not([data-free])'));
   await start(false);
   const card = await p.$eval(".excard", (x) => x.innerHTML);
   rec("Task cards show bold titles and line breaks, not ** or <br>", /<b>Mi barrio<\/b><br>/.test(card) && !/\*\*|&lt;br/.test(card), card.slice(0, 120));

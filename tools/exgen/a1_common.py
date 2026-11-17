@@ -1,9 +1,10 @@
-# shared pieces for the DELE A1 exams (format DELE A1, version 2020)
+# shared pieces for the DELE A1 exams (format DELE A1, version 2020: listening 25 min; speaking 10 min + 10 prep, 3 tasks; the old Tarea 4 is kept as labelled extra practice)
+# source: Instituto Cervantes, Especificaciones DELE A1 2020 / examenes.cervantes.es/a1a2/a1_en.htm (checked 16 Nov 2026)
 FORMAT = {
     "pass": "60/100 to pass, with at least 30/50 in each group (Group 1: reading + writing; Group 2: listening + speaking)",
-    "lectura": "45 min · 4 tasks · 25 questions", "auditiva": "20 min · 4 tasks · 25 questions",
-    "escritura": "25 min · 2 tasks", "oral": "15 min + 15 min prep · 4 tasks",
-    "mins": {"lectura": 45, "auditiva": 20, "escritura": 25, "oral": 15},
+    "lectura": "45 min · 4 tasks · 25 questions", "auditiva": "25 min · 4 tasks · 25 questions",
+    "escritura": "25 min · 2 tasks", "oral": "10 min + 10 min prep · 3 tasks (+ 1 extra practice task)",
+    "mins": {"lectura": 45, "auditiva": 25, "escritura": 25, "oral": 10},
 }
 
 def mc(q, o, a):

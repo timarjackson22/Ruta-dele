@@ -29,5 +29,16 @@ for n, x in enumerate(exams, 1):
                 lim = len(t["opts"]) if "opts" in t else len(q["o"])
                 assert 0 <= q["a"] < lim, (n, k, t["t"], q)
         assert tot == 25 or lv != "a1", (n, k, tot)
+# DELE A1 v2020 has 3 speaking tasks: the old Tarea 4 (role-play dialogues) stays as practice, clearly labelled and outside the exam's timing and score
+if lv == "a1":
+    for x in exams:
+        if len(x.get("oral", [])) > 3: x["oral"][3]["extra"] = True; x["oral"][3]["t"] = "Práctica extra"
+        for t in x.get("oral", []):
+            if t.get("prep", 0) > 10: t["prep"] = 10  # A1 v2020: 10 min preparation
+# DELE A2 v2020 speaking: monologue, photo description, role-play. The app's follow-up conversation (old Tarea 2) stays as labelled practice
+if lv == "a2":
+    for x in exams:
+        o = x.get("oral", [])
+        if len(o) == 4 and o[1]["t"] == "Tarea 2": o[1]["extra"] = True; o[1]["t"] = "Práctica extra"; o[2]["t"] = "Tarea 2"; o[3]["t"] = "Tarea 3"
 json.dump({"lvl": lv, "format": common.FORMAT, "exams": exams}, open("/home/claude/ruta-dele/examdata/" + lv + ".json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(lv, len(exams), "exams")

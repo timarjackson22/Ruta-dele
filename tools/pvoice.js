@@ -2,7 +2,7 @@
   const PVR = (() => { try { return JSON.parse(document.getElementById("pv-registry").textContent); } catch (e) { return { actions: [], routes: {}, acts: {} }; } })();
   const PV_DIAG = [];
   window.__pvLog = (x) => pvLog(x);
-  function pvLog(x) { PV_DIAG.push(new Date().toTimeString().slice(0, 8) + " " + x); if (PV_DIAG.length > 40) PV_DIAG.shift(); }
+  function pvLog(x) { PV_DIAG.push(new Date().toTimeString().slice(0, 8) + " " + x); if (PV_DIAG.length > 200) PV_DIAG.shift(); }
   // the phone's recogniser events, kept for "Mic diagnostics" (Profe › History & settings)
   (function () { const A = window.__astt; if (A && A.ev && !A.__pv) { const ev = A.ev; A.ev = function (t, a) { if (t !== "partial") pvLog("mic " + t + (a ? " " + String(a).slice(0, 40) : "")); return ev.apply(this, arguments); }; A.__pv = 1; } })();
 
@@ -64,7 +64,9 @@
     try { if (typeof PL !== "undefined" && pvQ("#pl-play")) { if (PL.playing) playing = true; else paused = true; } } catch (e) {}
     try { if (typeof RA !== "undefined" && RA.on) { if (RA.paused) paused = true; else playing = true; } } catch (e) {}
     try { if (typeof VP !== "undefined" && VP.p && VP.p.getPlayerState && pvQ("#vplayer, .vframe, #vp")) { const st = VP.p.getPlayerState(); if (st === 1) playing = true; else if (st === 2 || st === 5) paused = true; } } catch (e) {}
-    return { unit: run, runner: q, "runner-mc": mc, "runner-text": txt, "runner-fb": fb, "runner-open": mc || txt, guide: !!pvQ('[data-act="ra-start"]'), playing, paused, player: !!pvQ("#pl-rate"),
+    if (paused && HF.wasPlaying && HF.wasPlaying === location.hash) playing = true; // held by "Ok Profe": "pausa" still means pause it
+    const paged = document.body.classList.contains("paged") && !!window.__lf;
+    return { paged, unit: run, runner: q, "runner-mc": mc, "runner-text": txt, "runner-fb": fb, "runner-open": mc || txt, guide: !!pvQ('[data-act="ra-start"]'), playing, paused, player: !!pvQ("#pl-rate"),
       video: typeof VP !== "undefined" && !!VP.p && !!pvQ("#vplayer, .vframe, #vp"), vdrill: !!(typeof DR !== "undefined" && DR.on),
       exam: !!pvQ('main [data-act="ex-ans"]'), qdrill: location.hash === "#drill" && !!pvQ('main [data-act^="dr-"]'),
       tutor: document.body.classList.contains("tutor-open"), drill: !!(typeof PR !== "undefined" && PR && document.body.classList.contains("tutor-open") && typeof tView !== "undefined" && tView === "practice") };
@@ -176,7 +178,8 @@
     "q.show": async () => { if (!pvClick("px-dunno")) return { ok: false, say: "There's no answer to show." }; const ok = await pvUntil(() => pvQ('#runner [data-act="px-next"]'), 800); return ok ? { ok: true, say: pvFeedback().replace(/^Not quite\. /, ""), fb: 1 } : { ok: false, say: "I couldn't show it." }; },
     "q.repeat": () => (HF.on ? (hfLessonStep(""), { ok: true, quiet: 1, say: "" }) : { ok: true, say: pvQuestionSpeech() }),
     "q.restart": async () => { if (!pvQ("#runner")) return { ok: false, say: "There's nothing to restart here." }; pvClick("px-restart"); const ok = await pvUntil(() => pvQ("#runner .pxq") && PX.i === 0, 1000); return { ok, say: ok ? "Starting again from question 1." : "I couldn't restart.", next: 1 }; },
-    "play.pause": async () => { const c = pvCtx(); if (!c.playing) return { ok: false, say: "Nothing is playing." };
+    "play.pause": async () => { const c = pvCtx(); if (c.paused && HF.wasPlaying) return { ok: true, quiet: 1, say: "" }; // held by "Ok Profe": now it stays paused
+      if (!c.playing) return c.paused ? { ok: true, quiet: 1, say: "" } : { ok: false, say: "Nothing is playing." }; // already paused (e.g. by "Ok Profe"): stays paused
       try { if (typeof RA !== "undefined" && RA.on && !RA.paused) pvClick("ra-pp"); else if (typeof PL !== "undefined" && PL.playing) pvClick("l-play"); else if (typeof vpPause === "function") vpPause(); } catch (e) {}
       const ok = await pvUntil(() => !pvCtx().playing, 800); return { ok, say: ok ? "" : "I couldn't pause it.", quiet: ok }; },
     "play.resume": async () => { const c = pvCtx(); if (!c.paused) return { ok: false, say: c.playing ? "It's already playing." : "There's nothing to resume." };
@@ -363,17 +366,21 @@
   // the Android app listens for "Ok Profe": on the phone when it can; with an online recogniser only if you allowed it (Settings)
   const hfStatus = () => { try { return String(window.AndroidWake.status()); } catch (e) { return ""; } };
   const hfMode = () => { if (!window.AndroidWake) return CAN_MIC ? "tap" : null; const st = hfStatus(); HF.online = st === "online" && !!TS.hfOnline; return st === "ok" || st === "no-mic" || HF.online ? "wake" : CAN_MIC ? "tap" : null; };
-  function hfSpeaking() { try { return !!(window.speechSynthesis && speechSynthesis.speaking); } catch (e) { return false; } }
+  // the lesson being read aloud (not Profe talking): the offline "Ok Profe" listener records the mic directly, takes no audio focus and only knows the
+  // wake phrase, so it keeps listening while a lesson is read; the phone's own recogniser may take audio focus, so with it read-aloud still counts as busy
+  function hfReadingOnly() { try { return typeof RA !== "undefined" && RA.on && !RA.paused && !HF.saying && !(typeof tBusy !== "undefined" && tBusy) && !(typeof listening !== "undefined" && listening) && !HF.rec && !document.body.classList.contains("tutor-open"); } catch (e) { return false; } }
+  const hfWakeOverRA = () => HF.engine === "vosk" && hfReadingOnly();
+  function hfSpeaking() { try { return !!(window.speechSynthesis && speechSynthesis.speaking) && !hfWakeOverRA(); } catch (e) { return false; } }
   function hfBusy() { return Date.now() < (HF.hold || 0) || ((PV.running || 0) > 0 && Date.now() - (PV.runAt || 0) < 20000) || (typeof listening !== "undefined" && listening) || !!HF.rec || (typeof tBusy !== "undefined" && tBusy) || hfSpeaking() || HF.saying || !!(typeof EX !== "undefined" && EX && EX.recT != null) || !!(typeof VA !== "undefined" && VA && VA.on); }
-  function hfState() { if (!HF.on) return "off"; if (HF.paused) return "paused"; if ((typeof listening !== "undefined" && listening) || HF.rec) return "listening"; if (typeof tBusy !== "undefined" && tBusy) return "thinking"; if (hfSpeaking() || HF.saying) return "speaking"; return HF.mode === "wake" ? (HF.eng === "on" ? "wake" : "starting") : "tap"; }
-  const HF_LABEL = { off: "", paused: "Paused", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", wake: "Say “Ok Profe”", starting: "Say “Ok Profe”", tap: "Tap to talk" };
+  function hfState() { if (!HF.on) return "off"; if (HF.paused) return "paused"; if (hfReadingOnly() && !HF.rec) return hfWakeOverRA() && HF.eng === "on" ? "reading-wake" : "reading"; if ((typeof listening !== "undefined" && listening) || HF.rec) return "listening"; if (typeof tBusy !== "undefined" && tBusy) return "thinking"; if (hfSpeaking() || HF.saying) return "speaking"; return HF.mode === "wake" ? (HF.eng === "on" ? "wake" : "starting") : "tap"; }
+  const HF_LABEL = { "reading-wake": "Reading · say “Ok Profe”", reading: "Reading · tap to talk", off: "", paused: "Paused", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", wake: "Say “Ok Profe”", starting: "Say “Ok Profe”", tap: "Tap to talk" };
   function hfPaint() {
     let p = document.getElementById("hfpill");
     if (!HF.on) { if (p) p.hidden = true; return; }
     if (!p) { p = document.createElement("div"); p.id = "hfpill"; p.setAttribute("role", "status"); p.innerHTML = '<button type="button" class="hfmain" data-act="hf-tap"><span class="hfdot" aria-hidden="true"></span><span class="hft"></span></button><button type="button" class="hfx" data-act="hf-pause" aria-label="Pause hands-free">❚❚</button>'; document.body.appendChild(p); }
     const st = hfState(); p.hidden = false; p.dataset.st = st; p.querySelector(".hft").textContent = HF_LABEL[st] + (HF.note && (st === "wake" || st === "tap") ? "" : "");
     const x = p.querySelector(".hfx"); x.dataset.act = HF.paused ? "hf-toggle" : "hf-pause"; x.textContent = HF.paused ? "✕" : "❚❚"; x.setAttribute("aria-label", HF.paused ? "Turn hands-free off" : "Pause hands-free");
-    p.querySelector(".hfmain").setAttribute("aria-label", st === "tap" || st === "paused" ? "Talk to Profe" : st === "speaking" ? "Interrupt Profe and talk" : "Hands-free: " + HF_LABEL[st]);
+    p.querySelector(".hfmain").setAttribute("aria-label", st === "tap" || st === "paused" || st === "reading" ? "Talk to Profe" : st === "speaking" ? "Interrupt Profe and talk" : "Hands-free: " + HF_LABEL[st]);
   }
   // one place decides whether the wake listener should run: on, not paused, app visible, nothing else using the mic or speaking
   function hfReconcile() {
@@ -403,6 +410,7 @@
     if (type === "state") { if (v === "no-ondevice" || v === "no-lang") { HF.mode = "tap"; HF.eng = "off"; HF.note = v; hfNotice(v); } else if (v === "no-mic") { HF.eng = "off"; hfNotice("no-mic"); } else if (v === "error") { HF.eng = "off"; HF.settle = Date.now() + 5000; } else if (v === "stopped") { HF.eng = "off"; HF.wakeStopT = Date.now(); } hfPaint(); return; }
     if (HF.eng !== "on" || hfBusy()) return; // Profe is speaking or the mic is in use: never wake on that
     const t = String(v || ""), m = t.match(PV_WAKE); if (!m) return;
+    try { if (hfWakeOverRA() && RA.el && /prof/i.test(RA.el.textContent || "")) { pvLog("wake ignored: the line being read mentions Profe"); return; } } catch (e) {}
     HF.heard = t.slice(m.index + m[0].length).trim(); clearTimeout(HF.wt);
     if (type === "final") hfWoke(HF.heard); else HF.wt = setTimeout(() => hfWoke(HF.heard), 1500); // keep listening while the command follows in the same breath
   } };
@@ -429,7 +437,7 @@
     PV.skip = 1; tOpen(); tSend(text, true);
   }
   // follow-ups: no wake phrase needed for a few seconds after Profe finishes
-  function hfFollow() { if (!HF.on || HF.paused) { hfEnd(); return; } pvLog("follow-up listen"); HF.engaged = true; hfCapture((t) => (t ? hfHandle(t) : hfEnd()), { startMs: 8000 }); }
+  function hfFollow() { if (!HF.on || HF.paused) { hfEnd(); return; } try { if (typeof RA !== "undefined" && RA.on && !RA.paused) { pvLog("reading carried on: no follow-up listen"); hfEnd(); return; } } catch (e) {} pvLog("follow-up listen"); HF.engaged = true; hfCapture((t) => (t ? hfHandle(t) : hfEnd()), { startMs: 8000 }); }
   function hfEnd() { HF.engaged = false; HF.lesson = HF.lesson && pvCtx().runner ? HF.lesson : false; hfReconcile(); }
   function hfQuiet() { HF.cut = (HF.cut || 0) + 1; try { speechCut(); } catch (e) {} SPK_GEN++; try { speechSynthesis.cancel(); } catch (e) {} HF.saying = false; try { if (typeof listening !== "undefined" && listening) stopListening(); } catch (e) {} hfAbort(); HF.lesson = false; voiceMode = false; lastVoice = false; try { uiVoice(); } catch (e) {} }
   // stop every other user of the recogniser before listening (video captions from audio, the card pronunciation check, an exam recording)
@@ -446,7 +454,7 @@
     const r = new SR(); HF.rec = r; r.lang = o.lesson || HF.lesson || (typeof DR !== "undefined" && DR.on) ? sttLang() : hfCmdLang(); r.interimResults = true; r.continuous = !IS_IOS;
     try { if (window.AndroidSTT && window.AndroidSTT.setBias && !(o.lesson || HF.lesson)) window.AndroidSTT.setBias(JSON.stringify(PV_BIAS)); } catch (e) {}
     let live = "", fin = "", end = false, retried = !!o.retried; const t0 = Date.now();
-    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint();  pvLog("capture [" + r.lang + "] → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
+    const finish = (t) => { if (end) return; end = true; clearTimeout(r._q); clearTimeout(r._s); if (HF.rec === r) HF.rec = null; try { r.abort(); } catch (e) {} hfPaint();  pvLog("capture [" + r.lang + "] " + (r._readyT ? "mic open " + (r._readyT - t0) + " ms, " : "") + "turn " + (Date.now() - t0) + " ms → " + (t ? "«" + t + "»" : "nothing" + (r._err ? " (error " + r._err + ")" : r._got ? " (heard sound, no words)" : r._ready ? " (mic open, no speech)" : " (mic never opened)"))); done(t && t.trim() ? t.trim() : null); };
     r._fin = finish;
     r.onresult = (e) => { if (end) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; } fin = f.trim(); live = (f + im).trim();
       clearTimeout(r._s); clearTimeout(r._q); r._q = setTimeout(() => finish(live), hfWaitFor(live, fin && !im.trim(), o)); const l = document.getElementById("t-live"); if (l) { l.hidden = false; l.textContent = live; } };
@@ -498,7 +506,7 @@
   // UI: the pill, settings, the Speak tile
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest("[data-act]"), a = t && t.dataset.act; if (!a) return;
-    if (a === "hf-tap") { if (HF.paused) { hfPause(false); return; } if (hfSpeaking() || HF.saying) hfQuiet(); if (HF.rec) { hfAbort(); hfEnd(); return; } HF.engaged = true; hfStopOthers(); hfBeep(); hfCapture((x) => (x ? hfHandle(x) : hfEnd()), { startMs: 7000 }); }
+    if (a === "hf-tap") { if (HF.paused) { hfPause(false); return; } try { const c = pvCtx(); if (c.playing && !(typeof DR !== "undefined" && DR.on) && !HF.rec) { HF.wasPlaying = location.hash; PVH["play.pause"]("auto"); } } catch (e) {} if (hfSpeaking() || HF.saying) hfQuiet(); if (HF.rec) { hfAbort(); hfEnd(); return; } HF.engaged = true; hfStopOthers(); hfBeep(); hfCapture((x) => (x ? hfHandle(x) : hfEnd()), { startMs: 7000 }); }
     else if (a === "hf-toggle") { hfEnable(!HF.on); try { if (typeof tView !== "undefined") tRender(); } catch (x) {} }
     else if (a === "hf-pause") hfPause(true);
     else if (a === "t-speak") { tOpen(); tView = "chat"; tRender(); voiceMode = true; uiVoice(); setTimeout(() => listen((x) => tSend(x, true)), 60); }
@@ -703,6 +711,19 @@
   { const woke = hfWoke; hfWoke = function (cmd) { try { const c = pvCtx(); if (c.playing && !DR.on) { HF.wasPlaying = location.hash; PVH["play.pause"](); } } catch (e) {} return woke(cmd); };
     const end = hfEnd; hfEnd = function () { const w = HF.wasPlaying; HF.wasPlaying = null; end(); if (w && w === location.hash && HF.on && !HF.paused && !DR.on && !HF.lesson) { const c = pvCtx(); if (c.paused) { pvLog("resume after exchange"); PVH["play.resume"](); } } };
     const pause = PVH["play.pause"]; PVH["play.pause"] = async (s, c) => { const r = await pause(s, c); if (s && s !== "auto") HF.wasPlaying = null; return r; }; }
+  // ---- lesson pages, view and reading (16 Nov 2026) ----
+  Object.assign(PVH, {
+    "page.next": async () => { const L = window.__lf, st = L && L.state(); if (st && st.on) { if (st.i >= st.n - 1) return { ok: false, say: "This is the last page." }; L.userGo(st.i + 1); return { ok: true, say: typeof RA !== "undefined" && RA.on && !RA.paused ? "" : "Page " + (st.i + 2) + " of " + st.n + ".", quiet: typeof RA !== "undefined" && RA.on && !RA.paused }; }
+      const y = scrollY; scrollBy({ top: Math.round(innerHeight * 0.8), behavior: "smooth" }); const ok = await pvUntil(() => scrollY > y + 10, 900); return { ok, say: ok ? "" : "That's the end of the page.", quiet: ok }; },
+    "page.prev": async () => { const L = window.__lf, st = L && L.state(); if (!st || !st.on) return { ok: false, say: "That works in page view." }; if (st.i <= 0) return { ok: false, say: "This is the first page." }; L.userGo(st.i - 1); return { ok: true, say: typeof RA !== "undefined" && RA.on && !RA.paused ? "" : "Page " + st.i + " of " + st.n + ".", quiet: typeof RA !== "undefined" && RA.on && !RA.paused }; },
+    "page.first": async () => { if (!pvClick("lf-top")) return { ok: false, say: "There's no lesson open." }; await pvWait(250); return { ok: true, say: "The start of the lesson." }; },
+    "page.last": async () => { if (!pvClick("lf-end")) return { ok: false, say: "There's no lesson open." }; await pvWait(250); return { ok: true, say: document.getElementById("s-end") ? "The end of the lesson. Next come the Mastery exercises." : "The end of the page." }; },
+    "lesson.mode": async (s) => { const on = document.body.classList.contains("paged"), want = /scroll|continu|normal|flow|desplaz/.test(s || "") ? false : /page|pagina|book/.test(s || "") ? true : !on;
+      if (want === on) return { ok: true, say: on ? "You're already in page view." : "You're already in scroll view." };
+      if (!pvClick("pg-mode")) return { ok: false, say: "That works on a lesson or a guide." }; const ok = await pvUntil(() => document.body.classList.contains("paged") === want, 2500); return { ok, say: ok ? (want ? "Page view: one idea at a time. Say “next page” to turn the page." : "Scroll view.") : "I couldn't change the view." }; },
+    "lesson.readall": async () => { if (!pvQ('[data-act="ra-start"]')) return { ok: false, say: "There's no lesson to read here." }; try { raStop(true); raStart("all"); } catch (e) {} const ok = await pvUntil(() => typeof RA !== "undefined" && RA.on, 1500); return { ok, quiet: ok, say: ok ? "" : "I couldn't start reading." }; },
+    "read.again": async () => { if (typeof RA === "undefined" || !RA.on) return { ok: false, say: "Nothing is being read aloud." }; RA.paused = false; RA.self = 1; try { speechSynthesis.cancel(); } catch (e) {} RA.self = 0; HF.wasPlaying = null; raPlay(); return { ok: true, quiet: 1, say: "" }; },
+  });
   { const st = PVH["hf.stop"]; PVH["hf.stop"] = (s2, c) => { drStop(); return st(s2, c); }; } // "stop" also stops a word list
   window.__pv.pr = () => (typeof PR !== "undefined" && PR && PR.sc ? PR.sc.id + " " + PR.sc.en : null); window.__pv.store = () => S; window.__pv.save = () => save();
   window.__pv.dr = () => DR; window.__pv.marks = () => PV.marks; window.__pv.sess = () => PV.sess; window.__pv.seq = pvSeqParts;

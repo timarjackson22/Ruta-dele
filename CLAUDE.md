@@ -13,8 +13,12 @@ If no: say so in the commit message ("costs: no impact").
 - `tools/pvoice.js` is embedded in index.html; edit it there, then sync as above and `cp tools/pvoice.js /tmp/pvoice.orig.js`.
 - `node tools/profe_check.js` must pass (every route and data-act button has a voice status; no duplicate top-level names).
 - Suggested phrases in page intros (PV_PAGES) must really work: `node tools/profe-tests/sP.js`.
+- Audio turn-taking and lesson commands: `node tools/profe-tests/sMIC.js` must pass (read-aloud × "Ok Profe" × taps × Profe's voice; every page/view/reading command executed).
+  Read-aloud owns its utterances (`u.__ra`, `RA.self`); anything else that speaks or cancels pauses it through raGuard. Never cancel speech around it without that rule.
 
 ## Exams
+- Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
+- Curriculum content fixes for dashboard gaps: tools/content/add_functions.py (re-runnable).
 - Exam data is generated: `python3 tools/exgen/gen.py <level>` from `tools/exgen/<level>_part*.py`. Update `EXREADY` and `sw.js` when adding exams.
 
 ## Curriculum coverage dashboard (Settings › Admin, route #cobertura)

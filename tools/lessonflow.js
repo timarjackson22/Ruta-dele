@@ -156,7 +156,7 @@
     try { if (typeof RA === "undefined" || !RA.on || !RA.q || !RA.q.length) return; const k = LFS.i;
       let j = RA.q.findIndex((it) => lfPageOf(it.el) === k); if (j < 0) j = RA.q.findIndex((it) => lfPageOf(it.el) > k); if (j < 0) return;
       RA.i = j; if (RA.paused) { if (RA.el) RA.el.classList.remove("ra-now"); RA.el = RA.q[j].el; try { raPlayerUI(); } catch (e) {} return; }
-      try { speechSynthesis.cancel(); } catch (e) {} raPlay(); } catch (e) {} }
+      RA.self = 1; try { speechSynthesis.cancel(); } catch (e) {} RA.self = 0; raPlay(); } catch (e) {} }
   function lfWrap() { if (LFS.busy) return; LFS.busy = true; try { if (!lfPaged()) { lfUnwrap(); return; } lfBuild(); } finally { setTimeout(() => { LFS.busy = false; }, 0); } }
   function lfUnwrap() { document.body.classList.remove("paged", "pg-measure"); const N = document.getElementById("lf-nav"); if (N) N.remove(); const C = document.getElementById("lf-cont"); if (C) C.remove(); const root = lfRoot(); if (root) root.querySelectorAll(".pg-off").forEach((e) => e.classList.remove("pg-off")); LFS.pages = null; LFS.tag = new Map(); }
   // a page that ends part-way through a topic says so: "Los números continues on the next page"
@@ -246,4 +246,4 @@
   document.addEventListener("click", (e) => { const r = e.target.closest && e.target.closest("#s-pra #runner"); if (r && !document.getElementById("s-pra").classList.contains("m-full") && e.target.closest("[data-act^='px-']")) setTimeout(lfMOpen, 0); }, true);
   document.addEventListener("focusin", (e) => { if (e.target.id === "px-in" && !document.getElementById("s-pra").classList.contains("m-full") && !document.body.classList.contains("paged")) setTimeout(lfMOpen, 0); });
   addEventListener("hashchange", () => { document.body.classList.remove("mastery-on"); const sec = document.querySelector("body > #s-pra"); if (sec) sec.remove(); });
-  window.__lf = { mOpen: lfMOpen, mClose: lfMClose, go: (i) => lfGo(i), state: () => ({ on: document.body.classList.contains("paged"), i: LFS.i, n: LFS.n, label: (LFS.label || [])[LFS.i] || "", pages: (LFS.pages || []).map((p) => p.length) }), pageOf: lfPageOf, topLeaf: lfTopLeaf, cont: lfCont, build: () => lfBuild(LFS.anchor), toggle: lfToggle, showEl: lfShowEl, wordAt: lfWordAt, isEs: lfIsSpanish, show: lfShow, refresh: lfSoon, locked: lfExamLocked };
+  window.__lf = { mOpen: lfMOpen, mClose: lfMClose, go: (i) => lfGo(i), state: () => ({ on: document.body.classList.contains("paged"), i: LFS.i, n: LFS.n, label: (LFS.label || [])[LFS.i] || "", pages: (LFS.pages || []).map((p) => p.length) }), pageOf: lfPageOf, topLeaf: lfTopLeaf, cont: lfCont, userGo: lfUserGo, build: () => lfBuild(LFS.anchor), toggle: lfToggle, showEl: lfShowEl, wordAt: lfWordAt, isEs: lfIsSpanish, show: lfShow, refresh: lfSoon, locked: lfExamLocked };
