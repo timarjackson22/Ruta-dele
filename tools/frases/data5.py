@@ -7,7 +7,7 @@ P = [
  ("pret", "¿Cómo llegaste hasta aquí?", "How did you get here?"),
  ("fut", "¿Cómo vas a llegar?", "How are you going to get there?")]),
 ("direcciones", "a1", "Siga / Gire a la + direction", "Go / Turn …", "Commands with usted: siga recto, gire a la derecha, cruce la calle.", [
- ("imp", "Siga recto y gire a la izquierda.", "Go straight on and turn left."),
+ ("imp", "Siga derecho y gire a la izquierda.", "Go straight on and turn left."),
  ("imp", "Sigue derecho dos cuadras.", "Go straight for two blocks."),
  ("imp", "Cruce la calle y está a la derecha.", "Cross the street and it's on the right."),
  ("pret", "Giré donde me dijiste.", "I turned where you told me.")]),
@@ -35,7 +35,7 @@ P = [
  ("pres", "¿Aló? ¿Con quién hablo?", "Hello? Who am I speaking to?"),
  ("pres", "¿Está María, por favor?", "Is María there, please?"),
  ("pres", "¿De parte de quién?", "Who's calling?"),
- ("pres", "Un momento, ahora se pone.", "One moment, I'll put her on.")]),
+ ("pres", "Un momento, ya te la paso.", "One moment, I'll put her on.")]),
 ("telefono", "a1", "Te llamo + time", "I'll call you …", "The present for immediate promises: te llamo luego.", [
  ("pres", "Te llamo más tarde.", "I'll call you later."),
  ("pret", "Te llamé, pero no contestaste.", "I called you, but you didn't answer."),
@@ -58,7 +58,7 @@ P = [
  ("pres", "Se me va la señal.", "I'm losing signal.")]),
 ("problemas", "a2", "Se me rompió / cayó / perdió + noun", "My … broke / I dropped / lost …", "Accidental se: the thing is the subject.", [
  ("pret", "Se me cayó el teléfono.", "I dropped my phone."),
- ("pret", "Se me rompieron las gafas.", "My glasses broke."),
+ ("pret", "Se me rompieron los lentes.", "My glasses broke."),
  ("pret", "Se me perdió la billetera.", "I lost my wallet."),
  ("perf", "Se nos ha acabado la leche.", "We've run out of milk.")]),
 ("problemas", "a1", "No funciona + noun", "The … doesn't work", "Funcionar for machines; servir for usefulness.", [
@@ -160,7 +160,7 @@ P = [
  ("pres", "Estudio Ingeniería en la universidad.", "I study Engineering at university."),
  ("pret", "Estudié en un colegio bilingüe.", "I studied at a bilingual school."),
  ("pres", "Estoy estudiando para el examen.", "I'm studying for the exam."),
- ("fut", "Voy a estudiar un máster.", "I'm going to do a master's.")]),
+ ("fut", "Voy a estudiar una maestría.", "I'm going to do a master's.")]),
 ("trabajo", "a2", "Tengo una reunión con + person", "I have a meeting with …", "Reunión (meeting), cita (appointment).", [
  ("pres", "Tengo una reunión con el cliente a las tres.", "I have a meeting with the client at three."),
  ("pret", "La reunión duró dos horas.", "The meeting lasted two hours."),
@@ -173,7 +173,7 @@ P = [
  ("fut", "¿Quién se va a encargar del proyecto?", "Who's going to be in charge of the project?")]),
 ("trabajo", "b1", "Le escribo para + infinitive", "I'm writing to …", "The formal opening of an email or letter.", [
  ("pres", "Le escribo para solicitar información.", "I'm writing to request information."),
- ("pres", "Me pongo en contacto con usted para …", "I'm getting in touch with you to …"),
+ ("pres", "Me pongo en contacto con usted para pedir una cita.", "I'm getting in touch with you to ask for an appointment."),
  ("pres", "Quedo a la espera de su respuesta.", "I look forward to your reply."),
  ("cond", "Le agradecería que me respondiera pronto.", "I'd be grateful if you replied soon.")]),
 ("clima", "a1", "Hace + calor / frío / sol / viento", "It's hot / cold / sunny / windy", "Hacer for weather; hay for things: hay niebla, hay humedad.", [
@@ -194,7 +194,7 @@ P = [
 ("permiso", "a1", "Se puede + infinitive", "You can … / Is it allowed to …?", "Impersonal se for rules.", [
  ("pres", "¿Se puede entrar con perros?", "Can you go in with dogs?"),
  ("pres", "Aquí no se puede fumar.", "You can't smoke here."),
- ("impf", "Antes se podía aparcar aquí.", "You used to be able to park here."),
+ ("impf", "Antes se podía estacionar aquí.", "You used to be able to park here."),
  ("fut", "¿Se podrá pagar en dólares?", "Will it be possible to pay in dollars?")]),
 ("permiso", "a2", "Está prohibido + infinitive", "… is not allowed", "Also: no está permitido, prohibido + infinitive on signs.", [
  ("pres", "Está prohibido tomar fotos.", "Taking photos is not allowed."),
@@ -225,7 +225,7 @@ P = [
  ("pres", "Tienes que tomar mucho líquido.", "You need to drink lots of fluids."),
  ("subj", "Es mejor que descanses unos días.", "It's better if you rest for a few days."),
  ("imp", "Tome una pastilla cada ocho horas.", "Take a tablet every eight hours."),
- ("cond", "Deberías ir a urgencias.", "You should go to A&E.")]),
+ ("cond", "Deberías ir a urgencias.", "You should go to the emergency room.")]),
 ("otros", "a1", "Mi + family member + es / tiene / vive …", "My … is / has / lives …", "Describing people you know.", [
  ("pres", "Mi hermana es médica y vive en Chile.", "My sister is a doctor and lives in Chile."),
  ("impf", "Mi abuelo era pescador.", "My grandfather was a fisherman."),

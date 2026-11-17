@@ -112,9 +112,9 @@ P = [
  ("pres", "¿Para qué sirve esto?", "What's this for?")]),
 ("condicion", "a2", "Si + present, + present / future", "If …, …", "Real conditions: si llueve, no salgo.", [
  ("pres", "Si llueve, no salgo.", "If it rains, I don't go out."),
- ("fut", "Si tienes tiempo, te llamaré.", "If you have time, I'll call you."),
+ ("fut", "Si tengo tiempo, te llamaré.", "If I have time, I'll call you."),
  ("imp", "Si necesitas algo, llámame.", "If you need anything, call me."),
- ("fut", "Si no te das prisa, vas a llegar tarde.", "If you don't hurry, you're going to be late.")]),
+ ("fut", "Si no te apuras, vas a llegar tarde.", "If you don't hurry, you're going to be late.")]),
 ("condicion", "b1", "Si + imperfect subjunctive, + conditional", "If I …, I would …", "Unlikely or imaginary conditions.", [
  ("cond", "Si tuviera dinero, viajaría por el mundo.", "If I had money, I'd travel the world."),
  ("cond", "Si fuera tú, no lo haría.", "If I were you, I wouldn't do it."),
@@ -164,7 +164,7 @@ P = [
  ("pres", "Busco una farmacia.", "I'm looking for a pharmacy."),
  ("pres", "Estoy buscando un regalo para mi madre.", "I'm looking for a present for my mother."),
  ("impf", "Buscaba algo más barato.", "I was looking for something cheaper."),
- ("subj", "Busco un piso que tenga balcón.", "I'm looking for a flat that has a balcony.")]),
+ ("subj", "Busco un apartamento que tenga balcón.", "I'm looking for an apartment that has a balcony.")]),
 ("compras", "a1", "¿Tiene + noun + en + size / colour?", "Do you have … in …?", "Use tiene (usted) with shop assistants.", [
  ("pres", "¿Tiene esta camisa en talla M?", "Do you have this shirt in a medium?"),
  ("pres", "¿Lo tiene en azul?", "Do you have it in blue?"),
@@ -219,7 +219,7 @@ P = [
  ("pres", "Soy alérgica a los mariscos.", "I'm allergic to seafood."),
  ("pres", "No como carne.", "I don't eat meat."),
  ("pres", "¿Lleva gluten?", "Does it contain gluten?"),
- ("subj", "¿Podría prepararlo sin cebolla?", "Could you make it without onion?")]),
+ ("cond", "¿Podría prepararlo sin cebolla?", "Could you make it without onion?")]),
 ("comida", "a1", "Tengo una reserva a nombre de + name", "I have a reservation under …", "Reservar una mesa para + number.", [
  ("pres", "Tengo una reserva a nombre de García.", "I have a reservation under García."),
  ("cond", "Quisiera reservar una mesa para cuatro.", "I'd like to book a table for four."),
@@ -228,7 +228,7 @@ P = [
 ("comida", "a2", "¡Buen provecho! / ¡Salud!", "Enjoy your meal! / Cheers!", "Buen provecho is said to people eating, even strangers.", [
  ("pres", "¡Buen provecho!", "Enjoy your meal!"),
  ("pres", "¡Salud! Por nosotros.", "Cheers! To us."),
- ("pres", "¿Ya comiste? —Sí, gracias.", "Have you eaten? —Yes, thanks."),
+ ("pret", "¿Ya comiste? —Sí, gracias.", "Have you eaten? —Yes, thanks."),
  ("pres", "Estoy lleno, no puedo más.", "I'm full, I can't eat any more.")]),
 ("comida", "a2", "Se me antoja / Me provoca + noun", "I'm craving …", "Me provoca is very common in Venezuela and Colombia.", [
  ("pres", "Se me antoja un helado.", "I'm craving an ice cream."),

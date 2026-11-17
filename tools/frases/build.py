@@ -36,7 +36,7 @@ s = re.sub(r"/\* ==FRASES-CSS== \*/.*?/\* ==/FRASES-CSS== \*/\n", "", s, flags=r
 if 'h === "frases"' not in s:
     rep('    else if (h === "biblioteca") { setSec("biblioteca"); navChips(null); libraryHub(); }', '    else if (h === "biblioteca") { setSec("biblioteca"); navChips(null); libraryHub(); }\n    else if (h === "frases") { setSec("biblioteca"); navChips(null); frasesView(); }')
 if '"#frases"' not in s:
-    rep('["words", "Words", "7,000 palabras", "#palabras", "#3ccf8e", "#1a9c6b"]]', '["words", "Words", "7,000 palabras", "#palabras", "#3ccf8e", "#1a9c6b"], ["phrase", "Sentence patterns", "Estructuras de frases", "#frases", "#ff8a4c", "#d9581d"]]')
+    rep('["words", "Words", "7,000 palabras", "#palabras", "#3ccf8e", "#1a9c6b"]]', '["words", "Words", "7,000 palabras", "#palabras", "#3ccf8e", "#1a9c6b"], ["phrase", "Survival Kit", "260 everyday phrases", "#frases", "#ff8a4c", "#d9581d"]]')
 if 'phrase:["' not in s:
     rep('const UIC = {', 'const UIC = {phrase:["#d9581d",\'<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8 10h8M8 14h5"/>\'],')
 # the global player plays the sentences on screen
@@ -46,11 +46,11 @@ if 'location.hash.replace("#", "") === "frases"' not in s:
 if "opts && opts.pat" not in s:
     rep('  async function adStart(kind) {', '  async function adStart(kind, opts) {')
     rep('    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [] };\n    ensureSession(kind === "tr" ? "Sentence translation" : "Conjugation drill", (kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";',
-        '    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [], pat: (opts && opts.pat) || null };\n    ensureSession(PR.pat ? "Sentence patterns" : kind === "tr" ? "Sentence translation" : "Conjugation drill", (PR.pat ? "Sentence patterns · " : kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";')
+        '    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [], pat: (opts && opts.pat) || null };\n    ensureSession(PR.pat ? "Survival Kit" : kind === "tr" ? "Sentence translation" : "Conjugation drill", (PR.pat ? "Survival Kit · " : kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";')
     rep('  function adPickTr(lv) {\n', '  function adPickTr(lv) {\n    if (PR && PR.pat) { const f = frPick(lv); if (f) return f; }\n')
-    rep('const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";', 'const title = PR.pat ? "Sentence patterns" : PR.kind === "tr" ? "Sentence translation" : "Conjugation";')
+    rep('const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";', 'const title = PR.pat ? "Survival Kit" : PR.kind === "tr" ? "Sentence translation" : "Conjugation";')
 if 'data-act="pr-pat"' not in s:
-    rep('<button class="prc" data-act="pr-conj">', '<button class="prc" data-act="pr-pat"><i class="pri pr-i6" aria-hidden="true"></i><b>Sentence patterns</b><span>' + "Profe says an everyday sentence in English; you say it in Spanish, in every tense.</span></button><button class=\"prc\" data-act=\"pr-conj\">")
+    rep('<button class="prc" data-act="pr-conj">', '<button class="prc" data-act="pr-pat"><i class="pri pr-i6" aria-hidden="true"></i><b>Survival Kit</b><span>' + "Profe says an everyday sentence in English; you say it in Spanish, in every tense.</span></button><button class=\"prc\" data-act=\"pr-conj\">")
     rep('    else if (act === "pr-conj") startConj();', '    else if (act === "pr-conj") startConj();\n    else if (act === "pr-pat") startPatterns({});')
 open(P, "w", encoding="utf-8").write(s)
 print("frases:", len(pats), "patterns,", sum(len(p["v"]) for p in pats), "sentences")

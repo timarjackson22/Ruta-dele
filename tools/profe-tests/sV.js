@@ -81,7 +81,7 @@ const CORPUS = [
   ["go to the start of the lesson", "guide", "page.first"], ["ve al principio de la lección", "guide", "page.first"], ["go to the end", "guide", "page.last"], ["ve al final", "guide", "page.last"],
   ["switch to page view", "guide", "lesson.mode"], ["cambia la vista", "guide", "lesson.mode"], ["read the whole lesson", "guide", "lesson.readall"], ["lee toda la lección", "guide", "lesson.readall"],
   ["read that again", "play", "read.again"], ["repite eso", "paused", "read.again"],
-  ["open sentence patterns", "home", "nav.frases"], ["abre las frases", "home", "nav.frases"],
+  ["open sentence patterns", "home", "nav.frases"], ["abre las frases", "home", "nav.frases"], ["open the survival kit", "home", "nav.frases"], ["abre el kit de supervivencia", "home", "nav.frases"],
 ];
 
 // HELD-OUT: written after the patterns, never used to tune them. Reported separately (an honest estimate of real-world understanding).

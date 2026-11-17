@@ -41,7 +41,7 @@ If no: say so in the commit message ("costs: no impact").
 - Page view is semantic: pages are runs of whole blocks (PG_KEEP stays with what follows, PG_TAIL never sits alone, blocks open only at their seams). Never reintroduce CSS-column slicing.
   After lesson/layout changes run `node /tmp/audit/pgall.js`-style checks via sLF (every page fits above the bar, no text missing, no heading alone).
 
-## Sentence patterns (Library › Phrases, route #frases)
+## Survival Kit (Library › Survival Kit, route #frases)
 - Data: tools/frases/data*.py (category, level, pattern, English, tip, tense variations). Build and embed: `python3 tools/frases/build.py index.html` (view frases.js + frases.css; route, Library tile, flashcard deck `frases` in VPRO, global player source, Profe practice `PR.pat` via `startPatterns()`).
 - Each Spanish sentence must be unique, and tenses must use the codes in build.py. Level gating for practice comes from `FR_T` (tense level) and the pattern level.
 

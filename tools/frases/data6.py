@@ -21,9 +21,9 @@ P = [
  ("pres", "No vale la pena discutir.", "It's not worth arguing."),
  ("fut", "Va a valer la pena, ya verás.", "It's going to be worth it, you'll see.")]),
 ("conversacion", "a2", "Se trata de + noun / infinitive", "It's about … / It's a matter of …", "Se trata de is always impersonal (no subject).", [
- ("pres", "La película se trata de una familia en guerra.", "The film is about a family at war."),
+ ("pres", "Se trata de una película sobre una familia en guerra.", "It's a film about a family at war."),
  ("pres", "Se trata de llegar a un acuerdo.", "It's a matter of reaching an agreement."),
- ("impf", "¿De qué se trataba la reunión?", "What was the meeting about?"),
+ ("impf", "¿De qué se trataba?", "What was it about?"),
  ("pres", "No se trata de dinero.", "It's not about money.")]),
 ("obligacion", "a2", "Me toca + infinitive", "It's my turn to … / I have to …", "Tocar = to be someone's turn: ¿a quién le toca?", [
  ("pres", "Hoy me toca cocinar.", "It's my turn to cook today."),
@@ -42,7 +42,7 @@ P = [
  ("pres", "¿Todavía estás en la oficina?", "Are you still at the office?")]),
 ("tiempo", "a2", "Al + infinitive", "On / When …ing", "Al llegar = when I arrived / on arriving.", [
  ("pret", "Al llegar a casa, me di cuenta.", "When I got home, I realised."),
- ("pres", "Al salir, cierra la puerta.", "When you leave, close the door."),
+ ("imp", "Al salir, cierra la puerta.", "When you leave, close the door."),
  ("pret", "Al verme, sonrió.", "When he saw me, he smiled."),
  ("fut", "Al terminar, te aviso.", "When I finish, I'll let you know.")]),
 ("tiempo", "b1", "Estuve a punto de + infinitive", "I nearly …", "Also: por poco + present: por poco me caigo.", [

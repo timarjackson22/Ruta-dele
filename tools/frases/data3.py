@@ -8,7 +8,7 @@ P = [
 ("tiempo", "a2", "Verb + hace + time", "… (time) ago", "Hace + time after a past verb = ago: llegué hace una hora.", [
  ("pret", "Llegué hace una hora.", "I arrived an hour ago."),
  ("pret", "Nos conocimos hace diez años.", "We met ten years ago."),
- ("perf", "Lo he visto hace un momento.", "I saw him a moment ago."),
+ ("pret", "Lo vi hace un momento.", "I saw him a moment ago."),
  ("pret", "¿Cuándo pasó? —Hace un rato.", "When did it happen? —A while ago.")]),
 ("tiempo", "b1", "Llevo + time + gerund", "I've been …ing for (time)", "Very natural: llevo una hora esperando.", [
  ("pres", "Llevo una hora esperando el autobús.", "I've been waiting for the bus for an hour."),
@@ -164,12 +164,12 @@ P = [
  ("pres", "Tengo miedo de volar.", "I'm afraid of flying."),
  ("pres", "Me dan miedo las arañas.", "Spiders scare me."),
  ("impf", "De niño me daba miedo la oscuridad.", "As a child I was afraid of the dark."),
- ("subj", "Tengo miedo de que se enfade.", "I'm afraid he'll get angry.")]),
+ ("subj", "Tengo miedo de que se enoje.", "I'm afraid he'll get angry.")]),
 ("sentimientos", "a2", "Me pone + adjective", "It makes me …", "Ponerse = sudden change: me pone nervioso, se puso rojo.", [
  ("pres", "El tráfico me pone de mal humor.", "Traffic puts me in a bad mood."),
  ("pret", "Se puso muy contento con la noticia.", "He was really happy about the news."),
  ("impf", "Me ponía nerviosa hablar en público.", "Speaking in public used to make me nervous."),
- ("pres", "No te pongas triste.", "Don't be sad.")]),
+ ("imp", "No te pongas triste.", "Don't be sad.")]),
 ("sentimientos", "a2", "Me alegro de + infinitive / que + subjunctive", "I'm glad …", "Me alegro = I'm glad. Me alegro mucho de verte.", [
  ("pres", "Me alegro mucho de verte.", "I'm really glad to see you."),
  ("subj", "Me alegro de que estés mejor.", "I'm glad you're better."),
@@ -179,11 +179,11 @@ P = [
  ("pres", "Me preocupa la salud de mi madre.", "I'm worried about my mother's health."),
  ("subj", "Me preocupa que no conteste.", "I'm worried he isn't answering."),
  ("impf", "Me preocupaba no encontrar trabajo.", "I was worried about not finding work."),
- ("pres", "No te preocupes.", "Don't worry.")]),
+ ("imp", "No te preocupes.", "Don't worry.")]),
 ("sentimientos", "a1", "¡Qué + adjective / noun!", "How …! / What a …!", "¡Qué bonito! ¡Qué calor! ¡Qué bien!", [
  ("pres", "¡Qué bonito es esto!", "How beautiful this is!"),
  ("pres", "¡Qué calor hace hoy!", "It's so hot today!"),
- ("pret", "¡Qué bien lo pasamos!", "What a great time we had!"),
+ ("pret", "¡Qué bien la pasamos!", "What a great time we had!"),
  ("pres", "¡Qué pena!", "What a shame!")]),
 ("sentimientos", "a2", "Echo de menos / Extraño + noun", "I miss …", "Extrañar is more common in Latin America; echar de menos in Spain.", [
  ("pres", "Extraño mucho a mi familia.", "I miss my family a lot."),
@@ -239,10 +239,10 @@ P = [
  ("pret", "Se me olvidó traer el cargador.", "I forgot to bring the charger."),
  ("pret", "Se me olvidaron las llaves.", "I forgot my keys."),
  ("perf", "Se me ha olvidado tu nombre.", "I've forgotten your name."),
- ("pres", "Que no se te olvide.", "Don't forget.")]),
+ ("subj", "Que no se te olvide.", "Don't forget.")]),
 ("pasado", "b1", "Me acuerdo de + noun / infinitive", "I remember …", "Acordarse de; also recordar (without de).", [
  ("pres", "Me acuerdo de mi primer día de colegio.", "I remember my first day at school."),
  ("pres", "¿Te acuerdas de mí?", "Do you remember me?"),
  ("pret", "No me acordé de llamarla.", "I didn't remember to call her."),
- ("fut", "Acuérdate de comprar pan.", "Remember to buy bread.")]),
+ ("imp", "Acuérdate de comprar pan.", "Remember to buy bread.")]),
 ]

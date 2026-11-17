@@ -4,7 +4,7 @@
   const FR_TG = { all: ["All", null], pres: ["Present", ["pres", "imp"]], past: ["Past", ["pret", "impf", "perf", "pqp"]], fut: ["Future", ["fut", "cond"]], subj: ["Subj.", ["subj", "impsub"]] };
   const FRV = { cat: "all", tg: "all", lv: "all", q: "" };
   const frLvN = (l) => ["a1", "a2", "b1", "b2", "c1", "c2"].indexOf(l);
-  try { VPRO.push({ id: "frases", t: "Estructuras de frases", en: "Sentence patterns · " + FRASES.pats.reduce((n, p) => n + p.v.length, 0) + " everyday sentences",
+  try { VPRO.push({ id: "frases", t: "Kit de supervivencia", en: "Survival Kit · " + FRASES.pats.reduce((n, p) => n + p.v.length, 0) + " everyday sentences",
     themes: Object.keys(FRASES.cats).map((c) => ({ t: FRASES.cats[c][1], en: FRASES.cats[c][0], w: [].concat(...FRASES.pats.filter((p) => p.c === c).map((p) => p.v.map((v) => [v[1], v[2]]))) })) }); } catch (e) {}
   function frMatch(p) {
     if (FRV.cat !== "all" && p.c !== FRV.cat) return null;
@@ -15,6 +15,11 @@
     if (q && !(p.es + " " + p.en + " " + p.v.map((v) => v[1] + " " + v[2]).join(" ")).toLowerCase().includes(q)) return null;
     return vs;
   }
+  // "Gracias por + noun / infinitive" → "Gracias por …": the grammar labels stay out of the title
+  const FR_SLOT = /\s*\+\s*(?:noun|infinitive|subjunctive|indicative|present|preterite|imperfect|future(?: perfect)?|conditional(?: perfect)?|gerund|participle|place|time|person|number|adjective|sentence|verb|question word|question|name|profession|language|family member|family|things|people|description|state|location|direction|transport|stop|payment|size|colour|illness|symptom|body part|date|weather noun|reported speech|job|company|subject|imperfect subjunctive|pluperfect subjunctive|años)(?:\s*\/\s*(?:noun|infinitive|subjunctive|indicative|bien|mal|que \+ subjunctive|que \+ indicative|si \+ verb|question word|colour|symptom|company|things|people|place|time|noun))*(?:\s*\((?:ser|estar|food|polite request|prediction from evidence|doctor's advice|future)\))?/gi;
+  const FR_TITLE = { "Future tense (-ré, -rás, -rá…)": "Hablaré, comeré, viviré", "Future for guesses: Estará / Tendrá …": "Estará …, tendrá …", "Verb + hace + time": "… hace (una hora)", "Adjective + -ísimo": "Buenísimo, carísimo",
+    "Si + imperfect subjunctive, + conditional": "Si tuviera …, …ría", "Si + pluperfect subjunctive, + conditional perfect": "Si hubiera …, habría …", "Para + date / time + future perfect": "Para (junio) habré …", "¿Cómo se dice + word + en español?": "¿Cómo se dice … en español?" };
+  const frShort = (es) => FR_TITLE[es] || String(es).replace(FR_SLOT, " …").replace(/\(ser\)|\(estar\)/g, "").replace(/\s\+\s/g, " ").replace(/\s*\/\s*(present|future)$/, "").replace(/(\s*…)+/g, " …").replace(/\s+([,.?!])/g, "$1").replace(/\s+/g, " ").trim();
   function frasesView() {
     const C = FRASES.cats, nS = FRASES.pats.reduce((n, p) => n + p.v.length, 0);
     const pill = (act, v, cur, label) => '<button type="button" data-act="' + act + '" data-v="' + v + '" aria-pressed="' + (cur === v) + '">' + label + "</button>";
@@ -22,21 +27,20 @@
       const items = FRASES.pats.map((p, pi) => [p, pi, p.c === c ? frMatch(p) : null]).filter((x) => x[2]);
       if (!items.length) return "";
       return '<section class="fr-g"><h2 class="fr-gh"><span>' + esc(C[c][0]) + '</span><small lang="es">' + esc(C[c][1]) + "</small></h2>" + items.map(([p, pi, vs]) =>
-        '<article class="fr-p"><header><span class="fr-lv">' + p.l.toUpperCase() + '</span><h3 lang="es">' + esc(p.es) + "</h3><p>" + esc(p.en) + "</p></header>" +
-        (p.tip ? '<p class="fr-tip">' + esc(p.tip) + "</p>" : "") +
-        '<ul class="fr-vs">' + vs.map((v) => '<li class="fr-v" data-es="' + esc(v[1]) + '" data-en="' + esc(v[2]) + '"><span class="fr-t t-' + v[0] + '">' + FR_T[v[0]][0] + '</span><div><b lang="es">' + esc(v[1]) + "</b><span>" + esc(v[2]) + "</span></div>" + sayBtn(v[1]) + "</li>").join("") + "</ul>" +
-        '<button type="button" class="fr-ask" data-act="fr-profe" data-p="' + pi + '">Practise this pattern with Profe ›</button></article>').join("") + "</section>";
+        '<article class="fr-p"><header><h3 lang="es">' + esc(frShort(p.es)) + '</h3><p>' + esc(p.en) + '</p></header>' +
+        '<ul class="fr-vs">' + vs.map((v) => '<li class="fr-v" data-es="' + esc(v[1]) + '" data-en="' + esc(v[2]) + '"><div><b lang="es">' + esc(v[1]) + "</b><span>" + esc(v[2]) + '</span><i class="fr-t t-' + v[0] + '">' + FR_T[v[0]][0] + "</i></div>" + sayBtn(v[1]) + "</li>").join("") + "</ul>" +
+        '<footer>' + (p.tip ? '<p class="fr-tip">' + esc(p.tip) + "</p>" : "") + '<button type="button" class="fr-ask" data-act="fr-profe" data-p="' + pi + '" aria-label="Practise «' + esc(frShort(p.es)) + '» with Profe"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Practise</button></footer></article>').join("") + "</section>";
     }).join("");
     app.innerHTML = '<div class="stack fr">' +
-      '<p class="crumbs"><a href="#biblioteca">Library</a><span aria-hidden="true">›</span><span>Sentence patterns</span></p>' +
-      '<header class="fr-head"><p class="eyebrow">Estructuras de frases</p><h1>Sentence patterns</h1><p class="fr-sub">' + FRASES.pats.length + " structures that carry everyday conversation, " + nS.toLocaleString("en") + " example sentences in the present, past, future and more. Tap ▶ to hear one, or play them all.</p>" +
-      '<div class="fr-acts"><button type="button" class="btn primary" data-act="gp-play">▶ Play all: English, then Spanish</button><a class="btn" href="#repaso-frases">Flashcards</a><button type="button" class="btn" data-act="fr-profe" data-c="' + FRV.cat + '">Practise with Profe</button></div></header>' +
-      '<input class="fr-q" type="search" placeholder="Search: quiero, tener que, I used to…" value="' + esc(FRV.q) + '" data-act="fr-q" aria-label="Search sentence patterns">' +
+      '<p class="crumbs"><a href="#biblioteca">Library</a><span aria-hidden="true">›</span><span>Survival Kit</span></p>' +
+      '<header class="fr-head"><p class="fr-kick">Kit de supervivencia</p><h1>Survival Kit</h1><p class="fr-sub">The ' + FRASES.pats.length + " phrases you'll use every day, " + nS.toLocaleString("en") + " ready-made sentences in the present, past and future.</p>" +
+      '<div class="fr-acts"><button type="button" class="fr-act main" data-act="gp-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>Play all</button><a class="fr-act" href="#repaso-frases"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/></svg>Flashcards</a><button type="button" class="fr-act" data-act="fr-profe" data-c="' + FRV.cat + '"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Practise</button></div></header>' +
+      '<input class="fr-q" type="search" placeholder="Search a phrase in Spanish or English" value="' + esc(FRV.q) + '" data-act="fr-q" aria-label="Search sentence patterns">' +
       '<div class="lh-pills fr-cats" role="group" aria-label="Topic">' + pill("fr-cat", "all", FRV.cat, "All topics") + Object.keys(C).map((c) => pill("fr-cat", c, FRV.cat, esc(C[c][0]))).join("") + "</div>" +
       '<div class="lh-seg" role="group" aria-label="Tense">' + Object.keys(FR_TG).map((k) => pill("fr-tg", k, FRV.tg, FR_TG[k][0])).join("") + "</div>" +
       '<div class="lh-seg" role="group" aria-label="Level">' + [["all", "All levels"], ["a1", "A1"], ["a2", "A2"], ["b1", "B1"], ["b2", "B2"]].map(([v, n]) => pill("fr-lv", v, FRV.lv, n)).join("") + "</div>" +
       (groups || '<p class="lh-empty">No patterns match. Try another word or topic.</p>') +
-      '<p class="lh-foot">Spanish as spoken in Latin America (ustedes), with notes where Spain differs.</p></div>';
+      '<p class="lh-foot">Latin American Spanish (ustedes, carro, celular); the tips note where Spain differs. Play all reads the English, then the Spanish three times.</p></div>';
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest('[data-act^="fr-"]'); if (!b) return; const a = b.dataset.act;

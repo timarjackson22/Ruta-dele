@@ -14,7 +14,7 @@ P = [
  ("pres", "Debes descansar más.", "You must rest more."),
  ("cond", "Deberías ir al médico.", "You should go to the doctor."),
  ("impf", "Debía pagar el alquiler ayer.", "I was supposed to pay the rent yesterday."),
- ("pqp", "No deberías haber dicho eso.", "You shouldn't have said that.")]),
+ ("cond", "No deberías haber dicho eso.", "You shouldn't have said that.")]),
 ("obligacion", "a2", "Es necesario / importante + infinitive / que + subjunctive", "It's necessary / important to …", "With que, the verb goes into the subjunctive.", [
  ("pres", "Es importante beber mucha agua.", "It's important to drink plenty of water."),
  ("subj", "Es necesario que traigas tu pasaporte.", "You need to bring your passport."),
@@ -33,8 +33,8 @@ P = [
 ("obligacion", "b1", "Si yo fuera tú, + conditional", "If I were you, …", "Also: yo que tú + conditional, yo en tu lugar + conditional.", [
  ("cond", "Si yo fuera tú, aceptaría la oferta.", "If I were you, I'd accept the offer."),
  ("cond", "Yo que tú, no diría nada.", "If I were you, I wouldn't say anything."),
- ("cond", "Yo en tu lugar, buscaría otro piso.", "In your place, I'd look for another flat."),
- ("pqp", "Yo que tú, lo habría hecho antes.", "If I were you, I'd have done it earlier.")]),
+ ("cond", "Yo en tu lugar, buscaría otro apartamento.", "In your place, I'd look for another apartment."),
+ ("cond", "Yo que tú, lo habría hecho antes.", "If I were you, I'd have done it earlier.")]),
 ("obligacion", "a2", "Lo mejor es + infinitive / que + subjunctive", "The best thing is to …", "Great for giving advice and in DELE oral tasks.", [
  ("pres", "Lo mejor es esperar.", "The best thing is to wait."),
  ("subj", "Lo mejor es que se lo digas pronto.", "The best thing is for you to tell him soon."),
@@ -70,15 +70,15 @@ P = [
  ("fut", "Este fin de semana voy a descansar.", "This weekend I'm going to rest."),
  ("fut", "El próximo año viajaré a Perú.", "Next year I'll travel to Peru."),
  ("pret", "El fin de semana pasado fui a la playa.", "Last weekend I went to the beach.")]),
-("planes", "a2", "Quedamos en + place / time", "Let's meet at …", "Quedar (con alguien) = to meet up with someone.", [
- ("pres", "¿Quedamos a las siete en la plaza?", "Shall we meet at seven in the square?"),
+("planes", "a2", "¿Nos vemos en / a …? · Quedamos en …", "Shall we meet …? · We agreed to …", "Nos vemos for meeting up; quedar en = to agree on (quedar con alguien, 'meet up', is mainly Spain).", [
+ ("pres", "¿Nos vemos a las siete en la plaza?", "Shall we meet at seven in the square?"),
  ("pret", "Quedamos en vernos el lunes.", "We agreed to meet on Monday."),
- ("pret", "Ayer quedé con unos amigos.", "Yesterday I met up with some friends."),
- ("fut", "Vamos a quedar para cenar.", "We're going to meet for dinner.")]),
+ ("pret", "Ayer salí con unos amigos.", "Yesterday I went out with some friends."),
+ ("fut", "Vamos a vernos para cenar.", "We're going to meet for dinner.")]),
 ("planes", "a1", "¿Por qué no + present?", "Why don't we …?", "A friendly suggestion: ¿por qué no vamos al cine?", [
  ("pres", "¿Por qué no vamos al cine?", "Why don't we go to the cinema?"),
  ("pres", "¿Por qué no le preguntas a tu jefe?", "Why don't you ask your boss?"),
- ("cond", "¿Y si fuéramos mañana?", "What if we went tomorrow?"),
+ ("impsub", "¿Y si fuéramos mañana?", "What if we went tomorrow?"),
  ("pres", "¿Qué tal si cenamos fuera?", "How about we eat out?")]),
 ("planes", "a1", "Vamos a + infinitive", "Let's …", "Vamos a + infinitive = let's (also 'we're going to').", [
  ("fut", "¡Vamos a bailar!", "Let's dance!"),
@@ -96,7 +96,7 @@ P = [
  ("pres", "Cuando llego a casa, me ducho.", "When I get home, I shower. (habit)"),
  ("pret", "Cuando llegué, ya se habían ido.", "When I arrived, they had already left.")]),
 ("planes", "b1", "Antes de + infinitive / que + subjunctive", "Before …", "Same subject: antes de salir; different subject: antes de que salgas.", [
- ("pres", "Lávate las manos antes de comer.", "Wash your hands before eating."),
+ ("imp", "Lávate las manos antes de comer.", "Wash your hands before eating."),
  ("subj", "Llámame antes de que salgas.", "Call me before you leave."),
  ("pret", "Antes de irme, cerré todas las ventanas.", "Before leaving, I closed all the windows."),
  ("impsub", "Se fue antes de que yo llegara.", "He left before I arrived.")]),
@@ -138,7 +138,7 @@ P = [
 ("pedir", "a2", "Te pido que + subjunctive", "I'm asking you to …", "Pedir (ask for) + que + subjunctive; preguntar is for questions.", [
  ("subj", "Te pido que me escuches.", "I'm asking you to listen to me."),
  ("impsub", "Me pidió que la llamara.", "She asked me to call her."),
- ("subj", "Les pido que apaguen el móvil.", "I ask you all to switch off your phones."),
+ ("subj", "Les pido que apaguen el celular.", "I ask you all to switch off your phones."),
  ("impsub", "Nos pidieron que esperáramos afuera.", "They asked us to wait outside.")]),
 ("pedir", "a1", "¿Puedo + infinitive?", "May I …? / Can I …?", "Asking permission.", [
  ("pres", "¿Puedo pasar?", "May I come in?"),
@@ -179,7 +179,7 @@ P = [
  ("pres", "¿Cuándo empiezas el trabajo nuevo?", "When do you start the new job?"),
  ("pret", "¿Cuándo llegaste a Panamá?", "When did you get to Panama?"),
  ("fut", "¿Cuándo vas a volver?", "When are you going to come back?"),
- ("perf", "¿Cuándo has estado en Colombia?", "When have you been to Colombia?")]),
+ ("pres", "¿Cuándo es tu cumpleaños?", "When's your birthday?")]),
 ("preguntas", "a1", "¿Cómo se dice + word + en español?", "How do you say … in Spanish?", "Also: ¿qué significa…? (what does … mean?)", [
  ("pres", "¿Cómo se dice «window» en español?", "How do you say 'window' in Spanish?"),
  ("pres", "¿Qué significa «chévere»?", "What does 'chévere' mean?"),

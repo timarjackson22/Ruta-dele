@@ -6,12 +6,12 @@ P = [
  ("pres", "¿Cómo estás? Bien, gracias, ¿y tú?", "How are you? Fine, thanks, and you?"),
  ("pret", "¿Cómo estuvo tu día?", "How was your day?"),
  ("perf", "¿Cómo has estado?", "How have you been?"),
- ("fut", "¿Cómo vas a estar mañana?", "How are you going to be tomorrow?")]),
+ ("fut", "¿Cómo crees que te va a ir mañana?", "How do you think it'll go tomorrow?")]),
 ("cortesia", "a1", "¿Qué tal + noun?", "How's / How was …?", "Quick and friendly: ¿Qué tal el trabajo? ¿Qué tal todo?", [
  ("pres", "¿Qué tal el trabajo?", "How's work?"),
  ("pret", "¿Qué tal te fue en el examen?", "How did the exam go for you?"),
  ("perf", "¿Qué tal ha ido la reunión?", "How has the meeting gone?"),
- ("fut", "¿Qué tal si vamos mañana?", "How about we go tomorrow?")]),
+ ("fut", "¿Qué tal va a estar el clima mañana?", "What's the weather going to be like tomorrow?")]),
 ("cortesia", "a1", "Mucho gusto / Encantado de + infinitive", "Nice to meet you", "Encantado if you're a man, encantada if you're a woman.", [
  ("pres", "Mucho gusto, soy Ana.", "Nice to meet you, I'm Ana."),
  ("pret", "Fue un placer conocerte.", "It was a pleasure to meet you."),
@@ -21,7 +21,7 @@ P = [
  ("pres", "Gracias por tu ayuda.", "Thanks for your help."),
  ("pret", "Gracias por llamarme ayer.", "Thanks for calling me yesterday."),
  ("perf", "Gracias por haber venido.", "Thanks for having come."),
- ("fut", "Gracias de antemano por responder.", "Thanks in advance for replying.")]),
+ ("fut", "Te lo agradeceré mucho.", "I'll really appreciate it.")]),
 ("cortesia", "a1", "Perdón, ¿+ question?", "Excuse me, …?", "Perdón or disculpe to get attention; con permiso to get past someone.", [
  ("pres", "Perdón, ¿dónde está el baño?", "Excuse me, where's the bathroom?"),
  ("pret", "Perdón, no te escuché.", "Sorry, I didn't hear you."),
@@ -41,7 +41,7 @@ P = [
  ("subj", "¡Que tengas un buen día!", "Have a good day!"),
  ("subj", "¡Que te mejores pronto!", "Get well soon!"),
  ("subj", "¡Que te vaya bien!", "All the best! / Hope it goes well!"),
- ("subj", "¡Que lo pasen bien!", "Have a good time (all of you)!")]),
+ ("subj", "¡Que la pasen bien!", "Have a good time (all of you)!")]),
 ("cortesia", "a1", "Nos vemos + time", "See you …", "Hasta luego, hasta mañana and nos vemos are the everyday goodbyes.", [
  ("pres", "Nos vemos mañana.", "See you tomorrow."),
  ("pres", "Nos vemos el lunes en la oficina.", "See you on Monday at the office."),
@@ -50,7 +50,7 @@ P = [
 ("cortesia", "a1", "Bienvenido a + place", "Welcome to …", "Agrees: bienvenido, bienvenida, bienvenidos.", [
  ("pres", "Bienvenidos a Panamá.", "Welcome to Panama."),
  ("pres", "Bienvenida a la empresa.", "Welcome to the company."),
- ("perf", "Has sido muy bienvenido aquí.", "You've been very welcome here."),
+ ("perf", "Siempre te hemos recibido con los brazos abiertos.", "We've always welcomed you with open arms."),
  ("fut", "Siempre serás bienvenido en esta casa.", "You'll always be welcome in this house.")]),
 ("identidad", "a1", "Me llamo + name", "My name is …", "Also: soy + name, mi nombre es + name.", [
  ("pres", "Me llamo Carlos.", "My name is Carlos."),
@@ -70,8 +70,8 @@ P = [
 ("identidad", "a1", "Soy + profession / Trabajo de + profession", "I'm a … / I work as a …", "No article: soy enfermera (not una enfermera).", [
  ("pres", "Soy enfermera y trabajo en un hospital.", "I'm a nurse and I work in a hospital."),
  ("pres", "Trabajo de profesor en un colegio.", "I work as a teacher at a school."),
- ("impf", "Antes era contable.", "I used to be an accountant."),
- ("fut", "Quiero ser abogado.", "I want to be a lawyer.")]),
+ ("impf", "Antes era contador.", "I used to be an accountant."),
+ ("fut", "Algún día seré abogado.", "Some day I'll be a lawyer.")]),
 ("identidad", "a1", "Vivo en + place / con + people", "I live in / with …", "Vivir is regular: vivo, vives, vive, vivimos, viven.", [
  ("pres", "Vivo en un apartamento con mi hermana.", "I live in an apartment with my sister."),
  ("impf", "Antes vivía con mis padres.", "I used to live with my parents."),
@@ -197,7 +197,7 @@ P = [
  ("pres", "¿Café o té? —Me da igual.", "Coffee or tea? —I don't mind."),
  ("pret", "Le dio igual lo que dijimos.", "He didn't care what we said."),
  ("impf", "Antes me daba igual, pero ahora no.", "I used to not care, but now I do.")]),
-("gustos", "b1", "Me apetece + noun / infinitive", "I fancy … / I feel like …", "Very common in Spain; in Latin America people say tengo ganas de or se me antoja.", [
+("gustos", "b1", "Me apetece / Se me antoja + noun / infinitive", "I fancy … / I feel like …", "Me apetece is very common in Spain; in Latin America people say tengo ganas de or se me antoja.", [
  ("pres", "¿Te apetece un helado?", "Do you fancy an ice cream?"),
  ("pres", "Se me antoja algo dulce.", "I'm craving something sweet."),
  ("pret", "No me apeteció salir.", "I didn't feel like going out."),
@@ -210,7 +210,7 @@ P = [
 ("capacidad", "a1", "¿Puedes + infinitive?", "Can you …?", "The everyday way to ask a favour; ¿podrías…? is softer.", [
  ("pres", "¿Puedes ayudarme con esto?", "Can you help me with this?"),
  ("cond", "¿Podrías hablar más despacio?", "Could you speak more slowly?"),
- ("pres", "¿Me puede repetir, por favor?", "Can you repeat that, please? (formal)"),
+ ("pres", "¿Me lo puede repetir, por favor?", "Can you repeat that, please? (formal)"),
  ("cond", "¿Me podría decir la hora?", "Could you tell me the time? (formal)")]),
 ("capacidad", "a1", "Sé + infinitive", "I know how to …", "Saber + infinitive for skills: sé nadar, sé cocinar.", [
  ("pres", "Sé nadar, pero no muy bien.", "I can swim, but not very well."),
@@ -225,7 +225,7 @@ P = [
 ("capacidad", "a1", "Conozco + person / place", "I know (someone / somewhere)", "Conocer for people and places; saber for facts and skills.", [
  ("pres", "¿Conoces a mi hermana?", "Do you know my sister?"),
  ("pret", "Conocí a mi esposa en la universidad.", "I met my wife at university."),
- ("perf", "¿Has conocido Boquete?", "Have you been to Boquete?"),
+ ("perf", "Todavía no he conocido a tu novio.", "I still haven't met your boyfriend."),
  ("fut", "Vas a conocer a mucha gente.", "You're going to meet a lot of people.")]),
 ("capacidad", "a2", "Me cuesta + infinitive", "I find it hard to …", "Works like gustar: me cuesta entender, nos cuesta madrugar.", [
  ("pres", "Me cuesta entender a los nativos.", "I find it hard to understand native speakers."),
