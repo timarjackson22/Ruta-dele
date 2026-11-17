@@ -47,7 +47,9 @@
   "tr_chars_per_day": 1000,
   "pron_min_per_day": 2,
   "video_minutes_library": 1200,
-  "video_minutes_new_per_month": 200
+  "video_minutes_new_per_month": 200,
+  "app_download_mb_per_update": 1.9,
+  "app_download_note": "The app is one page (about 1.9 MB compressed). Since v210 it is downloaded once per release, not on every launch (service worker answers from cache; version.json triggers the update)."
  },
  "metrics": [
   [
@@ -714,7 +716,7 @@
   {
    "id": "host",
    "name": "Hosting, AI key server and app store",
-   "today": "GitHub Pages for the web app; the APK is installed by hand from GitHub Releases.",
+   "today": "GitHub Pages for the web app; the APK is installed by hand from GitHub Releases. The app downloads only when a new version is released (about 1.9 MB), not on every launch, which keeps GitHub Pages under its 100 GB a month bandwidth guideline at launch scale.",
    "gap": "No server to keep a shared AI key secret; no Play Store listing, automatic updates or payments.",
    "driver": "flat plans + requests; store fee is a share of sales",
    "tiers": [
