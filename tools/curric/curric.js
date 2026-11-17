@@ -47,6 +47,8 @@
         const items = pxItems(u); let A = []; try { A = window.__qc ? window.__qc.assign(items, secs) : []; } catch (e) {}
         const secOf = {}; A.forEach((ks, si) => ks.forEach((k) => (secOf[k] = si)));
         pushItems(T, L.id, items, link, items.map((_, k) => (secOf[k] != null ? secOf[k] : null)));
+        // items that practise a pronunciation or spelling section (sounds, stress, written accents) count as pronunciation work (METRICS.md)
+        T.recs.forEach((rid) => { const r = recs.find((x) => x.id === rid); if (r && r.role === "practice" && r.sec != null && secs[r.sec] && /^(Pronunciaci[oó]n|Ortograf[ií]a)\b/.test(secs[r.sec].name)) r.comp = { pro: .5, wex: .25, gra: .25 }; });
       });
       (L.exam && L.exam.tests || []).forEach((t, k) => { const n = crFold(t.n + " " + t.en), comp = {};
         if (/auditiva|listening/.test(n)) comp.lis = .5; if (/lectura|reading/.test(n)) comp.rea = .5; if (/escrit|writing/.test(n)) { comp.wex = .4; comp.wint = .4; } if (/oral|speaking/.test(n)) { comp.oex = .4; comp.oint = .4; }
@@ -55,7 +57,7 @@
     });
     // guides
     (typeof GUIDES !== "undefined" ? GUIDES : []).forEach((g) => { const id = "guia-" + g.id, link = "#" + id, T = { id, kind: "guide", gid: g.id, lvl: g.lvl, title: g.t, sub: g.en, link, recs: [], secs: g.sec.map((s) => s.t).concat(g.pit && g.pit.length ? ["Common mistakes"] : []) }; topics.push(T);
-      const pro = g.id === "pronunciacion", conn = g.id === "conectores", idi = g.id === "modismos";
+      const pro = g.id === "pronunciacion", conn = g.id === "conectores", idi = g.id === "modismos" || g.id === "tener-hacer-dar-echar";
       const comp = pro ? { pro: 1 } : conn ? { dis: 1, gra: .3 } : idi ? { voc: .6, pra: .4 } : { gra: 1 };
       T.recs.push(add({ role: "teach", type: "guide-intro", lvl: g.lvl, topic: id, link, text: [g.t, g.en, g.intro].join(" "), h: [g.t, g.en].join(" "), comp, ex: 0 }).id);
       g.sec.forEach((s, si) => T.recs.push(add({ role: "teach", type: "guide-section", lvl: g.lvl, topic: id, link, sec: si, text: [g.t, s.t, s.r, (s.n || []).join(" "), (s.e || []).map((e) => e.join(" ")).join(" ")].join(" "), h: [g.t, g.en, s.t, s.r, lab(s.n)].join(" "), comp, ex: (s.e || []).length }).id));
@@ -64,6 +66,9 @@
       const secOf = {}; A.forEach((ks, si) => ks.forEach((k) => (secOf[k] = si)));
       pushItems(T, g.lvl, items, link, items.map((_, k) => (secOf[k] != null ? secOf[k] : null)));
       if (pro) T.recs.forEach((rid) => { const r = recs.find((x) => x.id === rid); if (r && r.role === "practice") r.comp = { pro: .5, wex: .25, rea: .25 }; });
+      // items in the connectors guide test cohesion (which connector fits the discourse); in the idioms and collocations guides they test
+      // vocabulary: classify their practice by what it asks for, not by the item format (METRICS.md, 17 Nov 2026)
+      if (conn || idi) T.recs.forEach((rid) => { const r = recs.find((x) => x.id === rid); if (r && r.role === "practice") r.comp = conn ? { dis: .6, gra: .4 } : { voc: .6, gra: .2, pra: .2 }; });
     });
     // interactive skill drills (tools/skilldrills.js): the bank for every lesson and guide subsection
     if (window.__sk) topics.forEach((T) => T.secs.forEach((_, si) => { let B = []; try { B = window.__sk.bank(T.id, si, "bank"); } catch (e) {}

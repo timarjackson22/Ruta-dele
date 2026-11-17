@@ -21,7 +21,8 @@ If no: say so in the commit message ("costs: no impact").
 
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
-- Curriculum content fixes for dashboard gaps: tools/content/add_functions.py (re-runnable).
+- Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
+- A2 reading is 5 + 8 + 6 + 6 (Especificaciones 2020): Tarea 4 is a narrative text from tools/exgen/a2_t4.py, and the old gap-fill is kept as «Práctica extra» (gen.py).
 - Exam data is generated: `python3 tools/exgen/gen.py <level>` from `tools/exgen/<level>_part*.py`. Update `EXREADY` and `sw.js` when adding exams.
 
 ## Curriculum coverage dashboard (Settings › Admin, route #cobertura)
