@@ -1,0 +1,924 @@
+{
+ "asof": "17 Nov 2026",
+ "note": "Planning model, not a forecast. Every number below is an assumption you can change; prices and benchmarks carry their source. Running costs come from the service costs model (tools/costs/costs.json, same growth stages).",
+ "benchmarks": [
+  {
+   "k": "Duolingo Super (individual)",
+   "v": "$83.99 / year",
+   "src": "https://www.dailyexcelsior.com/?p=2182000"
+  },
+  {
+   "k": "Babbel (12-month plan, US)",
+   "v": "$107.40 / year ($8.95 a month)",
+   "src": "https://copycatcafe.com/blog/babbel-cost"
+  },
+  {
+   "k": "DELE exam fee (Spain, 2026)",
+   "v": "€138 (A2) to €240 (C2)",
+   "src": "https://www.uv.es/uvweb/servicio-politica-linguistica/es/certificacion-idiomas/dele-espanol-1286003215548.html"
+  },
+  {
+   "k": "Paying share of monthly users (Duolingo, 2025)",
+   "v": "9.2%",
+   "src": "https://voxbooster.com/blog/duolingo-statistics-2026"
+  },
+  {
+   "k": "Google Play fee on subscriptions",
+   "v": "15% (10% service + 5% billing)",
+   "src": "https://adapty.io/blog/markdown/google-play-billing-changes-subscriptions-fees.md"
+  },
+  {
+   "k": "Average cost per install, Android",
+   "v": "$1.12 worldwide",
+   "src": "https://thesocialoutline.com/blog/mobile-app-cpi-benchmarks-2026"
+  }
+ ],
+ "options": [
+  {
+   "id": "pro",
+   "name": "Freemium + Ruta Pro subscription",
+   "pitch": "Lessons, drills and reading stay free; Pro unlocks unlimited Profe conversations and grading, full mock exams and offline audio.",
+   "price": "$9.99 a month or $69.99 a year (about 17% under Duolingo Super and 35% under Babbel's yearly plans)",
+   "who": "Self-study learners worldwide; the default channel (Google Play).",
+   "fee": 0.15,
+   "arppu_month": 7.1,
+   "arppu_note": "Assumes 70% choose yearly ($5.83 a month) and 30% monthly ($9.99).",
+   "pros": [
+    "Standard for the category, learners know it",
+    "Recurring revenue",
+    "Store handles payments, refunds and tax"
+   ],
+   "cons": [
+    "Needs many users: conversion is single-digit",
+    "Competes head-on with Duolingo and Babbel"
+   ]
+  },
+  {
+   "id": "pass",
+   "name": "DELE Exam Pass (one-off)",
+   "pitch": "3 months of everything, built around one exam date: full mock exams with timing, graded writing and speaking, a study plan to the day.",
+   "price": "$29.99 once (well under 25% of the exam fee itself)",
+   "who": "Candidates registered for a DELE session; peaks before the registration deadlines.",
+   "fee": 0.2,
+   "price_once": 29.99,
+   "buy_share": 0.03,
+   "pros": [
+    "Clear promise and deadline, easy to sell",
+    "Fits people who won't subscribe",
+    "Marketable to exam centres"
+   ],
+   "cons": [
+    "Seasonal revenue",
+    "One-off: no recurring income unless they move up a level"
+   ]
+  },
+  {
+   "id": "b2b",
+   "name": "Schools, academies and exam centres (B2B licence)",
+   "pitch": "Seats for language schools, universities and DELE exam centres, with the coverage dashboard as a teacher tool and class progress reports.",
+   "price": "$25 per student per year (minimum 30 seats), invoiced directly",
+   "who": "Instituto Cervantes-accredited centres, academies, universities, companies with Spanish-learning staff (Panama: Canal, logistics, tourism).",
+   "fee": 0.03,
+   "seat_year": 25,
+   "accounts": {
+    "soft": 0,
+    "launch": 3,
+    "growth": 12,
+    "mature": 30
+   },
+   "seats_per_account": 60,
+   "pros": [
+    "Higher, predictable contracts",
+    "No ad spend per user",
+    "The curriculum dashboard is a real differentiator"
+   ],
+   "cons": [
+    "Slow sales cycle",
+    "Needs teacher accounts, invoicing and support"
+   ]
+  },
+  {
+   "id": "local",
+   "name": "Regional pricing for Panama and Latin America",
+   "pitch": "The same Pro at a local price, marketed with Casco Viejo content, Panamanian Spanish and partnerships with schools and employers.",
+   "price": "$3.99 a month or $29.99 a year",
+   "who": "Learners in Panama and the region; expats; tourism and hospitality staff.",
+   "fee": 0.15,
+   "arppu_month": 2.8,
+   "pros": [
+    "Home-market advantage and local content",
+    "Cheaper users to acquire"
+   ],
+   "cons": [
+    "Lower revenue per user",
+    "Smaller market for Spanish-as-a-foreign-language"
+   ]
+  }
+ ],
+ "assumptions": {
+  "conversion": {
+   "low": 0.03,
+   "base": 0.06,
+   "high": 0.09,
+   "note": "Share of monthly active users paying for Pro. Duolingo reached 9.2% after years of tuning; a new app starts lower."
+  },
+  "paid_install_share": 0.5,
+  "cpi": 1.12,
+  "installs_per_registered": 1.0,
+  "new_users_share_per_year": {
+   "soft": 1.0,
+   "launch": 0.9,
+   "growth": 0.6,
+   "mature": 0.35
+  },
+  "paid_months": 9,
+  "cost_tier": "modest",
+  "people_year": {
+   "soft": 0,
+   "launch": 24000,
+   "growth": 90000,
+   "mature": 180000
+  },
+  "people_note": "Support, content review and a part-time marketer from launch; not the founders' own time."
+ },
+ "tiers": {
+  "cheap": {
+   "stages": [
+    {
+     "scenario": "low",
+     "conv": 0.03,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 15,
+       "rev": {
+        "pro": 1086,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 428,
+        "total": 1446
+       },
+       "cloud_share": 0.037,
+       "cost": {
+        "running": 296,
+        "running_all": 5205,
+        "running_cheap_all": 5205,
+        "quotes": 0,
+        "acquisition": 560,
+        "people": 0,
+        "total": 856
+       },
+       "net": 590,
+       "net_all": -4319
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 135,
+       "rev": {
+        "pro": 9777,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 3856,
+        "total": 17381
+       },
+       "cloud_share": 0.077,
+       "cost": {
+        "running": 3958,
+        "running_all": 49493,
+        "running_cheap_all": 49493,
+        "quotes": 0,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 32998
+       },
+       "net": -15617,
+       "net_all": -61152
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 600,
+       "rev": {
+        "pro": 43452,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 17136,
+        "total": 75307
+       },
+       "cloud_share": 0.073,
+       "cost": {
+        "running": 16473,
+        "running_all": 221107,
+        "running_cheap_all": 221107,
+        "quotes": 0,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 123273
+       },
+       "net": -47966,
+       "net_all": -252599
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 1200,
+       "rev": {
+        "pro": 86904,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 34272,
+        "total": 159344
+       },
+       "cloud_share": 0.083,
+       "cost": {
+        "running": 36856,
+        "running_all": 442544,
+        "running_cheap_all": 442544,
+        "quotes": 0,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 236456
+       },
+       "net": -77112,
+       "net_all": -482800
+      }
+     ]
+    },
+    {
+     "scenario": "base",
+     "conv": 0.06,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 30,
+       "rev": {
+        "pro": 2173,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 857,
+        "total": 2532
+       },
+       "cloud_share": 0.068,
+       "cost": {
+        "running": 449,
+        "running_all": 5205,
+        "running_cheap_all": 5205,
+        "quotes": 0,
+        "acquisition": 560,
+        "people": 0,
+        "total": 1009
+       },
+       "net": 1524,
+       "net_all": -3233
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 270,
+       "rev": {
+        "pro": 19553,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 7711,
+        "total": 27157
+       },
+       "cloud_share": 0.107,
+       "cost": {
+        "running": 5439,
+        "running_all": 49493,
+        "running_cheap_all": 49493,
+        "quotes": 0,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 34479
+       },
+       "net": -7321,
+       "net_all": -51375
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 1200,
+       "rev": {
+        "pro": 86904,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 34272,
+        "total": 118759
+       },
+       "cloud_share": 0.103,
+       "cost": {
+        "running": 23099,
+        "running_all": 221107,
+        "running_cheap_all": 221107,
+        "quotes": 0,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 129899
+       },
+       "net": -11140,
+       "net_all": -209147
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 2400,
+       "rev": {
+        "pro": 173808,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 68544,
+        "total": 246248
+       },
+       "cloud_share": 0.113,
+       "cost": {
+        "running": 50121,
+        "running_all": 442544,
+        "running_cheap_all": 442544,
+        "quotes": 0,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 249721
+       },
+       "net": -3473,
+       "net_all": -395896
+      }
+     ]
+    },
+    {
+     "scenario": "high",
+     "conv": 0.09,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 45,
+       "rev": {
+        "pro": 3259,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 1285,
+        "total": 3619
+       },
+       "cloud_share": 0.098,
+       "cost": {
+        "running": 602,
+        "running_all": 5205,
+        "running_cheap_all": 5205,
+        "quotes": 0,
+        "acquisition": 560,
+        "people": 0,
+        "total": 1162
+       },
+       "net": 2457,
+       "net_all": -2146
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 405,
+       "rev": {
+        "pro": 29330,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 11567,
+        "total": 36934
+       },
+       "cloud_share": 0.138,
+       "cost": {
+        "running": 6919,
+        "running_all": 49493,
+        "running_cheap_all": 49493,
+        "quotes": 0,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 35959
+       },
+       "net": 975,
+       "net_all": -41599
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 1800,
+       "rev": {
+        "pro": 130356,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 51408,
+        "total": 162211
+       },
+       "cloud_share": 0.134,
+       "cost": {
+        "running": 29725,
+        "running_all": 221107,
+        "running_cheap_all": 221107,
+        "quotes": 0,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 136525
+       },
+       "net": 25686,
+       "net_all": -165695
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 3600,
+       "rev": {
+        "pro": 260712,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 102816,
+        "total": 333152
+       },
+       "cloud_share": 0.142,
+       "cost": {
+        "running": 63386,
+        "running_all": 442544,
+        "running_cheap_all": 442544,
+        "quotes": 0,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 262986
+       },
+       "net": 70166,
+       "net_all": -308992
+      }
+     ]
+    }
+   ],
+   "unit": {
+    "soft": {
+     "name": "Soft launch",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 0.868,
+     "cost_per_payer_month_all_cloud": 14.46,
+     "cost_per_payer_month": 1.14,
+     "contribution_month": 4.89,
+     "ltv": 44.05,
+     "cac": 18.67,
+     "ltv_cac": 2.4,
+     "payback_months": 3.8
+    },
+    "launch": {
+     "name": "Launch",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 0.917,
+     "cost_per_payer_month_all_cloud": 15.28,
+     "cost_per_payer_month": 0.95,
+     "contribution_month": 5.08,
+     "ltv": 45.72,
+     "cac": 20.74,
+     "ltv_cac": 2.2,
+     "payback_months": 4.1
+    },
+    "growth": {
+     "name": "Growth",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 0.921,
+     "cost_per_payer_month_all_cloud": 15.35,
+     "cost_per_payer_month": 0.94,
+     "contribution_month": 5.1,
+     "ltv": 45.88,
+     "cac": 23.33,
+     "ltv_cac": 2.0,
+     "payback_months": 4.6
+    },
+    "mature": {
+     "name": "Maturity",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 0.922,
+     "cost_per_payer_month_all_cloud": 15.37,
+     "cost_per_payer_month": 0.93,
+     "contribution_month": 5.1,
+     "ltv": 45.91,
+     "cac": 23.33,
+     "ltv_cac": 2.0,
+     "payback_months": 4.6
+    }
+   },
+   "breakeven": {
+    "low": 172700.0,
+    "base": 101800.0,
+    "high": 1000
+   }
+  },
+  "modest": {
+   "stages": [
+    {
+     "scenario": "low",
+     "conv": 0.03,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 15,
+       "rev": {
+        "pro": 1086,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 428,
+        "total": 1446
+       },
+       "cloud_share": 0.037,
+       "cost": {
+        "running": 31569,
+        "running_all": 47315,
+        "running_cheap_all": 5205,
+        "quotes": 1,
+        "acquisition": 560,
+        "people": 0,
+        "total": 32129
+       },
+       "net": -30683,
+       "net_all": -46429
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 135,
+       "rev": {
+        "pro": 9777,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 3856,
+        "total": 17381
+       },
+       "cloud_share": 0.077,
+       "cost": {
+        "running": 42497,
+        "running_all": 179873,
+        "running_cheap_all": 49493,
+        "quotes": 1,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 71537
+       },
+       "net": -54156,
+       "net_all": -191532
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 600,
+       "rev": {
+        "pro": 43452,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 17136,
+        "total": 75307
+       },
+       "cloud_share": 0.073,
+       "cost": {
+        "running": 73904,
+        "running_all": 615292,
+        "running_cheap_all": 221107,
+        "quotes": 1,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 180704
+       },
+       "net": -105397,
+       "net_all": -646784
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 1200,
+       "rev": {
+        "pro": 86904,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 34272,
+        "total": 159344
+       },
+       "cloud_share": 0.083,
+       "cost": {
+        "running": 118954,
+        "running_all": 1097598,
+        "running_cheap_all": 442544,
+        "quotes": 1,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 318554
+       },
+       "net": -159209,
+       "net_all": -1137853
+      }
+     ]
+    },
+    {
+     "scenario": "base",
+     "conv": 0.06,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 30,
+       "rev": {
+        "pro": 2173,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 857,
+        "total": 2532
+       },
+       "cloud_share": 0.068,
+       "cost": {
+        "running": 32060,
+        "running_all": 47315,
+        "running_cheap_all": 5205,
+        "quotes": 1,
+        "acquisition": 560,
+        "people": 0,
+        "total": 32620
+       },
+       "net": -30088,
+       "net_all": -45343
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 270,
+       "rev": {
+        "pro": 19553,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 7711,
+        "total": 27157
+       },
+       "cloud_share": 0.107,
+       "cost": {
+        "running": 46964,
+        "running_all": 179873,
+        "running_cheap_all": 49493,
+        "quotes": 1,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 76004
+       },
+       "net": -48847,
+       "net_all": -181755
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 1200,
+       "rev": {
+        "pro": 86904,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 34272,
+        "total": 118759
+       },
+       "cloud_share": 0.103,
+       "cost": {
+        "running": 91434,
+        "running_all": 615292,
+        "running_cheap_all": 221107,
+        "quotes": 1,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 198234
+       },
+       "net": -79475,
+       "net_all": -603332
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 2400,
+       "rev": {
+        "pro": 173808,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 68544,
+        "total": 246248
+       },
+       "cloud_share": 0.113,
+       "cost": {
+        "running": 150953,
+        "running_all": 1097598,
+        "running_cheap_all": 442544,
+        "quotes": 1,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 350553
+       },
+       "net": -104305,
+       "net_all": -1050949
+      }
+     ]
+    },
+    {
+     "scenario": "high",
+     "conv": 0.09,
+     "rows": [
+      {
+       "id": "soft",
+       "name": "Soft launch",
+       "users": 1000,
+       "mau": 500,
+       "payers": 45,
+       "rev": {
+        "pro": 3259,
+        "pass": 360,
+        "b2b": 0,
+        "local_alt": 1285,
+        "total": 3619
+       },
+       "cloud_share": 0.098,
+       "cost": {
+        "running": 32551,
+        "running_all": 47315,
+        "running_cheap_all": 5205,
+        "quotes": 1,
+        "acquisition": 560,
+        "people": 0,
+        "total": 33111
+       },
+       "net": -29492,
+       "net_all": -44257
+      },
+      {
+       "id": "launch",
+       "name": "Launch",
+       "users": 10000,
+       "mau": 4500,
+       "payers": 405,
+       "rev": {
+        "pro": 29330,
+        "pass": 3239,
+        "b2b": 4365,
+        "local_alt": 11567,
+        "total": 36934
+       },
+       "cloud_share": 0.138,
+       "cost": {
+        "running": 51432,
+        "running_all": 179873,
+        "running_cheap_all": 49493,
+        "quotes": 1,
+        "acquisition": 5040,
+        "people": 24000,
+        "total": 80472
+       },
+       "net": -43538,
+       "net_all": -171979
+      },
+      {
+       "id": "growth",
+       "name": "Growth",
+       "users": 50000,
+       "mau": 20000,
+       "payers": 1800,
+       "rev": {
+        "pro": 130356,
+        "pass": 14395,
+        "b2b": 17460,
+        "local_alt": 51408,
+        "total": 162211
+       },
+       "cloud_share": 0.134,
+       "cost": {
+        "running": 108965,
+        "running_all": 615292,
+        "running_cheap_all": 221107,
+        "quotes": 1,
+        "acquisition": 16800,
+        "people": 90000,
+        "total": 215765
+       },
+       "net": -53553,
+       "net_all": -559880
+      },
+      {
+       "id": "mature",
+       "name": "Maturity",
+       "users": 100000,
+       "mau": 40000,
+       "payers": 3600,
+       "rev": {
+        "pro": 260712,
+        "pass": 28790,
+        "b2b": 43650,
+        "local_alt": 102816,
+        "total": 333152
+       },
+       "cloud_share": 0.142,
+       "cost": {
+        "running": 182952,
+        "running_all": 1097598,
+        "running_cheap_all": 442544,
+        "quotes": 1,
+        "acquisition": 19600,
+        "people": 180000,
+        "total": 382552
+       },
+       "net": -49400,
+       "net_all": -964045
+      }
+     ]
+    }
+   ],
+   "unit": {
+    "soft": {
+     "name": "Soft launch",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 7.886,
+     "cost_per_payer_month_all_cloud": 131.43,
+     "cost_per_payer_month": 88.71,
+     "contribution_month": -82.68,
+     "ltv": -744.12,
+     "cac": 18.67,
+     "ltv_cac": -39.9,
+     "payback_months": null
+    },
+    "launch": {
+     "name": "Launch",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 3.331,
+     "cost_per_payer_month_all_cloud": 55.52,
+     "cost_per_payer_month": 12.31,
+     "contribution_month": -6.28,
+     "ltv": -56.49,
+     "cac": 20.74,
+     "ltv_cac": -2.7,
+     "payback_months": null
+    },
+    "growth": {
+     "name": "Growth",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 2.564,
+     "cost_per_payer_month_all_cloud": 42.73,
+     "cost_per_payer_month": 4.58,
+     "contribution_month": 1.45,
+     "ltv": 13.06,
+     "cac": 23.33,
+     "ltv_cac": 0.6,
+     "payback_months": 16.1
+    },
+    "mature": {
+     "name": "Maturity",
+     "net_arppu": 6.03,
+     "cost_per_mau_month_all_cloud": 2.287,
+     "cost_per_payer_month_all_cloud": 38.11,
+     "cost_per_payer_month": 3.3,
+     "contribution_month": 2.74,
+     "ltv": 24.64,
+     "cac": 23.33,
+     "ltv_cac": 1.1,
+     "payback_months": 8.5
+    }
+   },
+   "breakeven": {
+    "low": null,
+    "base": 150400.0,
+    "high": 116800.0
+   }
+  }
+ }
+}

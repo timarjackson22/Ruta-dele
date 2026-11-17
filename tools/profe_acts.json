@@ -1299,5 +1299,9 @@
  "lf-end": {
   "voice": "pending",
   "why": "lesson flow: go to the end of the lesson"
+ },
+ "gtm-st": {
+  "voice": "unsuitable",
+  "why": "admin go-to-market model switch"
  }
 }

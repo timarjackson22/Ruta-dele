@@ -9,6 +9,9 @@ If yes: edit `tools/costs/gaps.json` (gap, tiers, prices with source URL, impact
 then run `python3 tools/sync_profe.py index.html /tmp/pvoice.orig.js` (it re-runs `tools/costs/model.py` and embeds the new numbers).
 If no: say so in the commit message ("costs: no impact").
 
+## Go to market & unit economics (Settings › Admin, route #gtm)
+- Assumptions, prices and sources: `tools/costs/gtm.json`; model: `tools/costs/gtm.py` (uses costs.json); embed: `python3 tools/costs/patch_gtm.py index.html` (re-runs both models). Re-run after any change to gaps.json or gtm.json.
+
 ## Voice (Profe)
 - `tools/pvoice.js` is embedded in index.html; edit it there, then sync as above and `cp tools/pvoice.js /tmp/pvoice.orig.js`.
 - `node tools/profe_check.js` must pass (every route and data-act button has a voice status; no duplicate top-level names).
