@@ -19,10 +19,12 @@ FIX = {
   ["Aunque mañana hará frío, iremos a la playa.", "Aunque mañana haga frío, iremos a la playa", "A possible future obstacle after «aunque» takes the subjunctive: haga."],
   ["En cuanto llegaré, te escribo.", "En cuanto llegue, te escribo", "No future after «en cuanto» for a future action: present subjunctive llegue."]],
  "Oraciones de relativo": [
+  ["Es el profesor cuyo el libro leímos en clase.", "Es el profesor cuyo libro leímos en clase", "«Cuyo» already works as a determiner: never add an article after it."],
   ["No conozco a nadie que habla ruso.", "No conozco a nadie que hable ruso", "After a negative antecedent («nadie») the relative clause takes the subjunctive: hable."],
   ["La chica que te hablé ayer es mi prima.", "La chica de la que te hablé ayer es mi prima|La chica de quien te hablé ayer es mi prima", "«Hablar de» keeps its preposition before the relative: de la que / de quien."],
   ["El pueblo donde que nací es muy pequeño.", "El pueblo donde nací es muy pequeño|El pueblo en el que nací es muy pequeño", "Use «donde» or «en el que», never both together."]],
  "Pasiva e impersonalidad": [
+  ["Se alquila habitaciones para estudiantes.", "Se alquilan habitaciones para estudiantes", "Pasiva refleja: the verb agrees with the plural subject «habitaciones» → se alquilan."],
   ["Se informó a los vecinos del corte de agua y se les avisaron.", "Se informó a los vecinos del corte de agua y se les avisó", "With a person introduced by «a» or «les», the impersonal «se» stays singular: se les avisó."],
   ["Los resultados serán anunciado mañana.", "Los resultados serán anunciados mañana", "In the passive with «ser», the participle agrees with the subject: anunciados."],
   ["En esta empresa se trabajan mucho.", "En esta empresa se trabaja mucho", "Impersonal «se» with an intransitive verb is always singular: se trabaja."]],
