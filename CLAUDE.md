@@ -25,6 +25,8 @@ If no: say so in the commit message ("costs: no impact").
 
 - Word highlight while listening/reading (`cueTrack`) maps voice boundary positions against `u.text`, the cleaned text the voice really speaks, never the page text. `node tools/profe-tests/sSYNC.js [ids]` must pass (every lit word = spoken word).
 
+- Read aloud (v219) is the `#nb-ra` Listen button in the top bar (`raBtn()`/`raTopUI()`), on every RA_PAGES route; no in-page bar. It keeps `data-act="ra-start"` (voice commands click it); a real tap while reading pauses/resumes. Scroll view starts at the first block on screen, page view at the current page. `node tools/profe-tests/sRA.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
