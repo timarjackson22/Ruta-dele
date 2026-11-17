@@ -1307,5 +1307,29 @@
  "l-jump": {
   "voice": "unsuitable",
   "why": "in-page shortcut to a section of the same text (scrolling)"
+ },
+ "fr-cat": {
+  "voice": "unsuitable",
+  "why": "topic filter on the sentence patterns list"
+ },
+ "fr-tg": {
+  "voice": "unsuitable",
+  "why": "tense filter on the sentence patterns list"
+ },
+ "fr-lv": {
+  "voice": "unsuitable",
+  "why": "level filter on the sentence patterns list"
+ },
+ "fr-q": {
+  "voice": "unsuitable",
+  "why": "search box"
+ },
+ "fr-profe": {
+  "voice": "unsuitable",
+  "why": "opens Profe's sentence-pattern practice (voice: «practise sentence patterns» is not wired yet)"
+ },
+ "pr-pat": {
+  "voice": "unsuitable",
+  "why": "starts sentence-pattern practice in Profe; spoken start not wired yet"
  }
 }
