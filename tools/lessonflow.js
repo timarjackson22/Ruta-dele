@@ -109,7 +109,7 @@
   function lfTag(root) { LFS.tag = new Map(); LFS.pages.forEach((pg, k) => pg.forEach((el) => { let e = el; while (e && e !== root) { const r = LFS.tag.get(e); if (r) { r[0] = Math.min(r[0], k); r[1] = Math.max(r[1], k); } else LFS.tag.set(e, [k, k]); e = e.parentElement; } })); }
   // check each page as it really draws (a table's header, the padding of the boxes) and move blocks on until it fits above the page bar
   function lfFit(root) { LFS.fitting = true; try { lfFit0(root); } finally { LFS.fitting = false; } }
-  function lfFit0(root) { lfTag(root); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 14 - 8;
+  function lfFit0(root) { lfTag(root); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 14 - 16;
     for (let k = 0; k < LFS.pages.length && k < 400; k++) { LFS.i = k; lfApply(); scrollTo(0, 0);
       const pg = LFS.pages[k]; let guard = 0;
       while (pg.length > 1 && guard++ < 60) { const last = pg[pg.length - 1], bot = Math.max(0, ...pg.filter((e) => e.offsetHeight).map((e) => e.getBoundingClientRect().bottom)); if (window.__lfDbg) console.log('fit', k, pg.length, Math.round(bot), Math.round(limit), last.className || last.tagName);
@@ -134,7 +134,7 @@
     for (let k = 1; k < LFS.pages.length; k++) { const pg = LFS.pages[k], pv = LFS.pages[k - 1];
       if (!pg.every((e) => e.matches(PG_TAIL)) || lfSec(pg[0], root) !== lfSec(pv[pv.length - 1], root)) continue;
       const take = []; while (take.length < 2 && pv.length > 3 && /^(TR|LI)$/.test(pv[pv.length - 1].tagName) && pv[pv.length - 1].parentElement === pv[pv.length - 2].parentElement) take.unshift(pv.pop());
-      if (take.length) { pg.unshift(...take); lfTag(root); LFS.i = k; lfApply(); scrollTo(0, 0); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 22;
+      if (take.length) { pg.unshift(...take); lfTag(root); LFS.i = k; lfApply(); scrollTo(0, 0); const N = document.getElementById("lf-nav"), limit = innerHeight - (N ? N.offsetHeight : 74) - 30;
         if (Math.max(...pg.map((e) => e.getBoundingClientRect().bottom)) > limit) { pv.push(...pg.splice(0, take.length)); lfTag(root); } } }
     LFS.i = -1; }
   function lfLabel(el, root) { const sec = lfSec(el, root); let s = ""; try { const h = sec && sec.querySelector(".shead h2, h2"); s = h ? h.childNodes[0].textContent.trim() : ""; } catch (e) {}
@@ -143,7 +143,7 @@
   function lfApply() { const k = LFS.i; if (!LFS.tag) return; LFS.tag.forEach((r, e) => e.classList.toggle("pg-off", k < r[0] || k > r[1]));
     // the screen never slides in page view: a single block taller than the page scrolls inside its own box
     document.querySelectorAll(".pg-tall").forEach((e) => { e.classList.remove("pg-tall"); e.style.maxHeight = ""; });
-    if (!LFS.fitting && !document.body.classList.contains("pg-measure") && LFS.pages && LFS.pages[k]) { const N = document.getElementById("lf-nav"), lim = innerHeight - (N ? N.offsetHeight : 74) - 22;
+    if (!LFS.fitting && !document.body.classList.contains("pg-measure") && LFS.pages && LFS.pages[k]) { const N = document.getElementById("lf-nav"), lim = innerHeight - (N ? N.offsetHeight : 74) - 30;
       LFS.pages[k].forEach((e) => { if (!e.offsetHeight) return; const r = e.getBoundingClientRect(); if (r.bottom > lim + 1 && r.top < lim) { e.classList.add("pg-tall"); e.style.maxHeight = Math.max(160, lim - r.top) + "px"; } }); }
     // the first thing on a page sits at the top of the page, without the gap it had below the block before it
     const R = LFS.root; if (!R) return; R.querySelectorAll(".pg-first").forEach((e) => e.classList.remove("pg-first")); let e = R;

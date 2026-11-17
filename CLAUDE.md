@@ -13,6 +13,7 @@ If no: say so in the commit message ("costs: no impact").
 - Assumptions, prices and sources: `tools/costs/gtm.json`; model: `tools/costs/gtm.py` (uses costs.json); embed: `python3 tools/costs/patch_gtm.py index.html` (re-runs both models). Re-run after any change to gaps.json or gtm.json.
 
 ## Voice (Profe)
+- Word answers are grounded in the app's dictionaries: `facts()` and `verbLemma()` map conjugated forms («socavan» → socavar) and pass meanings with a no-invention rule; `teachCard()` puts the dictionary meaning above every "Teach me how to use «…»" reply.
 - `tools/pvoice.js` is embedded in index.html; edit it there, then sync as above and `cp tools/pvoice.js /tmp/pvoice.orig.js`.
 - `node tools/profe_check.js` must pass (every route and data-act button has a voice status; no duplicate top-level names).
 - Suggested phrases in page intros (PV_PAGES) must really work: `node tools/profe-tests/sP.js`.
@@ -39,6 +40,11 @@ If no: say so in the commit message ("costs: no impact").
 - Word meanings must stay off where they'd give an answer away (drill types in skilldrills.js `noGloss`) and in exam mode (`lfExamLocked`).
 - Page view is semantic: pages are runs of whole blocks (PG_KEEP stays with what follows, PG_TAIL never sits alone, blocks open only at their seams). Never reintroduce CSS-column slicing.
   After lesson/layout changes run `node /tmp/audit/pgall.js`-style checks via sLF (every page fits above the bar, no text missing, no heading alone).
+
+## Display rules (v212)
+- Nothing may cross the floating bottom controls: `#px-dock` (script PXDOCK) frosts the band under the tab bar, Profe, players, pager and video bar. Add any new floating bottom control to its `SEL`.
+- Tables never scroll sideways on phones: `tblTooWide()` turns a too-wide grammar table into one card per row (`.tbl-stack`, labels from `data-th`).
+- Full-app display audit (360-px phone, every route, every page of page view): /tmp/audit/px/run.js with check.js. It flags text under controls, clipped or off-screen text, and sideways scrolling.
 
 ## Profe screen backgrounds
 - By Spanish variety (`S.region` → `html[data-region]`): latam = Casco Viejo (tools/profe-bg/latam.svg), es = Andalusian village (es.svg). Original SVGs, embedded by `python3 tools/patch_profebg.py index.html`. Keep the veil: text must stay readable in light and dark.

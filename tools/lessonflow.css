@@ -32,7 +32,7 @@ body.paged .tabbar { display: none !important } body.paged.tabs-peek .tabbar { d
 body.paged #lf-cont, .lf-cont { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 12; margin: 0; max-width: calc(100% - 32px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-size: .78rem; color: var(--muted); background: color-mix(in srgb, var(--surface) 85%, transparent); padding: 3px 12px; border-radius: 99px }
 body:not(.paged) #lf-cont, body.mastery-on #lf-cont, body.tabs-peek #lf-cont { display: none }
-body.paged #tabpeek { bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important }
+body.paged #tabpeek { bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important; height: 22px !important }
 /* top-bar tools on lessons; Profe's floating button tucked away during lessons and drills */
 .nb-tools { display: inline-flex; gap: 6px; margin-left: auto; align-items: center } .nb-tools button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0 }
 .nb-tools svg { width: 20px; height: 20px } .nb-tools .nb-profe { font-weight: 800; color: #fff; background: var(--cobalt); border-color: transparent } .nb-tools button[aria-pressed="true"] { border-color: var(--cobalt) }
