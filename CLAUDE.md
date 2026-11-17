@@ -36,6 +36,9 @@ If no: say so in the commit message ("costs: no impact").
 - Page view is semantic: pages are runs of whole blocks (PG_KEEP stays with what follows, PG_TAIL never sits alone, blocks open only at their seams). Never reintroduce CSS-column slicing.
   After lesson/layout changes run `node /tmp/audit/pgall.js`-style checks via sLF (every page fits above the bar, no text missing, no heading alone).
 
+## Profe screen backgrounds
+- By Spanish variety (`S.region` → `html[data-region]`): latam = Casco Viejo (tools/profe-bg/latam.svg), es = Andalusian village (es.svg). Original SVGs, embedded by `python3 tools/patch_profebg.py index.html`. Keep the veil: text must stay readable in light and dark.
+
 ## Versions
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").
