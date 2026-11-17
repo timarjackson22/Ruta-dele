@@ -759,11 +759,11 @@
       return [...document.querySelectorAll('main a.vcard[href^="#video-"]')].filter((a) => a.offsetParent !== null).map((a) => ({ h: a.getAttribute("href").slice(1), t: pvTitleOf(a), kind }));
     }
     const r = await pvGo("escuchar", "Listening"); if (!r.ok && !/already/.test(r.say)) return null;
-    await pvUntil(() => document.querySelector("main a.lcard2"), 2000);
+    await pvUntil(() => document.querySelector("main a.lh-row[href]:not(.lh-add)"), 2000);
     const cf = document.querySelector('[data-act="l-cf"][data-v="' + kind + '"]'); if (cf && cf.getAttribute("aria-pressed") !== "true") { cf.click(); await pvWait(250); }
-    const lf = [...document.querySelectorAll('[data-act="l-lf"]')].find((b) => lv ? b.textContent.trim().toUpperCase() === lv.toUpperCase() : /^all levels$/i.test(b.textContent.trim())); if (lf && lf.getAttribute("aria-pressed") !== "true") { lf.click(); await pvWait(250); }
+    const lf = [...document.querySelectorAll('[data-act="l-lf"]')].find((b) => lv ? b.textContent.trim().toUpperCase() === lv.toUpperCase() : /^all( levels)?$/i.test(b.textContent.trim())); if (lf && lf.getAttribute("aria-pressed") !== "true") { lf.click(); await pvWait(250); }
     const pre = { song: "#song-", poem: "#poem-", news: "#news-", podcast: "#podcast", story: "#" }[kind];
-    return [...document.querySelectorAll("main a.lcard2")].filter((a) => a.offsetParent !== null && (a.getAttribute("href") || "").startsWith(pre) && (kind !== "story" || /^#(story|historia)-/.test(a.getAttribute("href")))).map((a) => ({ h: a.getAttribute("href").slice(1), t: pvTitleOf(a), kind }));
+    return [...document.querySelectorAll("main a.lh-row[href]:not(.lh-add)")].filter((a) => a.offsetParent !== null && (a.getAttribute("href") || "").startsWith(pre) && (kind !== "story" || /^#(story|historia)-/.test(a.getAttribute("href")))).map((a) => ({ h: a.getAttribute("href").slice(1), t: pvTitleOf(a), kind }));
   }
   // open one item and start it; success is checked on the player itself
   async function pvMediaPlay(it) {

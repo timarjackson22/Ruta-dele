@@ -1303,5 +1303,9 @@
  "gtm-st": {
   "voice": "unsuitable",
   "why": "admin go-to-market model switch"
+ },
+ "l-jump": {
+  "voice": "unsuitable",
+  "why": "in-page shortcut to a section of the same text (scrolling)"
  }
 }

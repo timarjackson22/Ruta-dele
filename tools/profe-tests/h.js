@@ -70,7 +70,7 @@ async function open(o = {}) {
   const p = await c.newPage(); const errs = []; p.on("pageerror", (x) => errs.push(x.message + (process.env.STACK ? " @ " + String(x.stack).split("\n").slice(1, 4).join(" < ") : "")));
   await p.goto("http://localhost:" + PORT + "/" + (o.hash || "#curso")); await p.waitForTimeout(1400);
   await p.evaluate(([l, w]) => { window.__T.lat = l; window.__T.wps = w; }, [+(process.env.LAT || 120), +(process.env.WPS || 5)]);
-  if (!o.noOpen) { await p.click('[data-act="t-open"]'); await p.waitForTimeout(400); }
+  if (!o.noOpen) { await p.evaluate(() => document.body.classList.add("tabs-peek")); /* lessons hide Profe's button while reading (lf-quiet); it comes back with the bottom menu */ await p.click('[data-act="t-open"]'); await p.waitForTimeout(400); }
   const H = {
     b, p, errs,
     wait: (ms) => p.waitForTimeout(ms),

@@ -4,7 +4,7 @@
 const { chromium, devices } = require("playwright");
 const C = { home: {}, exam: { exam: true }, qdrill: { qdrill: true }, mc: { unit: true, runner: true, "runner-mc": true, "runner-open": true }, text: { unit: true, runner: true, "runner-text": true, "runner-open": true }, fb: { unit: true, runner: true, "runner-fb": true },
   play: { playing: true, player: true }, paused: { paused: true, player: true }, tutor: { tutor: true }, unit: { unit: true, guide: true }, guide: { guide: true },
-  video: { video: true }, videoplay: { video: true, playing: true }, vdrill: { vdrill: true } };
+  video: { video: true }, videoplay: { video: true, playing: true }, vdrill: { vdrill: true }, paged: { unit: true, guide: true, paged: true } };
 const CORPUS = [
   // media, word lists, mistakes, sessions (PROFE_EVAL_BRIEF stage 1)
   ["practise translation", "home", "practise.translate"], ["let's do some sentence translations", "home", "practise.translate"], ["translation practice", "home", "practise.translate"], ["vamos a practicar traducción", "home", "practise.translate"], ["traducir frases", "home", "practise.translate"],
@@ -77,6 +77,10 @@ const CORPUS = [
   ["fui al cine", "text", null], ["comí", "text", null], ["the cat is black", "home", null], ["can you correct my sentence", "home", null], ["what does pegadita mean", "home", null], ["I'm tired today", "tutor", null],
   ["la película fue muy buena", "tutor", null], ["Hola Profe, ¿cómo estás?", "tutor", null], ["estoy aprendiendo español", "tutor", null], ["open the window", "home", null], ["mi casa es grande", "text", null],
   ["next week I travel to Madrid", "home", null], ["a mi madre le gusta cocinar", "home", null], ["siguiente", "home", null], ["b", "home", null], ["pause", "home", null],
+  ["next page", "guide", "page.next"], ["pasa la página", "guide", "page.next"], ["previous page", "paged", "page.prev"], ["página anterior", "paged", "page.prev"],
+  ["go to the start of the lesson", "guide", "page.first"], ["ve al principio de la lección", "guide", "page.first"], ["go to the end", "guide", "page.last"], ["ve al final", "guide", "page.last"],
+  ["switch to page view", "guide", "lesson.mode"], ["cambia la vista", "guide", "lesson.mode"], ["read the whole lesson", "guide", "lesson.readall"], ["lee toda la lección", "guide", "lesson.readall"],
+  ["read that again", "play", "read.again"], ["repite eso", "paused", "read.again"],
 ];
 
 // HELD-OUT: written after the patterns, never used to tune them. Reported separately (an honest estimate of real-world understanding).
