@@ -20,6 +20,9 @@ If no: say so in the commit message ("costs: no impact").
 - Audio turn-taking and lesson commands: `node tools/profe-tests/sMIC.js` must pass (read-aloud × "Ok Profe" × taps × Profe's voice; every page/view/reading command executed).
   Read-aloud owns its utterances (`u.__ra`, `RA.self`); anything else that speaks or cancels pauses it through raGuard. Never cancel speech around it without that rule.
 
+- Voices (v217): one engine. `pickVoices()` ranks every device voice (`vq()`: network/neural/enhanced up, `VX_ROBOT` novelty/eSpeak voices out, `S.region` accent, the learner's pick first) and sets `V2` (two Spanish speakers, different people), `VEN` and `voice`. Every utterance goes through `utter()` (`ttsNorm()` clean-up, pacing ≥0.75); never build a raw SpeechSynthesisUtterance.
+  Who says what: `tagSpeech()` (quotes judged by their own words and the words before them, a word after a Spanish article stays Spanish, the learner's name `TS.lname` uses the English voice unless `TS.nameLang === "es"`). `node tools/profe-tests/sVX.js` must pass (mock Android, iPhone and Chrome voice lists × both regions, plus the split cases).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
