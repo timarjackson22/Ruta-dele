@@ -40,5 +40,22 @@ if lv == "a2":
     for x in exams:
         o = x.get("oral", [])
         if len(o) == 4 and o[1]["t"] == "Tarea 2": o[1]["extra"] = True; o[1]["t"] = "Práctica extra"; o[2]["t"] = "Tarea 2"; o[3]["t"] = "Tarea 3"
+# official durations and lengths (DELE specs; the coverage dashboard compares these): speaking minutes and writing word ranges
+OFF = {"a2": {("oral", "Tarea 3"): {"speak": 3.5}},
+       "b2": {("oral", "Tarea 1"): {"speak": 6.5}, ("oral", "Tarea 2"): {"speak": 5.5}},
+       "c1": {("oral", "Tarea 3"): {"speak": 5}, ("escritura", "Tarea 2"): {"words": [180, 220], "txt": ("220–250", "180–220")}},
+       "c2": {("escritura", "Tarea 3"): {"words": [200, 250], "txt": ("150–250", "200–250")}}}
+def _fix(o, a, b):
+    if isinstance(o, str): return o.replace(a, b)
+    if isinstance(o, list): return [_fix(x, a, b) for x in o]
+    if isinstance(o, dict): return {k: _fix(v, a, b) for k, v in o.items()}
+    return o
+for x in exams:
+    for (pr, tt), ch in OFF.get(lv, {}).items():
+        for i, t in enumerate(x.get(pr, [])):
+            if t.get("t") != tt or t.get("extra"): continue
+            if "txt" in ch: t = x[pr][i] = _fix(t, *ch["txt"])
+            for k, v in ch.items():
+                if k != "txt": t[k] = v
 json.dump({"lvl": lv, "format": common.FORMAT, "exams": exams}, open("/home/claude/ruta-dele/examdata/" + lv + ".json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print(lv, len(exams), "exams")
