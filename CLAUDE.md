@@ -33,6 +33,8 @@ If no: say so in the commit message ("costs: no impact").
 - Mic (v222, native `SttBridge.java`): ONE SpeechRecognizer, created and bound at app start (`ensure()`/`warm()`), reused for every session with a per-session listener; rebuilt only after error 11 / client error. Never destroy+create per tap (S24: error 11 on every first try, start of the sentence lost). Continuous listening = segmented session (Android 13+), no restart gaps. The page shows «One moment… opening the mic» (`micReady`) until the phone's `start`, and counts the time to speak from then.
   Spoken answers are compared by sound: `spokenAs()` writes homophones (`SPK_SAME`: porque/por qué, sino/si no, hay/ahí…) the way the expected answer does; typed answers keep their spelling. Callers that know the language pass `speakMixed([[text, isSpanish], …])` instead of letting it guess.
 
+- Profe wording (v224): no internal codes on screen (`adLabel` returns "" for anything it can't name; «fr» = Survival Kit), no "Now"/"Practising:" labels or repeated notes; the focus is one chip; answer boxes say «Say or type…» when the mic exists; feedback lines are de-duplicated. `node tools/profe-tests/sPW.js` scans every Profe screen.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
