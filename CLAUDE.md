@@ -35,6 +35,8 @@ If no: say so in the commit message ("costs: no impact").
 
 - Profe wording (v224): no internal codes on screen (`adLabel` returns "" for anything it can't name; «fr» = Survival Kit), no "Now"/"Practising:" labels or repeated notes; the focus is one chip; answer boxes say «Say or type…» when the mic exists; feedback lines are de-duplicated. `node tools/profe-tests/sPW.js` scans every Profe screen.
 
+- MIC GUARD (v226): every recogniser in the page is `micGuard(window.SpeechRecognition)` (`SR`, `PC_SR`): one owner at a time (a new start ends the previous owner with error "aborted" + end), stop/abort only touch your own session, watchdogs (no mic-open in 8 s → "audio-capture" + end; unanswered stop/abort → end after 2.5/1.2 s; 25 s / 2 min max), end fires exactly once. Never use `window.SpeechRecognition` directly. The Android bridge (bridge.js) has the same ownership rules from APK v226. `node tools/profe-tests/sMG.js` must pass (reproduces the old bridge's behaviour).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
@@ -62,6 +64,9 @@ If no: say so in the commit message ("costs: no impact").
 ## Survival Kit (Library › Survival Kit, route #frases)
 - Data: tools/frases/data*.py (category, level, pattern, English, tip, tense variations). Build and embed: `python3 tools/frases/build.py index.html` (view frases.js + frases.css; route, Library tile, flashcard deck `frases` in VPRO, global player source, Profe practice `PR.pat` via `startPatterns()`).
 - Each Spanish sentence must be unique, and tenses must use the codes in build.py. Level gating for practice comes from `FR_T` (tense level) and the pattern level.
+
+## Home (#inicio) — v226
+- One purpose per block: the continue hero (cbHTML), a short «Today» list (today's session, streak/goal mini ring, Quick drill, Flashcards and My mistakes only when something waits), the word of the day as one line, the journey. No carousels of tiles that repeat the tabs.
 
 ## Reading hub (#leer) — v225
 - Same shape as Listening: level (`RF`), then kinds of text (`RK`, `RD_K`/`rdKind()` from the text's first line: Messages, Notices & ads, Articles, Opinion & essays, Literature, My texts), then the list. Each kind has its own icon colour (`t-r<kind>`). «Add your own text» is a row at the end (and under My texts). `node tools/profe-tests/sRD.js` must pass.

@@ -56,9 +56,15 @@
     function alt(t, f) { var a = [{ transcript: t, confidence: 0.9 }]; a.isFinal = f; a.item = function (i) { return a[i]; }; return a; }
     function fire(r, list, idx) { list.item = function (i) { return list[i]; }; try { if (r.onresult) r.onresult({ results: list, resultIndex: idx }); } catch (e) {} }
     function SR() { this.lang = "es-US"; this.interimResults = false; this.continuous = false; this.maxAlternatives = 1; this.onresult = this.onerror = this.onend = this.onstart = this.onspeechend = this.onaudiostart = this.onsoundstart = null; this._final = []; }
-    SR.prototype.start = function () { if (active && active !== this) try { R.cancel(); } catch (e) {} active = this; this._final = []; jsSid++; R.start(this.lang || "es-US", !!this.interimResults, !!this.continuous); };
-    SR.prototype.stop = function () { R.stop(); };
-    SR.prototype.abort = function () { R.cancel(); };
+    // v226: one owner at a time. A new start ends the previous owner cleanly (it used to wait for ever), and stop/abort
+    // from a recogniser that no longer owns the mic do nothing (they used to kill whoever was listening).
+    SR.prototype.start = function () {
+      var prev = active;
+      if (prev && prev !== this) { try { R.cancel(); } catch (e) {} active = null; try { if (prev.onerror) prev.onerror({ error: "aborted" }); } catch (e) {} try { if (prev.onend) prev.onend({}); } catch (e) {} }
+      active = this; this._final = []; jsSid++; R.start(this.lang || "es-US", !!this.interimResults, !!this.continuous);
+    };
+    SR.prototype.stop = function () { if (active === this) R.stop(); };
+    SR.prototype.abort = function () { if (active === this) R.cancel(); };
     SR.prototype.addEventListener = function (t, f) { this["on" + t] = f; };
     window.__astt = {
       ev: function (type, a, sid) {
