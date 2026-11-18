@@ -20,7 +20,7 @@
   window.__vcNote = () => {
     if (!VC.on) return "";
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
-    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
+    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
       (VC.instr.length ? "\n- The learner asked, for this whole call: " + VC.instr.map((x) => "«" + x + "»").join("; ") + ". Keep doing all of it." : "");
   };
 
@@ -268,6 +268,7 @@
           '<button class="vc-b" data-act="vc-cam" aria-pressed="' + !!VC.cam + '" aria-label="' + (VC.cam ? "Turn camera off" : "Turn camera on") + '">' + vcI(VC.cam ? "cam" : "camoff") + "</button></div></div>" +
       '<div class="vc-sheet" id="vc-sheet" hidden></div>';
   }
+  const vcMed = (k) => { const a = VC.metrics.slice(-20).map((x) => x[k] || 0).sort((x, y) => x - y); return a.length ? a[Math.floor(a.length / 2)] : 0; };
   function vcSheet() {
     const opt = (k, map, d) => '<div class="vc-opts" role="group">' + Object.entries(map).map(([v, [n]]) => '<button class="vc-o" data-act="vc-opt" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + (vcP(k, d) === v) + '">' + n + "</button>").join("") + "</div>";
     const ms = VC.metrics.slice(-20).map((x) => x.lat).filter((x) => x > 0).sort((a, b) => a - b), med = ms.length ? ms[Math.floor(ms.length / 2)] : null;
@@ -277,7 +278,7 @@
       "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "flow") +
       '<p class="vc-l">Interrupt Profe by speaking</p><div class="vc-opts"><button class="vc-o" data-act="vc-opt" data-k="barge" data-v="' + (vcP("barge", "off") === "on" ? "off" : "on") + '" aria-pressed="' + (vcP("barge", "off") === "on") + '">' + (vcP("barge", "off") === "on" ? "On · best with headphones" : "Off · tap Profe to interrupt") + "</button></div>" +
       '<p class="vc-note">Profe is an AI tutor, an animated character drawn on your phone. Your phone’s speech service turns your voice into text (on Android, Google’s); the app keeps no audio or video. Your camera, if you turn it on, is only shown to you: Profe can’t see it. The words of the call are saved in Profe › History, where you can delete them.</p>' +
-      (med != null ? '<p class="vc-note">This call: Profe starts answering in about ' + (med / 1000).toFixed(1) + " s (" + ms.length + " turns).</p>" : "") + "</div>";
+      (med != null ? '<p class="vc-note">This call: Profe starts answering about ' + (vcMed("total") / 1000).toFixed(1) + " s after you stop talking (" + (vcMed("eot") / 1000).toFixed(1) + " s waiting to be sure you’ve finished, " + (med / 1000).toFixed(1) + " s to answer · " + ms.length + " turns).</p>" : "") + "</div>";
   }
   function vcSet(st, hint) {
     VC.st = st; const root = document.getElementById("vcall"); if (!root) return;
@@ -304,33 +305,46 @@
     const sp = p.querySelector('span[data-w="' + k + '"]'); if (!sp) return; sp.classList.add("on");
     const box = document.getElementById("vc-cap"); if (box && !box.__user) { const y = sp.offsetTop - box.clientHeight * 0.35; box.scrollTop = Math.max(0, y); }
   }
+  function vcCapYou(fin, im) { const y = document.getElementById("vc-you"); if (!y) return; if (!fin && !im) { y.textContent = ""; return; }
+    y.innerHTML = "You: " + esc(fin) + (im ? ' <span class="vc-prov" title="still listening">' + esc(im) + "</span>" : ""); }
   function vcCap(you, pro) { if (you != null) { const y = document.getElementById("vc-you"); if (y) y.textContent = you ? "You: " + you : ""; } if (pro != null) { CAP.gen = VC.gen; CAP.text = vcPlain(pro); CAP.n = avWords(CAP.text).length; capPaint(); } }
   function vcOnSpeak(u) {
-    if (!VC.on) return; vcSet("speaking");
-    if (VC.tTurn) { VC.metrics.push({ lat: Date.now() - VC.tTurn, t: Date.now() }); if (VC.metrics.length > 60) VC.metrics.shift(); VC.tTurn = 0; }
+    if (!VC.on) return; vcHoldStop(); vcSet("speaking");
+    if (VC.tTurn) { const ans = Date.now() - VC.tTurn; VC.metrics.push({ lat: ans, eot: VC.eot || 0, total: ans + (VC.eot || 0), t: Date.now() }); if (VC.metrics.length > 60) VC.metrics.shift(); VC.tTurn = 0; }
     if (vcP("barge", "off") === "on" && !VC.muted) vcBargeOn();
   }
 
   /* ---------- the conversation loop ---------- */
-  function vcStopMic() { const r = VC.rec; VC.rec = null; if (r) { try { r._vcDead = 1; r.abort(); } catch (e) {} } clearTimeout(VC.qT); clearTimeout(VC.sT); }
+  function vcStopMic() { vcHoldStop(); const r = VC.rec; VC.rec = null; if (r) { try { r._vcDead = 1; r.abort(); } catch (e) {} } clearTimeout(VC.qT); clearTimeout(VC.sT); }
   function vcQuietThen(fn) { // wait until Profe has finished speaking (all queued parts), then go on
     const g = VC.gen; let quiet = 0; clearInterval(VC.qi);
     VC.qi = setInterval(() => { if (!VC.on || g !== VC.gen) return clearInterval(VC.qi); let sp = false; try { sp = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {} if (AV.speaking || AV.q > 0 || sp || (typeof tBusy !== "undefined" && tBusy)) quiet = 0; else quiet++; if (quiet >= 3) { clearInterval(VC.qi); fn(); } }, 150);
   }
   function vcLang() { const es = typeof sttLang === "function" ? sttLang() : "es-US"; return window.AndroidSTT && window.AndroidSTT.multiLang ? es + "|en-US" : es; }
+  // v235 end of turn, tuned for language learners: how long a silence must last before Profe answers.
+  // A sentence that is clearly unfinished (ends on «pero», «and», «porque», «the», «um»…, a comma, or is still only provisional
+  // text from the recogniser) waits much longer; after «wait / espera» Profe is extra patient for half a minute.
+  const VC_OPEN_END = /(?:^|\s)(?:y|e|o|u|ni|pero|porque|que|qué|si|cuando|como|donde|de|del|a|al|en|con|sin|para|por|el|la|los|las|un|una|mi|tu|su|muy|más|es|está|estoy|soy|tengo|quiero|hay|and|but|or|because|so|the|a|an|to|of|in|with|for|my|your|is|was|i|it|that|if|um+|uh+|eh+|em+|mm+|este|pues|bueno|o sea|like|well|i mean|you know)$/i;
+  function vcEot(t, isFinal) {
+    t = String(t || "").trim(); const n = (t.match(/\S+/g) || []).length; let w = isFinal ? (/[.?!]$/.test(t) ? 1100 : 1500) : 2300;
+    if (n <= 2) w += 700; if (VC_OPEN_END.test(t.replace(/[.,;:!?…]+$/, "")) && !/[.?!]$/.test(t)) w += 1700; else if (/[,…-]$/.test(t)) w += 900;
+    if ((VC.patient || 0) > Date.now()) w += 2500; return w;
+  }
+  window.__vcEot = vcEot;
   function vcListen(seed) {
     if (!VC.on || VC.paused) return; vcStopMic();
     if (VC.muted) { vcSet("muted", "You’re muted. Tap the mic to talk."); return; }
     if (!CAN_MIC) { vcSet("paused", "This browser can’t listen. Use Chrome on Android or Safari on iPhone."); return; }
     const r = new SR(); VC.rec = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
     let fin = seed || "", live = seed || "", done = false; const g = VC.gen;
-    const finish = (text) => { if (done) return; done = true; clearTimeout(VC.qT); clearTimeout(VC.sT); if (VC.rec === r) VC.rec = null; try { r._vcDead = 1; r.abort(); } catch (e) {} if (!VC.on || g !== VC.gen) return;
+    const finish = (text) => { if (done) return; done = true; VC.eot = VC.lastHeard ? Date.now() - VC.lastHeard : 0; clearTimeout(VC.qT); clearTimeout(VC.sT); if (VC.rec === r) VC.rec = null; try { r._vcDead = 1; r.abort(); } catch (e) {} if (!VC.on || g !== VC.gen) return;
       text = String(text || "").trim(); if (text) { VC.empties = 0; vcTurn(text); } else { VC.empties++; if (VC.empties >= 3) vcSet("paused", "Still there? Tap Profe to talk."); else vcListen(); } };
     // the learner's turn ends after a pause; learners pause more, so short or unfinished sentences get longer
-    const wait = (t, isFinal) => { const n = (t.match(/\S+/g) || []).length; return isFinal && /[.?!]$/.test(t) ? 1200 : n >= 5 ? 1700 : n >= 2 ? 2300 : 2900; };
-    r.onstart = () => { if (r._vcDead) return; VC.fails = 0; vcSet("listening"); clearTimeout(VC.sT); VC.sT = setTimeout(() => finish(live), 20000); };
+    const wait = (t, isFinal) => vcEot(t, isFinal);
+    r.onstart = () => { if (r._vcDead) return; VC.fails = 0; vcSet("listening"); clearTimeout(VC.sT); VC.sT = setTimeout(() => finish(live), 20000);
+      if (seed) { VC.lastHeard = Date.now(); vcCapYou(seed, ""); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(seed, true)); } }; // a continued turn: answer after the usual pause if nothing more comes
     r.onresult = (e) => { if (r._vcDead) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
-      fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCap(live, null);
+      fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCapYou(fin, im.trim()); VC.lastHeard = Date.now();
       { const nw = (live.match(/\S+/g) || []).length; if (nw - (VC.nodN || 0) >= 4) { VC.nodN = nw; AV.nodL = performance.now(); } }
       clearTimeout(VC.sT); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(live, !im.trim())); };
     r.onerror = (e) => { if (r._vcDead) return; r._err = e && e.error; };
@@ -369,6 +383,17 @@
     [/\b(?:speak|talk|go)\s+(?:more\s+)?slow(?:er|ly)\b|^slower\b|m[aá]s despacio|m[aá]s lento|habla despacio/i, "slower"],
     [/\b(?:speak|talk|go)\s+faster\b|^faster\b|m[aá]s r[aá]pido/i, "faster"],
   ];
+  // while Profe is thinking (before any speech), keep listening: more words from the learner mean the turn wasn't over
+  function vcHold(text, g) {
+    vcHoldStop(); if (VC.muted || !CAN_MIC) return; let r; try { r = new SR(); } catch (e) { return; } VC.hold = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
+    r.onresult = (e) => { if (r._dead || VC.hold !== r || g !== VC.gen || AV.speaking || AV.q > 0) return; let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " "; t = t.trim();
+      const n = (t.match(/[\p{L}\d']+/gu) || []).length, fin = [...e.results].some((x) => x.isFinal); if (n < 2 && !fin) return;
+      vcHoldStop(); VC.gen++; VC.conts = (VC.conts || 0) + 1; VC.contDrop = text; try { speechSynthesis.cancel(); } catch (x) {} try { if (typeof speechCut === "function") speechCut(); } catch (x) {}
+      vcListen(text + " " + t); };
+    r.onerror = () => {}; r.onend = () => { if (VC.hold === r) VC.hold = null; };
+    try { r.start(); } catch (e) { VC.hold = null; }
+  }
+  function vcHoldStop() { const r = VC.hold; VC.hold = null; if (r) { r._dead = 1; try { r.abort(); } catch (e) {} } }
   async function vcTurn(text) {
     if (!VC.on) return; const g = ++VC.gen; VC.nodN = 0; vcCap(text, ""); vcStopMic();
     const t = text.trim(), low = t.toLowerCase();
@@ -376,7 +401,7 @@
     const nW = (low.match(/\S+/g) || []).length;
     const cmd = (VC_CMD.find(([re, k]) => re.test(low) && (k === "end" ? nW <= 6 : nW <= 4)) || [])[1];
     if (cmd === "end") { vcSay([["¡Hasta luego!", true], ["Great talking with you.", false]], () => vcEnd()); return; }
-    if (cmd === "stop") { vcListen(); return; }
+    if (cmd === "stop") { VC.patient = Date.now() + 30000; vcListen(); return; }
     if (cmd === "repeat") { if (VC.lastPro) { vcSay(VC.lastPro, () => vcListen()); } else vcListen(); return; }
     if (cmd === "slower" || cmd === "faster") { const r0 = vcRate(), r1 = Math.max(0.7, Math.min(1.2, +(r0 + (cmd === "slower" ? -0.1 : 0.1)).toFixed(1))); TS.vc_rate = r1; tsave(); window.__vcRate = r1; vcPaintBar();
       vcSay(cmd === "slower" ? [["Vale, más despacio.", true], ["Okay, slower.", false]] : [["Vale, más rápido.", true], ["Okay, a bit faster.", false]], () => vcListen()); return; }
@@ -387,8 +412,12 @@
       if (/only (?:in )?spanish|solo (?:en )?espa/i.test(t)) { TS.vc_lang = "immersion"; tsave(); }
       if (/explain (?:my )?(?:mistakes|errors|things) in english|in english/i.test(t) && vcP("lang", "bilingual") === "immersion") { TS.vc_lang = "bilingual"; tsave(); }
     }
-    vcSet("thinking"); VC.tTurn = Date.now(); const h0 = location.hash;
+    vcSet("thinking"); VC.tTurn = Date.now(); const h0 = location.hash; vcHold(t, g);
+    if (window.__vcThinkDelay) await new Promise((r) => setTimeout(r, window.__vcThinkDelay)); // tests: a slow answer
+    if (!VC.on || g !== VC.gen) return;
     let n0 = 0; try { n0 = tCur ? tCur.msgs.length : 0; } catch (e) {}
+    // a continued turn replaces the half-sentence that was sent first (so the model sees the learner's words once, complete)
+    if (VC.contDrop && t.indexOf(VC.contDrop) === 0) { try { const k = tCur.msgs.map((m) => m.r === "u" && m.c === VC.contDrop).lastIndexOf(true); if (k >= 0) tCur.msgs.splice(k, 1); } catch (e) {} } VC.contDrop = null;
     try { await tSend(t, true); } catch (e) {}
     if (!VC.on || g !== VC.gen) return;
     let m = null; try { m = tCur && tCur.msgs.length > n0 ? [...tCur.msgs].reverse().find((x) => x.r === "a") : null; if (m && m.c && !m.err) VC.lastPro = vcPlain(m.c); } catch (e) {}
@@ -423,6 +452,7 @@
       : [["¡Hola" + nm + "! Soy Profe, tu tutor de español con inteligencia artificial.", true], ["¿De qué quieres hablar hoy?", true]];
     VC.lastPro = vcPlain(greet.map((x) => x[0]).join(" ")); vcCap("", VC.lastPro);
     const go = () => vcSay(greet, () => vcListen());
+    try { const vm = window.__pvVoiceMatch && window.__pvVoiceMatch(); if (vm && vm.m === "mismatch") setTimeout(() => vcToast("This phone has no " + (vm.want === "m" ? "man’s" : "woman’s") + " voice for " + pName() + " in your Spanish variety. Profe › Profe’s look: pick another look, or add voices in your phone’s settings."), 1500); } catch (e) {}
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK && typeof micAsk === "function") micAsk().then(() => go()); else go();
   }
   function vcMinimize() {
@@ -455,7 +485,7 @@
     try { if (typeof coachToast === "function" && secs > 5) coachToast("Call ended · " + Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0") + " · " + turns + " answers from " + pName() + (vcP("corr", "flow") === "end" ? " · say or type “review my call” for your feedback" : "")); } catch (e) {}
     try { if (typeof tRender === "function" && document.body.classList.contains("tutor-open")) tRender(); } catch (e) {}
   }
-  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
+  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, eot: vcEot, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
 
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest && ev.target.closest("[data-act^='vc-']"); if (!b) return; const a = b.dataset.act;

@@ -17,6 +17,7 @@ const INIT = () => {
   let active = null; window.__recStarts = 0; window.__micOpen = () => !!active;
   class Rec { constructor() { this.lang = ""; } start() { active = this; window.__recStarts++; setTimeout(() => { if (active === this) this.onstart && this.onstart({}); }, 100); } stop() { this.abort(); } abort() { if (active !== this) return; active = null; setTimeout(() => { this.onend && this.onend({}); }, 5); } }
   window.SpeechRecognition = Rec; window.webkitSpeechRecognition = Rec;
+  window.__sayI = (text) => { const r = active; if (!r) return false; const a = [{ transcript: text, confidence: 0.5 }]; a.isFinal = false; r.onresult && r.onresult({ results: [a], resultIndex: 0 }); return true; };
   window.__say = (text) => { const r = active; if (!r) return false; const a = [{ transcript: text, confidence: 0.9 }]; a.isFinal = true; r.onresult && r.onresult({ results: [a], resultIndex: 0 }); return true; };
   // the camera
   window.__camMode = "allow"; window.__camStopped = 0;
@@ -143,6 +144,26 @@ const INIT = () => {
     for (let i = 0; i < 40; i++) { peak = Math.max(peak, window.__vcMouthH()); shapes.add(document.querySelector("#vcall .vc-mouth").getAttribute("d")); const on = document.querySelector("#vc-pro span.on"); if (on) lit.add(on.dataset.w); await sleep(60); }
     window.__vc.end(); window.__noB = false; return { peak: +peak.toFixed(2), shapes: shapes.size, lit: lit.size }; });
   rec("Phone voices (bridge installed late, no word events): the mouth still talks and captions follow", an.peak > 3 && an.shapes >= 8 && an.lit >= 3, JSON.stringify(an));
+  // 17. turn-taking for learners: an unfinished sentence never ends the turn; provisional words are shown as provisional;
+  //     a learner who goes on talking while Profe prepares the answer gets the whole turn heard
+  const eo = await p.evaluate(() => ({ open: window.__vcEot("Ayer fui al cine pero", false), done: window.__vcEot("Ayer fui al cine con mis amigos.", true), um: window.__vcEot("I want to say, um", true) }));
+  rec("End of turn waits much longer when the sentence is unfinished («…pero», «um», provisional)", eo.open >= 3500 && eo.done <= 1500 && eo.um >= 3000, JSON.stringify(eo));
+  await p.evaluate(() => window.__vc.open()); await until(() => window.__vc.state() === "listening" && window.__micOpen(), 15000);
+  await p.evaluate(() => window.__sayI("Ayer fui al supermercado, but"));
+  const prov = await p.evaluate(() => !!document.querySelector("#vc-you .vc-prov"));
+  await p.waitForTimeout(2600); const still = await st();
+  await p.evaluate(() => window.__say("Ayer fui al supermercado, but I don't know how to say I ran into a friend"));
+  const whole = await until(() => /ran into a friend/.test(document.getElementById("vc-you").textContent) && /Ayer fui/.test(document.getElementById("vc-you").textContent), 3000);
+  rec("Mid-sentence pause + language switch: Profe keeps listening, then hears the whole sentence (provisional words marked)", prov && still === "listening" && whole, JSON.stringify({ prov, still, whole }));
+  await until(() => window.__vc.state() === "listening" && window.__micOpen(), 20000);
+  await p.evaluate(() => { window.__vcThinkDelay = 2500; window.__say("Me gusta"); });
+  await until(() => window.__vc.state() === "thinking", 6000); await p.waitForTimeout(300);
+  await p.evaluate(() => window.__say("mucho el café de Panamá"));
+  const cont = await until(() => window.__vc.st.conts >= 1 && /Me gusta mucho el café de Panamá/.test(document.getElementById("vc-you").textContent), 8000);
+  await p.evaluate(() => { window.__vcThinkDelay = 0; });
+  rec("Learner goes on talking while Profe prepares: that answer is dropped and the whole turn is used", cont, await p.evaluate(() => document.getElementById("vc-you").textContent));
+  const nt = await p.evaluate(() => window.__vc.note()); await p.evaluate(() => window.__vc.end());
+  rec("Profe's call brief: checks facts (not only grammar), asks when unsure what it heard, keeps the learner's languages, engages", /Barcelona/.test(nt) && /misheard/.test(nt) && /language they used/.test(nt) && /role-play/.test(nt), nt.slice(0, 120));
   rec("No page errors", !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();

@@ -80,4 +80,5 @@ body.vc-open .tabbar, body.vc-open .tutor-fab, body.vc-open #tabpeek { visibilit
 .vc-pro span.on { color: #1a1a1a; background: #ffc24a; box-shadow: 0 0 0 2px #ffc24a; transition: none }
 .vc-noyou .vc-you { display: none }
 @media (prefers-reduced-motion: reduce) { .vc-cap { scroll-behavior: auto } }
+.vc-prov { opacity: .6; font-style: italic }
 /* ==/VCALL-CSS== */
