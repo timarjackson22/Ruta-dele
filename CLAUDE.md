@@ -86,6 +86,9 @@ If no: say so in the commit message ("costs: no impact").
 - Tables never scroll sideways on phones: `tblTooWide()` turns a too-wide grammar table into one card per row (`.tbl-stack`, labels from `data-th`).
 - Full-app display audit (360-px phone, every route, every page of page view): /tmp/audit/px/run.js with check.js. It flags text under controls, clipped or off-screen text, and sideways scrolling.
 
+## Spanish variety and accent (Settings › Spanish variety) — v232
+- `S.region` (es / latam) decides grammar (vosotros or ustedes) and the Profe backgrounds; `S.accent` (`ACC`: es-ES, es-MX, es-PA, es-CO, es-419 = any LatAm) decides the voices (`vxRank`: the chosen country's voice first, then es-US/MX/419, then any LatAm), the mic language (`regLang()`: never hard-code es-ES/es-US), Profe's vocabulary (`accNote()` in the prompt) and the call's bunting. `setAccent()` keeps both in step; the top-bar `region` toggle swaps Spain ↔ the last LatAm accent (`S.accLat`). Settings says honestly when the phone has no voice for the chosen country (`accVoiceLine()`).
+
 ## Profe screen backgrounds
 - By Spanish variety (`S.region` → `html[data-region]`): latam = Casco Viejo (tools/profe-bg/latam.svg), es = Andalusian village (es.svg). Original SVGs, embedded by `python3 tools/patch_profebg.py index.html`. Keep the veil: text must stay readable in light and dark.
 

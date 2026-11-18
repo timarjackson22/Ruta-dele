@@ -112,8 +112,9 @@
       '<g filter="url(#vcBlur2)">' + [[60, 120, 16, "#ffd08a", 0.55], [120, 70, 10, "#ffb35c", 0.5], [360, 260, 20, "#ffd9a0", 0.4], [30, 470, 14, "#ffc070", 0.35], [380, 470, 12, "#ffe0b0", 0.4], [330, 360, 9, "#fff0d0", 0.5], [90, 330, 8, "#ffcc80", 0.45], [210, 120, 12, "#ffd9a0", 0.35], [370, 600, 16, "#ffb35c", 0.3]].map(([x, y, r, c, a]) => '<circle cx="' + x + '" cy="' + y + '" r="' + r + '" fill="' + c + '" opacity="' + a + '"/>').join("") + "</g>" +
       // bunting: Spain's colours, or Latin American papel picado
       '<g filter="url(#vcSoft)" opacity=".8" transform="translate(0 78)"><path d="M-10 36Q200 92 410 40" stroke="#3a2618" stroke-width="2" fill="none"/>' +
-      Array.from({ length: 9 }, (_, n) => { const x = 8 + n * 47, y = 36 + Math.sin((n + 0.5) / 9 * Math.PI) * 27; const c = es ? ["#c60b1e", "#ffc400"][n % 2] : ["#ff4d8d", "#2bb3e8", "#ffcf3a", "#38c172", "#ff8a3d", "#9b6bff"][n % 6];
-        return es ? '<path d="M' + x + " " + y + "h34l-17 34z" + '" fill="' + c + '"/>' : '<path d="M' + x + " " + (y - 2) + "h34v30l-5-5-6 5-6-5-6 5-6-5-5 5z" + '" fill="' + c + '" opacity=".92"/><circle cx="' + (x + 17) + '" cy="' + (y + 12) + '" r="5" fill="#2e1d12" opacity=".25"/>'; }).join("") + "</g>");
+      Array.from({ length: 9 }, (_, n) => { const x = 8 + n * 47, y = 36 + Math.sin((n + 0.5) / 9 * Math.PI) * 27; const ac = typeof S !== "undefined" ? S.accent : "", tri = es || ac === "es-PA" || ac === "es-CO";
+        const c = es ? ["#c60b1e", "#ffc400"][n % 2] : ac === "es-PA" ? ["#da121a", "#ffffff", "#072357"][n % 3] : ac === "es-CO" ? ["#fcd116", "#003893", "#ce1126"][n % 3] : ["#ff4d8d", "#2bb3e8", "#ffcf3a", "#38c172", "#ff8a3d", "#9b6bff"][n % 6];
+        return tri ? '<path d="M' + x + " " + y + "h34l-17 34z" + '" fill="' + c + '"/>' : '<path d="M' + x + " " + (y - 2) + "h34v30l-5-5-6 5-6-5-6 5-6-5-5 5z" + '" fill="' + c + '" opacity=".92"/><circle cx="' + (x + 17) + '" cy="' + (y + 12) + '" r="5" fill="#2e1d12" opacity=".25"/>'; }).join("") + "</g>");
     B.push('<rect x="-20" y="-20" width="440" height="900" fill="#140c06" opacity=".26"/>');
     // --- Profe
     const C = [];

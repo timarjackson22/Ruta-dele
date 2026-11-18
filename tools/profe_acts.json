@@ -1387,5 +1387,9 @@
  "vc-open": {
   "voice": "unsuitable",
   "why": "the video-call button in Profe's header"
+ },
+ "accent": {
+  "voice": "pending",
+  "why": "Settings › Spanish variety: Spain, Mexico, Panama, Colombia or any LatAm accent"
  }
 }
