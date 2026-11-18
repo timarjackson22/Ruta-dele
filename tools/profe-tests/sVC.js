@@ -11,8 +11,8 @@ const INIT = () => {
     speak(u) { q.push(u); ss.pending = true; if (!cur) next(); }, cancel() { const c = cur; q.length = 0; cur = null; ss.speaking = false; ss.pending = false; if (c) { clearTimeout(c._t); try { c.onerror && c.onerror({ error: "interrupted" }); } catch (e) {} } } };
   function next() { const u = q.shift(); if (!u) { ss.speaking = false; ss.pending = false; return; } cur = u; ss.speaking = true; ss.pending = q.length > 0; window.__spoken.push({ t: u.text, lang: u.lang, rate: u.rate, at: Date.now() });
     const words = [...u.text.matchAll(/[\p{L}\d'’]+/gu)]; let k = 0, scale = window.__ttsScale || 1;
-    setTimeout(() => { if (cur !== u) return; u.onstart && u.onstart({}); const step = () => { if (cur !== u) return; if (k >= words.length) { u._t = setTimeout(() => { if (cur !== u) return; cur = null; u.onend && u.onend({}); next(); }, 60 * scale); return; } const w = words[k++]; u.onboundary && u.onboundary({ name: "word", charIndex: w.index }); u._t = setTimeout(step, w[0].length * 70 * scale / (u.rate || 1)); }; step(); }, 40); }
-  Object.defineProperty(window, "speechSynthesis", { value: ss });
+    setTimeout(() => { if (cur !== u) return; u.onstart && u.onstart({}); const step = () => { if (cur !== u) return; if (k >= words.length) { u._t = setTimeout(() => { if (cur !== u) return; cur = null; u.onend && u.onend({}); next(); }, 60 * scale); return; } const w = words[k++]; u.onboundary && !window.__noB && u.onboundary({ name: "word", charIndex: w.index }); u._t = setTimeout(step, w[0].length * 70 * scale / (u.rate || 1)); }; step(); }, 40); }
+  Object.defineProperty(window, "speechSynthesis", { value: ss, configurable: true, writable: true }); window.__rawSS = { speak: ss.speak.bind(ss), cancel: ss.cancel.bind(ss), ss };
   // the phone's recogniser: the test says things with __say(); it opens 100 ms after start
   let active = null; window.__recStarts = 0; window.__micOpen = () => !!active;
   class Rec { constructor() { this.lang = ""; } start() { active = this; window.__recStarts++; setTimeout(() => { if (active === this) this.onstart && this.onstart({}); }, 100); } stop() { this.abort(); } abort() { if (active !== this) return; active = null; setTimeout(() => { this.onend && this.onend({}); }, 5); } }
@@ -42,7 +42,11 @@ const INIT = () => {
   rec("Profe greets (speaking state)", await until(() => window.__vc.state() === "speaking"));
   const lips = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const m = () => document.querySelector("#vcall .vc-mouth").getAttribute("d"); const seen = new Set(); for (let i = 0; i < 20; i++) { seen.add(m()); await sleep(50); } return seen.size; });
   rec("While Profe speaks, the mouth moves with the words (many shapes)", lips >= 8, String(lips));
+  const cap1 = await p.evaluate(() => ({ t: document.getElementById("vc-pro").textContent, on: !!document.querySelector("#vc-pro span.on") }));
+  rec("Captions follow the voice: the word being said is lit", cap1.on, JSON.stringify(cap1));
   rec("After the greeting, Profe listens by itself (hands-free)", await until(() => window.__vc.state() === "listening" && window.__micOpen(), 15000));
+  const cap2 = await p.evaluate(() => document.getElementById("vc-pro").textContent);
+  rec("Captions show the whole reply (every spoken part), not just the last part", /Soy Profe/.test(cap2) && /De qué quieres hablar hoy/.test(cap2), cap2);
   const closed = await p.evaluate(() => { return window.__vcMouthH ? window.__vcMouthH() : 99; });
   rec("When speech ends the mouth is closed", closed < 1.2, String(closed));
   // 3. a turn: the learner speaks, Profe thinks, answers, then listens again without a tap
@@ -71,7 +75,12 @@ const INIT = () => {
   await p.click('#vcall [data-act="vc-mute"]'); rec("Unmute: listening again", await until(() => window.__vc.state() === "listening" && window.__micOpen(), 3000));
   // 7. captions and settings → the prompt
   await p.click('#vcall [data-act="vc-cc"]'); rec("Captions can be hidden", await p.evaluate(() => document.getElementById("vc-cap").hidden)); await p.click('#vcall [data-act="vc-cc"]');
-  await p.click('#vcall [data-act="vc-set"]'); await p.click('#vcall [data-act="vc-opt"][data-k="corr"][data-v="now"]'); await p.click('#vcall [data-act="vc-opt"][data-k="lang"][data-v="immersion"]');
+  await p.click('#vcall [data-act="vc-set"]');
+  await p.click('#vcall [data-act="vc-opt"][data-k="txt"][data-v="pro"]'); const t1 = await p.evaluate(() => ({ cap: !document.getElementById("vc-cap").hidden, you: getComputedStyle(document.getElementById("vc-you")).display }));
+  await p.click('#vcall [data-act="vc-opt"][data-k="txt"][data-v="off"]'); const t2 = await p.evaluate(() => document.getElementById("vc-cap").hidden);
+  await p.click('#vcall [data-act="vc-opt"][data-k="txt"][data-v="all"]'); const t3 = await p.evaluate(() => !document.getElementById("vc-cap").hidden && !document.getElementById("vcall").classList.contains("vc-noyou"));
+  rec("Settings › Captions: Profe and me / Only Profe / Off", t1.cap && t1.you === "none" && t2 && t3, JSON.stringify({ t1, t2, t3 }));
+  await p.click('#vcall [data-act="vc-opt"][data-k="corr"][data-v="now"]'); await p.click('#vcall [data-act="vc-opt"][data-k="lang"][data-v="immersion"]');
   const note = await p.evaluate(() => window.__vc.note()); rec("Settings change Profe's behaviour (prompt: immersion + immediate coaching)", /Speak only Spanish/.test(note) && /corrected Spanish/.test(note), note.slice(0, 120));
   await p.click('#vcall .vc-sh-h [data-act="vc-set"]');
   await turn("Vamos a practicar pedir comida. Tú eres el camarero. Habla despacio y explica mis errores en inglés.", 20000);
@@ -118,6 +127,22 @@ const INIT = () => {
     window.__vc.open(); await sleep(8000); ss.speak = sp; window.__vc.end(); lags.sort((a, b) => a - b); return { n: lags.length, med: lags[Math.floor(lags.length / 2)], p95: lags[Math.floor(lags.length * 0.95)], close: Math.max(...closes) }; });
   rec("Lip sync measured: the mouth follows each spoken word (median < 100 ms) and closes when speech ends (< 150 ms)", ls.n >= 8 && ls.med < 100 && ls.close < 150, JSON.stringify(ls));
   console.log("   lip sync: " + JSON.stringify(ls));
+  // 15. expressions: praise → a big smile with smiling eyes; a question → brows up; Profe's voice brighter in a call
+  const ex = await p.evaluate(async () => { const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); window.__vc.open(); await sleep(5500);
+    const look = () => ({ ch: +document.querySelector("#vcall .vc-cheeks").getAttribute("opacity"), br: (document.querySelector("#vcall .vc-brows").getAttribute("transform") || "").match(/-?[\d.]+\)/) });
+    const u = new SpeechSynthesisUtterance("¡Muy bien! Eso es perfecto, has usado el pretérito muy bien."); u.lang = "es-US"; speechSynthesis.speak(u); await sleep(900); const joy = look(), pitch = u.pitch;
+    speechSynthesis.cancel(); await sleep(700); const u2 = new SpeechSynthesisUtterance("Y tú, ¿qué hiciste ayer por la tarde?"); u2.lang = "es-US"; speechSynthesis.speak(u2); await sleep(900);
+    const brAsk = parseFloat((document.querySelector("#vcall .vc-brows").getAttribute("transform") || "").replace(/^translate\(0 /, "")); speechSynthesis.cancel(); window.__vc.end(); return { joy: joy.ch, pitch, brAsk }; });
+  rec("Expressions: praise smiles with the eyes; a question lifts the brows; the voice is brighter", ex.joy > 0.5 && ex.pitch > 1.05 && ex.brAsk < -4, JSON.stringify(ex));
+  // 16. phones: the Android app puts in its own speechSynthesis after the page loads, and some voices send no word events.
+  //     The mouth must still move with the speech, and the captions still follow.
+  const an = await p.evaluate(async () => { const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); const R = window.__rawSS;
+    const fresh = { speak: (u) => R.speak(u), cancel: () => R.cancel(), getVoices: () => R.ss.getVoices(), get speaking() { return R.ss.speaking; }, get pending() { return R.ss.pending; } };
+    Object.defineProperty(window, "speechSynthesis", { value: fresh, configurable: true, writable: true }); window.__noB = true;
+    window.__vc.open(); await sleep(400); let peak = 0, shapes = new Set(), lit = new Set();
+    for (let i = 0; i < 40; i++) { peak = Math.max(peak, window.__vcMouthH()); shapes.add(document.querySelector("#vcall .vc-mouth").getAttribute("d")); const on = document.querySelector("#vc-pro span.on"); if (on) lit.add(on.dataset.w); await sleep(60); }
+    window.__vc.end(); window.__noB = false; return { peak: +peak.toFixed(2), shapes: shapes.size, lit: lit.size }; });
+  rec("Phone voices (bridge installed late, no word events): the mouth still talks and captions follow", an.peak > 3 && an.shapes >= 8 && an.lit >= 3, JSON.stringify(an));
   rec("No page errors", !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();

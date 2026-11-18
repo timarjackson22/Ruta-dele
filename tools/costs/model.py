@@ -8,11 +8,12 @@ U = G["usage"]
 def qty(stage_users, stage):
     mau = stage_users * U["mau_share"][stage]; d = U["days_per_month"]
     return {"mau": mau, "ai_turns": mau * d * U["ai_turns_per_day"], "stt_min": mau * d * U["stt_min_per_day"],
-            "tts_chars": mau * d * U["tts_chars_per_day"] * (1 - U["tts_cache_saving"]), "tr_chars": mau * d * U["tr_chars_per_day"], "pron_min": mau * d * U["pron_min_per_day"]}  # per month
+            "tts_chars": mau * d * U["tts_chars_per_day"] * (1 - U["tts_cache_saving"]), "tr_chars": mau * d * U["tr_chars_per_day"], "pron_min": mau * d * U["pron_min_per_day"], "call_min": mau * d * U.get("call_min_per_day", 0)}  # per month
 def year_cost(calc, q):
     t = calc["type"]
     if t == "quote": return None
     if t == "fixed": return calc["year"]
+    if t == "once": return calc["once"]  # one-off purchase, shown in the year it is bought
     if t == "llm":  # per month: input tokens (cached share at 0.1x) + output tokens
         tin = q["ai_turns"] * U["ai_in_tokens"]; eff = tin * (1 - U["ai_cached_share"]) + tin * U["ai_cached_share"] * 0.1
         return 12 * (eff * calc["in"] + q["ai_turns"] * U["ai_out_tokens"] * calc["out"]) / 1e6
@@ -41,7 +42,7 @@ for g in G["gaps"]:
         costs = {}
         for sid, _, users in G["stages"]:
             v = year_cost(tr["calc"], qty(users, sid)); costs[sid] = None if v is None else round(v, 2)
-        gg["tiers"].append({"t": tr["t"], "name": tr["name"], "unit": tr["unit"], "src": tr["src"], "impact": tr["impact"], "from": bool(tr["calc"].get("from")) or tr["calc"]["type"] == "picovoice", "quote": tr["calc"]["type"] == "quote", "year": costs})
+        gg["tiers"].append({"t": tr["t"], "name": tr["name"], "unit": tr["unit"], "src": tr["src"], "impact": tr["impact"], "from": bool(tr["calc"].get("from")) or tr["calc"]["type"] == "picovoice", "quote": tr["calc"]["type"] == "quote", "once": tr["calc"]["type"] == "once", "year": costs})
     out["gaps"].append(gg)
 for t in ("cheap", "modest", "best"):
     out["totals"][t] = {}

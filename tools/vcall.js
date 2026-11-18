@@ -20,35 +20,45 @@
   window.__vcNote = () => {
     if (!VC.on) return "";
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
-    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
+    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
       (VC.instr.length ? "\n- The learner asked, for this whole call: " + VC.instr.map((x) => "«" + x + "»").join("; ") + ". Keep doing all of it." : "");
   };
 
   /* ---------- watching speech: lip sync from the words actually spoken ---------- */
   const AV = { cur: null, speaking: false, q: 0, lastEnd: 0, m: { w: 5.2, h: 0.3 }, smile: 0 };
-  const VIS = { rest: [5.2, 0.3], mbp: [5, 0], a: [5.4, 5.2], e: [6, 3], i: [6.2, 2], o: [3.8, 4.6], u: [3, 3.4], f: [5.4, 1.2], l: [5.2, 2.4] };
+  const VIS = { rest: [5.2, 0.3], mbp: [5, 0], a: [5.4, 5.2], e: [6, 3], i: [6.2, 2], o: [3.8, 4.6], u: [3, 3.4], f: [5.4, 1.2], l: [5.2, 1.3] };
   function visOf(ch, nx, en) {
     ch = (ch || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     if (/[aá]/.test(ch)) return "a"; if (ch === "e") return "e"; if (ch === "i" || ch === "y") return "i"; if (ch === "o") return "o"; if (ch === "u" || ch === "w") return "u";
     if (/[mbp]/.test(ch)) return "mbp"; if (ch === "v") return en ? "f" : "mbp"; if (ch === "f") return "f";
     if (/[a-zñ]/.test(ch)) return "l"; return "rest";
   }
+  function avKeys(word, en) { // the word as mouth shapes with relative durations (vowels long, consonants short)
+    const ks = []; for (let i = 0; i < word.length; i++) { const v = visOf(word[i], word[i + 1], en), vow = /^(a|e|i|o|u)$/.test(v), wt = vow ? 1.7 : v === "mbp" ? 0.8 : 0.55;
+      if (ks.length && ks[ks.length - 1][0] === v) ks[ks.length - 1][1] += wt * 0.5; else ks.push([v, wt]); }
+    if (!ks.length) ks.push(["rest", 1]); ks.T = ks.reduce((a, k) => a + k[1], 0); return ks; }
   function avWords(text) { const out = []; const re = /[\p{L}\d'’]+/gu; let m; while ((m = re.exec(text))) out.push({ i: m.index, len: m[0].length }); return out; }
   function avBegin(u) {
     const en = /^en/i.test(u.lang || "");
-    AV.cur = { u, text: String(u.text || ""), rate: u.rate || 1, en, words: avWords(String(u.text || "")), wi: 0, wStart: performance.now(), hasB: false };
-    AV.speaking = true; AV.lastBegin = Date.now(); AV.smile = /^(¡?muy bien|¡?excelente|¡?perfecto|¡?genial|great|well done|nice|¡?eso es|¡?bien hecho)/i.test(AV.cur.text) ? 1 : 0;
+    AV.cur = { u, text: String(u.text || ""), rate: u.rate || 1, en, words: avWords(String(u.text || "")), wi: 0, wStart: performance.now() + 280, t0: performance.now(), hasB: false };
+    AV.speaking = true; AV.lastBegin = Date.now(); AV.smile = /^(¡?muy bien|¡?excelente|¡?perfecto|¡?genial|¡?fenomenal|¡?estupendo|¡?fant[aá]stico|¡?bravo|¡?s[ií]+,|great|well done|nice|perfect|excellent|awesome|¡?eso es|¡?bien hecho|¡?correcto)/i.test(AV.cur.text) ? 1 : 0;
+    AV.mood = AV.smile ? "joy" : /[!¡]/.test(AV.cur.text) ? "excited" : /[?¿]\s*$/.test(AV.cur.text) ? "ask" : "warm"; AV.moodT = performance.now();
+    AV.cur.capOff = capAdd(AV.cur.text);
     try { vcOnSpeak(u); } catch (e) {}
   }
-  function avWord(u, ci) { const c = AV.cur; if (!c || c.u !== u) return; c.hasB = true; let k = c.words.findIndex((w) => w.i >= ci); if (k < 0) k = c.words.length - 1; if (k > 0 && c.words[k].i > ci) k--; c.wi = Math.max(0, k); c.wStart = performance.now(); }
-  function avDone(u) { if (AV.cur && AV.cur.u === u) { AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
+  function avWord(u, ci) { const c = AV.cur; if (!c || c.u !== u) return; c.hasB = true; c.lastB = performance.now(); let k = c.words.findIndex((w) => w.i >= ci); if (k < 0) k = c.words.length - 1; if (k > 0 && c.words[k].i > ci) k--; c.wi = Math.max(0, k); c.wStart = performance.now(); avBeat(c); }
+  // a small nod on long (usually stressed) words, a bigger one on emphasis: speech looks alive, not just a moving mouth
+  function avBeat(c) { const w = c.words[c.wi]; if (!w) return; if (w.len >= 6 || (AV.mood !== "warm" && w.len >= 4)) AV.kick = performance.now(); capMark(c); }
+  function avDone(u) { if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
   function avStopAll() { AV.cur = null; AV.speaking = false; AV.q = 0; AV.lastEnd = Date.now(); AV.m.h = 0; }
-  (function hookSpeech() {
+  function hookSpeech() {
     const ss = window.speechSynthesis; if (!ss || ss.__vcHooked) return; ss.__vcHooked = true;
     const sp = ss.speak.bind(ss), ca = ss.cancel.bind(ss);
     try {
       ss.speak = function (u) {
         if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
+          // enthusiasm: a brighter voice in a call (higher on ¡exclamations!, a lift on questions)
+          try { const tx = String(u.text || ""), p0 = +u.pitch || 1; if (!u.__vcp) { u.__vcp = 1; u.pitch = Math.min(1.25, p0 * (/[!¡]/.test(tx) ? 1.12 : /[?¿]/.test(tx) ? 1.07 : 1.05)); } } catch (x) {}
           u.onstart = function (ev) { try { avBegin(u); } catch (x) {} if (o.s) return o.s.call(this, ev); };
           u.onboundary = function (ev) { try { if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
           u.onend = function (ev) { try { avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
@@ -57,7 +67,8 @@
       };
       ss.cancel = function () { if (VC.on) avStopAll(); return ca(); };
     } catch (e) {}
-  })();
+  }
+  hookSpeech();
 
   /* ---------- the scene (v229): Profe as a lit, Pixar-style character in a warm café (original art, drawn in code) ----------
      The character follows the learner's chosen Profe look (skin, hair style, beard, glasses, clothes). Everything that moves
@@ -133,6 +144,8 @@
       '<path class="vc-lid" data-x="' + x + '" data-y="' + y + '" d="" fill="' + skD + '"/></g>' +
       '<path class="vc-lash" data-x="' + x + '" data-y="' + y + '" d="" stroke="#22150e" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
       '<path d="M' + (x - 24) + " " + (y + 25) + "Q" + x + " " + (y + 32) + " " + (x + 24) + " " + (y + 25) + '" stroke="' + skDD + '" stroke-width="1.6" fill="none" opacity=".4"/>'));
+    // smiling eyes: skin crescents rise from below the eyes (opacity set by the mood)
+    C.push('<g class="vc-cheeks" opacity="0">' + VC_EYE.map(([x, y], n) => '<path clip-path="url(#vcEye' + n + ')" d="M' + (x - 34) + " " + (y + 30) + "Q" + x + " " + (y + 12) + " " + (x + 34) + " " + (y + 30) + "V" + (y + 40) + "H" + (x - 34) + 'Z" fill="' + skD + '"/><path d="M' + (x - 26) + " " + (y + 24) + "Q" + x + " " + (y + 12) + " " + (x + 26) + " " + (y + 24) + '" stroke="' + skDD + '" stroke-width="2" fill="none" opacity=".45" stroke-linecap="round"/>').join("") + "</g>");
     C.push('<g class="vc-brows">' + VC_EYE.map(([x, y], n) => '<path d="M' + (x - 28) + " " + (y - (n ? 52 : 46)) + "Q" + x + " " + (y - 64) + " " + (x + 28) + " " + (y - (n ? 46 : 52)) + '" stroke="' + hrD + '" stroke-width="7" fill="none" stroke-linecap="round"/>').join("") + "</g>");
     // nose
     C.push('<path d="M190 412C186 430 182 444 180 452" stroke="' + skDD + '" stroke-width="3" fill="none" opacity=".22" stroke-linecap="round" filter="url(#vcSoft)"/>' +
@@ -172,11 +185,19 @@
       let tgt = VIS.rest; const c = AV.cur;
       if (c && c.words.length) {
         const per = (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
-        if (!c.hasB) { while (w && el > w.len * per + 70 && c.wi < c.words.length - 1) { c.wStart += w.len * per + 70; c.wi++; w = c.words[c.wi]; el = now - c.wStart; } }
-        if (w) { const k = Math.floor(el / per); tgt = k < w.len ? VIS[visOf(c.text[w.i + k], c.text[w.i + k + 1], c.en)] : c.hasB ? [5, 0.6] : VIS.rest; }
+        // no word events from this voice (or they stopped): keep time from the text itself, so the mouth never freezes
+        const est = !c.hasB || now - (c.lastB || 0) > 1400;
+        if (est) { let moved = false; while (w && el > w.len * per + 70 && c.wi < c.words.length - 1) { c.wStart += w.len * per + 70; c.wi++; w = c.words[c.wi]; el = now - c.wStart; moved = true; } if (moved) avBeat(c); }
+        // syllables, not letters: the mouth opens on each vowel (held longer) and closes between them, like real speech
+        if (w && !c.hasB && now - c.t0 < 280) w = null; // some phones report "start" before the audio: wait for the first word
+        if (w) { const ks = w.keys || (w.keys = avKeys(c.text.substr(w.i, w.len), c.en)), dur = w.len * per;
+          if (el < dur) { let pos = (el / dur) * ks.T, j = 0; while (j < ks.length - 1 && pos > ks[j][1]) { pos -= ks[j][1]; j++; } tgt = VIS[ks[j][0]]; }
+          else tgt = c.hasB && !est ? [5, 0.6] : VIS.rest; }
       }
-      const m = AV.m, f = c ? 0.5 : 0.35; m.w += (tgt[0] - m.w) * f; m.h += (tgt[1] - m.h) * f; if (!c && m.h < 0.05) m.h = 0;
-      const smile = VC.st === "listening" ? 3.4 : AV.smile ? 5 : 2.4, W = m.w * 6.4, H = m.h * 5.6, y = 508;
+      const m = AV.m, f = c ? 0.42 : 0.35; m.w += (tgt[0] - m.w) * f; m.h += (tgt[1] - m.h) * f; if (!c && m.h < 0.05) m.h = 0;
+      const mood = c ? AV.mood : VC.st === "listening" ? "listen" : VC.st === "thinking" ? "think" : AV.after > now ? "joy" : "warm";
+      const smileT = { joy: 10, excited: 6.5, ask: 4.2, warm: 4.4, listen: 5, think: 2.2 }[mood] || 4; AV.sm = (AV.sm == null ? smileT : AV.sm + (smileT - AV.sm) * 0.08);
+      const smile = AV.sm, W = m.w * 6.4 + smile * 1.2, H = m.h * 5.6, y = 508;
       const up = y + 1.5 - smile - H * 0.22, dn = y + 2.5 + H;
       const lips = "M" + (200 - W).toFixed(1) + " " + (y - smile * 0.4).toFixed(1) + "Q200 " + up.toFixed(1) + " " + (200 + W).toFixed(1) + " " + (y - smile * 0.4).toFixed(1) + "Q200 " + dn.toFixed(1) + " " + (200 - W).toFixed(1) + " " + (y - smile * 0.4).toFixed(1) + "Z";
       const q = (sel) => svg.querySelector(sel);
@@ -196,9 +217,16 @@
       const gx = reduce ? 0 : think ? -6 : VC.st === "listening" ? 0 : VC_GAZE.tx, gy = reduce ? 0 : think ? -6 : VC.st === "listening" ? 0 : VC_GAZE.ty;
       VC_GAZE.x += (gx - VC_GAZE.x) * 0.15; VC_GAZE.y += (gy - VC_GAZE.y) * 0.15;
       svg.querySelectorAll(".vc-iris").forEach((g) => g.setAttribute("transform", "translate(" + VC_GAZE.x.toFixed(2) + " " + VC_GAZE.y.toFixed(2) + ")"));
-      const br = q(".vc-brows"); if (br) br.setAttribute("transform", "translate(0 " + (VC.st === "listening" ? -4 : think ? -3 : AV.smile ? -2 : 0) + ")");
+      // brows: up when asking or excited, a lift on each beat, raised and soft while listening
+      const kick = AV.kick ? Math.max(0, 1 - (now - AV.kick) / 380) : 0;
+      const bT = ({ joy: -6, excited: -7, ask: -8, warm: -2, listen: -5, think: -3 }[mood] || 0) - kick * 4; AV.bw = (AV.bw == null ? bT : AV.bw + (bT - AV.bw) * 0.12);
+      const br = q(".vc-brows"); if (br) br.setAttribute("transform", "translate(0 " + AV.bw.toFixed(2) + ")");
+      // smiling eyes: cheeks lift the lower lids when Profe is happy
+      const ch = q(".vc-cheeks"); if (ch) ch.setAttribute("opacity", Math.max(0, Math.min(1, (smile - 4.6) / 3)).toFixed(2));
       // head and body: restrained, a little more while speaking; a slight tilt while listening; breathing
-      if (!reduce) { const s = now / 1000, amp = c ? 1 : 0.5; const rot = Math.sin(s * 0.8) * 1.1 * amp + (VC.st === "listening" ? 2 : 0) + (c ? Math.sin(s * 2.1) * 0.5 : 0), ty = Math.sin(s * 1.2) * 1.4 * amp;
+      if (!reduce) { const s = now / 1000, amp = c ? 1.3 : 0.6; const nodL = AV.nodL ? Math.max(0, 1 - (now - AV.nodL) / 700) : 0;
+        const rot = Math.sin(s * 0.8) * 1.4 * amp + (VC.st === "listening" ? 2.5 : mood === "ask" ? -2.5 : 0) + (c ? Math.sin(s * 2.1) * 0.7 : 0),
+          ty = Math.sin(s * 1.2) * 1.4 * amp + kick * 5 + Math.sin(nodL * Math.PI) * 7 + (mood === "joy" && c ? Math.abs(Math.sin(s * 5)) * -2 : 0);
         const hd = q(".vc-head"); if (hd) hd.setAttribute("transform", "translate(0 " + ty.toFixed(2) + ") rotate(" + rot.toFixed(2) + " 200 640)");
         const bd = q(".vc-body"); if (bd) bd.setAttribute("transform", "translate(0 " + (Math.sin(s * 1.6) * 1.2).toFixed(2) + ")"); }
       VC_RAF = requestAnimationFrame(step);
@@ -230,7 +258,7 @@
         '<button class="vc-ibtn" data-act="vc-set" aria-label="Call settings">' + vcI("gear") + "</button></div>" +
       '<video class="vc-self" id="vc-self" playsinline muted autoplay hidden aria-label="Your camera (only on your screen)"></video>' +
       '<div class="vc-bottom"><span class="vc-hint" id="vc-hint"></span>' +
-        '<div class="vc-cap" id="vc-cap" aria-live="polite"' + (VC.cc ? "" : " hidden") + '><p class="vc-you" id="vc-you"></p><p class="vc-pro" id="vc-pro"></p></div>' +
+        '<div class="vc-cap" id="vc-cap" aria-live="off"' + (VC.cc ? "" : " hidden") + '><p class="vc-you" id="vc-you"></p><p class="vc-pro" id="vc-pro"></p></div>' +
         '<div class="vc-bar" role="toolbar" aria-label="Call controls">' +
           '<button class="vc-b" data-act="vc-mute" aria-pressed="' + VC.muted + '" aria-label="' + (VC.muted ? "Unmute microphone" : "Mute microphone") + '">' + vcI(VC.muted ? "micoff" : "mic") + "</button>" +
           '<button class="vc-b" data-act="vc-cc" aria-pressed="' + VC.cc + '" aria-label="Captions ' + (VC.cc ? "on" : "off") + '">' + vcI("cc") + "</button>" +
@@ -243,6 +271,7 @@
     const opt = (k, map, d) => '<div class="vc-opts" role="group">' + Object.entries(map).map(([v, [n]]) => '<button class="vc-o" data-act="vc-opt" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + (vcP(k, d) === v) + '">' + n + "</button>").join("") + "</div>";
     const ms = VC.metrics.slice(-20).map((x) => x.lat).filter((x) => x > 0).sort((a, b) => a - b), med = ms.length ? ms[Math.floor(ms.length / 2)] : null;
     return '<div class="vc-sh-in"><span class="vc-grab" aria-hidden="true"></span><div class="vc-sh-h"><b>Call settings</b><button class="vc-ibtn" data-act="vc-set" aria-label="Close settings">✕</button></div>' +
+      '<p class="vc-l">Captions</p>' + opt("txt", { all: ["Profe and me"], pro: ["Only Profe"], off: ["Off"] }, vcTxt()) +
       "<p class=\"vc-l\">Language</p>" + opt("lang", VC_LANG, "bilingual") +
       "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "flow") +
       '<p class="vc-l">Interrupt Profe by speaking</p><div class="vc-opts"><button class="vc-o" data-act="vc-opt" data-k="barge" data-v="' + (vcP("barge", "off") === "on" ? "off" : "on") + '" aria-pressed="' + (vcP("barge", "off") === "on") + '">' + (vcP("barge", "off") === "on" ? "On · best with headphones" : "Off · tap Profe to interrupt") + "</button></div>" +
@@ -255,9 +284,28 @@
     const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "" : st === "paused" ? "Tap to talk" : "";
   }
   const vcPlain = (t) => String(t || "").replace(/\*\*|__|`|#+\s/g, "").replace(/\[[^\]]*\]\([^)]*\)/g, "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
-  function vcCap(you, pro) { if (you != null) { const y = document.getElementById("vc-you"); if (y) y.textContent = you ? "You: " + you : ""; } if (pro != null) { const p = document.getElementById("vc-pro"); if (p) p.textContent = pro; } }
+  const CAP = { gen: -1, text: "", n: 0 };
+  function capAdd(t) { // a new spoken part: add it to this turn's caption, return the index of its first word
+    t = vcPlain(t); if (!t) return CAP.n;
+    if (CAP.gen !== VC.gen) { CAP.gen = VC.gen; CAP.text = ""; CAP.n = 0; }
+    const at = CAP.n; if (CAP.text.endsWith(t)) return Math.max(0, CAP.n - avWords(t).length); // the same part again ("repeat")
+    CAP.text = CAP.text ? CAP.text + " " + t : t; CAP.n = avWords(CAP.text).length; capPaint(); return at;
+  }
+  function capPaint() {
+    const p = document.getElementById("vc-pro"); if (!p) return; let h = "", last = 0, k = 0; const re = /[\p{L}\d'’]+/gu; let m;
+    while ((m = re.exec(CAP.text))) { h += esc(CAP.text.slice(last, m.index)) + '<span data-w="' + k++ + '">' + esc(m[0]) + "</span>"; last = m.index + m[0].length; }
+    p.innerHTML = h + esc(CAP.text.slice(last)); capMark(AV.cur);
+  }
+  function capMark(c) {
+    const p = document.getElementById("vc-pro"); if (!p || !c || c.capOff == null) return; const k = c.capOff + c.wi;
+    const on = p.querySelector("span.on"); if (on && +on.dataset.w === k) return; if (on) on.classList.remove("on");
+    p.querySelectorAll("span:not(.said)").forEach((x) => { if (+x.dataset.w < k) x.classList.add("said"); });
+    const sp = p.querySelector('span[data-w="' + k + '"]'); if (!sp) return; sp.classList.add("on");
+    const box = document.getElementById("vc-cap"); if (box && !box.__user) { const y = sp.offsetTop - box.clientHeight * 0.35; box.scrollTop = Math.max(0, y); }
+  }
+  function vcCap(you, pro) { if (you != null) { const y = document.getElementById("vc-you"); if (y) y.textContent = you ? "You: " + you : ""; } if (pro != null) { CAP.gen = VC.gen; CAP.text = vcPlain(pro); CAP.n = avWords(CAP.text).length; capPaint(); } }
   function vcOnSpeak(u) {
-    if (!VC.on) return; vcSet("speaking"); vcCap(null, vcPlain(u.text));
+    if (!VC.on) return; vcSet("speaking");
     if (VC.tTurn) { VC.metrics.push({ lat: Date.now() - VC.tTurn, t: Date.now() }); if (VC.metrics.length > 60) VC.metrics.shift(); VC.tTurn = 0; }
     if (vcP("barge", "off") === "on" && !VC.muted) vcBargeOn();
   }
@@ -282,6 +330,7 @@
     r.onstart = () => { if (r._vcDead) return; VC.fails = 0; vcSet("listening"); clearTimeout(VC.sT); VC.sT = setTimeout(() => finish(live), 20000); };
     r.onresult = (e) => { if (r._vcDead) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
       fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCap(live, null);
+      { const nw = (live.match(/\S+/g) || []).length; if (nw - (VC.nodN || 0) >= 4) { VC.nodN = nw; AV.nodL = performance.now(); } }
       clearTimeout(VC.sT); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(live, !im.trim())); };
     r.onerror = (e) => { if (r._vcDead) return; r._err = e && e.error; };
     r.onend = () => { if (r._vcDead || done) return; const er = r._err;
@@ -320,7 +369,7 @@
     [/\b(?:speak|talk|go)\s+faster\b|^faster\b|m[aá]s r[aá]pido/i, "faster"],
   ];
   async function vcTurn(text) {
-    if (!VC.on) return; const g = ++VC.gen; vcCap(text, ""); vcStopMic();
+    if (!VC.on) return; const g = ++VC.gen; VC.nodN = 0; vcCap(text, ""); vcStopMic();
     const t = text.trim(), low = t.toLowerCase();
     // a command is a short utterance; inside a longer sentence ("…habla despacio y explica mis errores") it's an instruction
     const nW = (low.match(/\S+/g) || []).length;
@@ -362,9 +411,10 @@
     try { if (typeof HF !== "undefined" && HF.eng === "on") { VC.wasWake = true; hfWakeStop(); } } catch (e) {}
     try { speechSynthesis.cancel(); } catch (e) {}
     Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
-    window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
+    hookSpeech(); window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
     let root = document.getElementById("vcall"); if (!root) { root = document.createElement("div"); root.id = "vcall"; root.className = "vc"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Video call with " + pName()); document.body.appendChild(root); }
-    root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); vcSet("connecting"); vcTimer(); vcAnimate();
+    root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
+    { const cb = root.querySelector("#vc-cap"); if (cb) { const hold = () => { cb.__user = true; clearTimeout(cb.__ut); cb.__ut = setTimeout(() => { cb.__user = false; }, 6000); }; cb.addEventListener("touchmove", hold, { passive: true }); cb.addEventListener("wheel", hold, { passive: true }); } }
     const pill = document.getElementById("vc-pill"); if (pill) pill.remove();
     if (!TS.vc_intro) { TS.vc_intro = 1; tsave(); }
     const nm = TS.lname ? ", " + TS.lname : "", lv = (() => { try { return String(learnerLevel(pageCtx())).toUpperCase(); } catch (e) { return ""; } })();
@@ -390,8 +440,9 @@
   }
   function vcRepaint() { // the bar only, so the face and captions keep their state
     const root = document.getElementById("vcall"); if (!root) return; const tmp = document.createElement("div"); tmp.innerHTML = vcxHTML(); const nb = tmp.querySelector(".vc-bar"), ob = root.querySelector(".vc-bar"); if (nb && ob) ob.replaceWith(nb);
-    const cap = root.querySelector("#vc-cap"); if (cap) cap.hidden = !VC.cc;
+    const cap = root.querySelector("#vc-cap"); if (cap) cap.hidden = !VC.cc; root.classList.toggle("vc-noyou", vcTxt() === "pro");
   }
+  const vcTxt = () => (!VC.cc ? "off" : TS.vc_you === false ? "pro" : "all");
   function vcToast(t) { const root = document.getElementById("vcall"); if (!root) return; let e = root.querySelector(".vc-toast"); if (!e) { e = document.createElement("p"); e.className = "vc-toast"; e.setAttribute("role", "status"); root.appendChild(e); } e.textContent = t; clearTimeout(VC.tt); VC.tt = setTimeout(() => e.remove(), 4500); }
   function vcEnd() {
     if (!VC.on) return; const secs = Math.round((Date.now() - VC.t0) / 1000), turns = VC.metrics.length;
@@ -413,13 +464,14 @@
     if (a === "vc-end") { vcEnd(); return; }
     if (a === "vc-tap") { if (VC.st === "speaking" || AV.speaking) vcInterrupt(); else if (VC.blocked) { VC.blocked = false; vcListen(); } else if (/paused|disconnected|reconnecting|muted/.test(VC.st)) { if (VC.muted) { VC.muted = false; vcRepaint(); } VC.empties = 0; VC.fails = 0; vcListen(); } return; }
     if (a === "vc-mute") { VC.muted = !VC.muted; vcRepaint(); if (VC.muted) { vcStopMic(); vcSet("muted", "You’re muted. Tap the mic to talk."); } else if (!AV.speaking) vcListen(); return; }
-    if (a === "vc-cc") { VC.cc = !VC.cc; TS.vc_cc = VC.cc; tsave(); vcRepaint(); return; }
+    if (a === "vc-cc") { VC.cc = !VC.cc; TS.vc_cc = VC.cc; tsave(); vcRepaint(); vcToast(VC.cc ? "Captions on" : "Captions off"); return; }
     if (a === "vc-rate") { const R = [0.8, 0.9, 1, 1.1], k = R.indexOf(vcRate()); TS.vc_rate = R[(k + 1) % R.length]; tsave(); window.__vcRate = TS.vc_rate; vcPaintBar(); return; }
     if (a === "vc-cam") { vcCam(); return; }
     if (a === "vc-set") { const s = document.getElementById("vc-sheet"); if (!s) return; s.hidden = !s.hidden; if (!s.hidden) s.innerHTML = vcSheet(); const r = document.getElementById("vcall"); if (r) r.classList.toggle("vc-sheet-on", !s.hidden);
       if (!s.hidden && !s.__sw) { s.__sw = 1; let y0 = null; s.addEventListener("touchstart", (e) => { y0 = (s.querySelector(".vc-sh-in") || s).scrollTop > 0 ? null : e.touches[0].clientY; }, { passive: true });
         s.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 70) { s.hidden = true; if (r) r.classList.remove("vc-sheet-on"); } y0 = null; }, { passive: true }); }
       return; }
+    if (a === "vc-opt" && b.dataset.k === "txt") { const v = b.dataset.v; VC.cc = v !== "off"; TS.vc_cc = VC.cc; if (v !== "off") TS.vc_you = v === "all"; tsave(); vcRepaint(); const s = document.getElementById("vc-sheet"); if (s) s.innerHTML = vcSheet(); vcToast(v === "off" ? "Captions off" : v === "pro" ? "Captions: only Profe" : "Captions: Profe and you"); return; }
     if (a === "vc-opt") { TS["vc_" + b.dataset.k] = b.dataset.v; tsave(); const s = document.getElementById("vc-sheet"); if (s) s.innerHTML = vcSheet(); return; }
   });
   // the self-view can be dragged out of the way

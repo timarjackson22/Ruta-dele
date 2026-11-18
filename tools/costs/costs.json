@@ -50,7 +50,9 @@
   "video_minutes_library": 1200,
   "video_minutes_new_per_month": 200,
   "app_download_mb_per_update": 1.9,
-  "app_download_note": "The app is one page (about 1.9 MB compressed). Since v210 it is downloaded once per release, not on every launch (service worker answers from cache; version.json triggers the update)."
+  "app_download_note": "The app is one page (about 1.9 MB compressed). Since v210 it is downloaded once per release, not on every launch (service worker answers from cache; version.json triggers the update).",
+  "call_min_per_day": 3,
+  "call_min_note": "Video-call minutes per active learner per active day (calls are optional; most practice is taps and short turns)."
  },
  "metrics": [
   [
@@ -97,6 +99,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 6.17,
       "soft": 146.88,
@@ -119,6 +122,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 123.38,
       "soft": 2937.6,
@@ -141,6 +145,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 246.76,
       "soft": 5875.2,
@@ -172,6 +177,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 105.24,
       "soft": 2505.6,
@@ -194,6 +200,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 290.3,
       "soft": 6912.0,
@@ -216,6 +223,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 242.4,
       "soft": 7140.14,
@@ -247,6 +255,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 66.53,
       "soft": 1584.0,
@@ -269,6 +278,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 131.04,
       "soft": 3120.05,
@@ -291,6 +301,7 @@
      },
      "from": false,
      "quote": true,
+     "once": false,
      "year": {
       "test": null,
       "soft": null,
@@ -322,6 +333,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0.0,
       "soft": 384.0,
@@ -344,6 +356,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0.72,
       "soft": 2070.0,
@@ -366,6 +379,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 604.8,
       "soft": 14400.0,
@@ -397,6 +411,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0.0,
       "soft": 480.0,
@@ -419,6 +434,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0.0,
       "soft": 1320.0,
@@ -441,6 +457,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 141.48,
       "soft": 1865.88,
@@ -472,6 +489,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0,
       "soft": 0,
@@ -494,6 +512,7 @@
      },
      "from": true,
      "quote": false,
+     "once": false,
      "year": {
       "test": 6000,
       "soft": 30000,
@@ -516,6 +535,7 @@
      },
      "from": true,
      "quote": false,
+     "once": false,
      "year": {
       "test": 30000,
       "soft": 30000,
@@ -547,6 +567,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 16.2,
       "soft": 16.2,
@@ -569,6 +590,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 18.72,
       "soft": 18.72,
@@ -591,6 +613,7 @@
      },
      "from": false,
      "quote": true,
+     "once": false,
      "year": {
       "test": null,
       "soft": null,
@@ -622,6 +645,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0,
       "soft": 0,
@@ -644,6 +668,7 @@
      },
      "from": false,
      "quote": true,
+     "once": false,
      "year": {
       "test": null,
       "soft": null,
@@ -666,6 +691,7 @@
      },
      "from": false,
      "quote": true,
+     "once": false,
      "year": {
       "test": null,
       "soft": null,
@@ -697,6 +723,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0.15,
       "soft": 3.46,
@@ -719,6 +746,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 300.0,
       "soft": 300.0,
@@ -741,6 +769,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 7188.0,
       "soft": 7188.0,
@@ -772,6 +801,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 0,
       "soft": 0,
@@ -794,6 +824,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 312,
       "soft": 312,
@@ -816,6 +847,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 960,
       "soft": 960,
@@ -847,6 +879,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 85.0,
       "soft": 85.0,
@@ -869,6 +902,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 325.0,
       "soft": 325.0,
@@ -891,6 +925,7 @@
      },
      "from": false,
      "quote": false,
+     "once": false,
      "year": {
       "test": 2485.0,
       "soft": 2485.0,
@@ -900,88 +935,166 @@
      }
     }
    ]
+  },
+  {
+   "id": "avatar",
+   "name": "Profe's video-call face",
+   "today": "An original animated character drawn on the phone in code (6 looks): lip sync from the phone's voice, blinking, gaze, smiles and nods. Free, offline, nothing sent anywhere.",
+   "gap": "It looks like a stylised drawing, not a lifelike 3D or photoreal tutor like Praktika's; lip sync is only as exact as the word timing the phone's voice reports.",
+   "driver": "per video-call minute (streamed avatars) or one-off (characters drawn on the phone)",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Licensed 3D characters drawn on the phone (three.js + TalkingHead, MIT)",
+     "unit": "≈$600 one-off: 6 rigged characters with ARKit face shapes at ~$50–150 each + fitting (estimate); +5–10 MB download; still free per minute",
+     "src": "https://superhivemarket.com/products/business-casual-woman-rigged-3d-character",
+     "impact": {
+      "teach": 1,
+      "voice": 6,
+      "rel": 7,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "once": true,
+     "year": {
+      "test": 600,
+      "soft": 600,
+      "launch": 600,
+      "growth": 600,
+      "mature": 600
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Simli streamed face (we keep our own voice and AI)",
+     "unit": "$0.05 / call minute, pay as you go",
+     "src": "https://www.heygen.com/blog/best-real-time-ai-avatar-platforms",
+     "impact": {
+      "teach": 2,
+      "voice": 8,
+      "rel": 6,
+      "scale": 5,
+      "legal": 4
+     },
+     "from": false,
+     "quote": false,
+     "once": false,
+     "year": {
+      "test": 453.6,
+      "soft": 10800.0,
+      "launch": 97200.0,
+      "growth": 432000.0,
+      "mature": 864000.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "HeyGen LiveAvatar photoreal 1080p (or Tavus, $0.37/min with its own AI)",
+     "unit": "≈$0.10 / call minute (Essential plan, LITE mode)",
+     "src": "https://www.sitepal.com/blog/?p=577",
+     "impact": {
+      "teach": 3,
+      "voice": 9,
+      "rel": 6,
+      "scale": 4,
+      "legal": 4
+     },
+     "from": false,
+     "quote": false,
+     "once": false,
+     "year": {
+      "test": 907.2,
+      "soft": 21600.0,
+      "launch": 194400.0,
+      "growth": 864000.0,
+      "mature": 1728000.0
+     }
+    }
+   ]
   }
  ],
  "totals": {
   "cheap": {
    "test": {
-    "sum": 279.29,
+    "sum": 879.29,
     "quotes": 0,
-    "per_mau": 13.3
+    "per_mau": 41.87
    },
    "soft": {
-    "sum": 5205.14,
+    "sum": 5805.14,
     "quotes": 0,
-    "per_mau": 10.41
+    "per_mau": 11.61
    },
    "launch": {
-    "sum": 49492.62,
+    "sum": 50092.62,
     "quotes": 0,
-    "per_mau": 11.0
+    "per_mau": 11.13
    },
    "growth": {
-    "sum": 221106.64,
+    "sum": 221706.64,
     "quotes": 0,
-    "per_mau": 11.06
+    "per_mau": 11.09
    },
    "mature": {
-    "sum": 442544.08,
+    "sum": 443144.08,
     "quotes": 0,
-    "per_mau": 11.06
+    "per_mau": 11.08
    }
   },
   "modest": {
    "test": {
-    "sum": 7501.16,
+    "sum": 7954.76,
     "quotes": 1,
-    "per_mau": 357.2
+    "per_mau": 378.8
    },
    "soft": {
-    "sum": 47315.37,
+    "sum": 58115.37,
     "quotes": 1,
-    "per_mau": 94.63
+    "per_mau": 116.23
    },
    "launch": {
-    "sum": 179872.55,
+    "sum": 277072.55,
     "quotes": 1,
-    "per_mau": 39.97
+    "per_mau": 61.57
    },
    "growth": {
-    "sum": 615291.64,
+    "sum": 1047291.64,
     "quotes": 1,
-    "per_mau": 30.76
+    "per_mau": 52.36
    },
    "mature": {
-    "sum": 1097597.56,
+    "sum": 1961597.56,
     "quotes": 1,
-    "per_mau": 27.44
+    "per_mau": 49.04
    }
   },
   "best": {
    "test": {
-    "sum": 41868.44,
+    "sum": 42775.64,
     "quotes": 3,
-    "per_mau": 1993.74
+    "per_mau": 2036.94
    },
    "soft": {
-    "sum": 69914.22,
+    "sum": 91514.22,
     "quotes": 3,
-    "per_mau": 139.83
+    "per_mau": 183.03
    },
    "launch": {
-    "sum": 304116.97,
+    "sum": 498516.97,
     "quotes": 3,
-    "per_mau": 67.58
+    "per_mau": 110.78
    },
    "growth": {
-    "sum": 1211652.64,
+    "sum": 2075652.64,
     "quotes": 3,
-    "per_mau": 60.58
+    "per_mau": 103.78
    },
    "mature": {
-    "sum": 2382666.4,
+    "sum": 4110666.4,
     "quotes": 3,
-    "per_mau": 59.57
+    "per_mau": 102.77
    }
   }
  }
