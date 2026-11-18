@@ -23,6 +23,7 @@ const LISTS = {
       const ok1 = name === "androidOnlySpain" && latam ? true : latam ? !/^es-ES$/i.test(v1) : /^es-ES$/i.test(v1);
       const okT = latam ? !/es-ES/i.test(a.tts) : a.tts === "es-ES";
       rec(name + " · " + acc + ": Profe's voice and fallback language are " + (latam ? "Latin American" : "from Spain"), ok1 && okT && (!v2 || name === "androidOnlySpain" || latam === !/^es-ES$/i.test(v2) || list.filter((x) => /^es/.test(x[1]) && (latam ? x[1] !== "es-ES" : x[1] === "es-ES")).length < 2), JSON.stringify(a));
+      rec(name + " · " + acc + ": the mic asks the phone for a Spanish it really has (" + (latam ? "es-US" : "es-ES") + ")", a.lang === (latam ? "es-US" : "es-ES"), a.lang);
       if (name === "chrome" && (acc === "es-MX" || acc === "es-PA")) rec(name + " · " + acc + ": the country's own voice is used when the phone has one", new RegExp(acc).test(a.voice || ""), a.voice);
     }
     // a Spain voice picked in the past does not override Latin America
