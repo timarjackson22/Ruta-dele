@@ -99,6 +99,17 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
             } catch (Exception ignored) { }
         }
         int r = tts.setLanguage(Locale.forLanguageTag(want));
+        // v233: a Latin American country the engine has no voice for (es-PA, es-CO…) must not fall back to Spain's voice
+        if ("es".equals(wl) && !want.toUpperCase(Locale.ROOT).endsWith("-ES")) {
+            boolean spain = false; try { Voice cv = tts.getVoice(); spain = cv != null && "ES".equalsIgnoreCase(cv.getLocale().getCountry()); } catch (Exception ignored) { }
+            if (r == TextToSpeech.LANG_AVAILABLE || r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED || spain) {
+                for (String alt : new String[]{"es-US", "es-MX", "es-419"}) {
+                    int r2 = tts.setLanguage(Locale.forLanguageTag(alt));
+                    boolean sp2 = false; try { Voice cv = tts.getVoice(); sp2 = cv != null && "ES".equalsIgnoreCase(cv.getLocale().getCountry()); } catch (Exception ignored) { }
+                    if (r2 >= TextToSpeech.LANG_COUNTRY_AVAILABLE && !sp2) { r = r2; break; }
+                }
+            }
+        }
         if (r == TextToSpeech.LANG_MISSING_DATA || r == TextToSpeech.LANG_NOT_SUPPORTED) return false;
         try { Voice v = tts.getVoice(); if (v != null && !v.getLocale().getLanguage().toLowerCase(Locale.ROOT).startsWith(wl)) return false; } catch (Exception ignored) { }
         return true;
