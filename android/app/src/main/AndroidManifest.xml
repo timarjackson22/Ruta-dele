@@ -21,7 +21,8 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="false"
         android:supportsRtl="true"
-        android:largeHeap="true">
+        android:largeHeap="true"
+        android:allowBackup="true">
         <uses-native-library android:name="libOpenCL.so" android:required="false"/>
         <uses-native-library android:name="libvndksupport.so" android:required="false"/>
         <activity

@@ -82,6 +82,10 @@ If no: say so in the commit message ("costs: no impact").
 ## Reading hub (#leer) — v225
 - Same shape as Listening: level (`RF`), then kinds of text (`RK`, `RD_K`/`rdKind()` from the text's first line: Messages, Notices & ads, Articles, Opinion & essays, Literature, My texts), then the list. Each kind has its own icon colour (`t-r<kind>`). «Add your own text» is a row at the end (and under My texts). `node tools/profe-tests/sRD.js` must pass.
 
+## Backup (Settings › Backup, Home) — v236
+- Android app: `bkAuto()` keeps ONE file, Downloads/ruta-dele-autobackup.json, up to date (native `AppBridge.saveAuto` overwrites this install's copy; older apps get a dated file weekly). At most every 6 h, only when the data changed (`UI.abHash`), never with no progress (`bkHasProgress()`), on start (+8 s) and when the app goes to the background. Toggle `UI.autoBk` (`bk-auto`). A fresh start shows the one-time Home card `bkWelcome()` (restore from file / «I’m new» → `UI.restoreAsked`). Restoring resets `abHash`. `android:allowBackup="true"` (Android's own backup may also restore it). `node tools/profe-tests/sBK.js` must pass.
+- Account sync of progress is NOT built: it needs an accounts service (gap `acct` in gaps.json).
+
 ## Display rules (v212)
 - Nothing may cross the floating bottom controls: `#px-dock` (script PXDOCK) frosts the band under the tab bar, Profe, players, pager and video bar. Add any new floating bottom control to its `SEL`.
 - Tables never scroll sideways on phones: `tblTooWide()` turns a too-wide grammar table into one card per row (`.tbl-stack`, labels from `data-th`).

@@ -1391,5 +1391,13 @@
  "accent": {
   "voice": "pending",
   "why": "Settings › Spanish variety: Spain, Mexico, Panama, Colombia or any LatAm accent"
+ },
+ "bk-nothanks": {
+  "voice": "unsuitable",
+  "why": "one-time Home card after a fresh install: dismiss the restore offer"
+ },
+ "bk-auto": {
+  "voice": "unsuitable",
+  "why": "Settings › Backup: automatic backup on/off (a privacy setting, by tap)"
  }
 }

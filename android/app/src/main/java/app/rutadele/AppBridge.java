@@ -52,6 +52,26 @@ public class AppBridge {
         }
     }
 
+    /** v236: the automatic backup. Keeps ONE file in Downloads up to date (overwrites the copy this install made),
+     *  so a learner who deletes the app can restore everything from it. Returns where it went, or "ERR:…". */
+    @JavascriptInterface
+    public String saveAuto(String name, String text) {
+        if (Build.VERSION.SDK_INT < 29) return saveText(name, text);
+        try {
+            byte[] b = text.getBytes(StandardCharsets.UTF_8);
+            Uri found = null;
+            try (android.database.Cursor c = a.getContentResolver().query(MediaStore.Downloads.EXTERNAL_CONTENT_URI, new String[]{MediaStore.Downloads._ID},
+                    MediaStore.Downloads.DISPLAY_NAME + "=?", new String[]{name}, null)) {
+                if (c != null && c.moveToFirst()) found = android.content.ContentUris.withAppendedId(MediaStore.Downloads.EXTERNAL_CONTENT_URI, c.getLong(0));
+            } catch (Exception ignored) { }
+            if (found != null) {
+                try (OutputStream o = a.getContentResolver().openOutputStream(found, "wt")) { o.write(b); return "Downloads/" + name; }
+                catch (Exception notOurs) { /* made by an earlier install: write a new one beside it */ }
+            }
+            return saveText(name, text);
+        } catch (Exception e) { return "ERR:" + e.getMessage(); }
+    }
+
     /** Daily reminder at hour:minute (local time). */
     @JavascriptInterface
     public void setReminder(int hour, int minute, String title, String text) {
