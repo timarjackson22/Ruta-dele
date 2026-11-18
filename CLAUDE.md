@@ -63,6 +63,9 @@ If no: say so in the commit message ("costs: no impact").
 - Data: tools/frases/data*.py (category, level, pattern, English, tip, tense variations). Build and embed: `python3 tools/frases/build.py index.html` (view frases.js + frases.css; route, Library tile, flashcard deck `frases` in VPRO, global player source, Profe practice `PR.pat` via `startPatterns()`).
 - Each Spanish sentence must be unique, and tenses must use the codes in build.py. Level gating for practice comes from `FR_T` (tense level) and the pattern level.
 
+## Reading hub (#leer) — v225
+- Same shape as Listening: level (`RF`), then kinds of text (`RK`, `RD_K`/`rdKind()` from the text's first line: Messages, Notices & ads, Articles, Opinion & essays, Literature, My texts), then the list. Each kind has its own icon colour (`t-r<kind>`). «Add your own text» is a row at the end (and under My texts). `node tools/profe-tests/sRD.js` must pass.
+
 ## Display rules (v212)
 - Nothing may cross the floating bottom controls: `#px-dock` (script PXDOCK) frosts the band under the tab bar, Profe, players, pager and video bar. Add any new floating bottom control to its `SEL`.
 - Tables never scroll sideways on phones: `tblTooWide()` turns a too-wide grammar table into one card per row (`.tbl-stack`, labels from `data-th`).

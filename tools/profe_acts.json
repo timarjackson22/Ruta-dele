@@ -1343,5 +1343,9 @@
  "qd-f": {
   "voice": "unsuitable",
   "why": "skill focus chips on the Quick drill"
+ },
+ "l-rk": {
+  "voice": "unsuitable",
+  "why": "type filter on the Reading list (like the level filter)"
  }
 }
