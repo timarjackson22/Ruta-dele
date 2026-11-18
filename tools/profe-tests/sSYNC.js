@@ -2,7 +2,7 @@
 const { chromium, devices } = require("playwright");
 const ROUTES = (process.argv[2] || "reading-b1-01,reading-a2-03,reading-b2-02,reading-c1-01").split(",");
 const SPEECH = () => {
-  window.__bad = []; window.__n = 0;
+  window.__bad = []; window.__n = 0; window.__numW = /^(y|cero|uno|un|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieci\S+|veinte|veinti\S+|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa|cien|ciento|\S+cientos|quinientos|mil|millón|millones|coma|por|ciento|dólares|euros|media|cuarto|primero|primera|segundo|segunda|tercero|tercer)$/i;
   class U { constructor(t) { this.text = t; this.rate = 1; } } window.SpeechSynthesisUtterance = U;
   const ss = { speaking: false, pending: false, paused: false, onvoiceschanged: null,
     getVoices: () => [{ name: "Google español de Estados Unidos", lang: "es-US", localService: false, voiceURI: "g" }, { name: "Google US English", lang: "en-US", localService: false, voiceURI: "ge" }],
@@ -10,7 +10,7 @@ const SPEECH = () => {
     speak(u) { ss.speaking = true; const words = [...u.text.matchAll(/[\p{L}\d]+(?:['’][\p{L}]+)?/gu)]; let k = 0; ss.cur = u;
       const step = () => { if (ss.cur !== u) return; if (k >= words.length) { ss.speaking = false; u.onend && u.onend({}); return; }
         const m = words[k++]; try { u.onstart && k === 1 && u.onstart({}); u.onboundary && u.onboundary({ name: "word", charIndex: m.index }); } catch (e) {}
-        setTimeout(() => { const els = [...document.querySelectorAll("#ltext .w.spk")], el = els[0] && { textContent: els.map((x) => x.textContent).join(" ") }; if (el && u.onboundary) { window.__n++; const shown = el.textContent.normalize("NFC").toLowerCase().replace(/[^\p{L}\d]/gu, ""); if (!/\d/.test(m[0]) && !shown.includes(m[0].toLowerCase()) && !m[0].toLowerCase().includes(shown)) window.__bad.push(m[0] + " ≠ " + el.textContent); } setTimeout(step, 4); }, 8); };
+        setTimeout(() => { const els = [...document.querySelectorAll("#ltext .w.spk")], el = els[0] && { textContent: els.map((x) => x.textContent).join(" ") }; if (el && u.onboundary) { window.__n++; const shown = el.textContent.normalize("NFC").toLowerCase().replace(/[^\p{L}\d]/gu, ""); if (!/\d/.test(m[0]) && !(window.__numW && window.__numW.test(m[0])) && !shown.includes(m[0].toLowerCase()) && !m[0].toLowerCase().includes(shown)) window.__bad.push(m[0] + " ≠ " + el.textContent); } setTimeout(step, 4); }, 8); };
       setTimeout(step, 5); } };
   Object.defineProperty(window, "speechSynthesis", { value: ss });
 };

@@ -62,6 +62,10 @@ let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log("FAIL", m); }
   // spoken homophones: «por qué» heard for «porque» counts; typed answers keep their spelling
   const hz = await p.evaluate(() => [window.__spokenAs("por qué", "porque"), window.__spokenAs("si no", "No es rojo sino azul."), (window.__prTyped = 1, window.__spokenAs("por qué", "porque"))]);
   ok(hz[0] === "porque" && /sino/.test(hz[1]) && hz[2] === "por qué", "homophones: " + JSON.stringify(hz));
+  // Spanish numbers as words, not digit by digit
+  const NUM = [["importar 10,000 quintales", "importar diez mil quintales"], ["En 1960 llegó", "En mil novecientos sesenta llegó"], ["Cuesta $25", "Cuesta veinticinco dólares"], ["un 3,5 %", "un tres coma cinco por ciento"], ["Son las 10:30", "Son las diez y media"], ["el 1.º de mayo", "el primero de mayo"], ["Tiene 21 años", "Tiene veintiún años"], ["el 1 de mayo", "el uno de mayo"], ["2.500.000 personas", "dos millones quinientos mil personas"], ["llámame al 6123 4567", "llámame al seis uno dos tres cuatro cinco seis siete"]];
+  const nb = await p.evaluate((C) => C.filter(([i, w]) => window.__ttsNorm(i, "es") !== w).map(([i]) => i + " → " + window.__ttsNorm(i, "es")), NUM);
+  ok(!nb.length, "numbers: " + nb.join(" | "));
   // text clean-up
   const n = await p.evaluate(() => [window.__ttsNorm("**Ud.** → «usted» 🙂 (formal)", "es"), window.__ttsNorm("e.g. ser vs. estar", "en")]);
   ok(n[0] === "usted, usted, formal", "norm es: " + n[0]); ok(n[1] === "for example, ser versus estar", "norm en: " + n[1]);

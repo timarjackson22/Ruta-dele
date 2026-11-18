@@ -44,7 +44,8 @@ const MOCK = `(() => {
   await row.click(); await p.waitForTimeout(700);
   let s = await st(); const cards = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href")));
   await p.evaluate(() => document.querySelectorAll("details.vsec").forEach((d) => (d.open = true))); const per = await p.$$eval(".vsec > summary.ghead", (hs) => hs.map((h) => [h.textContent.replace(/\s*\(.*$/, "").replace(/\s*\d+$/, ""), h.parentElement.querySelectorAll(".vcard").length]));
-  rec("Library: at least 4 videos in each of the 7 types", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Music", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] >= 4) && cards.includes("#video-WLXiu-qp8Lw"), JSON.stringify(per));
+  // 18 Nov 2026: rationed to the best 2 per type (music keeps all; sports keeps a live radio call)
+  rec("Library: the best 2 videos per type, every music video, and a live sports commentary", ["Everyday dialogues", "Interviews", "News", "Weather", "Sports", "Podcasts"].every((c) => (per.find((x) => x[0] === c) || [0, 0])[1] === 2) && (per.find((x) => x[0] === "Music") || [0, 0])[1] >= 8 && cards.includes("#video-8czkkbTwNBA"), JSON.stringify(per));
   rec("Only videos that play in apps: the 4 not allowed are gone", !["2GrDFoMl978", "rqiOwOmYO80", "-VxpA-9x0jc", "4oay8Hwdpjc", "O07zoqmdmrk", "xYYz5RTqbEs"].some((i) => cards.includes("#video-" + i)));
   rec("Music has Thiago Navarro's 4 most-viewed songs", ["i5neBtAgc-c", "6S243h-V3p4", "cEsp1dMTM1w", "aR0GjIVIAdo"].every((i) => cards.includes("#video-" + i)));
   rec("Videos list: menu shown, Practice tab lit, back to Practice", !s.tucked && s.tab === "practicar" && s.back === "Practice" && !s.wide, JSON.stringify(s));
@@ -118,8 +119,9 @@ const MOCK = `(() => {
   await go("video-ot5L3fIl0z0"); await p.evaluate(() => { window.__yt.p.dur = 100; window.__yt.p.t = 90; }); await p.waitForTimeout(500);
   rec("Watching 85% also counts", ((await S()).vid["ot5L3fIl0z0"] || {}).w > 0);
   await log(); await go("videos"); L = await log(); rec("Leaving the page stops the player", L.some((x) => x[0] === "destroy"), JSON.stringify(L));
-  const wb = await p.$$eval(".vcard", (a) => a.filter((x) => /Watched/.test(x.innerText)).length); const cc = await p.$eval('.vcard[href="#video-WLXiu-qp8Lw"]', (x) => x.innerText);
-  rec("List shows watched videos and words caught", wb === 2 && /2 words caught/.test(cc), cc.replace(/\s+/g, " "));
+  // 18 Nov 2026: «¿Es cara Barcelona?» is hidden in the rationed library; its history is kept (vFind still opens it)
+  const wb = await p.$$eval(".vcard", (a) => a.filter((x) => /Watched/.test(x.innerText)).length); const cc = ((await S()).vid["WLXiu-qp8Lw"] || {});
+  rec("List shows watched videos; a hidden video keeps its history", wb >= 1 && cc.w > 0, JSON.stringify({ wb, cc }));
   await go("practicar"); rec("Practice row shows the count", /2 watched/.test(await p.$eval('a[href="#videos"]', (x) => x.innerText)));
   // library clips: 4 minutes at most
   await go("video-kRt2sRyup6A"); const mk = await p.evaluate(() => window.__yt.made.at(-1).playerVars);
@@ -132,14 +134,14 @@ const MOCK = `(() => {
   // filters
   await p.click('.vchip[data-k="c"][data-v="noticias"]'); await p.waitForTimeout(200);
   let hrefs = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href").slice(7)));
-  rec("Filter: News shows only news", hrefs.length >= 4 && hrefs.includes("tjmp1fEk9d4") && !hrefs.includes("kRt2sRyup6A"), hrefs.join(" "));
+  rec("Filter: News shows only news", hrefs.length === 2 && hrefs.includes("tjmp1fEk9d4") && !hrefs.includes("kRt2sRyup6A"), hrefs.join(" "));
   await p.click('.vchip[data-k="l"][data-v="C1"]'); await p.waitForTimeout(200); hrefs = await p.$$eval(".vcard", (a) => a.map((x) => x.getAttribute("href").slice(7)));
-  rec("Filter: News + C1", hrefs.length === 2 && hrefs.includes("tjmp1fEk9d4"), hrefs.join(" "));
+  rec("Filter: News + C1", hrefs.length === 1 && hrefs.includes("tjmp1fEk9d4"), hrefs.join(" "));
   await p.reload(); await p.waitForTimeout(900); rec("Filters are remembered", (await p.getAttribute('.vchip[data-k="l"][data-v="C1"]', "aria-pressed")) === "true");
   await p.click('.vchip[data-k="c"][data-v=""]'); await p.click('.vchip[data-k="l"][data-v=""]'); await p.waitForTimeout(200);
   // remove / undo / restore
   await p.click('[data-act="v-edit"]'); await p.waitForTimeout(200); const nrm = (await p.$$('[data-act="v-rm"]')).length; const ncard = (await p.$$(".vcard")).length;
-  rec("Edit: every video gets a Remove button", nrm === ncard && nrm > 30, nrm + "/" + ncard);
+  rec("Edit: every video gets a Remove button", nrm === ncard && nrm >= 24, nrm + "/" + ncard);
   await p.click('[data-act="v-rm"][data-id="TiPRNqJnI_k"]'); await p.waitForTimeout(250);
   rec("Remove takes it off the list, with Undo", !(await p.$('.vcard[href="#video-TiPRNqJnI_k"]:not(.vmore .vcard)')) && /Removed/.test(await p.textContent("#dktoast")), await p.textContent("#dktoast"));
   await p.click('#dktoast [data-act="v-undo"]'); await p.waitForTimeout(250); rec("Undo brings it back", !!(await p.$('.vgrid .vcard[href="#video-TiPRNqJnI_k"]')) && !((await S()).vhide || {})["TiPRNqJnI_k"]);

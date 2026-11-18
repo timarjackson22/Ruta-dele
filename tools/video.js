@@ -1,9 +1,20 @@
   /* ===================== videos: watch Spanish and practise with it (tools/VIDEO_BRIEF.md) ===================== */
-  const VID_START = [];
+  const VID_START = [], VID_ALL = []; // VID_ALL: every library video, so a link or history entry to a hidden one still opens
   // the library: short clips (4 minutes at most) of native speakers, by type and estimated level; IDs found by web search (tools/VIDEO_LIBRARY_BRIEF.md)
   const VCATS = [["dele", "DELE exam guides", "Guía del DELE"], ["dialogos", "Everyday dialogues", "Diálogos"], ["entrevistas", "Interviews", "Entrevistas"], ["noticias", "News", "Noticias"], ["tiempo", "Weather", "El tiempo"], ["deportes", "Sports", "Deportes"], ["musica", "Music", "Música"], ["podcasts", "Podcasts", "Pódcasts"]];
   const VCL = Object.fromEntries(VCATS.map((c) => [c[0], c]));
   const VCLIP = 240;
+  // 18 Nov 2026: the library is rationed to the best two per category (all music stays; sports keeps a live radio call).
+  // The others stay listed below but hidden: add an ID here to bring one back.
+  const VID_KEEP = new Set([
+    "1zhIqQ0SV88", "tFy4phJyzI8",   // DELE: what the exam is; how it's marked (every level)
+    "W0LLExzov2A", "YrTVB8lKutI",   // dialogues: a restaurant (A1); real-life situations (B1)
+    "ot5L3fIl0z0", "LdRsZ1adZWw",   // interviews: street interviews in Mexico (B1); Joan Manuel Serrat, BBC Mundo (C1)
+    "nGX4VZk0d-w", "tjmp1fEk9d4",   // news: News in Slow Spanish (B1); DW bulletin (C1)
+    "glKFJ74Htn4", "v2Ph5hBmqYA",   // weather: Panama weekend (TVN); Spain today
+    "8czkkbTwNBA", "Qks54-LEYDs",   // sports: the Clásico goals called live on the radio; Clásico highlights with commentary
+    "guadxMv8RI8", "4Ppi4Aqptn0",   // podcasts: Duolingo episode 1 (A2); Spanishland, how I learned Spanish (B1)
+  ]);
   [
     // what each level's DELE exam contains (checked embeddable; shown in full, not clipped)
     ["1zhIqQ0SV88", "dele", "A1", "¿Qué es el DELE? (A1 and up)", "a por el DELE", "What the DELE is, how the papers work at every level and how to prepare: the best overview for A1, where no A1-only guide was found."],
@@ -53,11 +64,11 @@
     ["Sebrv96h2Ak", "podcasts", "A2", "La maleta azul (episodio 9)", "Duolingo Spanish Podcast", "A true story told in simple Spanish, with English narration between parts."],
     ["CmukzLYOQ9o", "podcasts", "B1", "Hoy Hablamos", "A Language Learning channel", "A podcast in Spanish from Spain for learners."],
     ["4Ppi4Aqptn0", "podcasts", "B1", "Cómo aprendí español (episodio 270)", "Spanishland School", "Nate shares 11 tips from learning Spanish, talking with Andrea from Colombia."],
-  ].forEach(([yt, cat, lvl, t, ch, note]) => VID_START.push({ yt, cat, lvl, t, ch, note, q: [], clip: cat === "dele" ? null : [0, VCLIP] }));
+  ].forEach(([yt, cat, lvl, t, ch, note]) => { const v = { yt, cat, lvl, t, ch, note, q: [], clip: cat === "dele" ? null : [0, VCLIP] }; VID_ALL.push(v); if (cat === "musica" || VID_KEEP.has(yt)) VID_START.push(v); });
   const ytId = (s) => { const m = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([\w-]{11})/.exec(String(s || "")) || /^([\w-]{11})$/.exec(String(s || "").trim()); return m ? m[1] : null; };
   const vMine = () => (S.myv = S.myv || []);
   const vData = (id) => { S.vid = S.vid || {}; return (S.vid[id] = S.vid[id] || { c: [] }); };
-  const vFind = (id) => VID_START.find((v) => v.yt === id) || vMine().find((v) => v.yt === id) || null;
+  const vFind = (id) => VID_ALL.find((v) => v.yt === id) || vMine().find((v) => v.yt === id) || null;
   const vThumb = (id) => "https://i.ytimg.com/vi/" + id + "/mqdefault.jpg";
   async function vTitle(id) { try { const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent("https://www.youtube.com/watch?v=" + id)); if (!r.ok) return null; const j = await r.json(); return { t: j.title, ch: j.author_name }; } catch (e) { return null; } }
   function vAdd(link, title) {

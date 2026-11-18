@@ -37,6 +37,9 @@ If no: say so in the commit message ("costs: no impact").
 
 - MIC GUARD (v226): every recogniser in the page is `micGuard(window.SpeechRecognition)` (`SR`, `PC_SR`): one owner at a time (a new start ends the previous owner with error "aborted" + end), stop/abort only touch your own session, watchdogs (no mic-open in 8 s → "audio-capture" + end; unanswered stop/abort → end after 2.5/1.2 s; 25 s / 2 min max), end fires exactly once. Never use `window.SpeechRecognition` directly. The Android bridge (bridge.js) has the same ownership rules from APK v226. `node tools/profe-tests/sMG.js` must pass (reproduces the old bridge's behaviour).
 
+- Numbers (v227): Spanish speech says numbers as words (`numsEs`/`numEs` in `ttsNorm`: thousands separators, decimals, %, money, ordinals, clock times, years; «21 años» → veintiún; phone numbers digit by digit). The word highlight matches whole words only, and a number spoken as words keeps the highlight on the word before it.
+- The mic guard also restarts the phone's recogniser once, silently, when it gives up before hearing anything; the flashcard mic says «One moment…» until the mic is open.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
@@ -67,6 +70,9 @@ If no: say so in the commit message ("costs: no impact").
 
 ## Home (#inicio) — v226
 - One purpose per block: the continue hero (cbHTML), a short «Today» list (today's session, streak/goal mini ring, Quick drill, Flashcards and My mistakes only when something waits), the word of the day as one line, the journey. No carousels of tiles that repeat the tabs.
+
+## Videos (#videos) — v227
+- Rationed library: `VID_KEEP` in tools/video.js (and its embedded copy in index.html) = the best 2 per category; all music stays; sports keeps a live radio commentary. Hidden videos stay in `VID_ALL` so links and history still open them.
 
 ## Reading hub (#leer) — v225
 - Same shape as Listening: level (`RF`), then kinds of text (`RK`, `RD_K`/`rdKind()` from the text's first line: Messages, Notices & ads, Articles, Opinion & essays, Literature, My texts), then the list. Each kind has its own icon colour (`t-r<kind>`). «Add your own text» is a row at the end (and under My texts). `node tools/profe-tests/sRD.js` must pass.

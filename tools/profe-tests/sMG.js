@@ -8,6 +8,7 @@ const OLD_BRIDGE = () => { // a faithful copy of bridge.js before v226, with a f
   const ev = (my, f) => setTimeout(() => { if (my === sid && active) f(active); }, 0);
   SR.prototype.start = function () { if (active && active !== this) { sid++; window.__native.cancels++; } active = this; const my = ++sid; window.__native.starts++;
     if (window.__native.mute) return; // the phone never opens the mic
+    if (window.__failOnce) { window.__failOnce = 0; setTimeout(() => ev(my, (r) => { r.onerror && r.onerror({ error: "no-speech" }); active = null; r.onend && r.onend({}); }), 150); return; }
     setTimeout(() => ev(my, (r) => { r.onstart && r.onstart({}); }), 200);
     setTimeout(() => ev(my, (r) => { if (window.__native.said) { const a = [{ transcript: window.__native.said, confidence: 0.9 }]; a.isFinal = true; r.onresult && r.onresult({ results: [a], resultIndex: 0 }); } }), 700);
     setTimeout(() => ev(my, (r) => { active = null; r.onend && r.onend({}); }), 900); };
@@ -51,6 +52,10 @@ const OLD_BRIDGE = () => { // a faithful copy of bridge.js before v226, with a f
   const ends = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const cnt = [0, 0, 0]; const mk = (k) => { const r = new window.__SRG(); r.onend = () => cnt[k]++; return r; };
     const a = mk(0), b = mk(1), c = mk(2); a.start(); await sleep(50); b.start(); await sleep(50); c.start(); await sleep(50); a.abort(); b.stop(); await sleep(1500); return cnt; });
   rec("Three features in a row: each gets exactly one end, none hangs", ends.join() === "1,1,1", ends.join());
+  // 6. the phone gives up at once ("no speech" before it heard anything): the guard restarts once, silently, and the answer still counts
+  await setSay(); await p.evaluate(() => { window.__native.said = "hoy abre una biblioteca nueva en cusco"; window.__failOnce = 1; }); await p.click('[data-act="dr-mic"]'); await p.waitForTimeout(2600);
+  st = await p.evaluate(() => ({ res: window.__qd().state.res, log: window.__micg.log.slice(-3).map((x) => x[1]) }));
+  rec("Phone gives up before hearing anything: one silent retry, the answer still counts", st.res === "ok" && st.log.some((x) => /retry/.test(x)), JSON.stringify(st));
   rec("No page errors", !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();
