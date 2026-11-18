@@ -6,10 +6,10 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.evaluate(async () => { await loadIndexForTest(); }).catch(() => {});
   await p.evaluate(() => new Promise((r) => { const t = setInterval(() => { if (window.__ad) { clearInterval(t); r(); } }, 50); }));
   await p.click('[data-act="t-tab"][data-v="practice"]'); await H.wait(300);
-  const opts = await p.evaluate(() => [...document.getElementById("t-prsel").options].map((o) => o.textContent).join(" | "));
-  rec("Practice dropdown has Sentence translation and adaptive Conjugation", /Sentence translation/.test(opts) && /Conjugation \(adaptive\)/.test(opts), opts);
+  const opts = await p.evaluate(() => [...document.querySelectorAll("#tutor .papp span")].map((o) => o.textContent).join(" | ") + (document.getElementById("t-prsel") ? " | DROPDOWN" : ""));
+  rec("Practice home: app icons for Translate and Verbs, no dropdown", /Translate/.test(opts) && /Verbs/.test(opts) && !/DROPDOWN/.test(opts), opts);
   // start (loads the verb index), then test the engine
-  await p.selectOption("#t-prsel", "trans"); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
+  await p.evaluate(() => { const b = document.querySelector("#tutor .prback"); if (b) b.click(); }); await H.wait(200); await p.click('#tutor [data-act="pr-type"][data-v="trans"]'); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
   const banks = await p.evaluate(() => ["a1", "a2", "b1", "b2", "c1", "c2"].map((lv) => { const B = window.__ad.bank(lv); return [lv, B.length, B.filter((x) => x.dir === "en-es").length, B.filter((x) => x.tags.some((t) => /^v:/.test(t))).length]; }));
   rec("Every level has its own bank (lessons + texts), both directions, tense-tagged", banks.every((b) => b[1] > 150 && b[2] > 40 && b[3] > b[1] * 0.5), JSON.stringify(banks));
   // generator: level-appropriate tenses, and every generated answer passes its own checker
@@ -37,7 +37,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   await p.evaluate(() => { const PR = window.__ad.pr(); PR.autoMic = false; PR.it = { id: "t1", dir: "en-es", src: "I ate at home yesterday.", ans: ["Ayer comí en casa."], tags: ["v:pret", "d:en-es"], len: 4, ui: 0, note: "Preterite: a finished action." }; PR.tries = 0; PR.fb = null; PR.over = false; window.__ad.st("tr", PR.lv).focus = null; window.__ad.render(); });
   const typeIt = async (t) => { await p.fill("#pr-input", t); await p.press("#pr-input", "Enter"); await H.wait(700); return p.evaluate(() => document.querySelector("#tutor .adwrap").innerText.replace(/\s+/g, " ")); };
   let v1 = await typeIt("Ayer como en casa"); rec("Try 1 wrong: says what's wrong, no clue yet, 2 tries left", /present/.test(v1) && /2 tries left/.test(v1) && !/Clue/.test(v1), v1.slice(0, 400));
-  let v2 = await typeIt("Ayer comía en casa"); rec("Try 2 wrong: a clue, one try left", /Clue/.test(v2) && /One more try/.test(v2), v2.slice(0, 400));
+  let v2 = await typeIt("Ayer comía en casa"); rec("Try 2 wrong: a clue, one try left", /(Clue|\b[a-záéíóúñ]+_{2,})/.test(v2) && /One more try/.test(v2), v2.slice(0, 400));
   let v3 = await typeIt("Ayer comemos en casa"); rec("Try 3 wrong: the answer is shown", /Ayer comí en casa/.test(v3) && /after three tries/.test(v3), v3.slice(0, 400));
   const f1 = await p.evaluate(() => { const PR = window.__ad.pr(); return window.__ad.st("tr", PR.lv).focus; });
   rec("A miss makes that skill the focus (the preterite)", f1 === "v:pret", f1);
@@ -57,8 +57,8 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   // waits for Next; history; back/next; kept after a restart (1 hour); ending the session clears it
   await p.evaluate(() => { const PR = window.__ad.pr(); PR.ask = null; PR.it = { id: "h1", dir: "en-es", src: "I live near the sea.", ans: ["Vivo cerca del mar."], tags: ["v:pres", "d:en-es"], len: 4, ui: 0 }; PR.tries = 0; PR.fb = null; PR.over = false; PR.att = []; window.__ad.render(); });
   await typeIt("Vivo cerca del mar"); await H.wait(4000);
-  const stay = await p.evaluate(() => ({ id: window.__ad.pr().it.id, over: window.__ad.pr().over, nav: document.querySelector("#tutor .adnav").innerText }));
-  rec("After the answer the question stays until Next (no auto-advance)", stay.id === "h1" && stay.over && /Next question/.test(stay.nav), JSON.stringify(stay));
+  const stay = await p.evaluate(() => ({ id: window.__ad.pr().it.id, over: window.__ad.pr().over, nav: document.querySelector("#tutor .adnav").innerText, next: (document.querySelector("#tutor .prnextbar .prnext") || {}).innerText || "", form: !!document.getElementById("pr-input") }));
+  rec("After the answer the question stays until Next (no auto-advance)", stay.id === "h1" && stay.over && /Next/.test(stay.next) && !stay.form, JSON.stringify(stay));
   const nHist0 = await p.evaluate(() => window.__ad.pr().hist.length);
   await p.click('#tutor [data-act="ad-fwd"]'); await H.wait(500);
   const hs = await p.evaluate(() => { const PR = window.__ad.pr(); const cards = [...document.querySelectorAll("#tutor .adhist .adh")]; return { n: PR.hist.length, last: cards.length ? cards[cards.length - 1].innerText.replace(/\s+/g, " ") : "", newId: PR.it.id }; });
@@ -73,15 +73,15 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const hdr = await p.evaluate(() => { const th = document.querySelector("#tutor .th"); return { brand: !!th.querySelector('.tbrand[data-act="t-close"]'), x: /✕/.test(th.innerText), gear: !!th.querySelector('[data-act="t-tab"][data-v="hist"]'), chat: !!th.querySelector('[data-act="t-tab"][data-v="chat"]'), pr: !!th.querySelector('[data-act="t-tab"][data-v="practice"]'), en: !!th.querySelector('[data-act="t-en"]'), end: !!document.querySelector('#tutor .adnav [data-act="ad-end"]') }; });
   rec("During a session the header shows only ‹ Profe (close), ⚙, Practice, 🇬🇧, hands-free; End is in the bottom bar", hdr.brand && !hdr.x && hdr.gear && !hdr.chat && hdr.pr && hdr.en && hdr.end, JSON.stringify(hdr));
   await p.click('#tutor [data-act="ad-end"]'); await H.wait(300);
-  const ended = await p.evaluate(() => ({ hist: localStorage.getItem("ruta-adhist"), pr: !!window.__ad.pr(), menu: !!document.querySelector('#tutor .prgrid') }));
+  const ended = await p.evaluate(() => ({ hist: localStorage.getItem("ruta-adhist"), pr: !!window.__ad.pr(), menu: !!document.querySelector('#tutor .prapps') }));
   rec("End session: clears the history and goes back to the practice list", ended.hist === null && !ended.pr && ended.menu, JSON.stringify(ended));
-  await p.selectOption("#t-prsel", "trans"); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
+  await p.evaluate(() => { const b = document.querySelector("#tutor .prback"); if (b) b.click(); }); await H.wait(200); await p.click('#tutor [data-act="pr-type"][data-v="trans"]'); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
   // conjugation: verbs grouped by behaviour; a miss brings verbs that behave the same way
   const grp = await p.evaluate(() => { const G = window.__ad.group; return { tener: G("tener", "pret"), poder: G("poder", "pret"), hacer: G("hacer", "pret"), decir: G("decir", "pret"), querer: G("querer", "pres"), dormir: G("dormir", "pres"), pedir: G("pedir", "pres"), salir: G("salir", "pres"), hablar: G("hablar", "pres"), tenerF: G("tener", "fut"), leer: G("leer", "pret") }; });
   rec("Verb groups: -uve, u-stem, i-stem, j-stem preterites; e→ie, o→ue, e→i, -go presents; irregular future stems", grp.tener === "uv" && grp.poder === "u" && grp.hacer === "i" && grp.decir === "j" && grp.querer === "e>ie" && grp.dormir === "o>ue" && grp.pedir === "e>i" && grp.salir === "go" && grp.hablar === "reg-ar" && grp.tenerF === "stem" && grp.leer === "y", JSON.stringify(grp));
   await p.click('#tutor [data-act="t-tab"][data-v="practice"]'); await H.wait(300); // Practice (tab) during a session: back to the list
-  rec("Practice tab during a session returns to the list of practices", await p.evaluate(() => !window.__ad.pr() && !!document.getElementById("t-prsel")));
-  await p.selectOption("#t-prsel", "conj"); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().kind === "cj" && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
+  rec("Practice tab during a session returns to the list of practices", await p.evaluate(() => !window.__ad.pr() && !!document.querySelector("#tutor .prapps")));
+  await p.evaluate(() => { const b = document.querySelector("#tutor .prback"); if (b) b.click(); }); await H.wait(200); await p.click('#tutor [data-act="pr-conj"]'); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().kind === "cj" && window.__ad.pr().it, null, { timeout: 8000 }).catch(() => {});
   await p.evaluate(() => { const PR = window.__ad.pr(); PR.autoMic = false; PR.lv = "a2"; PR.it = { id: "c1", v: "tener", t: "pret", p: "yo", pi: 0, ans: "tuve", grp: "uv", tags: ["c:pret:uv", "v:pret", "c:pret"] }; PR.tries = 0; PR.fb = null; PR.over = false; window.__ad.st("cj", "a2").focus = null; window.__ad.render(); });
   const c1 = await typeIt("tenía"); rec("Conjugation try 1: names the wrong tense", /imperfect|imperfecto/i.test(c1) && /pretérito|preterite/i.test(c1), c1.slice(0, 300));
   const c2 = await typeIt("tuvo"); rec("Conjugation try 2: clue names the verb group", /Clue/.test(c2) && /-uve/.test(c2), c2.slice(0, 300));

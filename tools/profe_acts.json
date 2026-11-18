@@ -1331,5 +1331,9 @@
  "pr-pat": {
   "voice": "unsuitable",
   "why": "starts sentence-pattern practice in Profe; spoken start not wired yet"
+ },
+ "t-chatmic": {
+  "voice": "unsuitable",
+  "why": "the mic in Profe's chat bar is itself a voice start; «Ok Profe» / «let's talk» already do this"
  }
 }

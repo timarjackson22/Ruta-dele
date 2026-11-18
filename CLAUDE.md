@@ -27,6 +27,9 @@ If no: say so in the commit message ("costs: no impact").
 
 - Read aloud (v219) is the `#nb-ra` Listen button in the top bar (`raBtn()`/`raTopUI()`), on every RA_PAGES route; no in-page bar. It keeps `data-act="ra-start"` (voice commands click it); a real tap while reading pauses/resumes. Scroll view starts at the first block on screen, page view at the current page. `node tools/profe-tests/sRA.js` must pass.
 
+- Profe home (v221): Profe opens on the practice icons (`.prapps`, `PA_ICON`; icon + 1–2 word name, no descriptions, no dropdown, no explanatory text). There is no Chat/Practice switch: chat is the bar at the bottom (`.pchat`, «Chat · have a conversation with Profe»), and the header «Practice» chip (`t-tab` practice) is the way back. Flows that need the chat (plan setup, prompts, «Ok Profe») set `tView = "chat"`.
+  After every answer (right, or the last try) the mic stays off and `.prnextbar` shows one big Next; nothing moves on until Next. Clues: what's wrong + the answer's shape with gaps (`adShape`/`adGap`: clue 1 first letter, clue 2 half the word). Test helper `open()` opens the chat (pass `{home:true}` for the icons). `node tools/profe-tests/sPH.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

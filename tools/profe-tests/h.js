@@ -70,12 +70,14 @@ async function open(o = {}) {
   const p = await c.newPage(); const errs = []; p.on("pageerror", (x) => errs.push(x.message + (process.env.STACK ? " @ " + String(x.stack).split("\n").slice(1, 4).join(" < ") : "")));
   await p.goto("http://localhost:" + PORT + "/" + (o.hash || "#curso")); await p.waitForTimeout(1400);
   await p.evaluate(([l, w]) => { window.__T.lat = l; window.__T.wps = w; }, [+(process.env.LAT || 120), +(process.env.WPS || 5)]);
-  if (!o.noOpen) { await p.evaluate(() => document.body.classList.add("tabs-peek")); /* lessons hide Profe's button while reading (lf-quiet); it comes back with the bottom menu */ await p.click('[data-act="t-open"]'); await p.waitForTimeout(400); }
+  if (!o.noOpen) { await p.evaluate(() => document.body.classList.add("tabs-peek")); /* lessons hide Profe's button while reading (lf-quiet); it comes back with the bottom menu */ await p.click('[data-act="t-open"]'); await p.waitForTimeout(400);
+    // v221: Profe opens on the practice icons; these tests drive the chat, so open it from the chat bar (o.home keeps the icons)
+    if (!o.home) { await p.evaluate(() => { const b = document.querySelector("#tutor .pchat-in"); if (b) b.click(); }); await p.waitForTimeout(150); } }
   const H = {
     b, p, errs,
     wait: (ms) => p.waitForTimeout(ms),
     replies: (arr) => p.evaluate((a) => { window.__L.replies.push(...a); }, arr),
-    type: async (t) => { await p.fill("#t-input", t); await p.press("#t-input", "Enter"); },
+    type: async (t) => { if (!(await p.$("#t-input"))) { await p.evaluate(() => { const b = document.querySelector("#tutor .pchat-in"); if (b) b.click(); }); await p.waitForSelector("#t-input", { timeout: 3000 }); } await p.fill("#t-input", t); await p.press("#t-input", "Enter"); }, // v221: Profe opens on the practice icons; the chat is the bar at the bottom
     mic: () => p.evaluate(() => { const b = document.querySelector('[data-act="t-mic"]'); window.__micT = performance.now(); b.click(); }),
     say: (t, o) => p.evaluate(([t, o]) => window.__say(t, o), [t, o || {}]),
     sttEnd: (err) => p.evaluate((e) => window.__sttEnd(e), err || null),
