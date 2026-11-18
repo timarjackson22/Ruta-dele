@@ -27,7 +27,7 @@ public class SttBridge {
     // the last words shown while speaking; some phones end a segment with "no match" instead of a result, so they are kept
     String lastPartial = "";
 
-    SttBridge(MainActivity act, WebView web) { this.act = act; this.web = web; }
+    SttBridge(MainActivity act, WebView web) { this.act = act; this.web = web; main.postDelayed(() -> { try { if (act.hasMic()) ensure(); } catch (Exception ignored) { } }, 1500); }
 
     void end() { if (ended) return; ended = true; js("end", null); }
 
@@ -50,6 +50,7 @@ public class SttBridge {
             this.lang = lang == null || lang.isEmpty() ? "es-US" : lang;
             this.interim = interim;
             this.continuous = continuous;
+            wasOpen = !this.ended; // a session still open: cancel it and give the service a moment before the next one
             sid++; ready = false; retried = false; tries = 0;
             this.ended = false;
             if (!SpeechRecognizer.isRecognitionAvailable(act)) { js("error", "service-not-allowed"); end(); return; }
@@ -67,15 +68,43 @@ public class SttBridge {
     }
 
     int tries = 0;
-    void begin() {
-        // a fresh recogniser for every session (S24 log, Nov 2026: reusing one and ignoring "stale" events hid the errors, so after "Ok Profe"
-        // the page heard nothing and never learnt why). Each listener only acts for its own session.
-        final int my = sid;
-        if (rec != null) { try { rec.cancel(); rec.destroy(); } catch (Exception ignored) { } rec = null; }
+    /*
+     * v222 (S24 log, 17 Nov 2026: "retry 1 after error 11" on nearly every tap, then the start of the sentence lost).
+     * Root cause: a new SpeechRecognizer was created (and the old one destroyed) for every session. Google's recognition
+     * service drops a client that binds right after the previous one unbinds (ERROR_SERVER_DISCONNECTED = 11), so the
+     * first try failed and the retry opened the mic ~0.5-1 s late, while the page already said "Listening".
+     * Now: ONE recogniser, created and bound when the app starts and reused for every session. Each session gets its own
+     * listener (late events from an older session are ignored by its session id). The recogniser is rebuilt only when the
+     * service really dropped it (error 11 / client error), after a pause so the old connection is gone.
+     * Continuous listening uses a segmented session on Android 13+: one session across pauses, no restart, no beep, no gap.
+     */
+    void ensure() {
+        if (rec != null) return;
         rec = SpeechRecognizer.createSpeechRecognizer(act);
+        warm();
+    }
+    /** bind the recognition service now, so the first tap does not pay for it */
+    void warm() {
+        if (android.os.Build.VERSION.SDK_INT < 33 || rec == null) return;
+        try {
+            Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang.split("\\|")[0]);
+            rec.checkRecognitionSupport(i, act.getMainExecutor(), new android.speech.RecognitionSupportCallback() {
+                @Override public void onSupportResult(android.speech.RecognitionSupport r) { }
+                @Override public void onError(int e) { }
+            });
+        } catch (Throwable ignored) { }
+    }
+    void rebuild() { if (rec != null) { try { rec.cancel(); rec.destroy(); } catch (Exception ignored) { } rec = null; } }
+    boolean segmented = false, gotSegment = false, wasOpen = false;
+
+    void begin() {
+        final int my = sid;
+        ensure();
+        final boolean settle = wasOpen; wasOpen = false;
+        if (settle) { try { rec.cancel(); } catch (Exception ignored) { } } // end what the previous session left open; same connection
         rec.setRecognitionListener(new RecognitionListener() {
             boolean mine() { return my == sid; }
-            @Override public void onReadyForSpeech(Bundle b) { if (!mine()) return; ready = true; tries = 0; js("start", null); }
+            @Override public void onReadyForSpeech(Bundle b) { if (!mine()) return; boolean first = !ready; ready = true; tries = 0; if (first) js("start", null); }
             @Override public void onBeginningOfSpeech() { }
             @Override public void onRmsChanged(float v) { }
             @Override public void onBufferReceived(byte[] b) { }
@@ -86,27 +115,51 @@ public class SttBridge {
                 ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) { lastPartial = r.get(0); if (interim) js("partial", r.get(0)); }
             }
+            // segmented session (Android 13+): each pause gives a segment; the session (and the mic) stays open
+            @Override public void onSegmentResults(Bundle b) {
+                if (!mine()) return; gotSegment = true;
+                ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
+                else if (!lastPartial.isEmpty()) js("final", lastPartial);
+                lastPartial = "";
+            }
+            @Override public void onEndOfSegmentedSession() {
+                if (!mine()) return;
+                if (!lastPartial.isEmpty()) { js("final", lastPartial); lastPartial = ""; }
+                if (continuous && active) { main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 60); }
+                else { active = false; end(); }
+            }
             @Override public void onResults(Bundle b) {
                 if (!mine()) return;
                 ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (r != null && !r.isEmpty() && !r.get(0).isEmpty()) js("final", r.get(0));
                 else if (!lastPartial.isEmpty()) js("final", lastPartial);
                 lastPartial = "";
-                if (continuous && active) { main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 150); }
+                if (continuous && active) { main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 60); }
                 else { active = false; end(); }
             }
             @Override public void onError(int e) {
                 if (!mine() || ended) return;
-                // the microphone or the service is still held (by the wake listener a moment ago, or a session ending): try again, up to 3 times
-                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_CLIENT || e == SpeechRecognizer.ERROR_AUDIO || e == 11 /* server disconnected: S24, first start after a new recogniser */) && !ready && active && tries < 3) {
-                    tries++; js("note", "retry " + tries + " after error " + e);
-                    main.postDelayed(() -> { if (sid == my && active) begin(); }, 300L * tries);
+                // the service dropped this client: rebuild the recogniser once the old connection has gone, then try again (silently)
+                // a "client" error right at the start is usually the echo of cancelling the previous session: just start again
+                if (e == SpeechRecognizer.ERROR_CLIENT && !ready && active && tries == 0) { tries++; main.postDelayed(() -> { if (sid == my && active) listenOnce(); }, 200); return; }
+                if ((e == 11 || e == SpeechRecognizer.ERROR_CLIENT) && active && tries < 3) {
+                    tries++; js("note", "rebuild " + tries + " after error " + e + (ready ? " (mid-session)" : ""));
+                    rebuild(); main.postDelayed(() -> { if (sid == my && active) { ensure(); begin(); } }, 350L * tries);
                     return;
                 }
+                // the microphone is still held (wake listener, Profe's voice ending): same recogniser, short wait
+                if ((e == SpeechRecognizer.ERROR_RECOGNIZER_BUSY || e == SpeechRecognizer.ERROR_AUDIO) && !ready && active && tries < 4) {
+                    tries++; js("note", "retry " + tries + " after error " + e);
+                    main.postDelayed(() -> { if (sid == my && active) listenOnce(); }, 200L * tries);
+                    return;
+                }
+                // the segmented session isn't supported by this recogniser: plain sessions from now on
+                if (segmented && !gotSegment && !ready && active && (e == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE || e == 14 || e == 15)) { noSeg = true; main.post(() -> { if (sid == my && active) listenOnce(); }); return; }
                 if (!lastPartial.isEmpty() && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) { js("final", lastPartial); lastPartial = ""; if (!continuous || !active) { active = false; end(); return; } }
                 if (!active && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || e == SpeechRecognizer.ERROR_CLIENT)) { end(); return; }
                 if (continuous && active && ready && (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT)) {
-                    main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 150);
+                    main.postDelayed(() -> { if (active && my == sid) listenOnce(); }, 60);
                     return;
                 }
                 active = false;
@@ -114,8 +167,9 @@ public class SttBridge {
                 end();
             }
         });
-        listenOnce();
+        if (settle) main.postDelayed(() -> { if (my == sid && active) listenOnce(); }, 150); else listenOnce();
     }
+    boolean noSeg = false;
 
     // words the recognizer should favour (the conversation and the page the learner is on)
     final ArrayList<String> bias = new ArrayList<>();
@@ -148,7 +202,15 @@ public class SttBridge {
         i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, interim);
         i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
         i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, continuous ? 3500 : 2000);
-        try { rec.startListening(i); } catch (Exception e) { active = false; js("error", "aborted"); end(); }
+        segmented = false; gotSegment = false;
+        if (continuous && !noSeg && android.os.Build.VERSION.SDK_INT >= 33) {
+            // one session through the learner's pauses (the page decides when they have finished and stops it)
+            segmented = true;
+            i.putExtra(RecognizerIntent.EXTRA_SEGMENTED_SESSION, RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS);
+            i.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 1200);
+        }
+        try { rec.startListening(i); }
+        catch (Exception e) { rebuild(); final int my = sid; main.postDelayed(() -> { if (sid == my && active) { ensure(); begin(); } }, 350); }
     }
 
     static String code(int e) {
