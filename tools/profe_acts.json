@@ -1335,5 +1335,13 @@
  "t-chatmic": {
   "voice": "unsuitable",
   "why": "the mic in Profe's chat bar is itself a voice start; «Ok Profe» / «let's talk» already do this"
+ },
+ "qd-lv": {
+  "voice": "unsuitable",
+  "why": "level chips on the Quick drill; «quick drill» opens it and the level is a tap"
+ },
+ "qd-f": {
+  "voice": "unsuitable",
+  "why": "skill focus chips on the Quick drill"
  }
 }

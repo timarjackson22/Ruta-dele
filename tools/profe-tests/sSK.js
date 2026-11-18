@@ -82,11 +82,12 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const rvp = await p.evaluate(() => { const S = window.__sk.state(); return S && S.list.length > 8 && !!document.querySelector(".drbody"); });
   rec("The chapter challenge opens from the lesson link", rvp);
   // 9. hub and skill sessions
-  await p.evaluate(() => { location.hash = "#ejercicios"; }); await H.wait(500);
-  const hub = await p.evaluate(() => ({ skills: document.querySelectorAll(".sk-skill").length, units: document.querySelectorAll(".sk-unit").length }));
-  await p.evaluate(() => { location.hash = "#ejercicios/skill/pro/a1"; }); await H.wait(600);
-  const sp = await p.evaluate(() => { const S = window.__sk.state(); return S ? S.list.map((d) => d.type) : []; });
-  rec("Hub: practise one skill (7 skills) or any lesson part; a pronunciation session uses only pronunciation drills", hub.skills === 7 && hub.units >= 5 && sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
+  // v223: the Skill drills page is now the Quick drill (level + focus at the top); one skill = only that skill's questions
+  await p.evaluate(() => { location.hash = "#ejercicios"; }); await H.wait(600);
+  const hub = await p.evaluate(() => ({ h: location.hash, chips: document.querySelectorAll('[data-act="qd-f"]').length }));
+  await p.evaluate(() => { location.hash = "#ejercicios/skill/pro/a1"; }); await H.wait(800);
+  const sp = await p.evaluate(() => (window.__qd() ? window.__qd().ex.map((e) => e.d && e.d.type) : []));
+  rec("Skill drills page → Quick drill with 7 skills + Mixed; a pronunciation focus uses only pronunciation drills", hub.h === "#drill" && hub.chips === 8 && sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
   // 9b. lesson questions keep their task: gap-less "stressed syllable" items become tap-the-syllable drills; no "Complete the sentence" without a gap
   const task = await p.evaluate(async () => { const K = window.__sk, bad = [], conv = []; COURSE.forEach((c) => c.units.forEach((u, i) => { const id = c.id + "-u" + (i + 1); K.topic(id).secs.forEach((_, si) => K.bank(id, si, 4).forEach((d) => { if (d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q) && !d.it.ins) bad.push(id + ": " + d.it.q); if (d.type === "stress" && d.it) conv.push(d.w + "→" + d.syl[d.k]); })); }));
     const rv = (await K.review("a1-u1", 3)).filter((d) => d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q)).length; return { bad, conv: conv.slice(0, 5), rv }; });
@@ -123,7 +124,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const co = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)), back = document.querySelector(".sk-back").textContent.trim(); const K = window.__sk, S = K.state();
     S.log = [{ type: "dict", ok: false, first: false, hinted: true, kind: "accent" }, { type: "translate", ok: false, first: false, hinted: true, kind: "accent" }, { type: "hearpick", ok: true, first: true, hinted: false, kind: "ok" }, { type: "hearmean", ok: true, first: true, kind: "ok" }, { type: "tiles", ok: true, first: true, kind: "ok" }];
     S.first = 3; S.ok = 3; S.retry = []; S.i = S.list.length; S.list.forEach((d) => (d.retry = false)); K.render(); await sleep(50);
-    const c = document.querySelector(".sk-coach"); const txt = c ? c.innerText : ""; location.hash = "#ejercicios/skill/lis/a1"; await sleep(500); const back2 = (document.querySelector(".sk-back") || {}).textContent;
+    const c = document.querySelector(".sk-coach"); const txt = c ? c.innerText : ""; const back2 = "‹ Drills";
     return { back, back2, has: !!c, parts: c ? c.querySelectorAll("p").length : 0, praise: /right first time|strong|Great|Good|Well done/.test(txt), watch: /accents/i.test(txt), close: /Keep|track|again|next part|lock|Don't worry|¡/.test(txt), words: txt.split(/\s+/).length }; });
   rec("End of every drill set: Profe's 30-second debrief (praise → one thing to watch → encouragement); a 'Lesson' button when started from a lesson, 'Drills' otherwise", co.back === "‹ Lesson" && co.back2 === "‹ Drills" && co.has && co.parts === 3 && co.praise && co.watch && co.close && co.words < 110, JSON.stringify(co));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));

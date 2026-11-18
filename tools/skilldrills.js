@@ -219,15 +219,22 @@
     if (!list.length) { app.innerHTML = '<div class="stack"><h1>No drills for this skill yet</h1><p><a href="#ejercicios">All drills</a></p></div>'; return; }
     skRender();
   }
+  /* v223: skill questions live inside the Quick drill. skPool gives a level's questions (one skill, or "mix");
+     skEmbed runs one question in the drill's own frame and hands the result back. */
+  function skPool(lv, comp) { const L = LV[lv]; if (!L) return []; const r = skRng(Date.now() % 100000), all = [];
+    L.units.forEach((u, i) => { const id = lv + "-u" + (i + 1), T = skTopic(id); if (!T) return; T.secs.forEach((_, si) => { const C = skGen(T, si, r); C.R.concat(C.S, C.P).forEach((d) => all.push(Object.assign(d, { src: id, si, lvl: lv }))); }); });
+    let list = skShuf(all.filter((d) => SK_T[d.type] && !/^ex|^readq|^lisq/.test(d.type) && (comp === "mix" || (SK_T[d.type][2][comp] || 0) >= 0.5) && (skCanMic() || d.type !== "say")), r);
+    const seen = {}; return list.filter((d) => { const k = d.type + JSON.stringify(d.s || d.w || d.say || d.q || ""); if (seen[k]) return false; seen[k] = 1; return true; }); }
+  function skEmbed(d, qd) { SK = { id: "drill", si: d.lvl, list: [d], i: 0, ok: 0, first: 0, st: {}, retry: [], done: {}, T: { title: "Quick drill", link: "#drill", lvl: d.lvl }, outs: [], t0: Date.now(), qd }; skRender(); scrollTo(0, 0); }
   const skBtn = (act, label, extra) => '<button class="btn' + (extra || "") + '" data-act="' + act + '">' + label + "</button>";
   const skPlay = (t, slow) => '<button class="drplay' + (slow ? " sm" : "") + '" data-act="sk-play" data-t="' + esc(t) + '"' + (slow ? ' data-slow="1"' : "") + ' aria-label="' + (slow ? "Play slowly" : "Play") + '">' + (slow ? "🐢" : "🔊") + "</button>";
   function skRender() {
     document.body.classList.add("no-tabs");
     if (!SK) return; const total = SK.list.length;
-    if (SK.i >= total) return skEnd();
+    if (SK.i >= total) { if (SK.qd) { const q = SK.qd, ok = SK.first > 0; SK = null; q.done(ok); return; } return skEnd(); }
     const d = SK.list[SK.i], st = SK.st, P = SK_P[d.lvl] || SK_P.a1, info = SK_T[d.type];
     const fromLesson = /^#(a1|a2|b1|b2|c1|c2)-u\d+$|^#guia-/.test(SK.T.link || "");
-    const top = '<div class="drtop"><a class="btn small sk-back" href="' + esc(SK.T.link || "#ejercicios") + '" aria-label="Close">' + (fromLesson ? "‹ Lesson" : "‹ Drills") + '</a><span class="drprog"><i style="width:' + Math.round((100 * SK.i) / total) + '%"></i></span><span class="sk-n small">' + (SK.i + 1) + "/" + total + "</span></div>";
+    const top = SK.qd ? SK.qd.head() : '<div class="drtop"><a class="btn small sk-back" href="' + esc(SK.T.link || "#drill") + '" aria-label="Close">' + (fromLesson ? "‹ Lesson" : "‹ Drills") + '</a><span class="drprog"><i style="width:' + Math.round((100 * SK.i) / total) + '%"></i></span><span class="sk-n small">' + (SK.i + 1) + "/" + total + "</span></div>";
     const lab = d.type === "acad" ? (d.it.t === "tr" ? ["🌍", "Translate"] : d.it.t === "fix" ? ["🩹", "Fix the mistake"] : /tilde|accent|syllable|spell|ñ/i.test((d.it.ins || "") + " " + d.it.q) ? ["🔎", "Spelling"] : ["✏️", "Grammar"]) : d.type === "gap" && d.word ? ["🔎", "Spelling"] : [info[1], info[0]];
     const tag = '<p class="sk-tag">' + lab[0] + " " + esc(lab[1]) + (d.retry ? " · <b>again</b>" : "") + "</p>";
     const opts = (list, picked) => '<div class="exopts">' + list.map((o, k) => '<button class="exopt' + (st.res ? (k === st.correct ? " ok" : k === picked ? " no" : "") : "") + '" data-act="sk-pick" data-k="' + k + '"' + (st.res ? " disabled" : "") + ">" + esc(o) + "</button>").join("") + "</div>";
@@ -276,7 +283,7 @@
     (SK.log = SK.log || []).push({ type: d.type, ok: ok === true, first: ok === true && !d.retry && !st.hinted, hinted: !!st.hinted, kind: why2 || (ok === true ? "ok" : ok === false ? "wrong" : "skip"), retry: !!d.retry }); st.res = ok === "skip" || ok === "skip-free" ? "skip" : ok ? "ok" : "no"; st.note = note || "";
     try { if (typeof ok === "boolean") sfx(ok); } catch (e) {}
     if (ok === true) { SK.ok++; if (!d.retry && !st.hinted) SK.first++; }
-    else if (ok !== "skip-free") { if (!d.retry && SK.retry.length < 4 && !/^(ex|readq|lisq)/.test(d.type)) SK.retry.push(Object.assign({}, d, { retry: true }));
+    else if (ok !== "skip-free") { if (!SK.qd && !d.retry && SK.retry.length < 4 && !/^(ex|readq|lisq)/.test(d.type)) SK.retry.push(Object.assign({}, d, { retry: true }));
       try { if (missedItem) mistakeAdd(missedItem, SK.id); } catch (e) {} }
     skRender(); }
   function skTyped(d) { const st = SK.st, inp = document.querySelector(".sk-in"); const v = (inp ? inp.value : "").trim(); st.val = v; const P = SK_P[d.lvl] || SK_P.a1;
@@ -360,8 +367,8 @@
       '<p class="small">Level: ' + SK_LV.map((l) => '<a href="#ejercicios" data-act="sk-lv" data-lv="' + l + '"' + (l === lv ? ' aria-current="true"' : "") + ">" + l.toUpperCase() + "</a>").join(" · ") + "</p>" +
       "<h2>Practise one skill</h2><div class=\"sk-skills\">" + skills + "</div><h2>By lesson</h2>" + units + "</div>"; }
   function skRoute(h) { const m = /^ejercicios(?:\/(skill)\/([a-z]+)\/(a1|a2|b1|b2|c1|c2)|\/([a-z0-9-]+)\/(\d+|review))?$/.exec(h); try { if (SK && SK.rec) SK.rec.abort(); } catch (e) {}
-    if (!m || (!m[1] && !m[4])) { SK = null; skHub(); return; }
-    if (m[1]) { skSkillStart(m[2], m[3]); return; }
+    if (!m || (!m[1] && !m[4])) { SK = null; location.replace("#drill"); return; }
+    if (m[1]) { SK = null; try { S.qdF = m[2]; S.qdLv = m[3]; save(); } catch (e) {} location.replace("#drill"); return; }
     skStart(m[4], m[5]); }
   document.addEventListener("click", (e) => { const b = e.target.closest && e.target.closest("[data-act^='sk-']"); if (!b) return; const a = b.dataset.act;
     if (a === "sk-go") { skMark(b); return; }
@@ -404,4 +411,4 @@
         const top = f.closest(".sk") ? document.querySelector(".sk .drtop") : f.closest("#runner") ? (f.closest("#runner").querySelector(".pxq, .pxcard, h3, p") || f) : f.closest(".drill") ? document.querySelector(".drill .drtop") : null;
         if (top) { const y = top.getBoundingClientRect().top + scrollY - 6; scrollTo(0, Math.max(0, y)); } }, 120); was = open; };
     vv.addEventListener("resize", fit); })();
-  window.__sk = { check: ansCheck, render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };
+  window.__sk = { pool: skPool, embed: skEmbed, skills: SK_SKILL, reset: () => { SK = null; }, check: ansCheck, render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };

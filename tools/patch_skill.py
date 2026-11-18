@@ -17,7 +17,9 @@ if "else if (/^ejercicios" not in s:
 if "skReviewCard(" not in s.split("/* ==SKILL== */")[0] and "skReviewCard(" not in s.split("/* ==/SKILL== */")[-1]:
     rep('''"</span>" : "") + "</div>" + pxHTML(u, u.xi) + "</section>";''', '''"</span>" : "") + "</div>" + skReviewCard(qkey) + pxHTML(u, u.xi) + "</section>";''')
     rep('''"</span>" : "") + "</div>" + pxHTML(g, "Fill in the blank.") + "</section></div>";''', '''"</span>" : "") + "</div>" + skReviewCard("guia-" + g.id) + pxHTML(g, "Fill in the blank.") + "</section></div>";''')
-if 'href="#ejercicios"><span class="qp2i"' not in s:
+# v223: no separate Skill drills tile: skill questions are part of the Quick drill (Practice tab)
+s = s.replace('''<a class="qp2t qd" href="#ejercicios"><span class="qp2i" aria-hidden="true">🎯</span><span><b>Skill drills</b><small>Listen, speak, spell, build</small></span></a>''', "")
+if False:
     rep('''<a class="qp2t qd" href="#drill"><span class="qp2i" aria-hidden="true">🧩</span><span><b>Quick drill</b><small>5 minutes · mixed practice</small></span></a>''', '''<a class="qp2t qd" href="#drill"><span class="qp2i" aria-hidden="true">🧩</span><span><b>Quick drill</b><small>5 minutes · mixed practice</small></span></a><a class="qp2t qd" href="#ejercicios"><span class="qp2i" aria-hidden="true">🎯</span><span><b>Skill drills</b><small>Listen, speak, spell, build</small></span></a>''')
 # words whose misspelling or moved stress would be another real word (carro→caro, hablo→habló): drills must not use them
 import json, unicodedata

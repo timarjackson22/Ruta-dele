@@ -44,6 +44,9 @@ If no: say so in the commit message ("costs: no impact").
 - New lesson or guide: add its id to `tools/curric/topics.json` (and targets if not the default) or it is flagged "needs its own skills mapping".
 - Exam format changes: update the DELE task rows/sources in build_register.py. `node tools/profe-tests/sCR.js` must pass. Method: tools/curric/METRICS.md.
 
+## Quick drill (Practice tab, #drill) — v223
+- One drill for everything: its own exercises (match, hear, build, dictation, say) + skill questions from every lesson of the chosen level (`__sk.pool(lv, focus)`, run in the drill's frame by `__sk.embed`). Level (`S.qdLv`, A1–C2 chips) and focus (`S.qdF`: Mixed or one skill) sit at the top of every drill screen (`qdHead()`). The old Skill drills page (#ejercicios, #ejercicios/skill/…) redirects here; lesson «Check yourself» drills (#ejercicios/<unit>/<part>) and chapter challenges stay. `node tools/profe-tests/sQD.js` must pass.
+
 ## Skill drills (Check yourself cards, #ejercicios)
 - `tools/skilldrills.js` (+ .css) embedded by `python3 tools/patch_skill.py index.html`; generated from lesson/guide content, so new content gets drills automatically.
 - `node tools/profe-tests/sSK.js` must pass (every drill type renders and grades; difficulty by level).
