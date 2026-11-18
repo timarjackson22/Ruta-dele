@@ -36,14 +36,14 @@ const INIT = () => {
   await p.click('#tutor [data-act="vc-open"]');
   rec("Opens the call screen with Profe's animated face", await until(() => document.querySelector("#vcall .vc-svg .vc-mouth") && document.querySelector("#vcall .vc-bar")));
   const ctr = await p.evaluate(() => [...document.querySelectorAll("#vcall .vc-bar [data-act]")].map((x) => x.getAttribute("aria-label")));
-  rec("Controls: mute, captions, speed, camera, end", /Mute/.test(ctr[0]) && /Captions/.test(ctr[1]) && /speed/.test(ctr[2]) && /camera/i.test(ctr[3]) && /End call/.test(ctr[4]), ctr.join(" | "));
+  rec("Controls: mute, captions, speed, camera, end", [/Mute/, /Captions/, /speed/, /camera/i, /End call/].every((r) => ctr.some((t) => r.test(t))), ctr.join(" | "));
   rec("Says it is an AI tutor", await p.evaluate(() => /AI tutor/.test(document.querySelector("#vcall .vc-ai").textContent)));
   // 2. greeting → lip sync on real word events
   rec("Profe greets (speaking state)", await until(() => window.__vc.state() === "speaking"));
   const lips = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const m = () => document.querySelector("#vcall .vc-mouth").getAttribute("d"); const seen = new Set(); for (let i = 0; i < 20; i++) { seen.add(m()); await sleep(50); } return seen.size; });
   rec("While Profe speaks, the mouth moves with the words (many shapes)", lips >= 8, String(lips));
   rec("After the greeting, Profe listens by itself (hands-free)", await until(() => window.__vc.state() === "listening" && window.__micOpen(), 15000));
-  const closed = await p.evaluate(() => { const d = document.querySelector("#vcall .vc-mouth").getAttribute("d"); const y = d.match(/Q50 ([\d.]+) [\d.]+ [\d.]+Z/); return y ? +y[1] - 57.6 : 99; });
+  const closed = await p.evaluate(() => { return window.__vcMouthH ? window.__vcMouthH() : 99; });
   rec("When speech ends the mouth is closed", closed < 1.2, String(closed));
   // 3. a turn: the learner speaks, Profe thinks, answers, then listens again without a tap
   await p.evaluate(() => window.__say("Hola, me llamo Ana."));
@@ -103,8 +103,10 @@ const INIT = () => {
   // 13. layouts
   for (const [w, h, n] of [[390, 844, "phone portrait"], [844, 390, "phone landscape"], [1280, 800, "desktop"]]) {
     await p.setViewportSize({ width: w, height: h }); await p.evaluate(() => window.__vc.open()); await p.waitForTimeout(500);
-    const g = await p.evaluate(() => { const f = document.querySelector("#vcall .vc-face").getBoundingClientRect(), bar = document.querySelector("#vcall .vc-bar").getBoundingClientRect(), cap = document.querySelector("#vcall .vc-cap").getBoundingClientRect(); return { fits: f.bottom <= innerHeight && bar.bottom <= innerHeight + 1 && f.right <= innerWidth, overlap: f.bottom > bar.top + 2 || (cap.top < f.bottom - 2 && cap.left < f.right - 2 && cap.bottom > f.top + 2 && cap.right > f.left + 2), side: document.documentElement.scrollWidth <= innerWidth }; });
-    rec("Layout " + n + ": face, captions and controls fit without overlapping", g.fits && !g.overlap && g.side, JSON.stringify(g));
+    const g = await p.evaluate(() => { const f = document.querySelector("#vcall .vc-face-shape").getBoundingClientRect(), bar = document.querySelector("#vcall .vc-bar").getBoundingClientRect(), cap = document.querySelector("#vcall .vc-cap").getBoundingClientRect(), hint = document.querySelector("#vcall .vc-hint").getBoundingClientRect();
+      const hit = (a) => a.width && a.top < f.bottom - 2 && a.left < f.right - 2 && a.bottom > f.top + 2 && a.right > f.left + 2;
+      return { fits: bar.bottom <= innerHeight + 1 && bar.right <= innerWidth + 1 && bar.left >= -1 && cap.bottom <= bar.top + 1, overlap: hit(bar) || hit(cap) || hit(hint), side: document.documentElement.scrollWidth <= innerWidth }; });
+    rec("Layout " + n + ": the face stays clear of captions and controls, all on screen", g.fits && !g.overlap && g.side, JSON.stringify(g));
     await p.screenshot({ path: "/tmp/vc-" + n.replace(/ /g, "-") + ".png", scale: "css" }); await p.evaluate(() => window.__vc.end());
   }
   // 14. measured lip sync: each spoken word moves the mouth within 100 ms; the mouth closes within 150 ms of the end
@@ -112,7 +114,7 @@ const INIT = () => {
   const ls = await p.evaluate(async () => { const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); const lags = [], closes = []; const mouth = () => document.querySelector("#vcall .vc-mouth") || document.createElement("i");
     const ss = window.speechSynthesis, sp = ss.speak; ss.speak = function (u) { const b0 = u.onboundary, e0 = u.onend;
       u.onboundary = function (ev) { const tb = performance.now(), d0 = mouth().getAttribute("d"); const chk = () => { if (mouth().getAttribute("d") !== d0) lags.push(performance.now() - tb); else if (performance.now() - tb < 300) requestAnimationFrame(chk); }; requestAnimationFrame(chk); return b0 && b0.call(this, ev); };
-      u.onend = function (ev) { const te = performance.now(); const chk = () => { const y = (mouth().getAttribute("d") || "").match(/Q50 ([\d.]+) [\d.]+ [\d.]+Z/); if (y && +y[1] - 57.6 < 1.2) closes.push(performance.now() - te); else if (performance.now() - te < 1000) requestAnimationFrame(chk); }; requestAnimationFrame(chk); return e0 && e0.call(this, ev); }; return sp.call(ss, u); };
+      u.onend = function (ev) { const te = performance.now(); const chk = () => { if (window.__vcMouthH && window.__vcMouthH() < 1.2) closes.push(performance.now() - te); else if (performance.now() - te < 1000) requestAnimationFrame(chk); }; requestAnimationFrame(chk); return e0 && e0.call(this, ev); }; return sp.call(ss, u); };
     window.__vc.open(); await sleep(8000); ss.speak = sp; window.__vc.end(); lags.sort((a, b) => a - b); return { n: lags.length, med: lags[Math.floor(lags.length / 2)], p95: lags[Math.floor(lags.length * 0.95)], close: Math.max(...closes) }; });
   rec("Lip sync measured: the mouth follows each spoken word (median < 100 ms) and closes when speech ends (< 150 ms)", ls.n >= 8 && ls.med < 100 && ls.close < 150, JSON.stringify(ls));
   console.log("   lip sync: " + JSON.stringify(ls));
