@@ -1347,5 +1347,45 @@
  "l-rk": {
   "voice": "unsuitable",
   "why": "type filter on the Reading list (like the level filter)"
+ },
+ "vc-end": {
+  "voice": "complete",
+  "why": "in a call: «end the call» / «termina la llamada»"
+ },
+ "vc-rate": {
+  "voice": "complete",
+  "why": "in a call: «speak slower» / «más despacio» / «faster»"
+ },
+ "vc-tap": {
+  "voice": "complete",
+  "why": "in a call: «stop» / «wait» / «espera» (and speaking, with interrupt by voice on)"
+ },
+ "vc-mute": {
+  "voice": "unsuitable",
+  "why": "muting is a deliberate tap: a muted mic can't hear a voice command to unmute"
+ },
+ "vc-cc": {
+  "voice": "unsuitable",
+  "why": "captions toggle on the call screen"
+ },
+ "vc-cam": {
+  "voice": "unsuitable",
+  "why": "camera needs a deliberate tap (privacy)"
+ },
+ "vc-set": {
+  "voice": "unsuitable",
+  "why": "call settings sheet"
+ },
+ "vc-opt": {
+  "voice": "unsuitable",
+  "why": "call settings options; «only Spanish» / «explain in English» also work by voice"
+ },
+ "vc-resume": {
+  "voice": "unsuitable",
+  "why": "the paused call's bubble: the mic is off while content plays"
+ },
+ "vc-open": {
+  "voice": "unsuitable",
+  "why": "the video-call button in Profe's header"
  }
 }

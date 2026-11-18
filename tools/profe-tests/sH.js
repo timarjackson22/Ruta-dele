@@ -16,7 +16,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   H = await open({ hash: "#practicar", noOpen: true, init: () => { window.__failStarts = 1; const o = window.AndroidSTT.start; window.AndroidSTT.start = function (l, i, c) { o.apply(this, arguments); if (window.__failStarts-- > 0) setTimeout(() => window.__sttEnd("aborted"), 80); }; } }); p = H.p;
   await p.click('button.stile[data-act="t-speak"]'); await H.wait(1000);
   rec("Busy mic: the start is retried once and then listens", await p.evaluate(() => window.__R.log.filter((x) => x[0] === "start").length === 2 && window.__R.on), JSON.stringify(await p.evaluate(() => window.__R.log)));
-  await p.evaluate(() => { window.__failStarts = 2; }); await p.evaluate(() => { const b = document.querySelector('[data-act="t-mic"]'); b.click(); }); await H.wait(150); await p.evaluate(() => { const b = document.querySelector('[data-act="t-mic"]'); if (!b.classList.contains("on")) b.click(); }); await H.wait(1200);
+  // v227: the mic guard retries a busy start once by itself, then the app retries once: the message comes after 4 busy starts
+  await p.evaluate(() => { const b = document.querySelector('[data-act="t-mic"]'); if (b.classList.contains("on")) b.click(); }); await H.wait(400); await p.evaluate(() => { window.__failStarts = 4; document.querySelector('[data-act="t-mic"]').click(); }); await H.wait(2400);
   const live = await p.evaluate(() => (document.getElementById("t-live") || {}).textContent || "");
   rec("Busy mic twice: Profe says the microphone is busy (and how to see why)", /microphone is busy/i.test(live), live);
   await p.click('[data-act="t-hist"], [data-v="hist"]').catch(() => {}); await H.close();

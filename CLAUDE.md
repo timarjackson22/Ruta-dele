@@ -40,6 +40,8 @@ If no: say so in the commit message ("costs: no impact").
 - Numbers (v227): Spanish speech says numbers as words (`numsEs`/`numEs` in `ttsNorm`: thousands separators, decimals, %, money, ordinals, clock times, years; «21 años» → veintiún; phone numbers digit by digit). The word highlight matches whole words only, and a number spoken as words keeps the highlight on the word before it.
 - The mic guard also restarts the phone's recogniser once, silently, when it gives up before hearing anything; the flashcard mic says «One moment…» until the mic is open.
 
+- Video call (v228, tools/vcall.js + vcall.css, embedded by `python3 tools/patch_vcall.py index.html`): button `vc-open` beside Practice. Profe's own portrait animated on the phone (no paid avatar service). Lip sync: while a call is on, `speechSynthesis.speak/cancel` are watched; each utterance's start / word boundaries / end drive the mouth from the letters of the word being spoken (`visOf`, `AV`); cancel or end closes it at once. Turns: the call's guarded recogniser (never while Profe speaks unless «interrupt by voice» is on; echo filter), end of turn after learner-length pauses, then `tSend()` (commands, dictionary, AI). During a call the chat's `listen()`, `hfCapture()`, `autoAgain()`/`afterSpeech()` stand down; `rules()` adds `window.__vcNote()` (language mode, correction mode, the learner's instructions); `utter()` applies the call speed. An app command that opens content pauses the call (bubble «Tap to talk»). Unspoken replies are spoken by the call; with no AI, Profe says how to turn it on. Rollback: `VC_FLAG = false` or `TS.vcall = false`. `node tools/profe-tests/sVC.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
@@ -69,7 +71,7 @@ If no: say so in the commit message ("costs: no impact").
 - Each Spanish sentence must be unique, and tenses must use the codes in build.py. Level gating for practice comes from `FR_T` (tense level) and the pattern level.
 
 ## Home (#inicio) — v226
-- One purpose per block: the continue hero (cbHTML), a short «Today» list (today's session, streak/goal mini ring, Quick drill, Flashcards and My mistakes only when something waits), the word of the day as one line, the journey. No carousels of tiles that repeat the tabs.
+- One purpose per block: the top banner (cbHTML: what to continue, then the word of the day as its second slide via `wodToday()`), a short «Today» list (today's session, streak/goal mini ring, Quick drill, Flashcards and My mistakes only when something waits), the word of the day as one line, the journey. No carousels of tiles that repeat the tabs.
 
 ## Videos (#videos) — v227
 - Rationed library: `VID_KEEP` in tools/video.js (and its embedded copy in index.html) = the best 2 per category; all music stays; sports keeps a live radio commentary. Hidden videos stay in `VID_ALL` so links and history still open them.

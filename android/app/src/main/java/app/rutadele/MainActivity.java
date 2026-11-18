@@ -29,7 +29,8 @@ import java.util.Collections;
 public class MainActivity extends Activity {
     static final String HOST = "timarjackson22.github.io";
     static final String URL = "https://" + HOST + "/Ruta-dele/";
-    static final int REQ_MIC = 7, REQ_NOTIF = 8, REQ_FILE = 9;
+    static final int REQ_MIC = 7, REQ_NOTIF = 8, REQ_FILE = 9, REQ_CAM = 10;
+    PermissionRequest camReq = null;
     ValueCallback<Uri[]> fileCb;
     LlmBridge llm;
     TranslateBridge trb;
@@ -115,6 +116,13 @@ public class MainActivity extends Activity {
         web.setWebChromeClient(new WebChromeClient() {
             @Override
             public void onPermissionRequest(PermissionRequest request) {
+                // v228: the learner's own camera in a Profe video call (off by default; asked only when they turn it on;
+                // shown on their screen only, never sent anywhere)
+                boolean wantsCam = false; for (String r : request.getResources()) if (PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(r)) wantsCam = true;
+                if (wantsCam) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) { request.grant(request.getResources()); return; }
+                    camReq = request; requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_CAM); return;
+                }
                 if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) request.grant(request.getResources());
                 else request.deny();
             }
@@ -183,6 +191,7 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         if (code == REQ_MIC) { boolean ok = res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED; stt.onPermission(ok); if (wake != null) wake.onPermission(ok); }
         if (code == AudioCapBridge.REQ_MIC2 && aud != null) aud.onMic(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
+        if (code == REQ_CAM && camReq != null) { PermissionRequest r = camReq; camReq = null; if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) r.grant(r.getResources()); else r.deny(); }
     }
 
     String readAsset(String name) {
