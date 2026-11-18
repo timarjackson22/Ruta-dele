@@ -16,6 +16,9 @@ const CASES = [
  ["Perfecto. Now, how do you say 'I have a red car'?", "ES[Perfecto.] EN[Now, how do you say I have a red car?]"],
  ["Use «me gusta» with one thing: Me gusta el café.", "EN[Use] ES[me gusta] EN[with one thing:] ES[Me gusta el café.]"],
  ["Me too! A mí también me gusta la playa.", "EN[Me too!] ES[A mí también me gusta la playa.]"],
+ ["¡Muy bien, lo lograste! la nota", "ES[¡Muy bien, lo lograste!] ES[la nota]"],
+ ["Lo lograste", "ES[Lo lograste]"],
+ ["Hablábamos rápidamente.", "ES[Hablábamos rápidamente.]"],
 ];
 let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log("FAIL", m); } };
 (async () => {
@@ -53,6 +56,12 @@ let fail = 0; const ok = (c, m) => { if (!c) { fail++; console.log("FAIL", m); }
   // tag-team split
   const p = await b.newPage(); await p.goto(URL + "#inicio"); await p.waitForTimeout(1200); await p.evaluate(() => window.__setName("Timar"));
   for (const [c, want] of CASES) { const got = await p.evaluate((t) => window.__tagSpeech(t).map(([x, es]) => (es ? "ES[" : "EN[") + x + "]").join(" "), c); ok(got === want, "split: " + c + "\n   got  " + got + "\n   want " + want); }
+  // every praise phrase: the Spanish half to the Spanish voice, the English half to the English voice
+  const tb = await p.evaluate(() => { const bad = []; Object.values(window.__TEACH()).forEach((l) => l.forEach((x) => { if (!Array.isArray(x)) return; const c = (y) => y.replace(/[^\p{L}\p{P}\s]/gu, "").trim(); if (window.__tagSpeech(c(x[0])).some((q) => !q[1])) bad.push(x[0]); if (window.__tagSpeech(c(x[1])).some((q) => q[1])) bad.push(x[1]); })); return bad; });
+  ok(!tb.length, "praise phrases tagged right: " + tb.join(" | "));
+  // spoken homophones: «por qué» heard for «porque» counts; typed answers keep their spelling
+  const hz = await p.evaluate(() => [window.__spokenAs("por qué", "porque"), window.__spokenAs("si no", "No es rojo sino azul."), (window.__prTyped = 1, window.__spokenAs("por qué", "porque"))]);
+  ok(hz[0] === "porque" && /sino/.test(hz[1]) && hz[2] === "por qué", "homophones: " + JSON.stringify(hz));
   // text clean-up
   const n = await p.evaluate(() => [window.__ttsNorm("**Ud.** → «usted» 🙂 (formal)", "es"), window.__ttsNorm("e.g. ser vs. estar", "en")]);
   ok(n[0] === "usted, usted, formal", "norm es: " + n[0]); ok(n[1] === "for example, ser versus estar", "norm en: " + n[1]);

@@ -4,7 +4,7 @@ const { chromium, devices } = require("playwright");
 const URL = process.env.URL || "http://localhost:8766/";
 const INIT = () => {
   window.__recStarts = 0;
-  class Rec { constructor() { this.lang = "es"; } start() { window.__recStarts++; setTimeout(() => { try { this.onstart && this.onstart({}); } catch (e) {} }, 5); } stop() { setTimeout(() => { try { this.onend && this.onend({}); } catch (e) {} }, 5); } abort() { this.stop(); } }
+  class Rec { constructor() { this.lang = "es"; } start() { window.__recStarts++; setTimeout(() => { try { this.onstart && this.onstart({}); } catch (e) {} }, window.__recDelay || 5); } stop() { setTimeout(() => { try { this.onend && this.onend({}); } catch (e) {} }, 5); } abort() { this.stop(); } }
   window.SpeechRecognition = Rec; window.webkitSpeechRecognition = Rec;
   class U { constructor(t) { this.text = t; } } window.SpeechSynthesisUtterance = U;
   const ss = { speaking: false, pending: false, paused: false, getVoices: () => [{ name: "Google español", lang: "es-US", localService: false, voiceURI: "g" }, { name: "Google US English", lang: "en-US", localService: false, voiceURI: "e" }], speak(u) { setTimeout(() => { u.onend && u.onend({}); }, 30); }, cancel() {} };
@@ -67,6 +67,15 @@ const INIT = () => {
   await p.waitForTimeout(300);
   const cj = await p.evaluate(() => document.querySelector("#tutor .prbox.bad").innerText);
   rec("Verbs clue shows the form's shape and length", /t___ \(4 letters\)/.test(cj), cj);
+  // the mic is "opening" until the phone confirms it is live; only then "Listening"
+  await p.evaluate(() => { window.__ad.end(); }); await p.waitForTimeout(300); await p.click('#tutor .papp[data-v="trans"]'); await p.waitForFunction(() => window.__ad.pr() && window.__ad.pr().it, null, { timeout: 8000 });
+  await p.evaluate(() => { window.__ad.pr().autoMic = false; }); await p.waitForTimeout(2500);
+  await p.evaluate(() => { window.__recDelay = 1500; const m = document.querySelector('#tutor [data-act="pr-mic"]'); if (m.classList.contains("on")) m.click(); }); await p.waitForTimeout(600);
+  await p.evaluate(() => document.querySelector('#tutor [data-act="pr-mic"]').click()); await p.waitForTimeout(250);
+  const w1 = await p.evaluate(() => ({ cls: document.querySelector('#tutor [data-act="pr-mic"]').className, n: document.querySelectorAll('[data-act="pr-mic"]').length, live: (document.getElementById("t-live") || {}).textContent || "", wait: document.querySelector('#tutor [data-act="pr-mic"]').classList.contains("wait") }));
+  await p.waitForTimeout(1600);
+  const w2 = await p.evaluate(() => ({ live: (document.getElementById("t-live") || {}).textContent || "", wait: document.querySelector('#tutor [data-act="pr-mic"]').classList.contains("wait") }));
+  rec("Mic tapped: 'opening the mic' until it is really open, then 'Listening'", /opening the mic/.test(w1.live) && w1.wait && /Listening/.test(w2.live) && !w2.wait, JSON.stringify([w1, w2]));
   rec("No page errors", !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();
