@@ -147,7 +147,7 @@ const INIT = () => {
   // 17. turn-taking for learners: an unfinished sentence never ends the turn; provisional words are shown as provisional;
   //     a learner who goes on talking while Profe prepares the answer gets the whole turn heard
   const eo = await p.evaluate(() => ({ open: window.__vcEot("Ayer fui al cine pero", false), done: window.__vcEot("Ayer fui al cine con mis amigos.", true), um: window.__vcEot("I want to say, um", true) }));
-  rec("End of turn waits much longer when the sentence is unfinished («…pero», «um», provisional)", eo.open >= 3500 && eo.done <= 1500 && eo.um >= 3000, JSON.stringify(eo));
+  rec("End of turn waits much longer when the sentence is unfinished («…pero», «um», provisional)", eo.open >= 2800 && eo.done <= 1000 && eo.um >= 2300, JSON.stringify(eo));
   await p.evaluate(() => window.__vc.open()); await until(() => window.__vc.state() === "listening" && window.__micOpen(), 15000);
   await p.evaluate(() => window.__sayI("Ayer fui al supermercado, but"));
   const prov = await p.evaluate(() => !!document.querySelector("#vc-you .vc-prov"));

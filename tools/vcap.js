@@ -204,7 +204,9 @@
     const c = VCAP.cues[k], row = w.querySelectorAll(".vcue")[k], spans = row ? row.querySelectorAll(".ves .vword") : []; if (!spans.length) return;
     let wi;
     if (c.words && c.words.length === spans.length) { wi = 0; for (let i = 0; i < c.words.length; i++) if (c.words[i].t <= t + 0.05) wi = i; }
-    else { const len = [...spans].map((s) => s.textContent.length + 1), tot = len.reduce((a, b) => a + b, 0), f = Math.min(1, Math.max(0, (t - c.s) / Math.max(0.5, (c.e - c.s) * 0.92))); let acc = 0; wi = spans.length - 1; for (let i = 0; i < len.length; i++) { acc += len[i]; if (acc / tot > f) { wi = i; break; } } }
+    else { const syl = (x) => Math.max(1, (x.toLowerCase().match(/[aeiouáéíóúü]+/g) || []).length), len = [...spans].map((s) => (VCAP.kind === "lyrics" ? syl(s.textContent) : s.textContent.length + 1)), tot = len.reduce((a, b) => a + b, 0);
+      // v237: a song's line is sung in about 0.3 s a syllable; the rest of the gap to the next line is music, so the words don't crawl through it
+      const span = VCAP.kind === "lyrics" ? Math.min((c.e - c.s) * 0.92, Math.max(1.2, tot * 0.3 / (VP.rate || 1))) : (c.e - c.s) * 0.92, f = Math.min(1, Math.max(0, (t - c.s) / Math.max(0.5, span))); let acc = 0; wi = spans.length - 1; for (let i = 0; i < len.length; i++) { acc += len[i]; if (acc / tot > f) { wi = i; break; } } }
     if (wi !== VCAP.word) { spans.forEach((s, i) => { s.classList.toggle("now", i === wi); s.classList.toggle("said", i < wi); }); VCAP.word = wi; vcTip(k, spans, wi); }
   }
   // cue tips: the English bubble above the word being said; little words (de, el…) and names jump ahead to the next real word

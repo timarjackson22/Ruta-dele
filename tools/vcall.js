@@ -326,8 +326,9 @@
   // text from the recogniser) waits much longer; after «wait / espera» Profe is extra patient for half a minute.
   const VC_OPEN_END = /(?:^|\s)(?:y|e|o|u|ni|pero|porque|que|qué|si|cuando|como|donde|de|del|a|al|en|con|sin|para|por|el|la|los|las|un|una|mi|tu|su|muy|más|es|está|estoy|soy|tengo|quiero|hay|and|but|or|because|so|the|a|an|to|of|in|with|for|my|your|is|was|i|it|that|if|um+|uh+|eh+|em+|mm+|este|pues|bueno|o sea|like|well|i mean|you know)$/i;
   function vcEot(t, isFinal) {
-    t = String(t || "").trim(); const n = (t.match(/\S+/g) || []).length; let w = isFinal ? (/[.?!]$/.test(t) ? 1100 : 1500) : 2300;
-    if (n <= 2) w += 700; if (VC_OPEN_END.test(t.replace(/[.,;:!?…]+$/, "")) && !/[.?!]$/.test(t)) w += 1700; else if (/[,…-]$/.test(t)) w += 900;
+    // v237: shorter than v235 (the learner found Profe slow); safe because more speech while Profe prepares continues the turn (vcHold)
+    t = String(t || "").trim(); const n = (t.match(/\S+/g) || []).length; let w = isFinal ? (/[.?!]$/.test(t) ? 800 : 1100) : 1700;
+    if (n <= 2) w += 400; if (VC_OPEN_END.test(t.replace(/[.,;:!?…]+$/, "")) && !/[.?!]$/.test(t)) w += 1300; else if (/[,…-]$/.test(t)) w += 600;
     if ((VC.patient || 0) > Date.now()) w += 2500; return w;
   }
   window.__vcEot = vcEot;
@@ -441,7 +442,7 @@
     try { if (typeof HF !== "undefined" && HF.eng === "on") { VC.wasWake = true; hfWakeStop(); } } catch (e) {}
     try { speechSynthesis.cancel(); } catch (e) {}
     Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
-    hookSpeech(); window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
+    hookSpeech(); try { window.AndroidLLM && AndroidLLM.preload && AndroidLLM.preload(); } catch (e) {} window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
     let root = document.getElementById("vcall"); if (!root) { root = document.createElement("div"); root.id = "vcall"; root.className = "vc"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Video call with " + pName()); document.body.appendChild(root); }
     root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
     { const cb = root.querySelector("#vc-cap"); if (cb) { const hold = () => { cb.__user = true; clearTimeout(cb.__ut); cb.__ut = setTimeout(() => { cb.__user = false; }, 6000); }; cb.addEventListener("touchmove", hold, { passive: true }); cb.addEventListener("wheel", hold, { passive: true }); } }
