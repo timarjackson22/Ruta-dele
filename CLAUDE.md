@@ -50,6 +50,7 @@ If no: say so in the commit message ("costs: no impact").
 - Voices that never send word events (often online voices) are learned (`TS.vxNoB`, `vxTrackHook`/`vxNoteRange`) and ranked −6 after two silent utterances, so the highlight can follow the voice.
 - Songs: words inside a lyric line are timed by syllables (~0.3 s each), not spread over the music after the line; −0.5 s / +0.5 s and Sync sit under the lyrics (`.vlnudge`).
 - Video call speed: `streamSpeaker.feed` no longer stops when the chat panel is hidden during a call (it made every call reply wait for the whole answer); the on-device answer streams (`natChat` part callback while `__vcOn`, 160 tokens, no «weak reply» retry), the model is preloaded at call start, and `vcEot` waits are shorter (continuation via `vcHold` protects the learner). `node tools/profe-tests/sLR.js` and `sNAT.js` must pass.
+- v239 audit: tools/VCALL_STANDARD.md (operating standard, issue register, measurements). Never rewrite a node's innerHTML from a MutationObserver path without comparing to what you last wrote (`dataset.sig`/`dataset.lbl`): the browser re-serialises SVG, so `innerHTML !== html` is always true and it loops every frame (that loop kept the whole app busy from v219 to v238). `node tools/profe-tests/sIDLE.js` must pass (idle screens do 0 work).
 
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.

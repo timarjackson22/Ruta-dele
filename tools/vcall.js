@@ -300,7 +300,7 @@
   }
   function capMark(c) {
     const p = document.getElementById("vc-pro"); if (!p || !c || c.capOff == null) return; const k = c.capOff + c.wi;
-    const on = p.querySelector("span.on"); if (on && +on.dataset.w === k) return; if (on) on.classList.remove("on");
+    const ons = p.querySelectorAll("span.on"); if (ons.length === 1 && +ons[0].dataset.w === k) return; ons.forEach((x) => x.classList.remove("on")); // v239: exactly one lit word
     p.querySelectorAll("span:not(.said)").forEach((x) => { if (+x.dataset.w < k) x.classList.add("said"); });
     const sp = p.querySelector('span[data-w="' + k + '"]'); if (!sp) return; sp.classList.add("on");
     const box = document.getElementById("vc-cap"); if (box && !box.__user) { const y = sp.offsetTop - box.clientHeight * 0.35; box.scrollTop = Math.max(0, y); }

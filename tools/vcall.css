@@ -74,7 +74,7 @@ body.vc-open .tabbar, body.vc-open .tutor-fab, body.vc-open #tabpeek { visibilit
 .vc-pill, .vc-who, .vc-cap, .vc-hint, .vc-o, .vc-note { font-size-adjust: none } @supports (font: -apple-system-body) { .vc-cap { font: -apple-system-body; font-weight: 600 } }
 /* v231: the whole reply, the word being said lit, words already said a little dimmer; captions follow the voice */
 .vc-cap { position: relative; scroll-behavior: smooth; overscroll-behavior: contain; -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 6px), transparent); mask-image: linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 6px), transparent) }
-.vc-pro span.on { padding: 0 2px; margin: 0 -2px }
+.vc-pro span.on { padding: 0; margin: 0 }
 .vc-pro span { transition: color .15s ease, background .15s ease; border-radius: 4px }
 .vc-pro span.said { color: rgba(255, 255, 255, .78) }
 .vc-pro span.on { color: #1a1a1a; background: #ffc24a; box-shadow: 0 0 0 2px #ffc24a; transition: none }
