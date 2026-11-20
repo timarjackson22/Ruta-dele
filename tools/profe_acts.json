@@ -1399,5 +1399,21 @@
  "bk-auto": {
   "voice": "unsuitable",
   "why": "Settings › Backup: automatic backup on/off (a privacy setting, by tap)"
+ },
+ "vc-report": {
+  "voice": "unsuitable",
+  "why": "copies the call report to the clipboard"
+ },
+ "pv-vit-copy": {
+  "voice": "unsuitable",
+  "why": "copies the session vitals"
+ },
+ "pv-vit-show": {
+  "voice": "unsuitable",
+  "why": "shows the session vitals"
+ },
+ "pv-vit-clear": {
+  "voice": "unsuitable",
+  "why": "clears the session vitals"
  }
 }

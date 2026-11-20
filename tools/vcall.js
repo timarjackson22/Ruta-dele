@@ -102,13 +102,13 @@
     const sp = ss.speak.bind(ss), ca = ss.cancel.bind(ss);
     try {
       ss.speak = function (u) {
-        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; try { avDiagNew(u); } catch (x) {} const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
+        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; u.__vcT = performance.now(); try { avDiagNew(u); } catch (x) {} const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
           // enthusiasm: a brighter voice in a call (higher on ¡exclamations!, a lift on questions)
           try { const tx = String(u.text || ""), p0 = +u.pitch || 1; if (!u.__vcp) { u.__vcp = 1; u.pitch = Math.min(1.25, p0 * (/[!¡]/.test(tx) ? 1.12 : /[?¿]/.test(tx) ? 1.07 : 1.05)); } } catch (x) {}
           u.onstart = function (ev) { try { if (u.__vd) u.__vd.start = performance.now(); if (!u.__vcs) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
           u.onboundary = function (ev) { try { const d = u.__vd; if (d) { const tt = performance.now() - (d.start || d.tq); d.words++; if (d.w1 == null) d.w1 = tt; d.wN = tt; } if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
-          u.onend = function (ev) { try { if (u.__vd) u.__vd.end = performance.now(); if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
-          u.onerror = function (ev) { try { if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
+          u.onend = function (ev) { try { if (u.__vd) { const d = u.__vd; d.end = performance.now(); window.__vlog("speak", "#" + d.n + " " + d.len + " chars · start " + (d.start != null ? "+" + Math.round(d.start - d.tq) + " ms" : "NONE") + " · " + (d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + " s" : "?") + " · word events " + d.words + " · sound yes " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " · LIPS STILL " + Math.round(d.silent) + " ms" : " · lips ok") + (d.how ? " · " + d.how : "") + " · voice " + ((u.voice && u.voice.name) || u.lang || "?") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
+          u.onerror = function (ev) { try { if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); window.__vlog("speak", "#" + u.__vd.n + " stopped: " + (ev && ev.error || "error") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
         return sp(u);
       };
       ss.cancel = function () { if (VC.on) avStopAll(); return ca(); };
@@ -253,6 +253,8 @@
       // v244: what the phone is really doing (sound playing or not), read a few times a second
       if (!AV.natT || now - AV.natT > 150) { AV.natT = now; AV.nat = vcTtsNat(); if (AV.nat) AV.natSeen = true;
         const d = AV.cur && AV.cur.u && AV.cur.u.__vd; if (d && AV.nat != null) { if (AV.nat) d.natYes++; else d.natNo++; } }
+      // v246: no «start» and no sound signal at all (some engines send neither): begin 0.6 s after Profe started the sentence
+      if (!AV.cur && AV.pend && !AV.pend.__vcs && !AV.nat && now - (AV.pend.__vcT || now) > 600) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; if (AV.pend.__vd) AV.pend.__vd.how = "no start, no sound signal: began after 0.6 s"; } catch (e) {} }
       if (!AV.cur && AV.pend && !AV.pend.__vcs && AV.nat) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; if (AV.pend.__vd) AV.pend.__vd.how = "no start: began on sound"; } catch (e) {} } // «start» never came
       AV.lastStep = now;
       let tgt = VIS.rest; const c = AV.cur;
@@ -363,6 +365,7 @@
     const opt = (k, map, d) => '<div class="vc-opts" role="group">' + Object.entries(map).map(([v, [n]]) => '<button class="vc-o" data-act="vc-opt" data-k="' + k + '" data-v="' + v + '" aria-pressed="' + (vcP(k, d) === v) + '">' + n + "</button>").join("") + "</div>";
     const ms = VC.metrics.slice(-20).map((x) => x.lat).filter((x) => x > 0).sort((a, b) => a - b), med = ms.length ? ms[Math.floor(ms.length / 2)] : null;
     return '<div class="vc-sh-in"><span class="vc-grab" aria-hidden="true"></span><div class="vc-sh-h"><b>Call settings</b><button class="vc-ibtn" data-act="vc-set" aria-label="Close settings">✕</button></div>' +
+      '<button class="vc-o vc-report" data-act="vc-report">Copy call report (to send to support)</button>' +
       '<p class="vc-l">Captions</p>' + opt("txt", { all: ["Profe and me"], pro: ["Only Profe"], off: ["Off"] }, vcTxt()) +
       "<p class=\"vc-l\">Language</p>" + opt("lang", VC_LANG, "bilingual") +
       "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "flow") +
@@ -372,6 +375,7 @@
       (med != null ? '<p class="vc-note">This call: Profe starts answering about ' + (vcMed("total") / 1000).toFixed(1) + " s after you stop talking (" + (vcMed("eot") / 1000).toFixed(1) + " s waiting to be sure you’ve finished, " + (med / 1000).toFixed(1) + " s to answer · " + ms.length + " turns).</p>" : "") + "</div>";
   }
   function vcSet(st, hint) {
+    if (VC.st !== st) try { window.__vlog("call", "state → " + st); } catch (e) {}
     VC.st = st; const root = document.getElementById("vcall"); if (!root) return;
     root.dataset.state = st; const e = document.getElementById("vc-st"); if (e) e.textContent = VC_ST[st] || "";
     const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "" : st === "paused" ? "Tap to talk" : "";
@@ -561,6 +565,7 @@
     try { if (typeof HF !== "undefined" && HF.eng === "on") { VC.wasWake = true; hfWakeStop(); } } catch (e) {}
     try { speechSynthesis.cancel(); } catch (e) {}
     Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
+    try { window.__vlog("call", "call started · Profe " + pName() + " · build " + (window.__BUILD || "?")); } catch (e) {}
     hookSpeech(); try { window.AndroidLLM && AndroidLLM.preload && AndroidLLM.preload(); } catch (e) {} window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
     let root = document.getElementById("vcall"); if (!root) { root = document.createElement("div"); root.id = "vcall"; root.className = "vc"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Video call with " + pName()); document.body.appendChild(root); }
     root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
@@ -603,6 +608,7 @@
   const vcTxt = () => (!VC.cc ? "off" : TS.vc_you === false ? "pro" : "all");
   function vcToast(t) { const root = document.getElementById("vcall"); if (!root) return; let e = root.querySelector(".vc-toast"); if (!e) { e = document.createElement("p"); e.className = "vc-toast"; e.setAttribute("role", "status"); root.appendChild(e); } e.textContent = t; clearTimeout(VC.tt); VC.tt = setTimeout(() => e.remove(), 4500); }
   function vcEnd() {
+    try { window.__vlog("call", "call ended after " + Math.round((Date.now() - (VC.t0 || Date.now())) / 1000) + " s"); } catch (e) {}
     if (!VC.on) return; const secs = Math.round((Date.now() - VC.t0) / 1000), turns = VC.metrics.length;
     VC.on = false; window.__vcOn = false; VC.gen++; clearInterval(VC.qi); clearInterval(VC.tick); cancelAnimationFrame(VC_RAF); vcStopMic(); vcCamOff();
     try { if (typeof SPK_GEN !== "undefined") SPK_GEN++; } catch (e) {} try { if (typeof tBusy !== "undefined" && tBusy && tCtl) tCtl.abort(); } catch (e) {}
@@ -625,6 +631,8 @@
     if (a === "vc-cc") { VC.cc = !VC.cc; TS.vc_cc = VC.cc; tsave(); vcRepaint(); vcToast(VC.cc ? "Captions on" : "Captions off"); return; }
     if (a === "vc-rate") { const R = [0.8, 0.9, 1, 1.1], k = R.indexOf(vcRate()); TS.vc_rate = R[(k + 1) % R.length]; tsave(); window.__vcRate = TS.vc_rate; vcPaintBar(); return; }
     if (a === "vc-cam") { vcCam(); return; }
+    if (a === "vc-report") { const txt = (window.__pvDiagText ? window.__pvDiagText() : (window.__vcLipDiag ? window.__vcLipDiag() : "")); const done = () => vcToast("Call report copied. Paste it into the chat with Claude.");
+      try { navigator.clipboard.writeText(txt).then(done, () => { prompt("Copy this report:", txt); }); } catch (x) { try { prompt("Copy this report:", txt); } catch (y) {} } return; }
     if (a === "vc-set") { const s = document.getElementById("vc-sheet"); if (!s) return; s.hidden = !s.hidden; if (!s.hidden) s.innerHTML = vcSheet(); const r = document.getElementById("vcall"); if (r) r.classList.toggle("vc-sheet-on", !s.hidden);
       if (!s.hidden && !s.__sw) { s.__sw = 1; let y0 = null; s.addEventListener("touchstart", (e) => { y0 = (s.querySelector(".vc-sh-in") || s).scrollTop > 0 ? null : e.touches[0].clientY; }, { passive: true });
         s.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 70) { s.hidden = true; if (r) r.classList.remove("vc-sheet-on"); } y0 = null; }, { passive: true }); }

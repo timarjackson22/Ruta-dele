@@ -74,6 +74,10 @@ If no: say so in the commit message ("costs: no impact").
 - Thinking pose: `VC.thinkSide` (±1 per thinking turn) drives gaze (up + that side), head tilt (eased `AV.think`, chin up) and the chin-rest hand on that side (`.vc-hand-m` mirrored), which moves with the head (`AV.headT`).
 - First call ever (no `TS.lname`): Profe introduces himself and asks «¿Cómo te llamas?» (`VC.askName`), answers «¡Mucho gusto, NAME! Encantado/a…», saves the name; a full sentence instead of a name is answered normally; later calls greet by name. `vcNameFrom()` ignores «soy cansado» / «I'm tired». Call brief adds `vcTeach()` (short turns, level, recasts, open questions, personal, energy). `node tools/profe-tests/sINTRO.js` must pass.
 
+## Session vitals and call report — v246
+- `window.__vlog(kind, text)` (first app script): rolling log kept 30 min across reloads (`ruta-vitals`, ≤ 1500 lines / 200 KB): app start/updates/front-back, errors, mic (`pvLog`), what the learner said (`tSend`), on-device AI asked/first words/finished/gave up (`natRun`), call start/states/end, every call sentence (start delay, length, word events, sound signal, «lips ok» or «LIPS STILL n ms», voice), memory every 2 min, screen freezes > 400 ms, storage full. Profe › Settings › Session vitals (Copy / Show / Clear); Copy and the call's «Copy call report» (`vc-report`) give `pvDiagText()`: version first, then diagnostics, then the vitals. `node tools/profe-tests/sVIT.js` must pass.
+- Lip-sync: a sentence with neither «start» nor a sound signal starts the mouth 0.6 s after Profe began it (sLIP «blind»).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

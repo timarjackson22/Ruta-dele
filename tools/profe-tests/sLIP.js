@@ -15,7 +15,8 @@ const INIT = () => {
       const a0 = 120 + (mode === "late" ? 700 : 0), A = performance.now() + a0; window.__lipLog.push({ start: A, end: A + dur });
       // «queued» = Android's isSpeaking() goes false once the audio is handed to the mixer (60 % in) while the sound plays on
       window.__natSpeaking = ["early", "nostart", "late"].includes(mode) ? () => { const n = performance.now(); return n >= A && n < A + dur; } : mode === "queued" ? () => { const n = performance.now(); return n >= A && n < A + dur * 0.6; } : null;
-      if (mode !== "nostart") ss._t.push(setTimeout(() => { u.onstart && u.onstart({}); }, 120));
+      // «blind» = no start event and no sound signal at all (v246)
+      if (mode !== "nostart" && mode !== "blind") ss._t.push(setTimeout(() => { u.onstart && u.onstart({}); }, 120));
       ws.forEach((ci, n) => { let send = mode === "all" || mode === "early" || mode === "queued" || (mode === "first" && n < 5); let idx = ci; if (mode === "reset") { const cut = t.lastIndexOf(".", ci - 1); idx = cut >= 0 ? ci - cut - 2 : ci; send = true; }
         if (send) ss._t.push(setTimeout(() => { u.onboundary && u.onboundary({ name: "word", charIndex: Math.max(0, idx) }); }, (mode === "early" || mode === "queued") ? 130 + n * 8 : a0 + ci * mpc)); });
       ss._t.push(setTimeout(() => { ss.speaking = false; ss._u = null; u.onend && u.onend({}); }, a0 + dur)); } };
@@ -30,7 +31,7 @@ const TEXT = "Muy bien. Ayer fuiste al mercado con tu hermana y comprasteis frut
   const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" }); await c.addInitScript(INIT); const p = await c.newPage();
   await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1500);
   await p.evaluate(() => window.__vc.open()); await p.waitForTimeout(800);
-  for (const mode of ["all", "first", "reset", "none", "early", "nostart", "late", "queued"]) {
+  for (const mode of ["all", "first", "reset", "none", "early", "nostart", "late", "queued", "blind"]) {
     const r = await p.evaluate(async ([mode, text]) => {
       const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); speechSynthesis.cancel(); await sleep(400);
       window.__lipMode = mode; window.__lipLog = []; { const u0 = new SpeechSynthesisUtterance("Hola, ¿qué tal estás hoy? Vamos a practicar un poco de español juntos."); speechSynthesis.speak(u0); await sleep(75 * 95 + 600); }
