@@ -83,6 +83,12 @@ If no: say so in the commit message ("costs: no impact").
 - On-device AI: one job at a time (`natRun` queue `NATQ`): replies first and cancel a background job; background jobs (`aiText.bg`: grammar check cap 90, notes cap 220) wait during a call. The chat session rotates (`tCur.natGen`) before the model's ~2,048 tokens fill (conversation budget `max(1500, 5600 − system prompt)`), with a recap of the last turns; an instant empty reply → fresh session + one retry. In a call the on-device prompt uses the compact brief (`__vcNote(true)`, ≤ 5,600 chars total). APK: Gemma session cap 6,400 chars, `resetChat()` resets it. `node tools/profe-tests/sAIQ.js` must pass.
 - The voice never changes during a call (`pickVoices` keeps it). A greeting instead of a name gets «¡Hola! ¿Y cómo te llamas?»; a name guessed from a bare word (`vcNameFrom.sure` false) comes with «Si no lo he oído bien, dime «me llamo…»». English answers get simple Spanish back.
 
+## Names on a shared phone — v248
+- Only the name typed in Profe › Settings («Your name», `pv-lname` → `TS.lnameOwner`) is remembered. A name heard in a call or chat sets `TS.lname` for the session only: `tsJSON()` never saves `lname`, a call's end restores the owner's name (`__nameReset`), and a restart starts from `lnameOwner`. Names saved by older versions are dropped.
+- No owner name → every call introduces Profe and asks. A bare word («Timar», «hola Timar») is a guess → «¿Te llamas Timar?» (`VC.askName = "confirm"`); «me gusta», «number Smart» are not names. «No me llamo…» / «that's not my name» forgets the session name and asks again (call and chat, `__notMyName`).
+- Bug fixed: Profe's own name field and the learner's name field shared the id `pv-name`; typing Profe's name set the learner's.
+- `node tools/profe-tests/sINTRO.js` (16) must pass; sVC sets an owner name (`__setName(n, true)`).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

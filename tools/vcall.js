@@ -523,7 +523,7 @@
     let m = /\b(?:me llamo|mi nombre es|my name is|i'?m called|ll[aá]mame|call me)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s);
     // «soy Ana» / «I'm Ana» only in a short answer, and not «soy cansado» / «I'm tired»
     if (!m && s.split(/\s+/).length <= 3) { const m2 = /\b(?:soy|i am|i'?m)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s); if (m2 && !ADJ.test(m2[1])) m = m2; }
-    vcNameFrom.sure = !!m; let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && w.length <= 2 && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1])) n = w[w.length - 1]; }
+    vcNameFrom.sure = !!m; let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1]) && (w.length === 1 || (w.length === 2 && /^(hola|hi|hello|hey|bueno|pues|ah|oh|eh|um|mm|ok|vale)$/i.test(w[0])))) n = w[w.length - 1]; } // v248: «me gusta» / «number Smart» are not names
     if (!n || STOP.test(n)) return ""; return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase();
   }
   window.__vcNameFrom = vcNameFrom;
@@ -533,8 +533,16 @@
     // a command is a short utterance; inside a longer sentence ("…habla despacio y explica mis errores") it's an instruction
     const nW = (low.match(/\S+/g) || []).length;
     const cmd = (VC_CMD.find(([re, k]) => re.test(low) && (k === "end" ? nW <= 6 : nW <= 4)) || [])[1];
+    if (VC.askName === "confirm" && cmd !== "end") { // v248: «¿Te llamas Smart?»
+      const yes = /^(s[ií]|yes|yeah|yep|correcto|eso es|exacto|claro|as[ií] es|that'?s right|right)\b/i.test(low), better = vcNameFrom(t), fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
+      if (yes && !(better && vcNameFrom.sure)) { const nm3 = VC.nameGuess; VC.askName = 0; TS.lname = nm3; tsave(); vcSay([["¡Mucho gusto, " + nm3 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true], ["¿De qué quieres hablar hoy?", true]], () => vcListen()); return; }
+      if (better && vcNameFrom.sure) { VC.askName = 0; TS.lname = better; tsave(); vcSay([["¡Ah, " + better + "! ¡Mucho gusto! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true], ["¿De qué quieres hablar hoy?", true]], () => vcListen()); return; }
+      VC.askName = 2; vcSay([["Perdona. ¿Cómo te llamas? Dime «me llamo…» y tu nombre.", true], ["Say «me llamo» and your name.", false]], () => vcListen()); return;
+    }
+    if (window.__notMyName && window.__notMyName(t) && !(vcNameFrom(t) && vcNameFrom.sure && !/no me llamo/i.test(low))) { TS.lname = ""; tsave(); VC.askName = 2; vcSay([["¡Perdona! ¿Cómo te llamas? Dime «me llamo…» y tu nombre.", true]], () => vcListen()); return; }
     if (VC.askName && cmd !== "end") {
       const nm2 = vcNameFrom(t), fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
+      if (nm2 && !vcNameFrom.sure) { VC.askName = "confirm"; VC.nameGuess = nm2; vcSay([["¿Te llamas " + nm2 + "?", true]], () => vcListen()); return; } // a guess: check before saving
       if (nm2) { VC.askName = 0; TS.lname = nm2; tsave();
         // a name guessed from a bare word may be a recognition slip («number Smart»): say how to fix it
         vcSay([["¡Mucho gusto, " + nm2 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true]].concat(vcNameFrom.sure ? [] : [["Si no lo he oído bien, dime «me llamo…» y lo cambio.", true]]).concat([["¿De qué quieres hablar hoy? Puede ser de tu día, de tus planes o de lo que estás estudiando.", true]]), () => vcListen()); return; }
@@ -634,6 +642,7 @@
   const vcTxt = () => (!VC.cc ? "off" : TS.vc_you === false ? "pro" : "all");
   function vcToast(t) { const root = document.getElementById("vcall"); if (!root) return; let e = root.querySelector(".vc-toast"); if (!e) { e = document.createElement("p"); e.className = "vc-toast"; e.setAttribute("role", "status"); root.appendChild(e); } e.textContent = t; clearTimeout(VC.tt); VC.tt = setTimeout(() => e.remove(), 4500); }
   function vcEnd() {
+    try { if (window.__nameReset) window.__nameReset(); } catch (e) {} // a guest's name lasts for their call only
     try { window.__vlog("call", "call ended after " + Math.round((Date.now() - (VC.t0 || Date.now())) / 1000) + " s"); } catch (e) {}
     if (!VC.on) return; const secs = Math.round((Date.now() - VC.t0) / 1000), turns = VC.metrics.length;
     VC.on = false; window.__vcOn = false; VC.gen++; clearInterval(VC.qi); clearInterval(VC.tick); cancelAnimationFrame(VC_RAF); vcStopMic(); vcCamOff();

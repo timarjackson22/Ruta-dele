@@ -30,6 +30,7 @@ const INIT = () => {
   const st = () => p.evaluate(() => window.__vc.state());
   const until = (f, ms) => p.waitForFunction(f, null, { timeout: ms || 8000 }).then(() => true).catch(() => false);
   await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1200);
+  await p.evaluate(() => window.__setName("Ana", true)); // v248: the phone owner's name is set (turn-taking tests, not the first-meeting flow: see sINTRO)
   await p.evaluate(() => { document.body.classList.add("tabs-peek"); document.querySelector('[data-act="t-open"]').click(); }); await p.waitForTimeout(600);
   // 1. entry
   const btn = await p.evaluate(() => { const b = document.querySelector('#tutor .tseg [data-act="vc-open"]'), pr = document.querySelector('#tutor .tseg [data-act="t-tab"][data-v="practice"]'); if (!b || !pr) return null; const r1 = b.getBoundingClientRect(), r2 = pr.getBoundingClientRect(); return { label: b.getAttribute("aria-label"), beside: Math.abs(r1.top - r2.top) < 6 }; });
