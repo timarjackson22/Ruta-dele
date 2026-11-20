@@ -230,7 +230,13 @@
   function pvRoute(raw, origin) {
     const c = pvCtx(), s = pvNorm(raw), now = Date.now();
     // v249: during a verb drill, short answers belong to the drill («otro verbo», «repite», «no», «cambié»), not to app commands
-    if (window.__drillOn && window.__drillOn() && s.split(" ").length <= 7 && !/^(open|abre|go to|ve a|ir a|show|muestra|take me|ll[eé]vame)\b/.test(s)) return false;
+    // v251 (S24 log: «hoy» in a call opened Home): in a call, app commands need a command word up front
+    if (window.__vcOn && !/^(profe |hey profe |ok profe )?(open|abre|abrir|ve a|vete a|vamos a la|vamos al|go to|take me|ll[eé]vame|muestra|ens[eé][nñ]ame|show|pon|play|reproduce|busca|search|cierra|close|start|empieza|comienza)\b/.test(s)) return false;
+    // v251: outside a call only answer-shaped text goes to the drill («yo cambié», «otro verbo», «repite», «sí»); app commands
+    // («close Profe», «new chat», «quiz me on this lesson») still work while a chat drill is open
+    if (window.__drillOn && window.__drillOn() && s.split(" ").length <= 7 && !/^(open|abre|go to|ve a|ir a|show|muestra|take me|ll[eé]vame)\b/.test(s) &&
+      (window.__vcOn || /^(yo|tu|t[uú]|el|[eé]l|ella|usted|nosotr[oa]s|vosotr[oa]s|ell[oa]s|ustedes)\b|\b(otro verbo|otra vez|repite|repitelo|rep[ií]telo|puedes repetir|cambiar de verbo|another verb|no entiendo|no lo entiendo)\b|^(s[ií]|no|vale|claro|ok)$/.test(s) ||
+       (s.split(" ").length === 1 && !/^(next|skip|stop|close|help|back|again|check|siguiente|salta|para|atras|ayuda)$/.test(s)))) return false;
     if (planChatOn()) { if (window.__planAbout(raw)) { planChatTurn(raw, origin); return true; } window.__planPause(true); } // not about the plan: pause it and carry on normally
     if (PV.pend && now < PV.pend.until) { const p = PV.pend; if (PV_YES.test(s)) { PV.pend = null; pvExec(p.a, p.s, origin, true); return true; } if (PV_NO.test(s)) { PV.pend = null; pvReply("Okay, I won't.", origin); return true; } PV.pend = null; }
     if (PV.clar && now < PV.clar.until) { const q = PV.clar; PV.clar = null;

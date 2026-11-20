@@ -100,6 +100,14 @@ If no: say so in the commit message ("costs: no impact").
 - Two app restarts in the first 15 s of a call: the AI model (~2 GB) loaded while the scene started and the greeting played. The model now loads after the greeting (`VC.preloadAt`, first `vcListen`). The heartbeat (`rd-live`) records `c` (call on) and `m` (model state, `window.__natState` from `__allm` loading/loaded/err, also in the vitals); a restart during a call is logged «DURING A CALL, AI model …» and sets `rd-vcsafe`: for 24 h calls run in SAFE MODE (`#vcall.vc-safe`: no SVG blur filters, no bokeh, no early model load). `node tools/profe-tests/sSAFE.js` must pass.
 - Lips: when the timing estimate runs out before the sentence's end event, the mouth goes round the last 4 words again (`c.loopFrom`) instead of parking («LIPS STILL 3.7 s» on the greeting). `node tools/profe-tests/sLIP3.js` replays the greeting at 40/55/95 ms per letter.
 
+## 4th S24 call log — v251
+- Never listen while Profe speaks: `avBegin` stops any listen-while-thinking session (`vcHoldStop`); an instant (non-AI) reply right after «thinking» left one open and Profe's drill intro came back as the learner's turn. Backup: `vcIsEcho()` = 5+ of Profe's words in a row (`AV.recent`, last 30 s), first heard (`VC.heardAt`) within 3 s of him stopping, unless he asked for a repeat. Test helper `overlapMic` now applies its grace to the mic's stop latency.
+- Calls: app commands need a command word up front (pvRoute; «hoy» opened Home). On-device calls use `callCore()` (~900 chars) + the compact brief instead of the general prompt (sessions lasted 2–3 turns, 5–10 s first words, re-greetings); `dropHola()` removes a mid-call «¡Hola…!». teach.js nudges are Spanish in calls.
+- The Android app uses the light call scene by default (`vc-safe` when `AndroidTTS`): the full scene + loaded model crashed the S24; the light one ran 13 min. A line that fails with «synthesis-failed» is said again once by `vcSay` (`AV.synthFail`).
+- Names: «mi nombre estimar» → Timar; filler after «my name is» skipped. `node tools/profe-tests/sCALL4.js` must pass.
+- Instant (on-device / no-AI) replies add «Back to the exercise: …» only outside calls and never to a reply the drill itself gave (`expertAnswer0.dr`).
+- Outside calls a chat drill takes only answer-shaped text (pronoun + form, «otro verbo», «repite», sí/no, one word); app commands still route (sH 70/70).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

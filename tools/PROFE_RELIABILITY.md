@@ -45,6 +45,12 @@ Checkpoint before changes: git tag `checkpoint-v241` (pushed). Rollback: `git ch
 | 20 | App restarted twice in the first 15 s of a call | 3rd S24 log 15:34–15:35 | Call unusable | Critical (device) | Most likely memory: the ~2 GB AI model loaded at call start alongside the animated scene and the greeting (no Android memory signal to prove it; the heartbeat now records call + model state) | v250: model loads after the greeting; safe mode for a day after a crash in a call | sSAFE | Fixed; confirm with the next report |
 | 21 | Lips still for the last half of the greeting | same log (3,687 ms of 7.8 s) | Looks broken | High | first sentence, nothing learned; events at ~40–55 ms/letter not flagged early; the estimate «stretch» parked the mouth | v250 loop over the last words until the end event | sLIP3 (fails on v249 at 55 ms) | Fixed |
 
+| 22 | Profe answered his own drill instructions | 4th S24 log 17:04 | Confusing loop | High | listen-while-thinking session stayed open while an instant reply was spoken | v251 stop on speech start + echo check | sCALL4 | Fixed |
+| 23 | «hoy» opened Home mid-call | same log 16:57 | Lost the call's thread | Medium | bare route word matched in a call | v251 command word required in calls | sCALL4 | Fixed |
+| 24 | Session restarts every 2–3 turns, slow first words, re-greetings | same log | Slow, repetitive | High | ~5,200-char prompt on a 2,048-token model | v251 lean call core, mid-call «hola» dropped | sCALL4 | Fixed |
+| 25 | Crash with the model loaded (full scene) | same log 16:56 | Call lost | Critical | memory; the light scene held 13 min | v251 light scene default in the app | sCALL4 | Fixed; watch |
+| 26 | First greeting failed (synthesis-failed), silent call | same log 16:55 | Silent start | Medium | engine not ready | v251 say it again once | sCALL4 | Fixed |
+
 ## One owner per resource (the rule going forward)
 - **Microphone**: the mic guard (`micGuard`, `MICG.cur`). Anything that listens goes through it; the wake listener asks
   `window.__micOwned()` and `__vcOn` via `hfBusy()` before it listens.

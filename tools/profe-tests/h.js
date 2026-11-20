@@ -93,7 +93,7 @@ async function open(o = {}) {
 }
 // checks
 function overlapMic(tts, wins, grace = 60) { // speech playing while the mic is open (after a short stop latency)
-  const bad = []; tts.forEach((e) => { if (!e.t0) return; wins.forEach(([a, z]) => { const end = e.t1 || 1e12, zz = z || 1e12; if (e.t0 < zz && end > a + grace) bad.push(e.text.slice(0, 40) + " @" + e.t0 + "-" + (e.t1 || "…") + " mic " + a + "-" + (z || "…")); }); }); return bad;
+  const bad = []; tts.forEach((e) => { if (!e.t0) return; wins.forEach(([a, z]) => { const end = e.t1 || 1e12, zz = z || 1e12; if (e.t0 + grace < zz && end > a) bad.push(e.text.slice(0, 40) + " @" + e.t0 + "-" + (e.t1 || "…") + " mic " + a + "-" + (z || "…")); }); }); return bad;
 }
 const labels = (tts) => tts.filter((e) => /\[\[|\*\*|^\s*(es|en)\s*[:=]|"language"|EN\b/.test(e.text)).map((e) => e.text);
 const ES_HINT = /[¿¡ñáéíóú]|\b(el|la|los|las|que|de|es|y|en|un|una|por|para|con|muy|yo|tú|fui|voy|ayer|tengo|hambre|ser|estar|vale|después|supermercado|mercado|hola|bien|gracias|años|treinta|comí|casa|quiero|reservar|habitación)\b/i;

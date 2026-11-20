@@ -86,7 +86,23 @@
       if (ks.length && ks[ks.length - 1][0] === v) ks[ks.length - 1][1] += wt * 0.5; else ks.push([v, wt]); }
     if (!ks.length) ks.push(["rest", 1]); ks.T = ks.reduce((a, k) => a + k[1], 0); return ks; }
   function avWords(text) { const out = []; const re = /[\p{L}\d'’]+/gu; let m; while ((m = re.exec(text))) out.push({ i: m.index, len: m[0].length }); return out; }
+  /* v251 (S24 log 17:04): a listening session that started while Profe was «thinking» stayed open while he spoke, and his
+     own words («vamos a practicar preguntar, yo te digo…») came back as the learner's turn — twice. Now any such session
+     stops the moment he speaks, and a turn made mostly of words Profe said in the last 30 s, heard within 4 s of him
+     stopping, is ignored as his own voice. */
+  const vcEW = (x) => (String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").match(/[a-zñ']+/g) || []);
+  // an echo carries a run of 5+ consecutive words exactly as Profe said them (a learner's own answer that reuses his words
+  // — «sí, me gusta el mercado» — doesn't)
+  function vcIsEcho(text) {
+    const ws = vcEW(text); if (ws.length < 5) return false; const now = Date.now();
+    for (const r of (AV.recent || []).filter((x) => now - x.t < 30000)) { const pw = " " + r.w.join(" ") + " ";
+      for (let i = 0; i + 5 <= ws.length; i++) if (pw.includes(" " + ws.slice(i, i + 5).join(" ") + " ")) return true; }
+    return false;
+  }
+  window.__vcIsEcho = vcIsEcho;
+  window.__vcTurns = () => (VC.on ? (VC.turns || 0) : 0);
   function avBegin(u) {
+    try { const now = Date.now(); AV.recent = (AV.recent || []).filter((x) => now - x.t < 30000); AV.recent.push({ t: now, w: vcEW(u && u.text) }); if (VC.hold) vcHoldStop(); } catch (e) {}
     const en = /^en/i.test(u.lang || "");
     AV.cur = { u, text: String(u.text || ""), rate: u.rate || 1, en, words: avWords(String(u.text || "")), wi: 0, wStart: performance.now() + 280, t0: performance.now(), hasB: false, bWi: -1, mpc: AV.mpc || 0 };
     AV.speaking = true; AV.lastBegin = Date.now(); AV.smile = /^(¡?muy bien|¡?excelente|¡?perfecto|¡?genial|¡?fenomenal|¡?estupendo|¡?fant[aá]stico|¡?bravo|¡?s[ií]+,|great|well done|nice|perfect|excellent|awesome|¡?eso es|¡?bien hecho|¡?correcto)/i.test(AV.cur.text) ? 1 : 0;
@@ -131,7 +147,10 @@
           u.onstart = function (ev) { try { if (u.__vd) u.__vd.start = performance.now(); if (!(AV.cur && AV.cur.u === u)) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
           u.onboundary = function (ev) { try { const d = u.__vd; if (d) { const tt = performance.now() - (d.start || d.tq); d.words++; if (d.w1 == null) d.w1 = tt; d.wN = tt; } if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
           u.onend = function (ev) { try { avUnq(u); AV.lastEndP = performance.now(); if (u.__vd) { const d = u.__vd; d.end = performance.now(); window.__vlog("speak", "#" + d.n + " " + d.len + " chars · start " + (d.start != null ? "+" + Math.round(d.start - d.tq) + " ms" : "NONE") + " · " + (d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + " s" : "?") + " · word events " + d.words + " · sound yes " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " · LIPS STILL " + Math.round(d.silent) + " ms" : " · lips ok") + (d.how ? " · " + d.how : "") + " · voice " + ((u.voice && u.voice.name) || u.lang || "?") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
-          u.onerror = function (ev) { try { avUnq(u); if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); window.__vlog("speak", "#" + u.__vd.n + " stopped: " + (ev && ev.error || "error") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
+          u.onerror = function (ev) {
+            // v251 (S24 log: the first greeting failed with «synthesis-failed» and the call went silent): try once more
+            if (ev && ev.error === "synthesis-failed") AV.synthFail = Date.now(); // vcSay says the line again
+            try { avUnq(u); if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); window.__vlog("speak", "#" + u.__vd.n + " stopped: " + (ev && ev.error || "error") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
         const r = sp(u);
         // queued after the engine took it: an engine that clears its queue inside speak() must not drop this sentence
         if (u && u.__vcQ && !u.__vcQd && !u.__vcEnd) { u.__vcQd = 1; (AV.pendQ = AV.pendQ || []).push(u); }
@@ -469,7 +488,8 @@
     const wait = (t, isFinal) => vcEot(t, isFinal);
     r.onstart = () => { if (r._vcDead) return; VC.fails = 0; vcSet("listening"); clearTimeout(VC.sT); VC.sT = setTimeout(() => finish(live), 20000);
       if (seed) { VC.lastHeard = Date.now(); vcCapYou(seed, ""); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(seed, true)); } }; // a continued turn: answer after the usual pause if nothing more comes
-    r.onresult = (e) => { if (r._vcDead) return; let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
+    if (!seed) VC.heardAt = 0;
+    r.onresult = (e) => { if (r._vcDead) return; if (!VC.heardAt) VC.heardAt = Date.now(); let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
       fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCapYou(fin, im.trim()); VC.lastHeard = Date.now();
       { const nw = (live.match(/\S+/g) || []).length; if (nw - (VC.nodN || 0) >= 4) { VC.nodN = nw; AV.nodL = performance.now(); } }
       clearTimeout(VC.sT); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(live, !im.trim())); };
@@ -501,7 +521,10 @@
     // v240: Spanish first — the English half of a bilingual confirmation is only spoken in «Mostly English» mode
     if (Array.isArray(parts) && vcP("lang", "bilingual") !== "english") { const es = parts.filter((x) => x[1]); if (es.length) parts = es; }
     const g = VC.gen; vcStopMic(); vcSet("speaking");
-    await new Promise((res) => { try { speakMixed(parts, res); } catch (e) { res(); } setTimeout(res, 15000); });
+    const t0 = Date.now(); await new Promise((res) => { try { speakMixed(parts, res); } catch (e) { res(); } setTimeout(res, 15000); });
+    // v251 (S24 log: the first greeting failed with «synthesis-failed» and the call went silent): one more try
+    if (VC.on && g === VC.gen && (AV.synthFail || 0) >= t0 && Date.now() - t0 < 3000) { try { window.__vlog("speak", "synthesis failed: saying it again"); } catch (e) {}
+      await new Promise((r) => setTimeout(r, 500)); await new Promise((res) => { try { speakMixed(parts, res); } catch (e) { res(); } setTimeout(res, 15000); }); }
     if (VC.on && g === VC.gen && then) vcQuietThen(then);
   }
   const VC_CMD = [
@@ -526,7 +549,8 @@
   function vcNameFrom(t) {
     const s = String(t || "").trim().replace(/[.!?¡¿,]/g, ""); const STOP = /^(profe|hola|hello|hi|bien|muy|yes|no|si|sí|gracias|thanks|okay|ok|vale|el|la|un|una|yo|me|my|name|is|soy|llamo|i|am|im|bueno|what|que|qué|como|cómo)$/i;
     const ADJ = /^(cansad[oa]s?|bien|mal|feliz|contento|contenta|nervios[oa]|de|del|estudiante|profesor|profesora|nuevo|nueva|tired|good|fine|ok|happy|sad|from|a|an|the|not|very|so|here|ready|listo|lista)$/i;
-    let m = /\b(?:me llamo|mi nombre es|my name is|i'?m called|ll[aá]mame|call me)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s);
+    let m = /\b(?:me llamo|mi nombre es|my name is|my name's|i'?m called|ll[aá]mame|call me)\s+(?:(?:to|a|the|is|es|el|la|de)\s+)?([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s);
+    if (!m) m = /\bmi nombre es([a-záéíóúñ]{3,20})\b/i.exec(s); // «mi nombre estimar» = «mi nombre es Timar» run together
     // «soy Ana» / «I'm Ana» only in a short answer, and not «soy cansado» / «I'm tired»
     if (!m && s.split(/\s+/).length <= 3) { const m2 = /\b(?:soy|i am|i'?m)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s); if (m2 && !ADJ.test(m2[1])) m = m2; }
     vcNameFrom.sure = !!m; let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1]) && (w.length === 1 || (w.length === 2 && /^(hola|hi|hello|hey|bueno|pues|ah|oh|eh|um|mm|ok|vale)$/i.test(w[0])))) n = w[w.length - 1]; } // v248: «me gusta» / «number Smart» are not names
@@ -534,6 +558,10 @@
   }
   window.__vcNameFrom = vcNameFrom;
   async function vcTurn(text) {
+    VC.turns = (VC.turns || 0) + 1;
+    // echo = 5+ of Profe's words in a row AND first heard within 3 s of him finishing AND he didn't ask for a repeat
+    if (vcIsEcho(text)) try { window.__vlog("call", "sounds like Profe's words (heard " + ((VC.heardAt || Date.now()) - (AV.lastEnd || 0)) + " ms after he stopped)"); } catch (e) {}
+    if (vcIsEcho(text) && (VC.heardAt || Date.now()) - (AV.lastEnd || 0) < 3000 && !/\b(repite|rep[ií]telo|repeat|say it|dilo|ahora t[uú]|tu turno|your turn|di:)/i.test(VC.lastPro || "")) { try { window.__vlog("call", "ignored Profe's own voice: «" + String(text).slice(0, 60) + "»"); } catch (e) {} vcListen(); return; }
     if (!VC.on) return; const g = ++VC.gen; VC.nodN = 0; vcCap(text, ""); vcStopMic();
     const t = text.trim(), low = t.toLowerCase();
     // a command is a short utterance; inside a longer sentence ("…habla despacio y explica mis errores") it's an instruction
@@ -613,7 +641,7 @@
     try { if (typeof listening !== "undefined" && listening) stopListening(); } catch (e) {}
     try { if (typeof HF !== "undefined" && HF.eng === "on") { VC.wasWake = true; hfWakeStop(); } } catch (e) {}
     try { speechSynthesis.cancel(); } catch (e) {}
-    Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
+    Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", turns: 0, instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
     try { window.__vlog("call", "call started · Profe " + pName() + " · build " + (window.__BUILD || "?")); } catch (e) {}
     /* v250 (S24 log: two restarts in the first 15 s of a call): loading the AI model (~2 GB) while the scene starts and the
        greeting plays ran the phone out of memory. The model now loads after the greeting, when the call is listening; after
@@ -623,7 +651,7 @@
     VC.preloadAt = VC.safe ? 0 : 1; if (VC.safe) try { window.__vlog("call", "safe mode (the app restarted during an earlier call)"); } catch (e) {}
     hookSpeech(); window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
     let root = document.getElementById("vcall"); if (!root) { root = document.createElement("div"); root.id = "vcall"; root.className = "vc"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Video call with " + pName()); document.body.appendChild(root); }
-    root.innerHTML = vcxHTML(); root.hidden = false; root.classList.toggle("vc-safe", !!VC.safe); document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
+    root.innerHTML = vcxHTML(); root.hidden = false; root.classList.toggle("vc-safe", !!VC.safe || !!window.AndroidTTS); /* v251: the lighter scene is the default in the Android app (the full one crashed the S24 with the AI model loaded; the light one ran 13 min) */ document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
     { const cb = root.querySelector("#vc-cap"); if (cb) { const hold = () => { cb.__user = true; clearTimeout(cb.__ut); cb.__ut = setTimeout(() => { cb.__user = false; }, 6000); }; cb.addEventListener("touchmove", hold, { passive: true }); cb.addEventListener("wheel", hold, { passive: true }); } }
     const pill = document.getElementById("vc-pill"); if (pill) pill.remove();
     const nm = TS.lname ? ", " + TS.lname : "";

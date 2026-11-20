@@ -62,7 +62,7 @@
     if (typeof PR !== "undefined" && PR) return; // role-plays have their own next step
     const txt = String(live.c);
     if (/[?¿]/.test(txt) || /\b(try|say|tell me|now you|your turn|repeat|intenta|prueba|dime|cuéntame|cuentame|ahora tú|ahora tu|repite|te toca)\b/i.test(txt)) return;
-    const lvl = (typeof learnerLevel === "function" ? learnerLevel(pageCtx()) : "a2").toUpperCase(), en = /A1|A2/.test(lvl);
+    const lvl = (typeof learnerLevel === "function" ? learnerLevel(pageCtx()) : "a2").toUpperCase(), en = /A1|A2/.test(lvl) && !window.__vcOn; // v251: a call is Spanish first
     live.c = txt.replace(/\s+$/, "") + "\n\n" + (cur ? (en ? "Now try saying it again." : "Ahora dilo tú otra vez.") : pvPick(en ? ["What about you? Tell me one more thing in Spanish.", "Your turn: can you answer in a full sentence?"] : ["¿Y tú? Cuéntame un poco más.", "¿Seguimos con otra pregunta o prefieres cambiar de tema?"]));
   }
   const TEACH_RULES = "\n\nHow to correct (always): only real mistakes, at most the one or two that matter most. 1) «You can say: …» with the corrected Spanish. 2) Why, in one plain-English sentence (no jargon; if you must name a tense, say what it means). 3) When useful, a tiny contrast (voy = I go; fui = I went). 4) Invite a retry or ask one short related question. Never correct a likely speech-recognition slip, accents or capital letters; if you are not sure what the learner said, ask instead of correcting. Regional usage (vos, ustedes, carro/coche, Panama words) is not a mistake.\n" +
