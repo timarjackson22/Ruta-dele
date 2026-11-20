@@ -81,4 +81,7 @@ body.vc-open .tabbar, body.vc-open .tutor-fab, body.vc-open #tabpeek { visibilit
 .vc-noyou .vc-you { display: none }
 @media (prefers-reduced-motion: reduce) { .vc-cap { scroll-behavior: auto } }
 .vc-prov { opacity: .6; font-style: italic }
+/* v250 safe mode (after the app restarted during a call): no blur filters, still background — less memory and work for the phone */
+#vcall.vc-safe .vc-scene [filter] { filter: none !important }
+#vcall.vc-safe .vc-scene .vc-bokeh, #vcall.vc-safe .vc-scene [class*="bokeh"] { display: none }
 /* ==/VCALL-CSS== */

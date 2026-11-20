@@ -42,6 +42,9 @@ Checkpoint before changes: git tag `checkpoint-v241` (pushed). Rollback: `git ch
 | 18 | «…ahor» / «a?» spoken as two pieces | same log | Broken speech | Medium | streaming speaker counted characters; the final reply is tidied | v249 sentence tracking | sTEACH | Fixed |
 | 19 | tools/pvoice.js 600 lines behind the page | found while fixing 17 | Next sync would have undone v242–v248 voice fixes | High (latent) | edits went into index.html only | back-synced; sSRC checks it | sSRC (54) | Fixed |
 
+| 20 | App restarted twice in the first 15 s of a call | 3rd S24 log 15:34–15:35 | Call unusable | Critical (device) | Most likely memory: the ~2 GB AI model loaded at call start alongside the animated scene and the greeting (no Android memory signal to prove it; the heartbeat now records call + model state) | v250: model loads after the greeting; safe mode for a day after a crash in a call | sSAFE | Fixed; confirm with the next report |
+| 21 | Lips still for the last half of the greeting | same log (3,687 ms of 7.8 s) | Looks broken | High | first sentence, nothing learned; events at ~40–55 ms/letter not flagged early; the estimate «stretch» parked the mouth | v250 loop over the last words until the end event | sLIP3 (fails on v249 at 55 ms) | Fixed |
+
 ## One owner per resource (the rule going forward)
 - **Microphone**: the mic guard (`micGuard`, `MICG.cur`). Anything that listens goes through it; the wake listener asks
   `window.__micOwned()` and `__vcOn` via `hfBusy()` before it listens.

@@ -17,7 +17,8 @@ const src = fs.readFileSync(__dirname + "/sVC.js", "utf8"); const INIT = eval(sr
   const p = await c.newPage(); const er = []; p.on("pageerror", (e) => er.push(e.message));
   await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1500);
   await p.evaluate(() => window.__vc.open()); await p.waitForFunction(() => window.__vc.state() === "listening" && window.__micOpen(), null, { timeout: 15000 });
-  rec("The on-device AI is warmed up when the call starts", await p.evaluate(() => window.__natLog.includes("preload")));
+  await p.waitForTimeout(1800); // v250: the model loads after the greeting (loading it during the greeting ran the S24 out of memory)
+  rec("The on-device AI is warmed up once the greeting is over", await p.evaluate(() => window.__natLog.includes("preload")));
   await p.evaluate(() => { window.__spoken = []; window.__t0 = 0; window.__say("Me encanta el café de Panamá."); });
   await p.waitForFunction(() => window.__vc.state() === "thinking", null, { timeout: 6000 }); const t0 = await p.evaluate(() => Date.now());
   await p.waitForFunction(() => window.__vc.state() === "speaking", null, { timeout: 12000 }); const t1 = await p.evaluate(() => Date.now());

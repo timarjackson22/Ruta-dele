@@ -291,10 +291,13 @@
         // audio is still playing (it used to reach the last word early and close the mouth for the rest of a long reply).
         const est = !c.hasB || now - (c.lastB || 0) > 900;
         if (est) {
-          if (!c.est) { const a = c.hasB ? Math.min(c.words.length - 1, c.bWi + 1) : 0, t0 = c.hasB ? c.lastB + (c.words[c.bWi] ? c.words[c.bWi].len * per + 60 : 0) : c.t0 + (AV.mpc ? 120 : 280);
+          if (!c.est) { const lp = c.loopFrom != null, a = lp ? c.loopFrom : c.hasB ? Math.min(c.words.length - 1, c.bWi + 1) : 0, t0 = lp ? c.loopT : c.hasB ? c.lastB + (c.words[c.bWi] ? c.words[c.bWi].len * per + 60 : 0) : c.t0 + (AV.mpc ? 120 : 280);
             const units = []; let tot = 0; for (let j = a; j < c.words.length; j++) { const wd = c.words[j], nx = c.words[j + 1], gap = nx ? c.text.slice(wd.i + wd.len, nx.i) : "", pause = Math.max(1, gap.length) + (/[.!?…]/.test(gap) ? 3 : /[,;:]/.test(gap) ? 1 : 0); /* real voices pause at punctuation */ units.push([j, tot]); tot += wd.len + pause; }
             c.est = { a, t0, units, tot, dur: tot * per }; }
-          const E = c.est, el2 = now - E.t0; if (el2 > E.dur * 0.96) E.dur = el2 / 0.86; // the voice is slower: stretch, don't stop
+          // v250 (S24 log: lips still for the last half of the greeting): the estimate ran out while the voice was still
+          // playing and the old «stretch» parked the mouth near the last word. Until the sentence's own end arrives, the
+          // mouth keeps talking: it goes round the last few words again.
+          const E = c.est, el2 = now - E.t0; if (el2 > E.dur) { c.loopFrom = Math.max(0, c.words.length - 4); c.loopT = now; c.est = null; c.looped = (c.looped || 0) + 1; }
           const at = Math.max(0, el2 / E.dur) * E.tot; let j = 0; while (j < E.units.length - 1 && E.units[j + 1][1] <= at) j++;
           const prev = c.wi; c.wi = E.units.length ? E.units[j][0] : c.wi; w = c.words[c.wi]; const into = at - (E.units[j] ? E.units[j][1] : 0);
           el = w ? into * (w.len * per) / Math.max(1, w.len) : 0; c.wStart = now - el; if (c.wi !== prev) avBeat(c);
@@ -455,6 +458,7 @@
   window.__vcEot = vcEot;
   function vcListen(seed) {
     if (!VC.on || VC.paused) return; vcStopMic();
+    if (VC.preloadAt === 1) { VC.preloadAt = 0; setTimeout(() => { try { if (VC.on && window.__natState !== "loaded" && window.AndroidLLM && AndroidLLM.preload) { window.__vlog("ai", "loading the model after the greeting"); AndroidLLM.preload(); } } catch (e) {} }, 1200); }
     if (VC.muted) { vcSet("muted", "You’re muted. Tap the mic to talk."); return; }
     if (!CAN_MIC) { vcSet("paused", "This browser can’t listen. Use Chrome on Android or Safari on iPhone."); return; }
     const r = new SR(); VC.rec = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
@@ -611,9 +615,15 @@
     try { speechSynthesis.cancel(); } catch (e) {}
     Object.assign(VC, { on: true, muted: false, paused: false, t0: Date.now(), gen: VC.gen + 1, lastPro: "", instr: [], empties: 0, fails: 0, metrics: [], blocked: false });
     try { window.__vlog("call", "call started · Profe " + pName() + " · build " + (window.__BUILD || "?")); } catch (e) {}
-    hookSpeech(); try { window.AndroidLLM && AndroidLLM.preload && AndroidLLM.preload(); } catch (e) {} window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
+    /* v250 (S24 log: two restarts in the first 15 s of a call): loading the AI model (~2 GB) while the scene starts and the
+       greeting plays ran the phone out of memory. The model now loads after the greeting, when the call is listening; after
+       a restart during a call, calls run in SAFE MODE for a day (lighter scene without blur; the model loads with the
+       learner's first sentence). */
+    VC.safe = (() => { try { return Date.now() - (+localStorage.getItem("rd-vcsafe") || 0) < 24 * 3600000; } catch (e) { return false; } })();
+    VC.preloadAt = VC.safe ? 0 : 1; if (VC.safe) try { window.__vlog("call", "safe mode (the app restarted during an earlier call)"); } catch (e) {}
+    hookSpeech(); window.__vcOn = true; window.__vcRate = vcRate(); VC.cc = vcP("cc", true) !== false;
     let root = document.getElementById("vcall"); if (!root) { root = document.createElement("div"); root.id = "vcall"; root.className = "vc"; root.setAttribute("role", "dialog"); root.setAttribute("aria-label", "Video call with " + pName()); document.body.appendChild(root); }
-    root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
+    root.innerHTML = vcxHTML(); root.hidden = false; root.classList.toggle("vc-safe", !!VC.safe); document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
     { const cb = root.querySelector("#vc-cap"); if (cb) { const hold = () => { cb.__user = true; clearTimeout(cb.__ut); cb.__ut = setTimeout(() => { cb.__user = false; }, 6000); }; cb.addEventListener("touchmove", hold, { passive: true }); cb.addEventListener("wheel", hold, { passive: true }); } }
     const pill = document.getElementById("vc-pill"); if (pill) pill.remove();
     const nm = TS.lname ? ", " + TS.lname : "";

@@ -96,6 +96,10 @@ If no: say so in the commit message ("costs: no impact").
 - tools/pvoice.js was 600 lines behind the page (v242–v248 voice-layer fixes existed only in index.html); it is back-synced and `sSRC` now also checks that the page holds tools/pvoice.js verbatim. Edit tools/pvoice.js, then `sync_profe.py`, then copy it to /tmp/pvoice.orig.js.
 - `node tools/profe-tests/sTEACH.js` must pass.
 
+## Call memory and lips that never park — v250 (3rd S24 log)
+- Two app restarts in the first 15 s of a call: the AI model (~2 GB) loaded while the scene started and the greeting played. The model now loads after the greeting (`VC.preloadAt`, first `vcListen`). The heartbeat (`rd-live`) records `c` (call on) and `m` (model state, `window.__natState` from `__allm` loading/loaded/err, also in the vitals); a restart during a call is logged «DURING A CALL, AI model …» and sets `rd-vcsafe`: for 24 h calls run in SAFE MODE (`#vcall.vc-safe`: no SVG blur filters, no bokeh, no early model load). `node tools/profe-tests/sSAFE.js` must pass.
+- Lips: when the timing estimate runs out before the sentence's end event, the mouth goes round the last 4 words again (`c.loopFrom`) instead of parking («LIPS STILL 3.7 s» on the greeting). `node tools/profe-tests/sLIP3.js` replays the greeting at 40/55/95 ms per letter.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
