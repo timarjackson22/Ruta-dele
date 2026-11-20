@@ -33,6 +33,10 @@ Checkpoint before changes: git tag `checkpoint-v241` (pushed). Rollback: `git ch
 
 | 12 | v244 made lip truncation worse at the ends of sentences | Samsung engine; the last part of each sentence | Voice heard, lips still | High (device) | v244 closed the mouth when `AndroidTTS.speaking()` (isSpeaking) said false, but isSpeaking turns false once audio is queued to the mixer, before it has played (reproduced: last third 0 % open). High | v245: sound only as a YES; start/onDone bound the mouth; per-sentence telemetry in the diagnostics | sLIP «queued» | Fixed, confirm on device with the diagnostics |
 
+| 13 | Lips still for about half of each sentence | S24 log 2026-11-20 (LIPS STILL ≈ ½ duration on most sentences) | Avatar looks broken | Critical | Google online voices send word events ~2.2× faster than playback; the mouth followed them to the end and rested; the pace learned from those events made later estimates too fast; the «sound» rescue started the LAST queued sentence, so its own start was ignored and it never moved. High (log + replay) | v247: early events by real pace, pace learned from start→end, FIFO rescue, own start always wins | sLIP2 (log replay), sLIP 10 modes | Fixed; confirm with the next call report |
+| 14 | Slow replies (25 s), empty replies → «Useful word…» filler | Same log: g21 35 s / 613 chars alongside a reply; g28/g29/g31 empty in 0.0 s | Profe slow, then off-topic | High | background AI jobs ran at the same time as replies; the chat session overflowed the model's 2,048 tokens (the call prompt alone was ~8,700 chars). High | v247 queue + compact call prompt + session rotation with recap + empty→retry; APK cap fix | sAIQ (6) | Fixed |
+| 15 | Voice changed mid-call (sfb → esf) | Same log, after returning to the app | Jarring | Medium | voice list refresh on resume re-ranked voices | v247 voice kept for the call | — | Fixed |
+
 ## One owner per resource (the rule going forward)
 - **Microphone**: the mic guard (`micGuard`, `MICG.cur`). Anything that listens goes through it; the wake listener asks
   `window.__micOwned()` and `__vcOn` via `hfBusy()` before it listens.

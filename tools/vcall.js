@@ -30,11 +30,24 @@
       "\n  · Ask open questions (¿qué?, ¿cómo?, ¿por qué?, cuéntame…) more than yes/no ones, and build each question on the details they just gave." +
       "\n  · Personal and memorable: use their name now and then (not every turn), bring back something they told you earlier, and connect new words to their life." +
       "\n  · Energy: sound genuinely interested and happy to talk — react to what they say («¡No me digas!», «¡Qué interesante!», «¡Me encanta!»), praise the specific thing they did well, celebrate attempts, vary your words (never the same praise twice in a row), and keep a light, friendly sense of humour." +
+      "\n  · If they answer in English, stay in simple Spanish (unless they asked for English): show them how to say what they said in Spanish and invite them to try it." +
       "\n  · If they sound tired or frustrated, make it easier, encourage them warmly and offer a short break or a different activity.";
   }
-  window.__vcNote = () => {
+  window.__vcNote = (compact) => {
     if (!VC.on) return "";
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
+    // v247: the on-device model holds ~2,048 tokens in all; the full call brief (~4,300 characters) filled most of it, so a
+    // compact brief carries the essentials of good spoken tutoring for it
+    if (compact) return "\n\nLIVE VIDEO CALL, spoken aloud. You are Profe, a warm, enthusiastic Spanish tutor." +
+      "\n- Say 1–2 short sentences (under 25 words). No lists, markdown or emojis." +
+      "\n- React to what they said with real interest, then ask ONE open question built on it." +
+      "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + ". If they answer in English, reply in simple Spanish and give them the Spanish for what they said." +
+      "\n- Correct by saying their idea back correctly; explain only a repeated mistake. Praise one specific thing; vary your words; use their name sometimes." +
+      "\n- Unsure what they said? Ask. Never invent facts." +
+      "\n- Language: " + String(L[1]).slice(0, 160) + "\n- Corrections: " + String(C[1]).slice(0, 140) +
+      (VC.wantEn ? "\n- THIS TURN they asked for English: explain in 2 short English sentences, give the Spanish, then a short Spanish question." : "") +
+      (VC.coachNow ? "\n- THIS TURN, in one short English sentence, coach the mistake they keep making (" + VC.coachNow.why + "): correct Spanish «" + VC.coachNow.to + "», invite a retry, then carry on in Spanish." : "") +
+      (VC.instr.length ? "\n- For this call they asked: " + VC.instr.map((x) => "«" + x.slice(0, 80) + "»").join("; ") + "." : "");
     return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural." + vcTeach() + "\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
       (VC.wantEn ? "\n- THIS TURN the learner explicitly asked for English: explain briefly in English (2–3 sentences), give the Spanish with one example, then invite them back into Spanish with a short question." : "") +
       (VC.coachNow ? "\n- THIS TURN, coach a repeated mistake in English (the learner has made it " + VC.coachNow.n + " times; check it really is in what they said, not a recognition error): say in one short English sentence what keeps going wrong (" + VC.coachNow.why + "), give the correct Spanish «" + VC.coachNow.to + "» in a useful example, invite a quick retry, then carry on in Spanish." : "") +
@@ -83,7 +96,12 @@
     // v244: an engine that reports words faster than anyone can speak (≈ 30 ms a letter) is reporting synthesis, not sound:
     // ignore its word events for the rest of the call and keep time from the audio instead
     if (AV.earlyEv) return;
-    if (c.words[k] && c.words[k].i >= 30 && (now - c.t0) / c.words[k].i < 30) { AV.earlyEv = true; c.hasB = false; c.bWi = -1; c.est = null; c.mpc = 0; c.wi = 0; return; }
+    // v247 (from a real Samsung call log): Google's online voices report words about twice as fast as they play (35 ms a
+    // letter against 77 ms of audio), so the mouth reached the last word halfway through and rested. Events are «early»
+    // when they run clearly ahead of the real playback pace (learned from finished sentences, AV.real) or faster than
+    // 50 ms a letter before anything is learned; then the mouth follows the audio clock to the end of the sentence.
+    if (c.words[k] && c.words[k].i >= 20) { const imp = (now - c.t0) / c.words[k].i, lim = AV.real ? AV.real * 0.72 : 50;
+      if (imp < lim) { AV.earlyEv = true; c.hasB = false; c.bWi = -1; c.est = null; c.mpc = AV.real || 0; c.wi = 0; return; } }
     // v240: some engines restart their positions inside a long utterance (chunked synthesis) or repeat one: each word event
     // still means «the next word has started», so the position never goes backwards
     if (c.hasB && k <= c.bWi) k = Math.min(c.words.length - 1, c.bWi + 1);
@@ -93,23 +111,29 @@
   // a small nod on long (usually stressed) words, a bigger one on emphasis: speech looks alive, not just a moving mouth
   function avBeat(c) { const w = c.words[c.wi]; if (!w) return; if (w.len >= 6 || (AV.mood !== "warm" && w.len >= 4)) AV.kick = performance.now(); capMark(c); }
   function avDone(u) {
+    try { const d = u && u.__vd, c = AV.cur; if (d && d.start != null && c && c.u === u) { const took = performance.now() - c.t0, n = c.text.length; if (n > 20 && took > 700) { const r = (took - 120) / n; if (r > 40 && r < 200) AV.real = AV.real ? AV.real * 0.6 + r * 0.4 : r; } } } catch (e) {}
     try { if (AV.q <= 1) setTimeout(() => { if (!AV.speaking) document.querySelectorAll("#vc-pro span.on").forEach((x) => { x.classList.remove("on"); x.classList.add("said"); }); }, 250); } catch (e) {}
     if (AV.cur && AV.cur.u === u) { const c = AV.cur, took = performance.now() - c.t0, n = c.text.length;
-      if (c.mpc && c.hasB && !AV.earlyEv) AV.mpc = c.mpc; else if (n > 25 && took > 600) { const mpc = (took - 150) / n; AV.mpc = AV.mpc ? AV.mpc * 0.6 + mpc * 0.4 : mpc; } } if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
-  function avStopAll() { AV.cur = null; AV.speaking = false; AV.q = 0; AV.lastEnd = Date.now(); AV.m.h = 0; }
+      if (c.mpc && c.hasB && !AV.earlyEv && (!AV.real || c.mpc > AV.real * 0.72)) AV.mpc = c.mpc; else if (n > 25 && took > 600) { const mpc = (took - 150) / n; AV.mpc = AV.mpc ? AV.mpc * 0.6 + mpc * 0.4 : mpc; } } if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
+  function avUnq(u) { if (u) u.__vcEnd = 1; if (AV.pendQ) AV.pendQ = AV.pendQ.filter((x) => x !== u); }
+  function avStopAll() { AV.pendQ = []; AV.cur = null; AV.speaking = false; AV.q = 0; AV.lastEnd = Date.now(); AV.m.h = 0; }
   function hookSpeech() {
     const ss = window.speechSynthesis; if (!ss || ss.__vcHooked) return; ss.__vcHooked = true;
     const sp = ss.speak.bind(ss), ca = ss.cancel.bind(ss);
     try {
       ss.speak = function (u) {
-        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; u.__vcT = performance.now(); try { avDiagNew(u); } catch (x) {} const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
+        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; u.__vcT = performance.now(); u.__vcQ = 1; try { avDiagNew(u); } catch (x) {} const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
           // enthusiasm: a brighter voice in a call (higher on ¡exclamations!, a lift on questions)
           try { const tx = String(u.text || ""), p0 = +u.pitch || 1; if (!u.__vcp) { u.__vcp = 1; u.pitch = Math.min(1.25, p0 * (/[!¡]/.test(tx) ? 1.12 : /[?¿]/.test(tx) ? 1.07 : 1.05)); } } catch (x) {}
-          u.onstart = function (ev) { try { if (u.__vd) u.__vd.start = performance.now(); if (!u.__vcs) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
+          // v247: a sentence's own start always takes the mouth (unless it already has it)
+          u.onstart = function (ev) { try { if (u.__vd) u.__vd.start = performance.now(); if (!(AV.cur && AV.cur.u === u)) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
           u.onboundary = function (ev) { try { const d = u.__vd; if (d) { const tt = performance.now() - (d.start || d.tq); d.words++; if (d.w1 == null) d.w1 = tt; d.wN = tt; } if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
-          u.onend = function (ev) { try { if (u.__vd) { const d = u.__vd; d.end = performance.now(); window.__vlog("speak", "#" + d.n + " " + d.len + " chars · start " + (d.start != null ? "+" + Math.round(d.start - d.tq) + " ms" : "NONE") + " · " + (d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + " s" : "?") + " · word events " + d.words + " · sound yes " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " · LIPS STILL " + Math.round(d.silent) + " ms" : " · lips ok") + (d.how ? " · " + d.how : "") + " · voice " + ((u.voice && u.voice.name) || u.lang || "?") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
-          u.onerror = function (ev) { try { if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); window.__vlog("speak", "#" + u.__vd.n + " stopped: " + (ev && ev.error || "error") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
-        return sp(u);
+          u.onend = function (ev) { try { avUnq(u); AV.lastEndP = performance.now(); if (u.__vd) { const d = u.__vd; d.end = performance.now(); window.__vlog("speak", "#" + d.n + " " + d.len + " chars · start " + (d.start != null ? "+" + Math.round(d.start - d.tq) + " ms" : "NONE") + " · " + (d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + " s" : "?") + " · word events " + d.words + " · sound yes " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " · LIPS STILL " + Math.round(d.silent) + " ms" : " · lips ok") + (d.how ? " · " + d.how : "") + " · voice " + ((u.voice && u.voice.name) || u.lang || "?") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
+          u.onerror = function (ev) { try { avUnq(u); if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); window.__vlog("speak", "#" + u.__vd.n + " stopped: " + (ev && ev.error || "error") + " · «" + String(u.text || "").slice(0, 50) + "»"); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
+        const r = sp(u);
+        // queued after the engine took it: an engine that clears its queue inside speak() must not drop this sentence
+        if (u && u.__vcQ && !u.__vcQd && !u.__vcEnd) { u.__vcQd = 1; (AV.pendQ = AV.pendQ || []).push(u); }
+        return r;
       };
       ss.cancel = function () { if (VC.on) avStopAll(); return ca(); };
     } catch (e) {}
@@ -254,12 +278,12 @@
       if (!AV.natT || now - AV.natT > 150) { AV.natT = now; AV.nat = vcTtsNat(); if (AV.nat) AV.natSeen = true;
         const d = AV.cur && AV.cur.u && AV.cur.u.__vd; if (d && AV.nat != null) { if (AV.nat) d.natYes++; else d.natNo++; } }
       // v246: no «start» and no sound signal at all (some engines send neither): begin 0.6 s after Profe started the sentence
-      if (!AV.cur && AV.pend && !AV.pend.__vcs && !AV.nat && now - (AV.pend.__vcT || now) > 600) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; if (AV.pend.__vd) AV.pend.__vd.how = "no start, no sound signal: began after 0.6 s"; } catch (e) {} }
-      if (!AV.cur && AV.pend && !AV.pend.__vcs && AV.nat) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; if (AV.pend.__vd) AV.pend.__vd.how = "no start: began on sound"; } catch (e) {} } // «start» never came
+      { const hd = AV.pendQ && AV.pendQ[0];
+        if (!AV.cur && hd && !hd.__vcs && (AV.nat || now - Math.max(hd.__vcT || now, AV.lastEndP || 0) > 600)) { try { hd.__vcs = 1; avBegin(hd); AV.cur.noStart = 1; if (hd.__vd) hd.__vd.how = AV.nat ? "began on sound" : "no signals: began after 0.6 s"; } catch (e) {} } }
       AV.lastStep = now;
       let tgt = VIS.rest; const c = AV.cur;
       if (c && c.words.length) {
-        const per = c.mpc ? Math.min(160, Math.max(40, c.mpc)) : (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
+        const per = (AV.earlyEv && AV.real) ? AV.real : c.mpc ? Math.min(160, Math.max(40, c.mpc)) : AV.real ? AV.real : (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
         // no word events from this voice (or they stopped mid-utterance): place the mouth by the time elapsed over the text that
         // is left. v240: the estimate stretches when the voice is slower than expected, so it can never run out while the
         // audio is still playing (it used to reach the last word early and close the mouth for the rest of a long reply).
@@ -499,7 +523,7 @@
     let m = /\b(?:me llamo|mi nombre es|my name is|i'?m called|ll[aá]mame|call me)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s);
     // «soy Ana» / «I'm Ana» only in a short answer, and not «soy cansado» / «I'm tired»
     if (!m && s.split(/\s+/).length <= 3) { const m2 = /\b(?:soy|i am|i'?m)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s); if (m2 && !ADJ.test(m2[1])) m = m2; }
-    let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && w.length <= 2 && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1])) n = w[w.length - 1]; }
+    vcNameFrom.sure = !!m; let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && w.length <= 2 && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1])) n = w[w.length - 1]; }
     if (!n || STOP.test(n)) return ""; return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase();
   }
   window.__vcNameFrom = vcNameFrom;
@@ -512,7 +536,9 @@
     if (VC.askName && cmd !== "end") {
       const nm2 = vcNameFrom(t), fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
       if (nm2) { VC.askName = 0; TS.lname = nm2; tsave();
-        vcSay([["¡Mucho gusto, " + nm2 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true], ["¿De qué quieres hablar hoy? Puede ser de tu día, de tus planes o de lo que estás estudiando.", true]], () => vcListen()); return; }
+        // a name guessed from a bare word may be a recognition slip («number Smart»): say how to fix it
+        vcSay([["¡Mucho gusto, " + nm2 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true]].concat(vcNameFrom.sure ? [] : [["Si no lo he oído bien, dime «me llamo…» y lo cambio.", true]]).concat([["¿De qué quieres hablar hoy? Puede ser de tu día, de tus planes o de lo que estás estudiando.", true]]), () => vcListen()); return; }
+      if (nW <= 3 && /^(hola|hello|hi|hey|buenas|buenos|qu[eé] tal|ol[aá])\b/i.test(t.trim())) { vcSay([["¡Hola! ¿Y cómo te llamas?", true]], () => vcListen()); return; } // a greeting, not a name: ask kindly
       if (nW > 3) VC.askName = 0; // they went straight into a sentence: don't insist, answer it
       else if (VC.askName === 1) { VC.askName = 2; vcSay([["Perdona, no te he oído bien. ¿Cómo te llamas?", true], ["You can say: «Me llamo…»", false]], () => vcListen()); return; }
       VC.askName = 0; // asked twice: carry on without a name

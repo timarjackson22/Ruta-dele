@@ -282,7 +282,8 @@ public class LlmBridge {
     void lmChatRun(String id, String key, String system, String user, int maxTokens, float temperature) {
         try {
             ensureLoaded();
-            boolean fresh = lmChat == null || !key.equals(lmKey) || lmChars + user.length() > 12000;
+            // v247: the session must fit the model's context (2,048 tokens ≈ 6,000 characters), not 12,000 characters
+            boolean fresh = lmChat == null || !key.equals(lmKey) || lmChars + user.length() > (maxTokens() <= 1280 ? 3600 : 6400);
             if (fresh) {
                 try { if (lmChat != null) lmChat.close(); } catch (Throwable ignored) { }
                 lmHist.clear(); lmChars = system.length();
@@ -357,7 +358,8 @@ public class LlmBridge {
 
     @JavascriptInterface
     public void resetChat() {
-        runExec.execute(() -> { if (chat != null) try { chat.close(); } catch (Exception ignored) { } chat = null; chatKey = ""; chatChars = 0; });
+        runExec.execute(() -> { if (chat != null) try { chat.close(); } catch (Exception ignored) { } chat = null; chatKey = ""; chatChars = 0;
+            try { if (lmChat != null) lmChat.close(); } catch (Throwable ignored) { } lmChat = null; lmKey = ""; lmChars = 0; }); // v247: the Gemma session too
     }
 
     @JavascriptInterface
