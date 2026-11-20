@@ -125,7 +125,7 @@
     if (a === "ch-lv") { CHUI.lv = t.dataset.v; chHub(); }
     else if (a === "ch-bmf") { CHUI.bm = !CHUI.bm; chHub(); }
     else if (a === "ch-bm") { const b = chBm(), i = b.indexOf(t.dataset.id); if (i >= 0) b.splice(i, 1); else b.push(t.dataset.id); save(); chSheet(t.dataset.id); }
-    else if (a === "ch-view") { CHUI.view = t.dataset.v; try { localStorage.setItem("ruta-chview", CHUI.view); } catch (x) {} chSheet(location.hash.slice(9)); }
+    else if (a === "ch-view") { CHUI.view = t.dataset.v; try { window.lsSet("ruta-chview", CHUI.view); } catch (x) {} chSheet(location.hash.slice(9)); }
     else if (a === "ch-zoom") { CHUI.zoom = !CHUI.zoom; chSheet(location.hash.slice(9)); }
     else if (a === "ch-qz") { const g = GUIDES.find((x) => x.id === t.dataset.id), q = g && g.mc[+t.dataset.q]; if (!q) return; const box = t.closest(".chqz"), right = +t.dataset.v === q[2];
       box.querySelectorAll("button").forEach((b, bi) => { b.disabled = true; if (bi === q[2]) b.classList.add("ok"); }); if (!right) t.classList.add("no"); const w = box.querySelector(".chwhy"); w.hidden = false; w.textContent = (right ? "✓ Right. " : "✗ Not quite. ") + q[3]; }

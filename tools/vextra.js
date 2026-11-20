@@ -36,8 +36,8 @@
   // which recogniser makes captions from the sound: on the phone (offline) or Google online (often catches more words)
   // default: Google's online recogniser, which catches clearly more words of real video speech than the phone's offline model (S24 report, Nov 2026); "Redo on the phone (offline)" switches
   const vaMode = () => { try { return localStorage.getItem("ruta-va-mode") || "online"; } catch (e) { return "online"; } };
-  function vaRedoOnline() { try { localStorage.setItem("ruta-va-mode", "online"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
-  function vaRedoPhone() { try { localStorage.setItem("ruta-va-mode", "phone"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
+  function vaRedoOnline() { try { window.lsSet("ruta-va-mode", "online"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
+  function vaRedoPhone() { try { window.lsSet("ruta-va-mode", "phone"); localStorage.removeItem(vaKey(VP.id)); } catch (e) {} vaStart(); }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="va-online"],[data-act="va-phone"]'); if (!t) return; if (t.dataset.act === "va-online") vaRedoOnline(); else vaRedoPhone(); });
   function vaStop(save2) { if (!VA.on && !VA.id) return;
     try { const st = (new Error().stack || "").split("\n").slice(2, 4).map((x) => x.trim().replace(/^at /, "").replace(/\(.*\)/, "").trim()).join(" < "); window.__pvLog && window.__pvLog("video-audio stop asked by the app: " + st + " · video at " + (typeof vpT === "function" ? Math.round(vpT()) : "?") + "s"); } catch (e) {} try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} if (save2 !== false) vaFinish(); VA.on = false; }
@@ -69,7 +69,7 @@
       const s = VA.seg != null ? VA.seg : Math.max(vpLo(), t - Math.min(6, 0.35 * text.split(/\s+/).length)); VA.seg = null; VA.live = "";
       if (VA.sync) { vlSyncHit(text, s); vaShowLive(); return; }
       VA.cues.push({ s, e: Math.max(s + 0.6, t), text: vcClean(text) }); VA.cues.sort((a, b) => a.s - b.s);
-      try { localStorage.setItem(vaKey(VA.id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: false })); } catch (e) {}
+      try { window.lsSet(vaKey(VA.id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: false })); } catch (e) {}
       vcGot(VA.id, { kind: "audio", es: vaXml(VA.cues), en: "", secs: VP.secs || 0 }); vaShowLive();
     }
   } };
@@ -77,7 +77,7 @@
   function vaFinish() {
     const id = VA.id; if (!id) return; VA.on = false;
     if (VA.sync || VL.sync) { VA.id = null; if (VL.sync) vlSyncEnd(false); return; }
-    if (VA.cues.length) { try { localStorage.setItem(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); { const b = document.getElementById("vabar"); if (b) b.insertAdjacentHTML("beforeend", VA.mode === "online" ? ' <button class="btn small" data-act="va-phone">Redo on the phone (offline)</button>' : ' <button class="btn small" data-act="va-online">Missed words? Redo with Google online</button>'); } setTimeout(() => { const b = document.getElementById("vabar"); if (b && !b.querySelector("[data-act=va-online],[data-act=va-phone]")) vaBanner(""); }, 5000); if (VP.id === id) vWordCheck(id); }
+    if (VA.cues.length) { try { window.lsSet(vaKey(id), JSON.stringify({ cues: VA.cues, at: Date.now(), done: true })); } catch (e) {} vData(id).cap = "audio"; save(); vaBanner("Captions saved: next time this video has them from the start."); { const b = document.getElementById("vabar"); if (b) b.insertAdjacentHTML("beforeend", VA.mode === "online" ? ' <button class="btn small" data-act="va-phone">Redo on the phone (offline)</button>' : ' <button class="btn small" data-act="va-online">Missed words? Redo with Google online</button>'); } setTimeout(() => { const b = document.getElementById("vabar"); if (b && !b.querySelector("[data-act=va-online],[data-act=va-phone]")) vaBanner(""); }, 5000); if (VP.id === id) vWordCheck(id); }
     else if (VA.levels > 4 && (VA.peak || 0) < 0.003) vaBanner("The video's sound didn't reach the app: Android passed it silence. Turn the media volume up (not muted), start again and choose Start on Android's prompt. If it still happens, this phone doesn't allow the app to record its own video sound.", true);
     else if (!(window.AndroidApp && window.AndroidApp.version)) vaBanner("The sound reached the app but no Spanish speech was recognised. Your Android app is an older version: update it (Settings › App shows the version; download the latest from the Ruta DELE page) — the new one uses Google's speech service, which works with Samsung phones.", true);
     else vaBanner("The sound reached the app but no Spanish speech was recognised" + (VA.engine ? " (" + (VA.engine === "on-device" ? "on-device recogniser" : VA.engine === "google" ? "Google speech service" : "phone's speech service") + ")" : "") + ". Music makes it harder: try a spoken video. It helps if Spanish is one of your voice languages: Google app › your profile picture › Settings › Voice › Languages.", true);
@@ -147,7 +147,7 @@
   const VL = { tried: {}, sync: null };
   const vlKey = (id) => "lrc:" + id;
   function vlGet(id) { try { return JSON.parse(localStorage.getItem(vlKey(id)) || "null"); } catch (e) { return null; } }
-  function vlPut(id, x) { try { localStorage.setItem(vlKey(id), JSON.stringify(x)); } catch (e) {} }
+  function vlPut(id, x) { try { window.lsSet(vlKey(id), JSON.stringify(x)); } catch (e) {} }
   // is this a song? the library's music, or a video whose title/channel says so
   function vlMusic(id) { const v = vFind(id) || {}; return v.cat === "musica" || /\b(official (music )?video|video oficial|videoclip|lyrics?|letra|ft\.|feat\.|vevo|music)\b/i.test((v.t || "") + " " + (v.ch || "")); }
   // what to search for: the library knows song and artist; a video you added only has YouTube's title ("Artist - Song (Official Video)") and channel ("ArtistVEVO")
@@ -240,5 +240,5 @@
   }
   function vlSyncEnd(ok) { const S2 = VL.sync; VL.sync = null; VA.sync = false; VA.id = null; VA.on = false; try { window.AndroidAud && window.AndroidAud.stop(); } catch (e) {} try { vaBanner(""); } catch (e) {} const x = S2 && vlGet(S2.id); if (ok && x && VCAP.id === S2.id) { vlShow(S2.id, x); vlSaid("Lyrics lined up with the video (offset " + x.off.toFixed(1) + " s)."); } else if (!ok) { VL.failed = S2 && S2.id; if (S2 && VCAP.id === S2.id && x) vlShow(S2.id, x); vlSaid("Couldn't hear enough of the singing to sync. Tap the button when the singing starts."); } }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest("[data-act^=vl-]"), a = t && t.dataset.act; if (!a) return;
-    if (a === "vl-early") vlNudge(-0.5); else if (a === "vl-late") vlNudge(0.5); else if (a === "vl-tap") vlTapFirst(); else if (a === "vl-auto") vlSyncStart(); else if (a === "vl-off") { const id = VCAP.id; try { localStorage.setItem("lrc-off:" + id, "1"); } catch (x) {} VL.tried[id] = 1; vcLoad(id); } });
+    if (a === "vl-early") vlNudge(-0.5); else if (a === "vl-late") vlNudge(0.5); else if (a === "vl-tap") vlTapFirst(); else if (a === "vl-auto") vlSyncStart(); else if (a === "vl-off") { const id = VCAP.id; try { window.lsSet("lrc-off:" + id, "1"); } catch (x) {} VL.tried[id] = 1; vcLoad(id); } });
   const vlOff = (id) => { try { return localStorage.getItem("lrc-off:" + id) === "1"; } catch (e) { return false; } };

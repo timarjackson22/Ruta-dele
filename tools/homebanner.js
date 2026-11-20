@@ -2,6 +2,10 @@
      Re-run tools/patch_m2m3.py to update. */
   const CB = { i: 0, t: null, paused: false, hold: 0, user: false, n: 0 };
   const cbMMSS = (s) => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
+  function wodToday() { // v228: the word of the day, from the learner's level (same pick all day)
+    try { const L = LV[curLevel()], pool = []; L.units.forEach((u) => (u.v || []).forEach((gr) => (gr.w || []).forEach((w) => { if (w[0] && w[0].length >= 4 && w[0].length < 32 && !/[\/…\d]/.test(w[0]) && /[a-záéíóúñ]{3}/i.test(w[0])) pool.push(w); })));
+      if (!pool.length) return null; const d = Math.floor(Date.now() / 864e5), w = pool[(d * 7919) % pool.length]; return { es: w[0], en: String(w[1]).split(/[;(]/)[0].trim(), raw: w[1], saved: wodSaved(w[0]) }; } catch (e) { return null; }
+  }
   function cbSlides() { // only real items: nothing invented
     const out = [], cl = curLevel();
     // 1. the study plan: the session due now or next today
@@ -11,9 +15,10 @@
     if (S.last && LV[S.last.l]) { const L = LV[S.last.l], u = L.units[S.last.i], done = unitState(L.id, S.last.i).done;
       if (u) out.push({ k: "lesson", eye: (done ? "Next up" : "Continue your lesson") + " · " + L.name, t: done && L.units[S.last.i + 1] ? L.units[S.last.i + 1].t : u.t, where: "Unit " + (done && L.units[S.last.i + 1] ? S.last.i + 2 : S.last.i + 1) + " of " + L.units.length, pct: levelPct(L.id), pctL: levelPct(L.id) + "% of " + L.name, min: 30, go: done ? "Start" : "Resume", href: "#" + L.id + "-u" + ((done && L.units[S.last.i + 1] ? S.last.i + 1 : S.last.i) + 1), c: "#2f7cf0" }); }
     // 3. flashcards due
+    { const w = wodToday(); if (w) out.splice(Math.min(1, out.length), 0, { k: "wod", eye: "Palabra del día · Word of the day", t: w.es, where: w.en, w, c: "#e07b00", min: 1, go: "" }); }
     const due = dueCount(); if (due) out.push({ k: "cards", eye: "Flashcards due", t: due + " card" + (due === 1 ? "" : "s") + " ready to review", where: "Spaced repetition: review before you forget", pct: null, min: Math.max(2, Math.ceil(due * 0.2)), go: "Review", href: "#repaso", c: "#f07b16" });
     // 4. media in progress
-    if (S.lastLi && LI[S.lastLi.id]) out.push({ k: "listen", eye: "Stories & Podcasts", t: S.lastLi.t, where: (S.lastLi.lvl ? String(S.lastLi.lvl).toUpperCase() + " · " : "") + "pick up where you stopped", pct: null, min: 10, go: "Resume", href: "#" + S.lastLi.id, c: "#1f63e0" });
+    if (S.lastLi && LI[S.lastLi.id]) out.push({ k: "listen", eye: "Listening", t: S.lastLi.t, where: (S.lastLi.lvl ? String(S.lastLi.lvl).toUpperCase() + " · " : "") + "pick up where you stopped", pct: null, min: 10, go: "Resume", href: "#" + S.lastLi.id, c: "#1f63e0" });
     if (S.lastVid && vFind(S.lastVid.id)) { const d = (S.vid || {})[S.lastVid.id] || {}; if (!d.w) out.push({ k: "video", eye: "Video", t: S.lastVid.t, where: d.at ? "Stopped at " + cbMMSS(d.at) : "Not finished yet", pct: null, min: 5, go: "Resume", href: "#video-" + S.lastVid.id, c: "#d6336c" }); }
     if (S.lastRead && LI[S.lastRead.id]) out.push({ k: "read", eye: "Reading", t: S.lastRead.t, where: (S.lastRead.lvl ? String(S.lastRead.lvl).toUpperCase() + " · " : "") + "continue the text", pct: null, min: 10, go: "Resume", href: "#" + S.lastRead.id, c: "#e0592e" });
     // 5. a cheat sheet: a saved one, else the guide behind your latest mistakes, else today's topic at your level
@@ -40,7 +45,8 @@
   function cbHTML(fallback) {
     const L = cbSlides(); CB.n = L.length; if (CB.i >= L.length) CB.i = 0;
     if (!L.length) return '<div class="cbwrap">' + fallback + cbSched() + "</div>";
-    const slide = (s, i) => { const tag = s.href ? 'a href="' + s.href + '"' : 'button type="button" data-act="' + s.act + '" data-id="' + esc(s.id || "") + '"';
+    const slide = (s, i) => { if (s.k === "wod") return '<div class="cbslide" role="group" aria-roledescription="slide" aria-label="' + (i + 1) + " of " + L.length + ": Word of the day, " + esc(s.t) + '" data-k="wod" style="--cb:' + s.c + '"' + (i === CB.i ? "" : " hidden inert") + '><div class="cbcard cbwod"><span class="cbeye">' + esc(s.eye) + '</span><span class="cbt" lang="es">' + esc(s.t) + '</span><span class="cbwhere">' + esc(s.where) + '</span><span class="cbfoot cbwodb"><button type="button" class="wod4-b" data-act="say" data-t="' + esc(s.t) + '" aria-label="Listen to ' + esc(s.t) + '">🔊</button><button type="button" class="wod4-b" data-act="wod-save" data-es="' + esc(s.t) + '" data-en="' + esc(s.w.raw) + '" aria-pressed="' + s.w.saved + '" aria-label="' + (s.w.saved ? "Saved to your flashcards" : "Save to your flashcards") + '">' + (s.w.saved ? "✓" : "+") + "</button></span></div></div>";
+      const tag = s.href ? 'a href="' + s.href + '"' : 'button type="button" data-act="' + s.act + '" data-id="' + esc(s.id || "") + '"';
       return '<div class="cbslide" role="group" aria-roledescription="slide" aria-label="' + (i + 1) + " of " + L.length + ": " + esc(s.eye) + '" data-k="' + s.k + '" style="--cb:' + s.c + '"' + (i === CB.i ? "" : " hidden inert") + '><' + tag + ' class="cbcard"><span class="cbeye">' + esc(s.eye) + '</span><span class="cbt">' + esc(s.t) + '</span><span class="cbwhere">' + esc(s.where) + "</span>" +
         (s.pct != null ? '<span class="cbbar" role="img" aria-label="Progress ' + s.pct + '%"><i style="width:' + s.pct + '%"></i></span>' : "") + '<span class="cbfoot"><span>' + (s.pctL ? esc(s.pctL) + " · " : "") + "≈ " + s.min + ' min</span><span class="cbgo">' + s.go + " ›</span></span></" + (s.href ? "a" : "button") + "></div>"; };
     return '<div class="cbwrap"><section class="cbanner" id="cbanner" aria-roledescription="carousel" aria-label="Continue where you left off"><div class="cbslides" id="cbslides" aria-live="off">' + L.map(slide).join("") + "</div>" +

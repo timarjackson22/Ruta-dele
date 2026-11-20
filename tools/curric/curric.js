@@ -9,7 +9,7 @@
   function crReg() { if (CR.R) return CR.R; try { CR.R = JSON.parse(document.getElementById("curric-data").textContent.replace(/<\\\//g, "</")); } catch (e) { CR.R = null; } return CR.R; }
   /* ---- admin role (a soft gate on this device: the app has no server, so this keeps the tool out of learners' way; it is not security) ---- */
   function crStore() { let s = null; try { s = JSON.parse(localStorage.getItem(CR_KEY) || "null"); } catch (e) {} s = s || {}; s.issues = s.issues || {}; s.log = s.log || []; s.val = s.val || {}; s.req = s.req || []; return s; }
-  function crPut(s) { try { localStorage.setItem(CR_KEY, JSON.stringify(s)); } catch (e) {} }
+  function crPut(s) { try { window.lsSet(CR_KEY, JSON.stringify(s)); } catch (e) {} }
   const crAdmin = () => !!crStore().on;
   function crLog(act, id, note) { const s = crStore(); s.log.push({ t: new Date().toISOString(), who: s.who || "admin", act, id: id || "", note: note || "" }); s.log = s.log.slice(-2000); crPut(s); }
   async function crSha(t) { const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join(""); }

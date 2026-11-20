@@ -18,9 +18,9 @@
   function adLabel(k) {
     if (!k) return ""; const [a, b, c] = k.split(":");
     if (a === "v") return AD_TN[b] || b; if (a === "g" || a === "r") return AD_G[b] || b; if (a === "d") return b === "en-es" ? "English → Spanish" : "Spanish → English";
-    if (a === "t") { const m = /^(a1|a2|b1|b2|c1|c2)-(\d+)$/.exec(b); const u = m && LXS[m[1]] && LXS[m[1]][+m[2]]; return u ? "lesson: " + u.t : b; }
+    if (a === "t") { if (/^fr/.test(b)) return "Survival Kit"; const m = /^(a1|a2|b1|b2|c1|c2)-(\d+)$/.exec(b); const u = m && LXS[m[1]] && LXS[m[1]][+m[2]]; return u ? u.t : ""; }
     if (a === "c") return (AD_TN[b] || b) + (c ? " · " + (AD_GRP[c] || c) : "");
-    return k;
+    return ""; // v224: an unknown key shows nothing rather than an internal code
   }
   // every reading of a word as a verb form, from the dictionary's lemma and the conjugator (all tenses, the participle, the imperative)
   const adRdCache = {};
@@ -219,6 +219,7 @@
     return { type: "word", l, a };
   }
   function adCheckEs(said, it) {
+    try { said = spokenAs(said, it.ans[0]); } catch (e) {}
     const L0 = adToks(said); let best = null;
     const dropSubj = (t) => (t.length > 1 && AD_SUBJ.has(t[0]) ? t.slice(1) : t);
     it.ans.forEach((ans) => { const M0 = adToks(ans);
@@ -313,6 +314,7 @@
   /* ---------- choosing the next item ---------- */
   function adWeak(st, k) { const s = st.sk[k]; if (!s) return 0.5; return (s.miss + 0.5) / (s.n + 1); }
   function adPickTr(lv) {
+    if (PR && PR.pat) { const f = frPick(lv); if (f) return f; }
     const st = adSt("tr", lv), B = adBank(lv), recent = new Set((PR && PR.recent) || []);
     const maxLen = Math.round(7 + st.diff * 13), nL = (LXS[lv] || []).length || 1, maxUi = Math.max(1, Math.ceil((0.4 + st.diff * 0.6) * nL));
     const fits = (it) => !recent.has(it.id) && (it.len <= maxLen || st.diff > 0.85) && it.ui < maxUi + 1;
@@ -374,18 +376,18 @@
   }
 
   /* ---------- the drill ---------- */
-  async function adStart(kind) {
+  async function adStart(kind, opts) {
     try { await loadIndex(); } catch (e) {}
     const lv = PRL || curLvl(), st = adSt(kind, lv);
-    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [] };
-    ensureSession(kind === "tr" ? "Sentence translation" : "Conjugation drill", (kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";
-    if (st.focus) PR.note = "Picking up where you left off: " + adLabel(st.focus) + ".";
+    tCur = null; PR = { kind, lv, recent: [], done: 0, first: 0, fb: null, autoMic: true, hist: adHistLoad(kind, lv), view: null, att: [], pat: (opts && opts.pat) || null };
+    ensureSession(PR.pat ? "Survival Kit" : kind === "tr" ? "Sentence translation" : "Conjugation drill", (PR.pat ? "Survival Kit · " : kind === "tr" ? "Sentence translation · " : "Conjugation · ") + lv.toUpperCase()); tView = "practice";
+
     adNext(true);
   }
   // the session's earlier questions stay on screen (scroll up, or ‹ Back): kept for an hour, or until the session ends
   const AD_HKEY = "ruta-adhist", AD_HOUR = 3600000;
   function adHistLoad(kind, lv) { try { const j = JSON.parse(localStorage.getItem(AD_HKEY) || "null"); if (!j || j.kind !== kind || j.lv !== lv) return []; return (j.items || []).filter((x) => Date.now() - x.t < AD_HOUR); } catch (e) { return []; } }
-  function adHistSave() { try { if (!PR || !PR.hist) return; PR.hist = PR.hist.filter((x) => Date.now() - x.t < AD_HOUR).slice(-60); localStorage.setItem(AD_HKEY, JSON.stringify({ kind: PR.kind, lv: PR.lv, items: PR.hist })); } catch (e) {} }
+  function adHistSave() { try { if (!PR || !PR.hist) return; PR.hist = PR.hist.filter((x) => Date.now() - x.t < AD_HOUR).slice(-60); window.lsSet(AD_HKEY, JSON.stringify({ kind: PR.kind, lv: PR.lv, items: PR.hist })); } catch (e) {} }
   function adHistEnd() { try { localStorage.removeItem(AD_HKEY); } catch (e) {} }
   function adHistPush() {
     if (!PR || !PR.it || !(PR.att.length || PR.over)) return; const it = PR.it, fb = PR.fb || {};
@@ -399,7 +401,7 @@
     tRender(); adAsk();
   }
   // English answers: the phone's recogniser listens for English first, Spanish as a fallback where it can do both (some phones have no offline English)
-  function adEnLang() { try { if (window.AndroidSTT && window.AndroidSTT.multiLang) return "en-US|" + (TS.sttLang || (S.region === "es" ? "es-ES" : "es-US")); } catch (e) {} return "en-US"; }
+  function adEnLang() { try { if (window.AndroidSTT && window.AndroidSTT.multiLang) return "en-US|" + (TS.sttLang || (regLang())); } catch (e) {} return "en-US"; }
   function adPrompt(it) { return PR.kind === "cj" ? it.v + " · " + it.p + " · " + AD_TN_ES[it.t] : it.src; }
   function adAsk() {
     if (!PR || !PR.it) return; const it = PR.it; window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? adEnLang() : null;
@@ -429,6 +431,13 @@
       const accent = ok && !(" " + s.toLowerCase() + " ").includes(" " + it.ans.toLowerCase() + " ") && adAcc(s.toLowerCase()).includes(adAcc(it.ans.toLowerCase()));
       chk = { ok, issues: ok ? [] : [{ type: "cj", said: s.split(/\s+/).pop() }], accents: accent ? [{ l: s.split(/\s+/).pop(), a: it.ans }] : [] }; }
     else chk = it.dir === "en-es" ? adCheckEs(s, it) : adCheckEn(s, it);
+    // the answer policy: accents count in typed Spanish (one hint, one retry); spoken answers are never judged on accents
+    if (chk.ok && chk.accents && chk.accents.length && (PR.kind === "cj" || it.dir === "en-es")) {
+      if (!window.__prTyped) chk.accents = [];
+      else if (!PR.accHint) { PR.accHint = 1; PR.tries++; const low = /^a/.test(PR.lv || "a1"), ws = chk.accents.map((x) => "«" + x.l + "»");
+        const line = "💡 " + (low ? "Check the accents on " + ws.join(" and ") + "." : chk.accents.length + (chk.accents.length > 1 ? " words need" : " word needs") + " an accent or ñ.") + " The DELE counts accents as spelling.";
+        PR.fb = { ok: false, said: s, lines: [line], left: AD_TRIES - PR.tries, chk }; PR.att.push({ said: s, lines: [line] }); logMsg("a", "**¡Casi!** " + line); tRender(); speakMixed("¡Casi! Revisa los acentos.", () => {}); return; }
+      else { PR.tries++; return adFinish(false, chk); } }
     PR.tries++;
     if (chk.ok) return adFinish(true, chk);
     if (PR.tries >= AD_TRIES) return adFinish(false, chk);
@@ -438,13 +447,28 @@
     if (lvl >= 2 && it.note && PR.kind === "tr" && !lines.some((l) => /💡/.test(l))) lines.push("💡 Clue: " + it.note);
     lines = [...new Set(lines)];
     if (PR.kind === "tr" && chk.issues.length > 3) lines = ["That's quite different from the sentence: check the whole thing, word by word." + (lvl >= 2 && it.note ? " 💡 Clue: " + it.note : "")];
+    // the most useful clue: the sentence itself, with gaps where yours differs
+    if (PR.kind === "tr") { const sh = adShape(it, chk, lvl); if (sh) { lines = lines.map((l) => l.replace(/\s*💡 Clue: (it|the right one|the word we need) starts with «[^»]*»(…)?( \(\d+ letters\))?\.?/g, "")); lines.push(sh); } }
+    else if (PR.kind === "cj") lines.push("🧩 " + it.ans.split(" ").map((w) => adGap(w, lvl)).join(" ") + " (" + it.ans.replace(/\s/g, "").length + " letters)");
     PR.fb = { ok: false, said: s, lines, left: AD_TRIES - PR.tries, chk }; PR.att.push({ said: s, lines });
     const [pes, pen] = tpick(TEACH.retry); logMsg("a", pes + " " + lines.join(" "));
     tRender(); speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + (lvl >= 2 ? "Te doy una pista." : "Inténtalo otra vez."), () => { if (PR && PR.autoMic && CAN_MIC && !PR.over) { window.__sttOver = PR.kind === "tr" && it.dir === "es-en" ? adEnLang() : null; listen(prAnswer); } });
   }
+  function adGap(w, lvl) { const m = String(w).match(/^([^\p{L}]*)([\p{L}'’]+)(.*)$/u); if (!m) return w; const core = m[2], k = lvl >= 2 ? Math.max(1, Math.ceil(core.length / 2)) : 1; return m[1] + core.slice(0, k) + "_".repeat(Math.max(1, core.length - k)) + m[3]; }
+  function adShape(it, chk, lvl) { // the answer with the words you have right shown, and gaps for the rest
+    try {
+      const b = chk && chk.best; if (!b || !b.ans) return "";
+      const W = String(b.ans).split(/\s+/).filter(Boolean); let bad = new Set();
+      if (it.dir === "en-es") { const full = adToks(b.ans); if (W.length !== full.length || !b.ops) return ""; b.ops.forEach((o) => { if ((o.op === "sub" || o.op === "ins") && o.aj != null) bad.add(o.aj); }); }
+      else { const miss = new Set(b.miss || []); W.forEach((w, k) => { const t = adEnNorm(w)[0]; if (t && !AD_ENSTOP.has(t) && miss.has(adEnStem(t))) bad.add(k); }); }
+      if (!bad.size || bad.size > Math.max(3, Math.ceil(W.length * 0.7))) { if (lvl < 2 && bad.size) return ""; }
+      if (!bad.size) return "";
+      return "🧩 " + W.map((w, k) => (bad.has(k) ? adGap(w, lvl) : w)).join(" ");
+    } catch (e) { return ""; }
+  }
   function adCjWhy(it, said, lvl) {
     let why; try { why = formWhy(it.v, said, it.t, it.pi, null).replace(/\n.*$/, ""); } catch (e) { why = "We need **" + it.p + "** · **" + AD_TN_ES[it.t] + "**."; }
-    if (lvl >= 2) why += " 💡 Clue: " + (AD_GRP[it.grp] && !/^reg/.test(it.grp) ? "this verb is one of the " + AD_GRP[it.grp] + "; " : "") + "it starts with «" + it.ans.slice(0, Math.max(2, Math.ceil(it.ans.length / 2))) + "…».";
+    if (lvl >= 2) why += " 💡 Clue: " + (AD_GRP[it.grp] && !/^reg/.test(it.grp) ? "this verb is one of the " + AD_GRP[it.grp] + "." : "«" + it.v + "» is a regular -" + it.v.slice(-2) + " verb: same endings as «" + ({ ar: "hablar", er: "comer", ir: "vivir" }[it.v.slice(-2)] || "hablar") + "».");
     return why;
   }
   function adRecord(it, pass, key) {
@@ -456,6 +480,7 @@
     adSave();
   }
   function adFinish(pass, chk, gaveUp) {
+    if (PR) PR.accHint = 0;
     const it = PR.it, st = adSt(PR.kind, PR.lv), firstTry = pass && PR.tries <= 1;
     const key = PR.kind === "cj" ? "c:" + it.t + ":" + it.grp : adMainKey(it, chk);
     adRecord(it, pass && PR.tries <= 2, key);
@@ -470,7 +495,7 @@
     PR.fb = { ok: pass, said: chk ? (PR.um && PR.um.c) || "" : "", model, praise: pes + " " + pen, notes, gaveUp, diff: !pass && chk && chk.best && chk.best.ops ? adDiffHtml(chk.best) : "" };
     // adaptive: a struggle makes that skill the focus; three right first time in a row masters it, then Profe offers something new
     let ask = null;
-    if (!pass || PR.tries >= 2) { if (st.focus !== key) { st.focus = key; st.fstreak = 0; PR.note2 = "Let's practise this a bit more: " + adLabel(key) + "."; } else st.fstreak = 0; }
+    if (!pass || PR.tries >= 2) { if (st.focus !== key) { st.focus = key; st.fstreak = 0; PR.note2 = ""; } else st.fstreak = 0; }
     else if (st.focus && (it.tags || []).includes(st.focus) || st.focus === key) { st.fstreak = (st.fstreak || 0) + (firstTry ? 1 : 0); if (st.fstreak >= AD_MASTER) { st.mastered[st.focus] = Date.now(); ask = st.focus; } }
     else if (!st.focus && PR.done % 8 === 0) ask = "_";
     adSave();
@@ -479,7 +504,9 @@
       speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + (PR.kind === "tr" && it.dir === "es-en" ? "" : model + ". ") + q, () => { if (PR && PR.ask && CAN_MIC && PR.autoMic) listen(prAnswer); }); return; }
     tRender(); const at = it.id;
     // the question stays until you move on: time to read the correction (say «siguiente» / "next", or tap Next)
-    speakMixed(pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim() + " " + model, () => { if (PR && PR.it && PR.it.id === at && PR.over && !PR.ask && PR.autoMic && CAN_MIC) { window.__sttOver = null; listen(prAnswer); } });
+    // v221: the answer stays on screen and the mic stays off: review it, then tap Next (or say "next" with hands-free)
+    try { stopListening(); } catch (e) {} window.__sttOver = null;
+    speakMixed([[pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim(), true], [model, !(PR.kind === "tr" && it.dir === "es-en")]], () => {});
   }
   function adNew(yes) {
     const st = adSt(PR.kind, PR.lv), was = st.focus; PR.ask = null;
@@ -506,34 +533,35 @@
   }
   function adHTML() {
     const it = PR.it, st = adSt(PR.kind, PR.lv); if (!it) return '<div class="tscroll"><p class="muted">Loading…</p></div>';
-    const title = PR.kind === "tr" ? "Sentence translation" : "Conjugation";
+    const title = PR.pat ? "Survival Kit" : PR.kind === "tr" ? "Sentence translation" : "Conjugation";
     let h = '';
-    h += '<div class="tscroll adwrap"><p class="small muted adstat">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " right first time</p>";
+    // v242: the same way out as every other practice screen
+    h += '<div class="tscroll adwrap"><div class="row adexit" style="justify-content:space-between;align-items:center"><button class="btn small" data-act="pr-exit">‹ All practice</button><span class="small muted adstat">' + PR.lv.toUpperCase() + " · " + PR.done + " done · " + PR.first + " right first time</span></div>";
     h += "<h3>" + title + "</h3>";
-    if (PR.hist.length) h += '<div class="adhist">' + PR.hist.map((x, k) => adHistCard(x, k)).join("") + '</div><p class="adnow small muted" id="ad-now">Now</p>';
-    if (st.focus) { const f = st.fstreak || 0; h += '<p class="adfocus small"><b>Practising:</b> ' + esc(adLabel(st.focus)) + ' <span class="addots" aria-label="' + f + " of " + AD_MASTER + ' right first time in a row">' + Array.from({ length: AD_MASTER }, (_, i) => (i < f ? "●" : "○")).join("") + "</span></p>"; }
+    if (PR.hist.length) h += '<div class="adhist">' + PR.hist.map((x, k) => adHistCard(x, k)).join("") + '</div><hr class="adnow" id="ad-now" aria-hidden="true">';
+    if (st.focus && adLabel(st.focus)) { const f = st.fstreak || 0; h += '<p class="adfocus small"><b>Focus</b> ' + esc(adLabel(st.focus)) + ' <span class="addots" aria-label="' + f + " of " + AD_MASTER + ' right first time in a row">' + Array.from({ length: AD_MASTER }, (_, i) => (i < f ? "●" : "○")).join("") + "</span></p>"; }
     if (PR.note) h += '<p class="small muted">' + esc(PR.note) + "</p>";
     const dirL = PR.kind === "cj" ? "Say or type the form" : it.dir === "en-es" ? "English → Spanish" : "Spanish → English";
     h += '<div class="prbox adq"><p class="small muted">' + dirL + '</p><p class="prsay">' + (PR.kind === "cj" ? "" : it.dir === "es-en" ? sayBtn(it.src) + " " : "") + "<b>" + esc(adPrompt(it)) + "</b></p>" + (it.from ? '<p class="small muted">From «' + esc(it.from) + "»</p>" : "") + "</div>";
     const fb = PR.fb;
-    if (fb && !fb.ok && !PR.over) h += '<div class="prbox bad"><p><b>¡Casi!</b> <span class="muted">' + (fb.left === 1 ? "One more try, then I'll show you." : "Try again: " + fb.left + " tries left.") + '</span></p><p class="small">You said: «' + esc(fb.said) + "»</p>" + fb.lines.map((l) => "<p>" + esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</p>").join("") + "</div>";
+    if (fb && !fb.ok && !PR.over) h += '<div class="prbox bad"><p><b>¡Casi!</b> <span class="muted">' + (fb.left === 1 ? "One more try, then I'll show you." : "Try again: " + fb.left + " tries left.") + '</span></p><p class="small">You said: «' + esc(fb.said) + "»</p>" + [...new Set(fb.lines)].map((l) => (/^🧩/.test(l) ? '<p class="adshape"><span aria-hidden="true">🧩</span> ' + esc(l.replace(/^🧩\s*/, "")).replace(/_+/g, (m) => '<i aria-label="' + m.length + ' letters">' + "_".repeat(m.length) + "</i>") + "</p>" : "<p>" + esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</p>")).join("") + "</div>";
     if (PR.over && fb) h += '<div class="prbox ' + (fb.ok ? "ok" : "bad") + '"><p><b>' + esc(fb.praise) + "</b></p>" + (fb.ok ? "" : '<p class="small muted">' + (fb.gaveUp ? "Here's the answer." : "Here's the answer, after three tries.") + "</p>") + '<p class="adans">✓ ' + (fb.diff || esc(fb.model)) + (PR.kind === "cj" || it.dir === "en-es" ? " " + sayBtn(fb.model) : "") + "</p>" + (fb.notes || []).map((n) => '<p class="small">' + esc(n) + "</p>").join("") + (!fb.ok && PR.kind === "tr" && it.ans.length > 1 ? '<p class="small muted">Also right: ' + it.ans.slice(1, 3).map((a) => "«" + esc(a) + "»").join(" · ") + "</p>" : "") + "</div>";
     if (PR.um && PR.um.fx && PR.um.fx.items && PR.um.fx.items.length) h += '<div class="prfx">' + fixCard(PR.um) + "</div>";
     if (PR.ask) h += '<div class="prbox adask"><p><b>' + (PR.ask === "_" ? "¿Probamos algo nuevo?" : "¡Dominado! You've mastered " + esc(adLabel(PR.ask)) + ".") + '</b></p><p class="small">Would you like to try something new?</p><div class="row"><button class="btn primary small" data-act="ad-new" data-v="1">Yes, something new</button><button class="btn small" data-act="ad-new" data-v="0">No, more of this</button></div></div>';
     h += '<div class="row adbtns">' + (PR.over ? "" : '<button class="btn small" data-act="ad-show">Show the answer</button>') + (PR.ask ? "" : '<button class="btn small" data-act="ad-new" data-v="1">Something new</button>') + "</div>";
-    h += '<p class="small muted">' + (PR.kind === "tr" ? "Up to three tries; a clue after the second. Mistakes bring more of the same kind until you've got it." : "Up to three tries; a clue after the second. Verbs that behave like the one you missed come next.") + "</p>";
     h += "</div>";
-    const ph = PR.ask ? "…or type yes / no" : PR.over ? "…or type next" : PR.kind === "tr" && it.dir === "es-en" ? "Type your English answer" : "Type your Spanish answer";
+    const ph = PR.ask ? "Say or type yes / no" : (CAN_MIC ? "Say or type" : "Type") + " your answer in " + (PR.kind === "tr" && it.dir === "es-en" ? "English" : "Spanish");
     const pos = PR.view == null ? PR.hist.length + 1 : PR.view + 1, tot = PR.hist.length + 1;
-    const fwd = PR.view != null ? "Next ›" : PR.ask ? "" : PR.over ? "Next question ›" : "Skip ›";
+    const fwd = PR.view != null ? "Next ›" : PR.ask || PR.over ? "" : "Skip ›";
     h += '<div class="adnav" role="toolbar" aria-label="Questions"><button class="btn small" data-act="ad-back"' + (pos <= 1 ? " disabled" : "") + '>‹ Back</button><span class="small muted">' + pos + " / " + tot + "</span>" + '<button class="btn small adendb" data-act="ad-end">End</button>' + (fwd ? '<button class="btn small' + (PR.over && PR.view == null ? " primary" : "") + '" data-act="ad-fwd">' + fwd + "</button>" : "<span></span>") + "</div>";
+    if (PR.over && !PR.ask && PR.view == null) return h + '<div class="prnextbar"><button class="btn primary prnext" data-act="ad-fwd">Next <span aria-hidden="true">›</span></button></div>';
     return h + '<div class="t-live" id="t-live" hidden></div><form class="tform" id="pr-form">' + (CAN_MIC ? '<button class="micbtn" type="button" data-act="pr-mic" aria-label="Speak">' + MIC + "</button>" : "") + '<label class="sr" for="pr-input">Type your answer</label><input id="pr-input" autocomplete="off" autocapitalize="off" placeholder="' + ph + '"><button class="btn primary" type="submit">OK</button></form>';
   }
   function adHistCard(x, k) {
     const dl = x.dir === "cj" ? "Conjugation" : x.dir === "en-es" ? "English → Spanish" : "Spanish → English";
     return '<div class="prbox adh' + (x.ok ? " ok" : " bad") + (PR.view === k ? " adsel" : "") + '" id="adh-' + k + '"><p class="small muted">' + (k + 1) + " · " + dl + (x.skipped ? " · skipped" : "") + '</p><p><b>' + esc(x.prompt) + "</b></p>" +
       x.att.map((a, i) => '<p class="small">' + (x.att.length > 1 ? "Try " + (i + 1) + ": " : "You: ") + "«" + esc(a.said) + "»" + (a.lines && a.lines.length && a.lines[0] !== "✓" ? '<br><span class="muted">' + a.lines.map((l) => esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")).join("<br>") + "</span>" : a.lines && a.lines[0] === "✓" ? " ✓" : "") + "</p>").join("") +
-      '<p class="adans">✓ ' + (x.diff || esc(x.model)) + "</p>" + (x.notes || []).map((n) => '<p class="small muted">' + esc(n) + "</p>").join("") + "</div>";
+      '<p class="adans">✓ ' + (x.diff || esc(x.model)) + "</p>" + [...new Set(x.notes || [])].map((n) => '<p class="small muted">' + esc(n) + "</p>").join("") + "</div>";
   }
   // ending: a short summary in the chat, history cleared, back to the list of practices
   function adEnd() {
@@ -552,5 +580,5 @@
   // after each render: show the question you're looking at (the current one, or the one ‹ Back selected)
   function adScroll() { const box = document.querySelector("#tutor .adwrap"); if (!box || !PR) return; const el = PR.view != null ? document.getElementById("adh-" + PR.view) : document.getElementById("ad-now");
     if (el) { const top = el.offsetTop - box.offsetTop - 8; box.scrollTop = PR.view != null ? top : Math.max(top, 0); } }
-  window.__ad = { bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, end: () => adEnd(), enLang: adEnLang, back: () => adBack(), fwd: () => adFwd(), render: () => tRender(), label: adLabel, key: adMainKey };
+  window.__ad = { answer: (s) => adAnswer(s), bank: adBank, gen: adGen, checkEs: adCheckEs, checkEn: adCheckEn, why: adWhy, whyEn: adWhyEn, st: adSt, group: adGroup, pickTr: adPickTr, pickCj: adPickCj, pool: adCjPool, tags: adTags, pr: () => PR, end: () => adEnd(), enLang: adEnLang, back: () => adBack(), fwd: () => adFwd(), render: () => tRender(), label: adLabel, key: adMainKey };
   /* ==/ADAPTIVE== */

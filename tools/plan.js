@@ -486,6 +486,7 @@
   function planChatOn() { const c = S.plan && S.plan.chat; return !!(c && c.on && !c.paused); }
   function pcSay(text, origin) { try { pvReply(text, origin || "chat", { listen: 1 }); } catch (e) { try { logMsg("a", text); tRender(); } catch (x) {} } }
   function planChatStart(origin) {
+    try { tView = "chat"; } catch (e) {} // the plan is set up in Profe's chat, not on the practice icons
     plState(); const D = plDraft(), c = (S.plan.chat = S.plan.chat || {}), resumed = c.started && !c.done;
     c.on = true; c.paused = false; c.started = c.started || Date.now(); c.done = false; c.confirm = false; c.clar = null; c.asked = c.asked || {}; c.origin = origin || "chat"; save();
     const known = []; if (D.target) known.push("target DELE " + D.target.toUpperCase()); if (D.current) known.push("current level " + D.current.toUpperCase() + (D.currentSrc ? " (from " + D.currentSrc + ")" : "")); if (plWeekMin(D)) known.push(plWeekMin(D) + " minutes a week");

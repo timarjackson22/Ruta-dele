@@ -55,7 +55,7 @@
   async function bkSave() {
     const out = document.getElementById("bk-res"); if (out) out.textContent = "Preparing…";
     const B = await bkCollect(), txt = JSON.stringify(B), name = "ruta-dele-backup-" + dayKey() + ".json";
-    UI.lastBackup = Date.now(); uiSave(); try { localStorage.setItem("ruta-ui", JSON.stringify(UI)); } catch (e) {}
+    UI.lastBackup = Date.now(); uiSave(); try { window.lsSet("ruta-ui", JSON.stringify(UI)); } catch (e) {}
     const kb = Math.round(txt.length / 1024);
     if (window.AndroidApp && AndroidApp.saveText) { const r = AndroidApp.saveText(name, txt); if (out) out.innerHTML = /^ERR/.test(r) ? "✗ Couldn’t save: " + esc(r.slice(4)) : "✓ Saved to <b>" + esc(r) + "</b> (" + kb + " KB). Keep a copy somewhere safe, like Google Drive or email."; qCheck(); return; }
     const file = new File([txt], name, { type: "application/json" });
@@ -70,7 +70,7 @@
     try {
       const B = JSON.parse(await file.text());
       if (!B || B.app !== "ruta-dele" || !B.ls) throw new Error("This isn’t a Ruta DELE backup file.");
-      Object.keys(B.ls).forEach((k) => { if (/^(ruta|ra-|rd-)/.test(k)) localStorage.setItem(k, B.ls[k]); });
+      Object.keys(B.ls).forEach((k) => { if (/^(ruta|ra-|rd-)/.test(k)) window.lsSet(k, B.ls[k]); });
       for (const d of B.docs || []) { try { await myPut(d); } catch (e) {} }
       if (out) out.textContent = "✓ Restored from " + new Date(B.date).toLocaleString() + ". Reloading…";
       setTimeout(() => location.reload(), 900);

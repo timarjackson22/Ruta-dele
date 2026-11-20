@@ -59,6 +59,12 @@ If no: say so in the commit message ("costs: no impact").
 - On-device AI (`natRun`): first word within 150 s while loading / 60 s once loaded, 15 s without a word mid-reply keeps what was written, and stopping or a new message ends the reply at once (never wait for the phone to confirm a cancel). A failed reply answers from `expertAnswer()` when it can. `node tools/profe-tests/sSTALL.js` must pass.
 - Phones: the Listen button is icon-only (≤ 440 px) and `nbTitleFit` keeps the title clear of it. LatAm alphabet names V «ve corta», W «doble ve» (`ALFA_LATAM`).
 
+## Reliability foundations — v242 (tools/PROFE_RELIABILITY.md: issue register, one owner per resource)
+- Storage: never call `localStorage.setItem` directly; use `window.lsSet(k, v)` (on «full»: clears caches vcap:/vaud:/lrc:, trims Profe's history via `__tsTrim`, retries, warns once with `#ls-full`). Profe history budget `TS_MAX` 1.5 MB (older chats keep 40 messages, notes kept). `node tools/profe-tests/sSTORE.js` must pass.
+- Microphone: one owner, the mic guard (`MICG.cur`, `window.__micOwned()`); «Ok Profe» stands down in `hfBusy()` while a call is on or anything owns the mic. `node tools/profe-tests/sOWN.js` must pass.
+- Build: tools/ sources are the truth — edit the source, then embed. Every `tools/patch_*.py` must be a no-op on index.html: `node tools/profe-tests/sSRC.js` must pass (five stale sources once reverted newer work when re-embedded).
+- Every drill screen has «‹ All practice» (`pr-exit`; adaptive.js `.adexit`).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

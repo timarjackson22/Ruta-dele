@@ -129,7 +129,7 @@
       let r; try { r = JSON.parse(json); } catch (e) { vcState("error", "unreadable reply"); return; }
       if (r.none) { if (+r.secs > 0) VP.secs = +r.secs; vData(id).cap = "none"; save(); vcNoCaps(id); return; }
       vcCache.set(id, r);
-      try { const keys = Object.keys(localStorage).filter((k) => k.startsWith("vcap:")); if (keys.length >= 8) localStorage.removeItem(keys[0]); localStorage.setItem("vcap:" + id, JSON.stringify(r)); } catch (e) {}
+      try { const keys = Object.keys(localStorage).filter((k) => k.startsWith("vcap:")); if (keys.length >= 8) localStorage.removeItem(keys[0]); window.lsSet("vcap:" + id, JSON.stringify(r)); } catch (e) {}
       if (!hit) vcGot(id, r); else if (+r.secs > 0) VP.secs = +r.secs;
     };
     try { window.AndroidCap.fetch(rid, id); } catch (e) { vcState("error", String(e)); }

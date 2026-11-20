@@ -20,8 +20,9 @@ html[data-region="es"] .tutor .tscroll {{ --pbg: url("{es}") }}
 .tutor .tscroll > :not(.tm):not(.tmsg) {{ position: relative }}
 /* ==/PROFEBG== */
 """
-s = re.sub(r"/\* ==PROFEBG== \*/.*?/\* ==/PROFEBG== \*/\n", "", s, flags=re.S)
-s = s.replace("</style>", css + "</style>", 1)
+# replace the block where it already is (moving it would change which CSS rules win); first run appends it
+if "/* ==PROFEBG== */" in s: s = re.sub(r"/\* ==PROFEBG== \*/.*?/\* ==/PROFEBG== \*/\n", lambda m: css, s, count=1, flags=re.S)
+else: s = s.replace("</style>", css + "</style>", 1)
 # the page knows the variety, so CSS can pick the scene
 o = 'function regionUI() { const b = document.getElementById("regbtn");'
 if 'dataset.region = S.region' not in s:

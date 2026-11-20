@@ -49,7 +49,7 @@
     if (!cur || !cur.items || !cur.items.length) return;
     {
       const f = cur.items[0]; TCH.last = { rule: f.rule, from: f.from, to: f.to, t: Date.now() };
-      cur.items.forEach((x) => { TCH.errs[x.rule] = (TCH.errs[x.rule] || 0) + 1; }); try { localStorage.setItem("ruta-teach-errs", JSON.stringify(TCH.errs)); } catch (e) {}
+      cur.items.forEach((x) => { TCH.errs[x.rule] = (TCH.errs[x.rule] || 0) + 1; }); try { window.lsSet("ruta-teach-errs", JSON.stringify(TCH.errs)); } catch (e) {}
       // a mistake made twice goes to My mistakes, as a sentence to fix
       try { const id = "profe-" + f.rule + "-" + cur.text.toLowerCase().replace(/[^a-záéíóúñ]+/g, "-").slice(0, 40);
         if (TCH.errs[f.rule] >= 2 && !(S.mist || []).some((m) => m.id === id)) { S.mist = S.mist || []; S.mist.push({ id, key: "profe", n: TCH.errs[f.rule], ts: Date.now(), it: { t: "fix", q: cur.text, a: [cur.better], why: f.why } }); save(); } } catch (e) {}
