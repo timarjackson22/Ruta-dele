@@ -122,3 +122,4 @@ If no: say so in the commit message ("costs: no impact").
 - Never edit `window.__BUILD`, `var BUILD` or `version.json` by hand: `tools/sync_profe.py` stamps all three with one value.
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").
 - Bump the `sw.js` cache name (ruta-dele-vNNN) with each release.
+- Updates (v243): the page reloads itself onto a newer build (version.json) at start, on coming back to the front and every 30 min, with Profe open too; it waits only while something is happening (call, mic owner, speech, typing, player) and retries a failed try after 5 min. `node tools/profe-tests/sUPD.js` must pass. Profe's diagnostics text starts with «Version: build …».
