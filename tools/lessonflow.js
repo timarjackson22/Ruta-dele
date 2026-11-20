@@ -200,6 +200,7 @@
   // swipe
   let lfX = null, lfY = null; document.addEventListener("touchstart", (e) => { if (!document.body.classList.contains("paged") || !e.target.closest("#app") || e.target.closest(".tbl, .cr-scroll, input, textarea")) return; lfX = e.touches[0].clientX; lfY = e.touches[0].clientY; }, { passive: true });
   document.addEventListener("touchend", (e) => { if (lfX == null) return; const dx = e.changedTouches[0].clientX - lfX, dy = e.changedTouches[0].clientY - lfY; lfX = null;
+    { const sl = window.getSelection && window.getSelection(); if (sl && !sl.isCollapsed) return; } // v241: dragging a selection handle is not a page swipe
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.4) { if (!S.pgSwiped) { S.pgSwiped = 1; try { save(); } catch (x) {} } lfUserGo(LFS.i + (dx < 0 ? 1 : -1)); } }, { passive: true });
   document.addEventListener("keydown", (e) => { if (!document.body.classList.contains("paged") || e.altKey || e.ctrlKey || e.metaKey || /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || "")) return;
     if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); lfUserGo(LFS.i + 1); } else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); lfUserGo(LFS.i - 1); } });
