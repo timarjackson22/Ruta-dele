@@ -20,10 +20,22 @@
   // English in Profe's other voice only for real coaching: an explicit request, a repeated mistake, or the «Mostly English» mode
   function vcEnOK() { return !!(VC.on && (vcP("lang", "bilingual") === "english" || VC.wantEn || VC.coachNow)); }
   window.__vcEnOK = vcEnOK;
+  // v245: spoken-tutoring practice for language learning, added to every call turn
+  function vcTeach() {
+    const lv = (() => { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })();
+    return "\n- HOW GOOD SPOKEN TUTORS TEACH (follow these every turn):" +
+      "\n  · The learner should talk more than you: keep your turn under about 25 words and end it with a question or a clear invitation, so they know it's their turn." +
+      "\n  · Comprehensible input: speak at the learner's level" + lv + ", just a little above it; reuse words they have just used; if they struggle, simplify, slow down and offer two choices («¿Prefieres la playa o la montaña?») or a sentence starter («Puedes decir: Me gusta… porque…»)." +
+      "\n  · Correct mostly by recasting: say their idea back in correct Spanish inside your natural reply («Ah, ¿fuiste al mercado ayer? ¡Qué bien!»); stop to explain only when a mistake blocks meaning or keeps coming back." +
+      "\n  · Ask open questions (¿qué?, ¿cómo?, ¿por qué?, cuéntame…) more than yes/no ones, and build each question on the details they just gave." +
+      "\n  · Personal and memorable: use their name now and then (not every turn), bring back something they told you earlier, and connect new words to their life." +
+      "\n  · Energy: sound genuinely interested and happy to talk — react to what they say («¡No me digas!», «¡Qué interesante!», «¡Me encanta!»), praise the specific thing they did well, celebrate attempts, vary your words (never the same praise twice in a row), and keep a light, friendly sense of humour." +
+      "\n  · If they sound tired or frustrated, make it easier, encourage them warmly and offer a short break or a different activity.";
+  }
   window.__vcNote = () => {
     if (!VC.on) return "";
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
-    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
+    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural." + vcTeach() + "\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
       (VC.wantEn ? "\n- THIS TURN the learner explicitly asked for English: explain briefly in English (2–3 sentences), give the Spanish with one example, then invite them back into Spanish with a short question." : "") +
       (VC.coachNow ? "\n- THIS TURN, coach a repeated mistake in English (the learner has made it " + VC.coachNow.n + " times; check it really is in what they said, not a recognition error): say in one short English sentence what keeps going wrong (" + VC.coachNow.why + "), give the correct Spanish «" + VC.coachNow.to + "» in a useful example, invite a quick retry, then carry on in Spanish." : "") +
       (VC.instr.length ? "\n- The learner asked, for this whole call: " + VC.instr.map((x) => "«" + x + "»").join("; ") + ". Keep doing all of it." : "");
@@ -31,11 +43,21 @@
 
   /* ---------- watching speech: lip sync from the words actually spoken ---------- */
   const AV = { cur: null, speaking: false, q: 0, lastEnd: 0, m: { w: 5.2, h: 0.3 }, smile: 0 };
-  /* v244: on the phone the audio itself is the authority. Android's text-to-speech says whether sound is playing right now
+  /* v245 correction: Android's isSpeaking() turns false as soon as the audio is HANDED TO THE MIXER, not when it has played;
+     fast engines (Samsung) hand most of a sentence over early, so v244 shut the mouth while the voice played on. Rules now:
+     the sentence's own events (start … onDone, which Android sends only after the audio has played) bound the mouth;
+     «sound playing» is only ever used as a YES (start a mouth that missed its start, keep one going); never as a NO.
+     Every utterance is logged (AV.diag) so a test call on the phone shows exactly what the engine sent.
+     (v244 notes:) on the phone the audio itself is the authority. Android's text-to-speech says whether sound is playing right now
      (AndroidTTS.speaking()). Samsung's engine (and others) can report «start» before the sound, skip «start» for a sentence,
      or report every word as it is *synthesised* — far ahead of the audio — which raced the mouth to the end of the sentence
      and shut it while the voice carried on. Now: word events faster than speech are ignored (AV.earlyEv), a sentence whose
      «start» never came begins when the sound does (AV.pend), and the mouth's clock only runs while sound is playing. */
+  AV.diag = [];
+  function avDiagNew(u) { const d = { n: AV.diag.length + 1, len: String(u.text || "").length, tq: performance.now(), start: null, words: 0, w1: null, wN: null, end: null, natYes: 0, natNo: 0, silent: 0, how: "" }; u.__vd = d; AV.diag.push(d); if (AV.diag.length > 30) AV.diag.shift(); return d; }
+  window.__vcLipDiag = () => { const L = AV.diag.map((d) => { const st = d.start != null ? Math.round(d.start - d.tq) : "none", dur = d.end != null && d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + "s" : "?";
+      return "#" + d.n + " " + d.len + "ch start+" + st + "ms dur " + dur + " words " + d.words + (d.words ? " (" + Math.round(d.w1) + "–" + Math.round(d.wN) + "ms)" : "") + " sound " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " MOUTH-STILL " + Math.round(d.silent) + "ms" : "") + (d.how ? " " + d.how : ""); });
+    return "Lip-sync (" + (AV.earlyEv ? "engine reports words early" : "word events trusted") + "; " + (AV.natSeen ? "phone reports sound" : "no sound signal") + "):\n" + L.slice(-12).join("\n"); };
   function vcTtsNat() { try { if (window.__natSpeaking) return !!window.__natSpeaking(); if (window.AndroidTTS && typeof AndroidTTS.speaking === "function") return !!AndroidTTS.speaking(); } catch (e) {} return null; }
   const VIS = { rest: [5.2, 0.3], mbp: [5, 0], a: [5.4, 5.2], e: [6, 3], i: [6.2, 2], o: [3.8, 4.6], u: [3, 3.4], f: [5.4, 1.2], l: [5.2, 1.3] };
   function visOf(ch, nx, en) {
@@ -80,13 +102,13 @@
     const sp = ss.speak.bind(ss), ca = ss.cancel.bind(ss);
     try {
       ss.speak = function (u) {
-        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
+        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; try { avDiagNew(u); } catch (x) {} const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
           // enthusiasm: a brighter voice in a call (higher on ¡exclamations!, a lift on questions)
           try { const tx = String(u.text || ""), p0 = +u.pitch || 1; if (!u.__vcp) { u.__vcp = 1; u.pitch = Math.min(1.25, p0 * (/[!¡]/.test(tx) ? 1.12 : /[?¿]/.test(tx) ? 1.07 : 1.05)); } } catch (x) {}
-          u.onstart = function (ev) { try { if (!u.__vcs) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
-          u.onboundary = function (ev) { try { if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
-          u.onend = function (ev) { try { if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
-          u.onerror = function (ev) { try { if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
+          u.onstart = function (ev) { try { if (u.__vd) u.__vd.start = performance.now(); if (!u.__vcs) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
+          u.onboundary = function (ev) { try { const d = u.__vd; if (d) { const tt = performance.now() - (d.start || d.tq); d.words++; if (d.w1 == null) d.w1 = tt; d.wN = tt; } if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
+          u.onend = function (ev) { try { if (u.__vd) u.__vd.end = performance.now(); if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
+          u.onerror = function (ev) { try { if (u.__vd) { u.__vd.end = performance.now(); u.__vd.how = "error:" + (ev && ev.error || ""); } if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
         return sp(u);
       };
       ss.cancel = function () { if (VC.on) avStopAll(); return ca(); };
@@ -198,14 +220,25 @@
     C.push("</g>");
     // v240 thinking gesture: a hand resting under the chin (to the side, below the mouth), shown only while an answer is
     // really being prepared and the wait is noticeable; hidden with reduced motion
-    C.push('<g class="vc-hand" opacity="0" transform="translate(0 60)"><g transform="rotate(-14 270 610)">' +
-      '<path d="M300 900L318 700C320 676 304 650 282 648L258 650C244 690 246 780 252 900Z" fill="' + sh + '"/>' +
-      '<path d="M252 652C252 636 256 622 262 612L292 610C302 622 306 640 304 656C302 676 286 684 270 682C258 680 252 668 252 652Z" fill="url(#vcSkin)"/>' +
-      '<rect x="246" y="566" width="62" height="58" rx="22" fill="url(#vcSkin)"/>' +
-      '<path d="M252 590C264 586 290 586 302 590" stroke="' + skDD + '" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>' +
-      '<path d="M262 568V576M277 567V575M292 568V576" stroke="' + skDD + '" stroke-width="1.6" opacity=".3" stroke-linecap="round"/>' +
-      '<path d="M248 606C238 600 236 586 244 578C250 574 258 578 260 586C262 596 258 606 248 606Z" fill="' + sk + '" stroke="' + skD + '" stroke-width="1.5"/>' +
-      '<path d="M300 572C306 586 306 604 300 618" stroke="#fff" stroke-width="4" opacity=".15" fill="none" stroke-linecap="round"/></g></g>');
+    // v245 thinking pose: a hand resting on the chin on the side Profe is looking to — thumb under the chin, curled fingers in
+    // front of it, index finger along the jaw, sleeve and wrist below. Drawn for the viewer's right; mirrored (.vc-hand-m)
+    // when he looks to the left. It moves with the head (vcAnimate) and comes in only while an answer is really being prepared.
+    C.push('<g class="vc-hand" opacity="0"><g class="vc-hand-m">' +
+      '<ellipse cx="282" cy="560" rx="30" ry="12" fill="#000" opacity=".07" filter="url(#vcSoft)"/>' +
+      '<path d="M322 900L398 900L360 700C354 670 326 652 300 656L270 668C272 724 292 806 322 900Z" fill="' + sh + '"/>' +
+      '<path d="M270 668C276 700 290 760 302 820" stroke="' + shD + '" stroke-width="5" fill="none" opacity=".35" stroke-linecap="round"/>' +
+      '<path d="M276 664C278 646 292 634 312 634C330 636 344 648 346 668L340 690C322 700 296 698 280 688Z" fill="url(#vcSkin)"/>' +
+      '<path d="M258 604C254 574 272 552 300 550C328 548 346 570 346 600C346 634 326 664 296 668C272 670 262 636 258 604Z" fill="url(#vcSkin)"/>' +
+      '<path d="M266 612C278 630 300 640 326 632" stroke="' + skDD + '" stroke-width="2.2" fill="none" opacity=".35" stroke-linecap="round"/>' +
+      '<path d="M266 584C256 578 244 574 234 574" stroke="url(#vcSkin)" stroke-width="14" stroke-linecap="round" fill="none"/>' +
+      '<path d="M262 590C252 585 242 582 234 582" stroke="' + skDD + '" stroke-width="1.4" stroke-linecap="round" fill="none" opacity=".3"/>' +
+      [[236, 566], [240, 584], [246, 602]].map(([x, y]) => '<rect x="' + x + '" y="' + y + '" width="56" height="19" rx="9.5" fill="url(#vcSkin)" stroke="' + skDD + '" stroke-opacity=".28" stroke-width="1.4"/>').join("") +
+      '<path d="M246 575C250 573 254 573 258 575M250 593C254 591 258 591 262 593M256 611C260 609 264 609 268 611" stroke="' + skDD + '" stroke-width="1.4" fill="none" opacity=".35" stroke-linecap="round"/>' +
+      '<path d="M306 600C302 580 304 560 308 540C312 524 316 512 318 500" stroke="url(#vcSkin)" stroke-width="18" stroke-linecap="round" fill="none"/>' +
+      '<path d="M316 600C312 580 314 562 317 544C320 528 324 516 326 506" stroke="' + skDD + '" stroke-width="1.4" fill="none" opacity=".28"/>' +
+      '<path d="M316 500Q320 492 324 500" stroke="#fff" stroke-width="3" opacity=".35" fill="none" stroke-linecap="round"/>' +
+      '<path d="M304 548C308 546 312 546 314 549M310 528C313 526 317 526 319 529" stroke="' + skDD + '" stroke-width="1.3" fill="none" opacity=".35" stroke-linecap="round"/>' +
+      '</g></g>');
     return '<svg class="vc-scene vc-svg" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(pName()) + ', AI tutor">' + B.join("") + '<g class="vc-char" transform="translate(200 300) scale(.82) translate(-200 -300)">' + C.join("") + "</g>" + '<rect width="400" height="860" fill="url(#vcVig)" pointer-events="none"/></svg>';
   }
   const vcFace = vcScene;
@@ -218,10 +251,9 @@
       const root = document.getElementById("vcall"); const svg = root && root.querySelector(".vc-scene"); if (!svg) { VC_RAF = requestAnimationFrame(step); return; }
       // the mouth: the letter being spoken now, from the word the voice reported
       // v244: what the phone is really doing (sound playing or not), read a few times a second
-      if (!AV.natT || now - AV.natT > 150) { AV.natT = now; AV.nat = vcTtsNat(); }
-      if (!AV.cur && AV.pend && !AV.pend.__vcs && AV.nat) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; } catch (e) {} } // «start» never came
-      { const c0 = AV.cur, dt = AV.lastStep ? Math.min(100, now - AV.lastStep) : 0;
-        if (c0 && AV.nat === false && now - c0.t0 > 350) { c0.t0 += dt; c0.wStart += dt; if (c0.est) c0.est.t0 += dt; if (c0.lastB) c0.lastB += dt; c0.held = 1; } } // no sound yet / any more: the mouth's clock waits
+      if (!AV.natT || now - AV.natT > 150) { AV.natT = now; AV.nat = vcTtsNat(); if (AV.nat) AV.natSeen = true;
+        const d = AV.cur && AV.cur.u && AV.cur.u.__vd; if (d && AV.nat != null) { if (AV.nat) d.natYes++; else d.natNo++; } }
+      if (!AV.cur && AV.pend && !AV.pend.__vcs && AV.nat) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; if (AV.pend.__vd) AV.pend.__vd.how = "no start: began on sound"; } catch (e) {} } // «start» never came
       AV.lastStep = now;
       let tgt = VIS.rest; const c = AV.cur;
       if (c && c.words.length) {
@@ -241,11 +273,11 @@
         }
         // syllables, not letters: the mouth opens on each vowel (held longer) and closes between them, like real speech
         if (w && !c.hasB && now - c.t0 < 280) w = null; // some phones report "start" before the audio: wait for the first word
-        if (AV.nat === false && now - c.t0 > 350) w = null; // the phone says no sound is playing
         if (w) { const ks = w.keys || (w.keys = avKeys(c.text.substr(w.i, w.len), c.en)), dur = w.len * per;
           if (el < dur) { let pos = (el / dur) * ks.T, j = 0; while (j < ks.length - 1 && pos > ks[j][1]) { pos -= ks[j][1]; j++; } tgt = VIS[ks[j][0]]; }
           else tgt = c.hasB && !est ? [5, 0.6] : VIS.rest; } // between words / at commas: nearly closed, as in real speech
       }
+      { const d = c && c.u && c.u.__vd; if (d) { if (AV.m.h < 0.8) { AV.stillT = AV.stillT || now; if (now - AV.stillT > 600) d.silent += Math.min(100, now - (AV.stillLast || now)); } else AV.stillT = 0; AV.stillLast = now; } else AV.stillT = 0; }
       const m = AV.m, f = c ? 0.42 : 0.35; m.w += (tgt[0] - m.w) * f; m.h += (tgt[1] - m.h) * f; if (!c && m.h < 0.05) m.h = 0;
       const mood = c ? AV.mood : VC.st === "listening" ? "listen" : VC.st === "thinking" ? "think" : AV.after > now ? "joy" : "warm";
       const smileT = { joy: 10, excited: 6.5, ask: 4.2, warm: 4.4, listen: 5, think: 2.2 }[mood] || 4; AV.sm = (AV.sm == null ? smileT : AV.sm + (smileT - AV.sm) * 0.08);
@@ -261,27 +293,32 @@
       // eyelids: natural blinks every 2.5–6 s; a little lower while thinking
       if (now > VC_BLINKT) { VC_BLINK = now; VC_BLINKT = now + 2500 + Math.random() * 3500; }
       const bl = now - VC_BLINK, closeT = bl < 75 ? bl / 75 : bl < 165 ? 1 - (bl - 75) / 90 : 0;
-      const think = VC.st === "thinking", base = think ? 0.2 : VC.st === "listening" ? 0.02 : 0.06, t = Math.max(base, closeT);
+      const think = (VC.posed || VC.st) === "thinking", base = think ? 0.2 : VC.st === "listening" ? 0.02 : 0.06, t = Math.max(base, closeT);
       svg.querySelectorAll(".vc-lid").forEach((l) => { const x = +l.dataset.x, yy = +l.dataset.y, e = yy - 14 + t * 42, mid = e - 16 * (1 - t); l.setAttribute("d", "M" + (x - 36) + " " + (yy - 34) + "H" + (x + 36) + "V" + e.toFixed(1) + "Q" + x + " " + mid.toFixed(1) + " " + (x - 36) + " " + e.toFixed(1) + "Z"); });
       svg.querySelectorAll(".vc-lash").forEach((l) => { const x = +l.dataset.x, yy = +l.dataset.y, e = yy - 14 + t * 42, mid = e - 16 * (1 - t); l.setAttribute("d", "M" + (x - 31) + " " + (e - 1).toFixed(1) + "Q" + x + " " + (mid - 1).toFixed(1) + " " + (x + 31) + " " + (e - 1).toFixed(1)); });
       // gaze: at the learner while listening, up and aside while thinking, small natural shifts while speaking
       if (now > VC_GAZE.t) { VC_GAZE.t = now + 900 + Math.random() * 1800; const s2 = c ? 3 : 1.5; VC_GAZE.tx = (Math.random() - 0.5) * s2 * 2; VC_GAZE.ty = (Math.random() - 0.5) * s2; }
-      const gx = reduce ? 0 : think ? -6 : VC.st === "listening" ? 0 : VC_GAZE.tx, gy = reduce ? 0 : think ? -6 : VC.st === "listening" ? 0 : VC_GAZE.ty;
+      const tSide = VC.thinkSide || 1, gx = reduce ? 0 : think ? 7.5 * tSide : VC.st === "listening" ? 0 : VC_GAZE.tx, gy = reduce ? 0 : think ? -7.5 : VC.st === "listening" ? 0 : VC_GAZE.ty;
       VC_GAZE.x += (gx - VC_GAZE.x) * 0.15; VC_GAZE.y += (gy - VC_GAZE.y) * 0.15;
       svg.querySelectorAll(".vc-iris").forEach((g) => g.setAttribute("transform", "translate(" + VC_GAZE.x.toFixed(2) + " " + VC_GAZE.y.toFixed(2) + ")"));
       // brows: up when asking or excited, a lift on each beat, raised and soft while listening
       const kick = AV.kick ? Math.max(0, 1 - (now - AV.kick) / 380) : 0;
       const bT = ({ joy: -6, excited: -7, ask: -8, warm: -2, listen: -5, think: -3 }[mood] || 0) - kick * 4; AV.bw = (AV.bw == null ? bT : AV.bw + (bT - AV.bw) * 0.12);
-      { const hand = q(".vc-hand"); if (hand) { const want = !reduce && (VC.posed || VC.st) === "thinking" && VC.handOn && now - (VC.thinkT || now) > 900 ? 1 : 0; AV.hand = (AV.hand || 0) + (want - (AV.hand || 0)) * (want ? 0.08 : 0.25);
-        if (AV.hand < 0.01 && !want) AV.hand = 0; hand.setAttribute("opacity", AV.hand.toFixed(2)); hand.setAttribute("transform", "translate(0 " + ((1 - AV.hand) * 60).toFixed(1) + ")"); } }
+      { const hand = q(".vc-hand"); if (hand) { const want = !reduce && (VC.posed || VC.st) === "thinking" && VC.handOn && now - (VC.thinkT || now) > 700 ? 1 : 0; AV.hand = (AV.hand || 0) + (want - (AV.hand || 0)) * (want ? 0.07 : 0.22);
+        if (AV.hand < 0.01 && !want) AV.hand = 0; hand.setAttribute("opacity", Math.min(1, AV.hand * 1.6).toFixed(2));
+        const hm = q(".vc-hand-m"); const side = VC.thinkSide || 1; if (hm && hm.dataset.s !== String(side)) { hm.dataset.s = String(side); hm.setAttribute("transform", side < 0 ? "matrix(-1 0 0 1 400 0)" : ""); }
+        hand.setAttribute("transform", (AV.headT || "") + " translate(0 " + ((1 - AV.hand) * 70).toFixed(1) + ")"); } }
       const br = q(".vc-brows"); if (br) br.setAttribute("transform", "translate(0 " + AV.bw.toFixed(2) + ")");
       // smiling eyes: cheeks lift the lower lids when Profe is happy
       const ch = q(".vc-cheeks"); if (ch) ch.setAttribute("opacity", Math.max(0, Math.min(1, (smile - 4.6) / 3)).toFixed(2));
       // head and body: restrained, a little more while speaking; a slight tilt while listening; breathing
       if (!reduce) { const s = now / 1000, amp = c ? 1.3 : 0.6; const nodL = AV.nodL ? Math.max(0, 1 - (now - AV.nodL) / 700) : 0;
-        const rot = Math.sin(s * 0.8) * 1.4 * amp + (VC.st === "listening" ? 2.5 : mood === "ask" ? -2.5 : 0) + (c ? Math.sin(s * 2.1) * 0.7 : 0),
-          ty = Math.sin(s * 1.2) * 1.4 * amp + kick * 5 + Math.sin(nodL * Math.PI) * 7 + (mood === "joy" && c ? Math.abs(Math.sin(s * 5)) * -2 : 0);
-        const hd = q(".vc-head"); if (hd) hd.setAttribute("transform", "translate(0 " + ty.toFixed(2) + ") rotate(" + rot.toFixed(2) + " 200 640)");
+        // v245 thinking: the head tilts toward the side he looks to and the chin lifts (eased, so it never snaps)
+        const thinkW = (VC.posed || VC.st) === "thinking" ? 1 : 0; AV.think = (AV.think || 0) + (thinkW - (AV.think || 0)) * 0.06; const th = AV.think;
+        const rot = (Math.sin(s * 0.8) * 1.4 * amp + (VC.st === "listening" ? 2.5 : mood === "ask" ? -2.5 : 0) + (c ? Math.sin(s * 2.1) * 0.7 : 0)) * (1 - th) + th * (5.5 * (VC.thinkSide || 1) + Math.sin(s * 0.6) * 0.6),
+          ty = (Math.sin(s * 1.2) * 1.4 * amp + kick * 5 + Math.sin(nodL * Math.PI) * 7 + (mood === "joy" && c ? Math.abs(Math.sin(s * 5)) * -2 : 0)) * (1 - th) - th * 5;
+        AV.headT = "translate(0 " + ty.toFixed(2) + ") rotate(" + rot.toFixed(2) + " 200 640)";
+        const hd = q(".vc-head"); if (hd) hd.setAttribute("transform", AV.headT);
         const bd = q(".vc-body"); if (bd) bd.setAttribute("transform", "translate(0 " + (Math.sin(s * 1.6) * 1.2).toFixed(2) + ")"); }
       VC_RAF = requestAnimationFrame(step);
     };
@@ -451,12 +488,31 @@
     try { r.start(); } catch (e) { VC.hold = null; }
   }
   function vcHoldStop() { const r = VC.hold; VC.hold = null; if (r) { r._dead = 1; try { r.abort(); } catch (e) {} } }
+  // v245: a name from «me llamo Ana», «soy Ana», «I'm Ana» or just «Ana», as speech recognition writes it
+  function vcNameFrom(t) {
+    const s = String(t || "").trim().replace(/[.!?¡¿,]/g, ""); const STOP = /^(profe|hola|hello|hi|bien|muy|yes|no|si|sí|gracias|thanks|okay|ok|vale|el|la|un|una|yo|me|my|name|is|soy|llamo|i|am|im|bueno|what|que|qué|como|cómo)$/i;
+    const ADJ = /^(cansad[oa]s?|bien|mal|feliz|contento|contenta|nervios[oa]|de|del|estudiante|profesor|profesora|nuevo|nueva|tired|good|fine|ok|happy|sad|from|a|an|the|not|very|so|here|ready|listo|lista)$/i;
+    let m = /\b(?:me llamo|mi nombre es|my name is|i'?m called|ll[aá]mame|call me)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s);
+    // «soy Ana» / «I'm Ana» only in a short answer, and not «soy cansado» / «I'm tired»
+    if (!m && s.split(/\s+/).length <= 3) { const m2 = /\b(?:soy|i am|i'?m)\s+([A-Za-zÁÉÍÓÚÑáéíóúñü]{2,20})/i.exec(s); if (m2 && !ADJ.test(m2[1])) m = m2; }
+    let n = m && m[1]; if (!n) { const w = s.split(/\s+/).filter(Boolean); if (w.length && w.length <= 2 && !STOP.test(w[w.length - 1]) && !ADJ.test(w[w.length - 1])) n = w[w.length - 1]; }
+    if (!n || STOP.test(n)) return ""; return n.charAt(0).toUpperCase() + n.slice(1).toLowerCase();
+  }
+  window.__vcNameFrom = vcNameFrom;
   async function vcTurn(text) {
     if (!VC.on) return; const g = ++VC.gen; VC.nodN = 0; vcCap(text, ""); vcStopMic();
     const t = text.trim(), low = t.toLowerCase();
     // a command is a short utterance; inside a longer sentence ("…habla despacio y explica mis errores") it's an instruction
     const nW = (low.match(/\S+/g) || []).length;
     const cmd = (VC_CMD.find(([re, k]) => re.test(low) && (k === "end" ? nW <= 6 : nW <= 4)) || [])[1];
+    if (VC.askName && cmd !== "end") {
+      const nm2 = vcNameFrom(t), fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
+      if (nm2) { VC.askName = 0; TS.lname = nm2; tsave();
+        vcSay([["¡Mucho gusto, " + nm2 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true], ["¿De qué quieres hablar hoy? Puede ser de tu día, de tus planes o de lo que estás estudiando.", true]], () => vcListen()); return; }
+      if (nW > 3) VC.askName = 0; // they went straight into a sentence: don't insist, answer it
+      else if (VC.askName === 1) { VC.askName = 2; vcSay([["Perdona, no te he oído bien. ¿Cómo te llamas?", true], ["You can say: «Me llamo…»", false]], () => vcListen()); return; }
+      VC.askName = 0; // asked twice: carry on without a name
+    }
     if (cmd === "end") { vcSay([["¡Hasta luego!", true], ["Great talking with you.", false]], () => vcEnd()); return; }
     if (cmd === "stop") { VC.patient = Date.now() + 30000; vcListen(); return; }
     if (cmd === "repeat") { if (VC.lastPro) { vcSay(VC.lastPro, () => vcListen()); } else vcListen(); return; }
@@ -475,7 +531,7 @@
     try { const thr = vcP("enhelp", "3"); if (thr !== "off" && typeof quickFixes === "function") { VC.errs = VC.errs || {};
       quickFixes(t).forEach((f) => { const k = String(f.why || f.from + "→" + f.to).slice(0, 80); VC.errs[k] = (VC.errs[k] || 0) + 1;
         if (!VC.coachNow && VC.errs[k] >= +thr) { VC.coachNow = { why: String(f.why || ("«" + f.from + "» → «" + f.to + "»")).slice(0, 160), to: f.to, n: VC.errs[k] }; VC.errs[k] = 0; VC.coached = (VC.coached || 0) + 1; } }); } } catch (e) {}
-    vcSet("thinking"); VC.tTurn = Date.now(); VC.thinkT = performance.now(); VC.handOn = !VC.handLast && Math.random() < 0.6; VC.handLast = VC.handOn; const h0 = location.hash; vcHold(t, g);
+    vcSet("thinking"); VC.tTurn = Date.now(); VC.thinkT = performance.now(); VC.thinkSide = Math.random() < 0.5 ? -1 : 1; VC.handOn = !VC.handLast && Math.random() < 0.6; VC.handLast = VC.handOn; const h0 = location.hash; vcHold(t, g);
     if (window.__vcThinkDelay) await new Promise((r) => setTimeout(r, window.__vcThinkDelay)); // tests: a slow answer
     if (!VC.on || g !== VC.gen) return;
     let n0 = 0; try { n0 = tCur ? tCur.msgs.length : 0; } catch (e) {}
@@ -510,10 +566,17 @@
     root.innerHTML = vcxHTML(); root.hidden = false; document.body.classList.add("vc-open"); root.classList.toggle("vc-noyou", vcTxt() === "pro"); vcSet("connecting"); vcTimer(); vcAnimate();
     { const cb = root.querySelector("#vc-cap"); if (cb) { const hold = () => { cb.__user = true; clearTimeout(cb.__ut); cb.__ut = setTimeout(() => { cb.__user = false; }, 6000); }; cb.addEventListener("touchmove", hold, { passive: true }); cb.addEventListener("wheel", hold, { passive: true }); } }
     const pill = document.getElementById("vc-pill"); if (pill) pill.remove();
+    const nm = TS.lname ? ", " + TS.lname : "";
+    const en = vcP("lang", "bilingual") === "english", fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
+    // v245: the first time ever (no name yet), Profe introduces himself and asks the learner's name; later calls greet by name
+    VC.askName = !TS.lname ? 1 : 0;
+    const back = ["¡Qué alegría verte otra vez!", "¡Qué bueno verte de nuevo!", "¡Me alegra mucho verte!"][Math.floor(Math.random() * 3)];
+    const prof = (fem ? "profesora" : "profesor");
+    const greet = VC.askName ? (en ? [["Hi! I'm " + pName() + ", your Spanish tutor. I'm so happy to meet you!", false], ["¿Cómo te llamas?", true], ["What's your name?", false]]
+        : [["¡Hola! Soy " + pName() + ", tu " + prof + " de español. ¡Qué alegría conocerte!", true], ["¿Cómo te llamas?", true]])
+      : TS.vc_intro ? (en ? [["Hi" + nm + "! Great to see you again.", false], ["¿De qué quieres hablar hoy?", true]] : [["¡Hola" + nm + "! " + back, true], ["¿De qué quieres hablar hoy?", true]])
+      : (en ? [["Hi" + nm + "! I'm " + pName() + ", your Spanish tutor.", false], ["¿De qué quieres hablar hoy?", true]] : [["¡Hola" + nm + "! Soy " + pName() + ", tu " + prof + " de español. ¡Qué alegría conocerte!", true], ["¿De qué quieres hablar hoy?", true]]);
     if (!TS.vc_intro) { TS.vc_intro = 1; tsave(); }
-    const nm = TS.lname ? ", " + TS.lname : "", lv = (() => { try { return String(learnerLevel(pageCtx())).toUpperCase(); } catch (e) { return ""; } })();
-    const greet = vcP("lang", "bilingual") === "english" ? [["Hi" + nm + "! I'm Profe, your AI Spanish tutor.", false], ["¿De qué quieres hablar hoy?", true]]
-      : [["¡Hola" + nm + "! Soy Profe, tu tutor de español con inteligencia artificial.", true], ["¿De qué quieres hablar hoy?", true]];
     VC.lastPro = vcPlain(greet.map((x) => x[0]).join(" ")); vcCap("", VC.lastPro);
     const go = () => vcSay(greet, () => vcListen());
     try { const vm = window.__pvVoiceMatch && window.__pvVoiceMatch(); if (vm && vm.m === "mismatch") setTimeout(() => vcToast("This phone has no " + (vm.want === "m" ? "man’s" : "woman’s") + " voice for " + pName() + " in your Spanish variety. Profe › Profe’s look: pick another look, or add voices in your phone’s settings."), 1500); } catch (e) {}
@@ -549,7 +612,7 @@
     try { if (typeof coachToast === "function" && secs > 5) coachToast("Call ended · " + Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0") + " · " + turns + " answers from " + pName() + (vcP("corr", "flow") === "end" ? " · say or type “review my call” for your feedback" : "")); } catch (e) {}
     try { if (typeof tRender === "function" && document.body.classList.contains("tutor-open")) tRender(); } catch (e) {}
   }
-  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, eot: vcEot, enOK: () => vcEnOK(), pose: (st) => { VC.posed = st || null; VC.handOn = true; VC.thinkT = performance.now() - 2000; }, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
+  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, eot: vcEot, enOK: () => vcEnOK(), pose: (st, side) => { VC.posed = st || null; VC.handOn = true; VC.thinkSide = side || 1; VC.thinkT = performance.now() - 2000; }, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
 
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest && ev.target.closest("[data-act^='vc-']"); if (!b) return; const a = b.dataset.act;

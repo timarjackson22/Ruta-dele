@@ -47,7 +47,7 @@ const INIT = () => {
   rec("Captions follow the voice: the word being said is lit", cap1.on, JSON.stringify(cap1));
   rec("After the greeting, Profe listens by itself (hands-free)", await until(() => window.__vc.state() === "listening" && window.__micOpen(), 15000));
   const cap2 = await p.evaluate(() => document.getElementById("vc-pro").textContent);
-  rec("Captions show the whole reply (every spoken part), not just the last part", /Soy Profe/.test(cap2) && /De qué quieres hablar hoy/.test(cap2), cap2);
+  rec("Captions show the whole reply (every spoken part), not just the last part", /Soy Profe/.test(cap2) && /(De qué quieres hablar hoy|Cómo te llamas)/.test(cap2), cap2); // v245: a first call asks the name
   const closed = await p.evaluate(() => { return window.__vcMouthH ? window.__vcMouthH() : 99; });
   rec("When speech ends the mouth is closed", closed < 1.2, String(closed));
   // 3. a turn: the learner speaks, Profe thinks, answers, then listens again without a tap
@@ -56,6 +56,8 @@ const INIT = () => {
   rec("…turn ends after the pause; Profe thinks then speaks", await until(() => window.__vc.state() === "speaking", 9000));
   rec("…and listens again by itself", await until(() => window.__vc.state() === "listening" && window.__micOpen(), 20000));
   rec("Profe never listens while it speaks (no self-hearing)", await p.evaluate(() => { return true; }));
+  // v245: «me llamo Ana» answered the name question locally (no AI); the next turn goes to the AI and is timed
+  await p.evaluate(() => window.__say("Me gusta mucho el café por la mañana.")); await until(() => window.__vc.state() === "speaking", 9000); await until(() => window.__vc.state() === "listening", 20000);
   const lat = await p.evaluate(() => window.__vc.st.metrics.map((x) => x.lat)); rec("Response latency is measured", lat.length >= 1 && lat[0] > 0, JSON.stringify(lat));
   // 4. commands
   const turn = async (t, ms) => { await p.evaluate((x) => window.__say(x), t); await until(() => window.__vc.state() !== "listening", 6000); return until(() => window.__vc.state() === "listening" && window.__micOpen(), ms || 15000); };
