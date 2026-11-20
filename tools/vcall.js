@@ -13,7 +13,7 @@
   const vcEnabled = () => VC_FLAG && TS.vcall !== false && !!window.speechSynthesis;
   const VC_ST = { idle: "", connecting: "Connecting…", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", muted: "Muted", reconnecting: "Reconnecting the mic…", paused: "Paused", disconnected: "Call ended" };
   const VC_LANG = { immersion: ["Spanish only", "Speak only Spanish, slowly and simply at the learner's level; never switch to English unless they explicitly ask."], bilingual: ["Spanish first", "Speak Spanish the whole call, at the learner's level; don't translate your replies into English. If the learner speaks English, understand them, give them the Spanish way to say it and invite them to say it themselves (e.g. «Puedes decir: “Perdí el autobús”. Ahora inténtalo tú: ¿por qué llegaste tarde?»), warmly, without making it feel like a punishment. One English word inside a Spanish sentence is not a request to switch. Use English only when they explicitly ask for an explanation in English (brief, then back to Spanish) or when told below to coach a repeated mistake."], english: ["Mostly English", "Explain in English and use Spanish for the examples and the practice phrases."] };
-  const VC_CORR = { flow: ["Conversation first", "Correct only big or repeated mistakes, in one short phrase, then carry on with the conversation."], now: ["Immediate coaching", "When the learner makes a mistake, give the corrected Spanish and a one-line reason, invite a quick retry, then continue."], end: ["End-of-session review", "Don't correct during the call (only if meaning is unclear); the learner gets a review at the end."] };
+  const VC_CORR = { every: ["Correct every mistake (gently)", "Correct every real mistake the learner makes: start your reply with «Se dice: …» and the corrected sentence, add the reason in a few words when it helps, then carry on with the conversation. Never repeat a wrong sentence back as if it were right. After explaining something new, check it is clear («¿Está claro?»); if not, find which part is confusing and explain it another way with one example."], flow: ["Conversation first", "Correct only big or repeated mistakes, in one short phrase, then carry on with the conversation."], now: ["Immediate coaching", "When the learner makes a mistake, give the corrected Spanish and a one-line reason, invite a quick retry, then continue."], end: ["End-of-session review", "Don't correct during the call (only if meaning is unclear); the learner gets a review at the end."] };
   const vcP = (k, d) => (TS["vc_" + k] != null ? TS["vc_" + k] : d);
 
   /* ---------- the prompt note for the call ---------- */
@@ -35,20 +35,22 @@
   }
   window.__vcNote = (compact) => {
     if (!VC.on) return "";
-    const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
+    const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "every")] || VC_CORR.every;
     // v247: the on-device model holds ~2,048 tokens in all; the full call brief (~4,300 characters) filled most of it, so a
     // compact brief carries the essentials of good spoken tutoring for it
     if (compact) return "\n\nLIVE VIDEO CALL, spoken aloud. You are Profe, a warm, enthusiastic Spanish tutor." +
       "\n- Say 1–2 short sentences (under 25 words). No lists, markdown or emojis." +
       "\n- React to what they said with real interest, then ask ONE open question built on it." +
       "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + ". If they answer in English, reply in simple Spanish and give them the Spanish for what they said." +
-      "\n- Correct by saying their idea back correctly; explain only a repeated mistake. Praise one specific thing; vary your words; use their name sometimes." +
+      "\n- Mistakes: start with «Se dice: …» and the correct sentence (a few words of why if useful). Never repeat a wrong sentence back as if it were right. Praise one specific thing; vary your words; use their name sometimes." +
+      "\n- After you explain something, ask «¿Está claro?». If not, find which part is confusing and explain it another way with one example." +
+      (VC.fixSaid ? "\n- You have JUST told them: «Se dice: " + VC.fixSaid + "». Don't repeat it; carry on from it." : "") +
       "\n- Unsure what they said? Ask. Never invent facts." +
       "\n- Language: " + String(L[1]).slice(0, 160) + "\n- Corrections: " + String(C[1]).slice(0, 140) +
       (VC.wantEn ? "\n- THIS TURN they asked for English: explain in 2 short English sentences, give the Spanish, then a short Spanish question." : "") +
       (VC.coachNow ? "\n- THIS TURN, in one short English sentence, coach the mistake they keep making (" + VC.coachNow.why + "): correct Spanish «" + VC.coachNow.to + "», invite a retry, then carry on in Spanish." : "") +
       (VC.instr.length ? "\n- For this call they asked: " + VC.instr.map((x) => "«" + x.slice(0, 80) + "»").join("; ") + "." : "");
-    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural." + vcTeach() + "\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
+    return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural." + vcTeach() + (VC.fixSaid ? "\n- You have JUST told the learner: «Se dice: " + VC.fixSaid + "». Don't repeat that correction; carry on from it." : "") + "\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
       (VC.wantEn ? "\n- THIS TURN the learner explicitly asked for English: explain briefly in English (2–3 sentences), give the Spanish with one example, then invite them back into Spanish with a short question." : "") +
       (VC.coachNow ? "\n- THIS TURN, coach a repeated mistake in English (the learner has made it " + VC.coachNow.n + " times; check it really is in what they said, not a recognition error): say in one short English sentence what keeps going wrong (" + VC.coachNow.why + "), give the correct Spanish «" + VC.coachNow.to + "» in a useful example, invite a quick retry, then carry on in Spanish." : "") +
       (VC.instr.length ? "\n- The learner asked, for this whole call: " + VC.instr.map((x) => "«" + x + "»").join("; ") + ". Keep doing all of it." : "");
@@ -67,7 +69,7 @@
      and shut it while the voice carried on. Now: word events faster than speech are ignored (AV.earlyEv), a sentence whose
      «start» never came begins when the sound does (AV.pend), and the mouth's clock only runs while sound is playing. */
   AV.diag = [];
-  function avDiagNew(u) { const d = { n: AV.diag.length + 1, len: String(u.text || "").length, tq: performance.now(), start: null, words: 0, w1: null, wN: null, end: null, natYes: 0, natNo: 0, silent: 0, how: "" }; u.__vd = d; AV.diag.push(d); if (AV.diag.length > 30) AV.diag.shift(); return d; }
+  function avDiagNew(u) { const d = { n: (AV.dn = (AV.dn || 0) + 1), len: String(u.text || "").length, tq: performance.now(), start: null, words: 0, w1: null, wN: null, end: null, natYes: 0, natNo: 0, silent: 0, how: "" }; u.__vd = d; AV.diag.push(d); if (AV.diag.length > 30) AV.diag.shift(); return d; }
   window.__vcLipDiag = () => { const L = AV.diag.map((d) => { const st = d.start != null ? Math.round(d.start - d.tq) : "none", dur = d.end != null && d.start != null ? ((d.end - d.start) / 1000).toFixed(1) + "s" : "?";
       return "#" + d.n + " " + d.len + "ch start+" + st + "ms dur " + dur + " words " + d.words + (d.words ? " (" + Math.round(d.w1) + "–" + Math.round(d.wN) + "ms)" : "") + " sound " + d.natYes + "/" + (d.natYes + d.natNo) + (d.silent ? " MOUTH-STILL " + Math.round(d.silent) + "ms" : "") + (d.how ? " " + d.how : ""); });
     return "Lip-sync (" + (AV.earlyEv ? "engine reports words early" : "word events trusted") + "; " + (AV.natSeen ? "phone reports sound" : "no sound signal") + "):\n" + L.slice(-12).join("\n"); };
@@ -392,7 +394,7 @@
       '<button class="vc-o vc-report" data-act="vc-report">Copy call report (to send to support)</button>' +
       '<p class="vc-l">Captions</p>' + opt("txt", { all: ["Profe and me"], pro: ["Only Profe"], off: ["Off"] }, vcTxt()) +
       "<p class=\"vc-l\">Language</p>" + opt("lang", VC_LANG, "bilingual") +
-      "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "flow") +
+      "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "every") +
       '<p class="vc-l">English help for a repeated mistake</p>' + opt("enhelp", { "2": ["After 2 times"], "3": ["After 3 times"], off: ["Only when I ask"] }, "3") +
       '<p class="vc-l">Interrupt Profe by speaking</p><div class="vc-opts"><button class="vc-o" data-act="vc-opt" data-k="barge" data-v="' + (vcP("barge", "off") === "on" ? "off" : "on") + '" aria-pressed="' + (vcP("barge", "off") === "on") + '">' + (vcP("barge", "off") === "on" ? "On · best with headphones" : "Off · tap Profe to interrupt") + "</button></div>" +
       '<p class="vc-note">Profe is an AI tutor, an animated character drawn on your phone. Your phone’s speech service turns your voice into text (on Android, Google’s); the app keeps no audio or video. Your camera, if you turn it on, is only shown to you: Profe can’t see it. The words of the call are saved in Profe › History, where you can delete them.</p>' +
@@ -552,8 +554,8 @@
       VC.askName = 0; // asked twice: carry on without a name
     }
     if (cmd === "end") { vcSay([["¡Hasta luego!", true], ["Great talking with you.", false]], () => vcEnd()); return; }
-    if (cmd === "stop") { VC.patient = Date.now() + 30000; vcListen(); return; }
-    if (cmd === "repeat") { if (VC.lastPro) { vcSay(VC.lastPro, () => vcListen()); } else vcListen(); return; }
+    if (cmd === "stop" && !(window.__drillOn && window.__drillOn())) { VC.patient = Date.now() + 30000; vcListen(); return; }
+    if (cmd === "repeat" && !(window.__drillOn && window.__drillOn())) { if (VC.lastPro) { vcSay(VC.lastPro, () => vcListen()); } else vcListen(); return; }
     if (cmd === "slower" || cmd === "faster") { const r0 = vcRate(), r1 = Math.max(0.7, Math.min(1.2, +(r0 + (cmd === "slower" ? -0.1 : 0.1)).toFixed(1))); TS.vc_rate = r1; tsave(); window.__vcRate = r1; vcPaintBar();
       vcSay(cmd === "slower" ? [["Vale, más despacio.", true], ["Okay, slower.", false]] : [["Vale, más rápido.", true], ["Okay, a bit faster.", false]], () => vcListen()); return; }
     // the learner's own instructions for the call ("you're the waiter", "speak slowly", "explain my mistakes in English")
@@ -569,6 +571,15 @@
     try { const thr = vcP("enhelp", "3"); if (thr !== "off" && typeof quickFixes === "function") { VC.errs = VC.errs || {};
       quickFixes(t).forEach((f) => { const k = String(f.why || f.from + "→" + f.to).slice(0, 80); VC.errs[k] = (VC.errs[k] || 0) + 1;
         if (!VC.coachNow && VC.errs[k] >= +thr) { VC.coachNow = { why: String(f.why || ("«" + f.from + "» → «" + f.to + "»")).slice(0, 160), to: f.to, n: VC.errs[k] }; VC.errs[k] = 0; VC.coached = (VC.coached || 0) + 1; } }); } } catch (e) {}
+    // v249 «correct me more»: when the app's own checker finds a real mistake, Profe says the right sentence at once
+    // («Se dice: …»), then the AI carries on (told not to repeat it). Not in a drill (it grades its own answers), not in
+    // «review at the end» mode, not when English coaching takes this turn.
+    VC.fixSaid = null;
+    try { const mode = vcP("corr", "every");
+      if (mode !== "end" && mode !== "flow" && !VC.coachNow && !(window.__drillOn && window.__drillOn()) && nW >= 2 && typeof quickFixes === "function" && typeof applyFixes === "function") {
+        const fx = quickFixes(t); const better = fx.length ? applyFixes(t, fx) : "";
+        if (better && better.toLowerCase().replace(/\W+/g, "") !== t.toLowerCase().replace(/\W+/g, "")) { VC.fixSaid = better; try { window.__vlog("call", "correction: «" + t + "» → «" + better + "»"); } catch (e) {}
+          await new Promise((r) => vcSay([["Se dice: «" + better.replace(/^./, (c) => c.toUpperCase()).replace(/[.!?]*$/, "") + "».", true]], r)); if (!VC.on || g !== VC.gen) return; } } } catch (e) {}
     vcSet("thinking"); VC.tTurn = Date.now(); VC.thinkT = performance.now(); VC.thinkSide = Math.random() < 0.5 ? -1 : 1; VC.handOn = !VC.handLast && Math.random() < 0.6; VC.handLast = VC.handOn; const h0 = location.hash; vcHold(t, g);
     if (window.__vcThinkDelay) await new Promise((r) => setTimeout(r, window.__vcThinkDelay)); // tests: a slow answer
     if (!VC.on || g !== VC.gen) return;
@@ -576,7 +587,7 @@
     // a continued turn replaces the half-sentence that was sent first (so the model sees the learner's words once, complete)
     if (VC.contDrop && t.indexOf(VC.contDrop) === 0) { try { const k = tCur.msgs.map((m) => m.r === "u" && m.c === VC.contDrop).lastIndexOf(true); if (k >= 0) tCur.msgs.splice(k, 1); } catch (e) {} } VC.contDrop = null;
     try { await tSend(t, true); } catch (e) {}
-    VC.wantEn = false; VC.coachNow = null;
+    VC.wantEn = false; VC.coachNow = null; VC.fixSaid = null;
     if (!VC.on || g !== VC.gen) return;
     let m = null; try { m = tCur && tCur.msgs.length > n0 ? [...tCur.msgs].reverse().find((x) => x.r === "a") : null; if (m && m.c && !m.err) VC.lastPro = vcPlain(m.c); } catch (e) {}
     // the chat wrote an answer but didn't say it (no AI engine, a typed-style reply): the call says it

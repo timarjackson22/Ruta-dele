@@ -37,6 +37,11 @@ Checkpoint before changes: git tag `checkpoint-v241` (pushed). Rollback: `git ch
 | 14 | Slow replies (25 s), empty replies → «Useful word…» filler | Same log: g21 35 s / 613 chars alongside a reply; g28/g29/g31 empty in 0.0 s | Profe slow, then off-topic | High | background AI jobs ran at the same time as replies; the chat session overflowed the model's 2,048 tokens (the call prompt alone was ~8,700 chars). High | v247 queue + compact call prompt + session rotation with recap + empty→retry; APK cap fix | sAIQ (6) | Fixed |
 | 15 | Voice changed mid-call (sfb → esf) | Same log, after returning to the app | Jarring | Medium | voice list refresh on resume re-ranked voices | v247 voice kept for the call | — | Fixed |
 
+| 16 | Mistakes repeated back as if correct («¡Te quiero pan con queso!»), few corrections | 2nd S24 log | Learner not corrected | High | default call mode corrected only big/repeated mistakes; the small model echoes the learner | v249 «every» mode, «Se dice» from the app's checker before the AI, echo dropped, brief rules | sTEACH | Fixed |
+| 17 | Drill confusing in calls | same log | English labels in a Spanish voice, 15–30 s feedback, «puedes repetir» replayed everything, «otro verbo» ignored, no understanding check | High | drill built for the chat | v249 Spanish prompts, pronoun + form, hint, «¿Está claro?» + table, repeat/stop/other verb | sTEACH | Fixed |
+| 18 | «…ahor» / «a?» spoken as two pieces | same log | Broken speech | Medium | streaming speaker counted characters; the final reply is tidied | v249 sentence tracking | sTEACH | Fixed |
+| 19 | tools/pvoice.js 600 lines behind the page | found while fixing 17 | Next sync would have undone v242–v248 voice fixes | High (latent) | edits went into index.html only | back-synced; sSRC checks it | sSRC (54) | Fixed |
+
 ## One owner per resource (the rule going forward)
 - **Microphone**: the mic guard (`micGuard`, `MICG.cur`). Anything that listens goes through it; the wake listener asks
   `window.__micOwned()` and `__vcOn` via `hfBusy()` before it listens.

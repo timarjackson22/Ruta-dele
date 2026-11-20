@@ -89,6 +89,13 @@ If no: say so in the commit message ("costs: no impact").
 - Bug fixed: Profe's own name field and the learner's name field shared the id `pv-name`; typing Profe's name set the learner's.
 - `node tools/profe-tests/sINTRO.js` (16) must pass; sVC sets an owner name (`__setName(n, true)`).
 
+## Profe as a master teacher in calls — v249 (from the second S24 call log)
+- Corrections: call default `VC_CORR.every` («Correct every mistake (gently)»). When `quickFixes` finds a real mistake, the call says «Se dice: …» at once (`VC.fixSaid`, before the AI), and both briefs tell the AI not to repeat it, to start with «Se dice» for mistakes the checker can't see, never to echo a wrong sentence, and to check understanding («¿Está claro?» → find the confusion, explain another way). `dropEcho()` removes a first sentence that only repeats the learner (streaming waits for what follows). In calls the chat's retry coach (`convoCoach`), the «Useful word» tip and English praise stand down.
+- Verb drill (`drStart`/`drNext`/`drGrade`/`drAfter`/`drillAnswer`): Spanish prompts in calls (`D.qs`: «Pretérito. Yo…»), answers as pronoun + form («yo cambié», as tables list them), `drHint` names the wrong form («cambiaba es imperfecto»), a revealed answer asks «¿Está claro?» (`D.chk`): yes → next, no → the whole tense (`drTable`) then the same question; «repite» repeats the question only (the call's repeat/stop commands defer to the drill, `__drillOn`); «otro verbo» switches verb; «practicar + verb» starts a drill, not a role-play (practise.convo). Short answers during a drill skip the voice router.
+- Speech: the streaming speaker tracks spoken SENTENCES (`sayNew`, split at .!?… and before ¿/¡), so a tidied final reply never resumes mid-word. Lip report numbering is a counter (`AV.dn`).
+- tools/pvoice.js was 600 lines behind the page (v242–v248 voice-layer fixes existed only in index.html); it is back-synced and `sSRC` now also checks that the page holds tools/pvoice.js verbatim. Edit tools/pvoice.js, then `sync_profe.py`, then copy it to /tmp/pvoice.orig.js.
+- `node tools/profe-tests/sTEACH.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

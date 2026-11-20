@@ -7,4 +7,6 @@ for (const f of fs.readdirSync(path.join(ROOT, "tools")).filter((x) => /^patch_.
   try { execFileSync("python3", [path.join("tools", f), tmp], { cwd: ROOT, stdio: "ignore" }); } catch (e) {}
   if (fs.readFileSync(tmp, "utf8") !== page) { bad++; console.log("FAIL " + f + " would change index.html (its source is out of date)"); }
 }
+// v249: the voice layer is embedded verbatim by sync_profe.py: the page must hold tools/pvoice.js exactly
+n++; { const pv = fs.readFileSync(path.join(ROOT, "tools", "pvoice.js"), "utf8"); if (!page.includes(pv)) { bad++; console.log("FAIL tools/pvoice.js differs from the copy inside index.html (edit tools/pvoice.js, then sync_profe.py)"); } }
 console.log(bad ? bad + " FAILED of " + n : "ALL " + n + " PASS (every embed source matches the page)"); process.exit(bad ? 1 : 0);
