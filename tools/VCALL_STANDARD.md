@@ -1,4 +1,4 @@
-# Profe Call Operating Standard (v239)
+# Profe Call Operating Standard (v240)
 
 Scope: the Profe video call (`tools/vcall.js`, `tools/vcall.css`, embedded by `tools/patch_vcall.py`), plus the page code it depends on
 (`utter()`, `streamSpeaker`, `tSend()`, `natChat()`, `micGuard()`), and the Android bridges (`TtsBridge`, `SttBridge`, `LlmBridge`, `bridge.js`).
@@ -49,6 +49,34 @@ Platform references: Web Speech API (W3C draft, MDN `SpeechSynthesisUtterance.on
 | I-7 | P2 | Response time depends on on-device model speed | Not measurable here | Gemma prefill/generation on the phone | Open: needs device measurement (call settings shows it) |
 | I-8 | P2 | Mixed English/Spanish recognition quality | Not testable here | Phone recogniser | Open: device test |
 
+## 3b. v240: sustained lip-sync, Spanish first, coaching, thinking
+
+**Lip-sync stopping mid-reply — root cause (reproduced in `sLIP.js`).** When the voice engine stops sending word positions
+partway through a long utterance (chunked engines report only the first words), or sends none and speaks slower than the
+app's assumed pace, the text-paced fallback reached the last word early and closed the mouth while the audio kept playing.
+Before the fix, with a 23 s reply, the mouth was open in only 17–20 % of the last third (vs ~70 % at the start).
+Fix (`avWord`, `vcAnimate`): word events never move the position backwards (positions that restart per sentence count as
+«next word»); the voice's real pace is learned from word events, or from how long each utterance took when there are none
+(`AV.mpc`); the fallback places the mouth by elapsed time over the text left, with pauses at punctuation, and stretches
+when the voice is slower, so it can't run out before `onend`. After: open 64–80 % in every third for all four engine
+behaviours; position error median 0 ms with word events, ≈0.7 s with no word events at all (an estimate; real phones
+that report positions get the exact timing).
+
+**Spanish first (default «Spanish first» mode, `VC_LANG.bilingual`).** Profe speaks Spanish all call, doesn't translate,
+answers English with the Spanish way to say it and an invitation to try («Puedes decir: “Perdí el autobús”…»), and treats
+one English word as not a switch. Bilingual confirmations drop their English half (`vcSay`). One Spanish voice says the
+whole reply (`vcVoiceTag`); Profe's English voice (same gender as the look) is used only for a coaching sentence of 5+
+English words when coaching is on (`vcEnOK`: explicit request this turn, a repeated mistake, or «Mostly English» mode).
+
+**English coaching for repeated mistakes.** Each learner turn is checked offline (`quickFixes`); a mistake type seen
+N times (Settings › English help: 2, 3 (default) or only when asked) adds a one-turn coaching instruction to the brief
+(say what goes wrong in English, give the Spanish in an example, invite a retry, back to Spanish; check it isn't a
+recognition error). The count resets after coaching.
+
+**Thinking.** «Thinking…» state + brows/eyes; on about half the turns (never two in a row), once the wait passes 0.9 s, a
+hand rests under the chin (to the side, below the mouth) and leaves at once when speech starts, the learner talks
+(`vcHold`), or the call ends. Hidden with reduced motion. Driven by the real state only (`VC.st`), never a delay.
+
 ## 4. Measurements (automation, desktop Chromium emulating a Pixel 7; NOT a real phone)
 
 | Metric | Before | After |
@@ -65,6 +93,8 @@ Platform references: Web Speech API (W3C draft, MDN `SpeechSynthesisUtterance.on
 
 | Area | Status | How |
 |---|---|---|
+| Sustained lip-sync (4 engine behaviours × start/middle/end, closes after) | PASSED | sLIP (4) — mocked engines |
+| Spanish-first voice, brief, repeated-mistake coaching, English request, thinking gesture | PASSED | sSPA (6) — automation |
 | Call states, mute, captions, camera, end, re-entry, layout, lip-sync timing | PASSED | sVC (43) — automation with mocked speech/mic/camera |
 | Streaming replies, preload, short answers | PASSED | sNAT (5) — mocked on-device model |
 | Variety + gender voice choice | PASSED | sACC (40) — mocked voice lists |

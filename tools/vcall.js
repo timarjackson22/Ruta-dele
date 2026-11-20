@@ -12,15 +12,20 @@
   const VC_FLAG = true; // rollback: set to false (or TS.vcall = false) and the call button disappears
   const vcEnabled = () => VC_FLAG && TS.vcall !== false && !!window.speechSynthesis;
   const VC_ST = { idle: "", connecting: "Connecting…", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", muted: "Muted", reconnecting: "Reconnecting the mic…", paused: "Paused", disconnected: "Call ended" };
-  const VC_LANG = { immersion: ["Spanish only", "Speak only Spanish, slowly and simply at the learner's level; never switch to English unless they explicitly ask."], bilingual: ["Bilingual", "Practise in Spanish; explain grammar and mistakes briefly in English when it helps or when asked."], english: ["Mostly English", "Explain in English and use Spanish for the examples and the practice phrases."] };
+  const VC_LANG = { immersion: ["Spanish only", "Speak only Spanish, slowly and simply at the learner's level; never switch to English unless they explicitly ask."], bilingual: ["Spanish first", "Speak Spanish the whole call, at the learner's level; don't translate your replies into English. If the learner speaks English, understand them, give them the Spanish way to say it and invite them to say it themselves (e.g. «Puedes decir: “Perdí el autobús”. Ahora inténtalo tú: ¿por qué llegaste tarde?»), warmly, without making it feel like a punishment. One English word inside a Spanish sentence is not a request to switch. Use English only when they explicitly ask for an explanation in English (brief, then back to Spanish) or when told below to coach a repeated mistake."], english: ["Mostly English", "Explain in English and use Spanish for the examples and the practice phrases."] };
   const VC_CORR = { flow: ["Conversation first", "Correct only big or repeated mistakes, in one short phrase, then carry on with the conversation."], now: ["Immediate coaching", "When the learner makes a mistake, give the corrected Spanish and a one-line reason, invite a quick retry, then continue."], end: ["End-of-session review", "Don't correct during the call (only if meaning is unclear); the learner gets a review at the end."] };
   const vcP = (k, d) => (TS["vc_" + k] != null ? TS["vc_" + k] : d);
 
   /* ---------- the prompt note for the call ---------- */
+  // English in Profe's other voice only for real coaching: an explicit request, a repeated mistake, or the «Mostly English» mode
+  function vcEnOK() { return !!(VC.on && (vcP("lang", "bilingual") === "english" || VC.wantEn || VC.coachNow)); }
+  window.__vcEnOK = vcEnOK;
   window.__vcNote = () => {
     if (!VC.on) return "";
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "flow")] || VC_CORR.flow;
     return "\n\nLIVE VIDEO CALL (spoken aloud):\n- You are Profe, an AI Spanish tutor, in a live voice call. Reply in 1–3 short spoken sentences: no lists, no markdown, no emojis, no headings.\n- Respond to what the learner actually meant; keep the conversation going with ONE natural follow-up question; allow them to change topic or stop.\n- If you are not sure what they said, ask one short clarification question. Never invent what they said.\n- What the learner says comes from speech recognition: it may be cut, misheard or mix English and Spanish. Keep their words in the language they used. If a word looks misheard or the meaning is unclear, ask ONE short, specific question instead of guessing; never correct something they may not have said.\n- Facts: check the meaning, not only the grammar. If they state something clearly false (e.g. «Barcelona es la capital de España»), say kindly that the Spanish is fine if it is, give the fact in one line (Madrid), then carry on. Opinions, preferences, jokes, hypotheticals and role-play are not errors. If a fact may be out of date or you're not sure, say so; never invent a source.\n- Corrections, when the mode calls for one: acknowledge what they meant, give the better Spanish, the key point in a few words (English unless they chose Spanish only), offer a quick retry when useful, then go back to the topic. Accept regional usage.\n- Be a good conversation partner: react to the specifics they said, build the next question on their answer, share a short example or a light joke now and then, suggest a role-play or a small challenge when it fits, give hints or an easier question if they struggle, and leave them thinking time. Don't fire question after question, don't lecture, don't repeat the same praise. Every so often, offer to keep going or switch activity.\n- A word they quote («how do you say ‘bookshelf’?») is not a request to switch language; only switch when they ask.\n- Be warm and enthusiastic, like a favourite teacher: notice what the learner did well and say so specifically («¡Muy bien!», «¡Eso es!», «¡Perfecto, «fui» es correcto!»), encourage every attempt, and keep the energy up with exclamations where natural.\n- Language: " + L[1] + "\n- Corrections: " + C[1] +
+      (VC.wantEn ? "\n- THIS TURN the learner explicitly asked for English: explain briefly in English (2–3 sentences), give the Spanish with one example, then invite them back into Spanish with a short question." : "") +
+      (VC.coachNow ? "\n- THIS TURN, coach a repeated mistake in English (the learner has made it " + VC.coachNow.n + " times; check it really is in what they said, not a recognition error): say in one short English sentence what keeps going wrong (" + VC.coachNow.why + "), give the correct Spanish «" + VC.coachNow.to + "» in a useful example, invite a quick retry, then carry on in Spanish." : "") +
       (VC.instr.length ? "\n- The learner asked, for this whole call: " + VC.instr.map((x) => "«" + x + "»").join("; ") + ". Keep doing all of it." : "");
   };
 
@@ -40,16 +45,25 @@
   function avWords(text) { const out = []; const re = /[\p{L}\d'’]+/gu; let m; while ((m = re.exec(text))) out.push({ i: m.index, len: m[0].length }); return out; }
   function avBegin(u) {
     const en = /^en/i.test(u.lang || "");
-    AV.cur = { u, text: String(u.text || ""), rate: u.rate || 1, en, words: avWords(String(u.text || "")), wi: 0, wStart: performance.now() + 280, t0: performance.now(), hasB: false };
+    AV.cur = { u, text: String(u.text || ""), rate: u.rate || 1, en, words: avWords(String(u.text || "")), wi: 0, wStart: performance.now() + 280, t0: performance.now(), hasB: false, bWi: -1, mpc: AV.mpc || 0 };
     AV.speaking = true; AV.lastBegin = Date.now(); AV.smile = /^(¡?muy bien|¡?excelente|¡?perfecto|¡?genial|¡?fenomenal|¡?estupendo|¡?fant[aá]stico|¡?bravo|¡?s[ií]+,|great|well done|nice|perfect|excellent|awesome|¡?eso es|¡?bien hecho|¡?correcto)/i.test(AV.cur.text) ? 1 : 0;
     AV.mood = AV.smile ? "joy" : /[!¡]/.test(AV.cur.text) ? "excited" : /[?¿]\s*$/.test(AV.cur.text) ? "ask" : "warm"; AV.moodT = performance.now();
     AV.cur.capOff = capAdd(AV.cur.text);
     try { vcOnSpeak(u); } catch (e) {}
   }
-  function avWord(u, ci) { const c = AV.cur; if (!c || c.u !== u) return; c.hasB = true; c.lastB = performance.now(); let k = c.words.findIndex((w) => w.i >= ci); if (k < 0) k = c.words.length - 1; if (k > 0 && c.words[k].i > ci) k--; c.wi = Math.max(0, k); c.wStart = performance.now(); avBeat(c); }
+  function avWord(u, ci) { const c = AV.cur; if (!c || c.u !== u) return; const now = performance.now(); let k = c.words.findIndex((w) => w.i >= ci); if (k < 0) k = c.words.length - 1; if (k > 0 && c.words[k].i > ci) k--;
+    // v240: some engines restart their positions inside a long utterance (chunked synthesis) or repeat one: each word event
+    // still means «the next word has started», so the position never goes backwards
+    if (c.hasB && k <= c.bWi) k = Math.min(c.words.length - 1, c.bWi + 1);
+    // learn the voice's real pace (ms per character) from consecutive word events, for the stretches without events
+    if (c.hasB && k > c.bWi && now - c.lastB < 2500) { const ch = c.words[k].i - c.words[c.bWi].i; if (ch > 0) { const mpc = (now - c.lastB) / ch; c.mpc = c.mpc ? c.mpc * 0.7 + mpc * 0.3 : mpc; } }
+    c.hasB = true; c.lastB = now; c.bWi = k; c.est = null; c.wi = Math.max(0, k); c.wStart = performance.now(); avBeat(c); }
   // a small nod on long (usually stressed) words, a bigger one on emphasis: speech looks alive, not just a moving mouth
   function avBeat(c) { const w = c.words[c.wi]; if (!w) return; if (w.len >= 6 || (AV.mood !== "warm" && w.len >= 4)) AV.kick = performance.now(); capMark(c); }
-  function avDone(u) { if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
+  function avDone(u) {
+    try { if (AV.q <= 1) setTimeout(() => { if (!AV.speaking) document.querySelectorAll("#vc-pro span.on").forEach((x) => { x.classList.remove("on"); x.classList.add("said"); }); }, 250); } catch (e) {}
+    if (AV.cur && AV.cur.u === u) { const c = AV.cur, took = performance.now() - c.t0, n = c.text.length;
+      if (c.mpc && c.hasB) AV.mpc = c.mpc; else if (n > 25 && took > 600) { const mpc = (took - 150) / n; AV.mpc = AV.mpc ? AV.mpc * 0.6 + mpc * 0.4 : mpc; } } if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
   function avStopAll() { AV.cur = null; AV.speaking = false; AV.q = 0; AV.lastEnd = Date.now(); AV.m.h = 0; }
   function hookSpeech() {
     const ss = window.speechSynthesis; if (!ss || ss.__vcHooked) return; ss.__vcHooked = true;
@@ -172,6 +186,16 @@
     if (o.glasses) C.push('<g fill="#fff" fill-opacity=".06" stroke="#2a221d" stroke-width="4">' + VC_EYE.map(([x, y]) => '<rect x="' + (x - 44) + '" y="' + (y - 36) + '" width="88" height="68" rx="26"/>').join("") + '</g><path d="M194 402Q200 394 206 402M106 398L76 392M294 398L324 392" stroke="#2a221d" stroke-width="4" fill="none"/>' +
       '<path d="M120 380L136 368M216 380L232 368" stroke="#fff" stroke-width="5" opacity=".18" stroke-linecap="round"/>');
     C.push("</g>");
+    // v240 thinking gesture: a hand resting under the chin (to the side, below the mouth), shown only while an answer is
+    // really being prepared and the wait is noticeable; hidden with reduced motion
+    C.push('<g class="vc-hand" opacity="0" transform="translate(0 60)"><g transform="rotate(-14 270 610)">' +
+      '<path d="M300 900L318 700C320 676 304 650 282 648L258 650C244 690 246 780 252 900Z" fill="' + sh + '"/>' +
+      '<path d="M252 652C252 636 256 622 262 612L292 610C302 622 306 640 304 656C302 676 286 684 270 682C258 680 252 668 252 652Z" fill="url(#vcSkin)"/>' +
+      '<rect x="246" y="566" width="62" height="58" rx="22" fill="url(#vcSkin)"/>' +
+      '<path d="M252 590C264 586 290 586 302 590" stroke="' + skDD + '" stroke-width="2" fill="none" opacity=".35" stroke-linecap="round"/>' +
+      '<path d="M262 568V576M277 567V575M292 568V576" stroke="' + skDD + '" stroke-width="1.6" opacity=".3" stroke-linecap="round"/>' +
+      '<path d="M248 606C238 600 236 586 244 578C250 574 258 578 260 586C262 596 258 606 248 606Z" fill="' + sk + '" stroke="' + skD + '" stroke-width="1.5"/>' +
+      '<path d="M300 572C306 586 306 604 300 618" stroke="#fff" stroke-width="4" opacity=".15" fill="none" stroke-linecap="round"/></g></g>');
     return '<svg class="vc-scene vc-svg" viewBox="0 0 400 860" preserveAspectRatio="xMidYMid slice" role="img" aria-label="' + esc(pName()) + ', AI tutor">' + B.join("") + '<g class="vc-char" transform="translate(200 300) scale(.82) translate(-200 -300)">' + C.join("") + "</g>" + '<rect width="400" height="860" fill="url(#vcVig)" pointer-events="none"/></svg>';
   }
   const vcFace = vcScene;
@@ -185,15 +209,25 @@
       // the mouth: the letter being spoken now, from the word the voice reported
       let tgt = VIS.rest; const c = AV.cur;
       if (c && c.words.length) {
-        const per = (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
-        // no word events from this voice (or they stopped): keep time from the text itself, so the mouth never freezes
-        const est = !c.hasB || now - (c.lastB || 0) > 1400;
-        if (est) { let moved = false; while (w && el > w.len * per + 70 && c.wi < c.words.length - 1) { c.wStart += w.len * per + 70; c.wi++; w = c.words[c.wi]; el = now - c.wStart; moved = true; } if (moved) avBeat(c); }
+        const per = c.mpc ? Math.min(160, Math.max(40, c.mpc)) : (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
+        // no word events from this voice (or they stopped mid-utterance): place the mouth by the time elapsed over the text that
+        // is left. v240: the estimate stretches when the voice is slower than expected, so it can never run out while the
+        // audio is still playing (it used to reach the last word early and close the mouth for the rest of a long reply).
+        const est = !c.hasB || now - (c.lastB || 0) > 900;
+        if (est) {
+          if (!c.est) { const a = c.hasB ? Math.min(c.words.length - 1, c.bWi + 1) : 0, t0 = c.hasB ? c.lastB + (c.words[c.bWi] ? c.words[c.bWi].len * per + 60 : 0) : c.t0 + (AV.mpc ? 120 : 280);
+            const units = []; let tot = 0; for (let j = a; j < c.words.length; j++) { const wd = c.words[j], nx = c.words[j + 1], gap = nx ? c.text.slice(wd.i + wd.len, nx.i) : "", pause = Math.max(1, gap.length) + (/[.!?…]/.test(gap) ? 3 : /[,;:]/.test(gap) ? 1 : 0); /* real voices pause at punctuation */ units.push([j, tot]); tot += wd.len + pause; }
+            c.est = { a, t0, units, tot, dur: tot * per }; }
+          const E = c.est, el2 = now - E.t0; if (el2 > E.dur * 0.96) E.dur = el2 / 0.86; // the voice is slower: stretch, don't stop
+          const at = Math.max(0, el2 / E.dur) * E.tot; let j = 0; while (j < E.units.length - 1 && E.units[j + 1][1] <= at) j++;
+          const prev = c.wi; c.wi = E.units.length ? E.units[j][0] : c.wi; w = c.words[c.wi]; const into = at - (E.units[j] ? E.units[j][1] : 0);
+          el = w ? into * (w.len * per) / Math.max(1, w.len) : 0; c.wStart = now - el; if (c.wi !== prev) avBeat(c);
+        }
         // syllables, not letters: the mouth opens on each vowel (held longer) and closes between them, like real speech
         if (w && !c.hasB && now - c.t0 < 280) w = null; // some phones report "start" before the audio: wait for the first word
         if (w) { const ks = w.keys || (w.keys = avKeys(c.text.substr(w.i, w.len), c.en)), dur = w.len * per;
           if (el < dur) { let pos = (el / dur) * ks.T, j = 0; while (j < ks.length - 1 && pos > ks[j][1]) { pos -= ks[j][1]; j++; } tgt = VIS[ks[j][0]]; }
-          else tgt = c.hasB && !est ? [5, 0.6] : VIS.rest; }
+          else tgt = c.hasB && !est ? [5, 0.6] : VIS.rest; } // between words / at commas: nearly closed, as in real speech
       }
       const m = AV.m, f = c ? 0.42 : 0.35; m.w += (tgt[0] - m.w) * f; m.h += (tgt[1] - m.h) * f; if (!c && m.h < 0.05) m.h = 0;
       const mood = c ? AV.mood : VC.st === "listening" ? "listen" : VC.st === "thinking" ? "think" : AV.after > now ? "joy" : "warm";
@@ -221,6 +255,8 @@
       // brows: up when asking or excited, a lift on each beat, raised and soft while listening
       const kick = AV.kick ? Math.max(0, 1 - (now - AV.kick) / 380) : 0;
       const bT = ({ joy: -6, excited: -7, ask: -8, warm: -2, listen: -5, think: -3 }[mood] || 0) - kick * 4; AV.bw = (AV.bw == null ? bT : AV.bw + (bT - AV.bw) * 0.12);
+      { const hand = q(".vc-hand"); if (hand) { const want = !reduce && (VC.posed || VC.st) === "thinking" && VC.handOn && now - (VC.thinkT || now) > 900 ? 1 : 0; AV.hand = (AV.hand || 0) + (want - (AV.hand || 0)) * (want ? 0.08 : 0.25);
+        if (AV.hand < 0.01 && !want) AV.hand = 0; hand.setAttribute("opacity", AV.hand.toFixed(2)); hand.setAttribute("transform", "translate(0 " + ((1 - AV.hand) * 60).toFixed(1) + ")"); } }
       const br = q(".vc-brows"); if (br) br.setAttribute("transform", "translate(0 " + AV.bw.toFixed(2) + ")");
       // smiling eyes: cheeks lift the lower lids when Profe is happy
       const ch = q(".vc-cheeks"); if (ch) ch.setAttribute("opacity", Math.max(0, Math.min(1, (smile - 4.6) / 3)).toFixed(2));
@@ -276,6 +312,7 @@
       '<p class="vc-l">Captions</p>' + opt("txt", { all: ["Profe and me"], pro: ["Only Profe"], off: ["Off"] }, vcTxt()) +
       "<p class=\"vc-l\">Language</p>" + opt("lang", VC_LANG, "bilingual") +
       "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "flow") +
+      '<p class="vc-l">English help for a repeated mistake</p>' + opt("enhelp", { "2": ["After 2 times"], "3": ["After 3 times"], off: ["Only when I ask"] }, "3") +
       '<p class="vc-l">Interrupt Profe by speaking</p><div class="vc-opts"><button class="vc-o" data-act="vc-opt" data-k="barge" data-v="' + (vcP("barge", "off") === "on" ? "off" : "on") + '" aria-pressed="' + (vcP("barge", "off") === "on") + '">' + (vcP("barge", "off") === "on" ? "On · best with headphones" : "Off · tap Profe to interrupt") + "</button></div>" +
       '<p class="vc-note">Profe is an AI tutor, an animated character drawn on your phone. Your phone’s speech service turns your voice into text (on Android, Google’s); the app keeps no audio or video. Your camera, if you turn it on, is only shown to you: Profe can’t see it. The words of the call are saved in Profe › History, where you can delete them.</p>' +
       (med != null ? '<p class="vc-note">This call: Profe starts answering about ' + (vcMed("total") / 1000).toFixed(1) + " s after you stop talking (" + (vcMed("eot") / 1000).toFixed(1) + " s waiting to be sure you’ve finished, " + (med / 1000).toFixed(1) + " s to answer · " + ms.length + " turns).</p>" : "") + "</div>";
@@ -373,6 +410,8 @@
     VC.paused = false; vcListen(seed);
   }
   async function vcSay(parts, then) { // Profe speaks something of the call's own (greeting, confirmations)
+    // v240: Spanish first — the English half of a bilingual confirmation is only spoken in «Mostly English» mode
+    if (Array.isArray(parts) && vcP("lang", "bilingual") !== "english") { const es = parts.filter((x) => x[1]); if (es.length) parts = es; }
     const g = VC.gen; vcStopMic(); vcSet("speaking");
     await new Promise((res) => { try { speakMixed(parts, res); } catch (e) { res(); } setTimeout(res, 15000); });
     if (VC.on && g === VC.gen && then) vcQuietThen(then);
@@ -413,13 +452,20 @@
       if (/only (?:in )?spanish|solo (?:en )?espa/i.test(t)) { TS.vc_lang = "immersion"; tsave(); }
       if (/explain (?:my )?(?:mistakes|errors|things) in english|in english/i.test(t) && vcP("lang", "bilingual") === "immersion") { TS.vc_lang = "bilingual"; tsave(); }
     }
-    vcSet("thinking"); VC.tTurn = Date.now(); const h0 = location.hash; vcHold(t, g);
+    // v240: English only when asked, or to coach a mistake the learner keeps making (counted across the call)
+    VC.wantEn = /\b(in english|en ingl[eé]s|explain (it|that|this)?\s*(to me )?in english|what does .{1,40} mean|qu[eé] significa|no entiendo|i don'?t understand)\b/i.test(t);
+    VC.coachNow = null;
+    try { const thr = vcP("enhelp", "3"); if (thr !== "off" && typeof quickFixes === "function") { VC.errs = VC.errs || {};
+      quickFixes(t).forEach((f) => { const k = String(f.why || f.from + "→" + f.to).slice(0, 80); VC.errs[k] = (VC.errs[k] || 0) + 1;
+        if (!VC.coachNow && VC.errs[k] >= +thr) { VC.coachNow = { why: String(f.why || ("«" + f.from + "» → «" + f.to + "»")).slice(0, 160), to: f.to, n: VC.errs[k] }; VC.errs[k] = 0; VC.coached = (VC.coached || 0) + 1; } }); } } catch (e) {}
+    vcSet("thinking"); VC.tTurn = Date.now(); VC.thinkT = performance.now(); VC.handOn = !VC.handLast && Math.random() < 0.6; VC.handLast = VC.handOn; const h0 = location.hash; vcHold(t, g);
     if (window.__vcThinkDelay) await new Promise((r) => setTimeout(r, window.__vcThinkDelay)); // tests: a slow answer
     if (!VC.on || g !== VC.gen) return;
     let n0 = 0; try { n0 = tCur ? tCur.msgs.length : 0; } catch (e) {}
     // a continued turn replaces the half-sentence that was sent first (so the model sees the learner's words once, complete)
     if (VC.contDrop && t.indexOf(VC.contDrop) === 0) { try { const k = tCur.msgs.map((m) => m.r === "u" && m.c === VC.contDrop).lastIndexOf(true); if (k >= 0) tCur.msgs.splice(k, 1); } catch (e) {} } VC.contDrop = null;
     try { await tSend(t, true); } catch (e) {}
+    VC.wantEn = false; VC.coachNow = null;
     if (!VC.on || g !== VC.gen) return;
     let m = null; try { m = tCur && tCur.msgs.length > n0 ? [...tCur.msgs].reverse().find((x) => x.r === "a") : null; if (m && m.c && !m.err) VC.lastPro = vcPlain(m.c); } catch (e) {}
     // the chat wrote an answer but didn't say it (no AI engine, a typed-style reply): the call says it
@@ -486,7 +532,7 @@
     try { if (typeof coachToast === "function" && secs > 5) coachToast("Call ended · " + Math.floor(secs / 60) + ":" + String(secs % 60).padStart(2, "0") + " · " + turns + " answers from " + pName() + (vcP("corr", "flow") === "end" ? " · say or type “review my call” for your feedback" : "")); } catch (e) {}
     try { if (typeof tRender === "function" && document.body.classList.contains("tutor-open")) tRender(); } catch (e) {}
   }
-  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, eot: vcEot, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
+  window.__vc = { open: vcOpen, end: vcEnd, state: () => VC.st, st: VC, av: AV, turn: (t) => vcTurn(t), interrupt: vcInterrupt, eot: vcEot, enOK: () => vcEnOK(), pose: (st) => { VC.posed = st || null; VC.handOn = true; VC.thinkT = performance.now() - 2000; }, minimize: vcMinimize, resume: vcResume, vis: visOf, note: () => window.__vcNote() };
 
   document.addEventListener("click", (ev) => {
     const b = ev.target.closest && ev.target.closest("[data-act^='vc-']"); if (!b) return; const a = b.dataset.act;
