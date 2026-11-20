@@ -483,12 +483,29 @@
   function pcLevels(t) { return (pcNorm(t).match(/\b(a1|a2|b1|b2|c1|c2)\b/g) || []); }
   const pcYes = (t) => /^(yes|yeah|yep|yup|sure|ok|okay|correct|right|thats right|that's right|si|sí|vale|claro|exacto|confirm|confirmed|go ahead|do it|create it|perfect|perfecto|sounds good|looks good)\b/.test(pcNorm(t));
   const pcNo = (t) => /^(no|nope|not yet|todavia no|not really|nah|wrong|incorrect)\b/.test(pcNorm(t));
-  function planChatOn() { const c = S.plan && S.plan.chat; return !!(c && c.on && !c.paused); }
+  /* v244: the plan conversation is a short mode, not a state the app stays in. It used to stay on (saved in progress, across
+     restarts and calls) and take every message as a plan answer. Now it is on only while you are actually answering it:
+     never in a video call, never after 15 min without a plan answer, and anything that isn't about the plan pauses it
+     (the draft is kept; «continue my study plan» picks it up). */
+  function planChatOn() { const c = S.plan && S.plan.chat; return !!(c && c.on && !c.paused && !window.__vcOn && Date.now() - (c.last || c.started || 0) < 15 * 60000); }
+  function pcAbout(raw) { // does this message answer the plan questions?
+    const c = S.plan.chat, s = pcNorm(raw);
+    if ((c.clar || c.confirm) && (pcYes(raw) || pcNo(raw))) return true;
+    if (pcYes(raw) || pcNo(raw)) return s.split(" ").length <= 4;
+    if (/^(fine|thats fine|that is fine|its fine|good|great|keep (it|that)|default|as is|no change|vale|bien|esta bien|perfecto|de acuerdo)\b/.test(s) && s.split(" ").length <= 5) return true;
+    if (/^(pause|stop|later|cancel|exit|quit|para|basta|luego|despues)\b/.test(s) || /\b(open the form|edit (it )?(in the form|myself)|let me (fill|edit))\b/.test(s)) return true;
+    if (pcLevels(raw).length || pcDate(raw) || pcDays(raw).length || pcSkills(raw).length || pcWindows(raw).out.length || pcWindows(raw).vague.length) return true;
+    if (/\b(\d+\s*(min|mins|minutes|minutos|hours?|horas?|h)\b|hour|session|break|remind|booked|registered|exam|examen|dele|weekend|weekday|morning|evening|afternoon|night|holiday|vacation|none|nothing|balanced|default)\b/.test(s)) return true;
+    return false;
+  }
+  window.__planAbout = pcAbout;
+  function planChatPause(note) { const c = S.plan && S.plan.chat; if (!c || !c.on || c.paused) return; c.paused = true; save(); if (note) { try { logMsg("a", "*I’ve put your study plan on hold (your answers are saved). Say «continue my study plan» whenever you want to finish it.*"); } catch (e) {} } }
+  window.__planPause = planChatPause;
   function pcSay(text, origin) { try { pvReply(text, origin || "chat", { listen: 1 }); } catch (e) { try { logMsg("a", text); tRender(); } catch (x) {} } }
   function planChatStart(origin) {
     try { tView = "chat"; } catch (e) {} // the plan is set up in Profe's chat, not on the practice icons
     plState(); const D = plDraft(), c = (S.plan.chat = S.plan.chat || {}), resumed = c.started && !c.done;
-    c.on = true; c.paused = false; c.started = c.started || Date.now(); c.done = false; c.confirm = false; c.clar = null; c.asked = c.asked || {}; c.origin = origin || "chat"; save();
+    c.on = true; c.paused = false; c.last = Date.now(); c.started = c.started || Date.now(); c.done = false; c.confirm = false; c.clar = null; c.asked = c.asked || {}; c.origin = origin || "chat"; save();
     const known = []; if (D.target) known.push("target DELE " + D.target.toUpperCase()); if (D.current) known.push("current level " + D.current.toUpperCase() + (D.currentSrc ? " (from " + D.currentSrc + ")" : "")); if (plWeekMin(D)) known.push(plWeekMin(D) + " minutes a week");
     const intro = resumed ? "Let's carry on with your study plan." : "Let's make your study plan. I'll ask a few short questions — you can answer several things at once, correct anything, or say “pause” and come back later. Then I'll show a summary for you to confirm before I create the calendar.";
     pcSay(intro + (known.length ? " I already have: " + known.join(", ") + ". Tell me if any of that is wrong. " : " ") + pcNext(), origin);
@@ -516,7 +533,7 @@
     return "Here's what I have:\n" + L + (v.optional.length ? "\n(Optional, can add later: " + v.optional.join("; ") + ".)" : "") + (v.err.length ? "\n⚠️ " + v.err.join(" ") : "") + "\nShall I create the plan? Say “yes”, or tell me what to change (for example “make Saturdays one hour instead”).";
   }
   function planChatTurn(raw, origin) {
-    const c = S.plan.chat, D = plDraft(), s = pcNorm(raw); let notes = [];
+    const c = S.plan.chat, D = plDraft(), s = pcNorm(raw); let notes = []; c.last = Date.now();
     try { if (origin === "chat" || (origin === "voice" && document.body.classList.contains("tutor-open"))) { if (!tCur) ensureSession(pageCtx().label, raw); tCur.msgs.push({ r: "u", c: raw, t: Date.now() }); } } catch (e) {}
     if (/^(pause|stop|later|cancel|exit|quit|para|basta|luego|despues)\b/.test(s)) { c.paused = true; save(); return pcSay("Paused. Your answers are saved as a draft — say “set up my study plan” to continue, or edit it in Study plan › Set up.", origin); }
     if (/\b(open the form|edit (it )?(in the form|myself)|let me (fill|edit))\b/.test(s)) { c.paused = true; save(); PLUI.view = "setup"; location.hash = "#plan"; return pcSay("Opening the form with everything filled in so far.", origin); }

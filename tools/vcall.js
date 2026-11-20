@@ -31,6 +31,12 @@
 
   /* ---------- watching speech: lip sync from the words actually spoken ---------- */
   const AV = { cur: null, speaking: false, q: 0, lastEnd: 0, m: { w: 5.2, h: 0.3 }, smile: 0 };
+  /* v244: on the phone the audio itself is the authority. Android's text-to-speech says whether sound is playing right now
+     (AndroidTTS.speaking()). Samsung's engine (and others) can report «start» before the sound, skip «start» for a sentence,
+     or report every word as it is *synthesised* — far ahead of the audio — which raced the mouth to the end of the sentence
+     and shut it while the voice carried on. Now: word events faster than speech are ignored (AV.earlyEv), a sentence whose
+     «start» never came begins when the sound does (AV.pend), and the mouth's clock only runs while sound is playing. */
+  function vcTtsNat() { try { if (window.__natSpeaking) return !!window.__natSpeaking(); if (window.AndroidTTS && typeof AndroidTTS.speaking === "function") return !!AndroidTTS.speaking(); } catch (e) {} return null; }
   const VIS = { rest: [5.2, 0.3], mbp: [5, 0], a: [5.4, 5.2], e: [6, 3], i: [6.2, 2], o: [3.8, 4.6], u: [3, 3.4], f: [5.4, 1.2], l: [5.2, 1.3] };
   function visOf(ch, nx, en) {
     ch = (ch || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -52,6 +58,10 @@
     try { vcOnSpeak(u); } catch (e) {}
   }
   function avWord(u, ci) { const c = AV.cur; if (!c || c.u !== u) return; const now = performance.now(); let k = c.words.findIndex((w) => w.i >= ci); if (k < 0) k = c.words.length - 1; if (k > 0 && c.words[k].i > ci) k--;
+    // v244: an engine that reports words faster than anyone can speak (≈ 30 ms a letter) is reporting synthesis, not sound:
+    // ignore its word events for the rest of the call and keep time from the audio instead
+    if (AV.earlyEv) return;
+    if (c.words[k] && c.words[k].i >= 30 && (now - c.t0) / c.words[k].i < 30) { AV.earlyEv = true; c.hasB = false; c.bWi = -1; c.est = null; c.mpc = 0; c.wi = 0; return; }
     // v240: some engines restart their positions inside a long utterance (chunked synthesis) or repeat one: each word event
     // still means «the next word has started», so the position never goes backwards
     if (c.hasB && k <= c.bWi) k = Math.min(c.words.length - 1, c.bWi + 1);
@@ -63,20 +73,20 @@
   function avDone(u) {
     try { if (AV.q <= 1) setTimeout(() => { if (!AV.speaking) document.querySelectorAll("#vc-pro span.on").forEach((x) => { x.classList.remove("on"); x.classList.add("said"); }); }, 250); } catch (e) {}
     if (AV.cur && AV.cur.u === u) { const c = AV.cur, took = performance.now() - c.t0, n = c.text.length;
-      if (c.mpc && c.hasB) AV.mpc = c.mpc; else if (n > 25 && took > 600) { const mpc = (took - 150) / n; AV.mpc = AV.mpc ? AV.mpc * 0.6 + mpc * 0.4 : mpc; } } if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
+      if (c.mpc && c.hasB && !AV.earlyEv) AV.mpc = c.mpc; else if (n > 25 && took > 600) { const mpc = (took - 150) / n; AV.mpc = AV.mpc ? AV.mpc * 0.6 + mpc * 0.4 : mpc; } } if (AV.cur && AV.cur.u === u) { if (AV.mood === "joy") AV.after = performance.now() + 1800; AV.cur = null; } AV.q = Math.max(0, AV.q - 1); AV.speaking = !!AV.cur; AV.lastEnd = Date.now(); }
   function avStopAll() { AV.cur = null; AV.speaking = false; AV.q = 0; AV.lastEnd = Date.now(); AV.m.h = 0; }
   function hookSpeech() {
     const ss = window.speechSynthesis; if (!ss || ss.__vcHooked) return; ss.__vcHooked = true;
     const sp = ss.speak.bind(ss), ca = ss.cancel.bind(ss);
     try {
       ss.speak = function (u) {
-        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
+        if (VC.on && u && !u.__vcw) { u.__vcw = 1; AV.q++; AV.pend = u; const o = { s: u.onstart, b: u.onboundary, e: u.onend, r: u.onerror };
           // enthusiasm: a brighter voice in a call (higher on ¡exclamations!, a lift on questions)
           try { const tx = String(u.text || ""), p0 = +u.pitch || 1; if (!u.__vcp) { u.__vcp = 1; u.pitch = Math.min(1.25, p0 * (/[!¡]/.test(tx) ? 1.12 : /[?¿]/.test(tx) ? 1.07 : 1.05)); } } catch (x) {}
-          u.onstart = function (ev) { try { avBegin(u); } catch (x) {} if (o.s) return o.s.call(this, ev); };
+          u.onstart = function (ev) { try { if (!u.__vcs) { u.__vcs = 1; avBegin(u); } } catch (x) {} if (o.s) return o.s.call(this, ev); };
           u.onboundary = function (ev) { try { if (!ev || ev.name === "word" || ev.name == null) avWord(u, ev ? ev.charIndex : 0); } catch (x) {} if (o.b) return o.b.call(this, ev); };
-          u.onend = function (ev) { try { avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
-          u.onerror = function (ev) { try { avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
+          u.onend = function (ev) { try { if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.e) return o.e.call(this, ev); };
+          u.onerror = function (ev) { try { if (AV.pend === u) AV.pend = null; avDone(u); } catch (x) {} if (o.r) return o.r.call(this, ev); }; }
         return sp(u);
       };
       ss.cancel = function () { if (VC.on) avStopAll(); return ca(); };
@@ -207,6 +217,12 @@
       if (!VC.on) return;
       const root = document.getElementById("vcall"); const svg = root && root.querySelector(".vc-scene"); if (!svg) { VC_RAF = requestAnimationFrame(step); return; }
       // the mouth: the letter being spoken now, from the word the voice reported
+      // v244: what the phone is really doing (sound playing or not), read a few times a second
+      if (!AV.natT || now - AV.natT > 150) { AV.natT = now; AV.nat = vcTtsNat(); }
+      if (!AV.cur && AV.pend && !AV.pend.__vcs && AV.nat) { try { AV.pend.__vcs = 1; avBegin(AV.pend); AV.cur.noStart = 1; } catch (e) {} } // «start» never came
+      { const c0 = AV.cur, dt = AV.lastStep ? Math.min(100, now - AV.lastStep) : 0;
+        if (c0 && AV.nat === false && now - c0.t0 > 350) { c0.t0 += dt; c0.wStart += dt; if (c0.est) c0.est.t0 += dt; if (c0.lastB) c0.lastB += dt; c0.held = 1; } } // no sound yet / any more: the mouth's clock waits
+      AV.lastStep = now;
       let tgt = VIS.rest; const c = AV.cur;
       if (c && c.words.length) {
         const per = c.mpc ? Math.min(160, Math.max(40, c.mpc)) : (c.en ? 62 : 70) / Math.max(0.5, c.rate); let w = c.words[c.wi], el = now - c.wStart;
@@ -225,6 +241,7 @@
         }
         // syllables, not letters: the mouth opens on each vowel (held longer) and closes between them, like real speech
         if (w && !c.hasB && now - c.t0 < 280) w = null; // some phones report "start" before the audio: wait for the first word
+        if (AV.nat === false && now - c.t0 > 350) w = null; // the phone says no sound is playing
         if (w) { const ks = w.keys || (w.keys = avKeys(c.text.substr(w.i, w.len), c.en)), dur = w.len * per;
           if (el < dur) { let pos = (el / dur) * ks.T, j = 0; while (j < ks.length - 1 && pos > ks[j][1]) { pos -= ks[j][1]; j++; } tgt = VIS[ks[j][0]]; }
           else tgt = c.hasB && !est ? [5, 0.6] : VIS.rest; } // between words / at commas: nearly closed, as in real speech

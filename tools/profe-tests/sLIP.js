@@ -9,12 +9,15 @@ const INIT = () => {
   const ss = { speaking: false, pending: false, _t: [], getVoices: () => [{ name: "Google español de Estados Unidos", lang: "es-US", localService: false, voiceURI: "g", default: true }],
     cancel() { ss._t.forEach(clearTimeout); ss._t = []; const u = ss._u; ss._u = null; ss.speaking = false; if (u) { u.onerror && u.onerror({ error: "interrupted" }); } },
     pause() {}, resume() {}, addEventListener() {}, removeEventListener() {},
+    // v244 phone behaviours (with the phone's «sound playing» signal, window.__natSpeaking): «early» = every word reported at
+    // once as the engine synthesises (Samsung); «nostart» = the start event never comes; «late» = start 700 ms before the sound
     speak(u) { ss.cancel(); ss._u = u; ss.speaking = true; const mpc = window.__mpc || 95, mode = window.__lipMode || "all", t = String(u.text || ""), ws = words(t), dur = t.length * mpc;
-      window.__lipLog.push({ start: performance.now() + 120, end: performance.now() + 120 + dur });
-      ss._t.push(setTimeout(() => { u.onstart && u.onstart({}); }, 120));
-      ws.forEach((ci, n) => { let send = mode === "all" || (mode === "first" && n < 5); let idx = ci; if (mode === "reset") { const cut = t.lastIndexOf(".", ci - 1); idx = cut >= 0 ? ci - cut - 2 : ci; send = true; }
-        if (send) ss._t.push(setTimeout(() => { u.onboundary && u.onboundary({ name: "word", charIndex: Math.max(0, idx) }); }, 120 + ci * mpc)); });
-      ss._t.push(setTimeout(() => { ss.speaking = false; ss._u = null; u.onend && u.onend({}); }, 120 + dur)); } };
+      const a0 = 120 + (mode === "late" ? 700 : 0), A = performance.now() + a0; window.__lipLog.push({ start: A, end: A + dur });
+      window.__natSpeaking = ["early", "nostart", "late"].includes(mode) ? () => { const n = performance.now(); return n >= A && n < A + dur; } : null;
+      if (mode !== "nostart") ss._t.push(setTimeout(() => { u.onstart && u.onstart({}); }, 120));
+      ws.forEach((ci, n) => { let send = mode === "all" || mode === "early" || (mode === "first" && n < 5); let idx = ci; if (mode === "reset") { const cut = t.lastIndexOf(".", ci - 1); idx = cut >= 0 ? ci - cut - 2 : ci; send = true; }
+        if (send) ss._t.push(setTimeout(() => { u.onboundary && u.onboundary({ name: "word", charIndex: Math.max(0, idx) }); }, mode === "early" ? 130 + n * 8 : a0 + ci * mpc)); });
+      ss._t.push(setTimeout(() => { ss.speaking = false; ss._u = null; u.onend && u.onend({}); }, a0 + dur)); } };
   Object.defineProperty(window, "speechSynthesis", { value: ss, configurable: true }); window.__lipLog = [];
   window.SpeechSynthesisUtterance = function (t) { this.text = t; this.lang = "es-US"; this.rate = 1; this.pitch = 1; this.volume = 1; };
   window.SpeechRecognition = window.webkitSpeechRecognition = function () { this.start = () => {}; this.stop = () => { this.onend && this.onend(); }; this.abort = this.stop; };
@@ -26,7 +29,7 @@ const TEXT = "Muy bien. Ayer fuiste al mercado con tu hermana y comprasteis frut
   const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" }); await c.addInitScript(INIT); const p = await c.newPage();
   await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1500);
   await p.evaluate(() => window.__vc.open()); await p.waitForTimeout(800);
-  for (const mode of ["all", "first", "reset", "none"]) {
+  for (const mode of ["all", "first", "reset", "none", "early", "nostart", "late"]) {
     const r = await p.evaluate(async ([mode, text]) => {
       const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); speechSynthesis.cancel(); await sleep(400);
       window.__lipMode = mode; window.__lipLog = []; { const u0 = new SpeechSynthesisUtterance("Hola, ¿qué tal estás hoy? Vamos a practicar un poco de español juntos."); speechSynthesis.speak(u0); await sleep(75 * 95 + 600); }

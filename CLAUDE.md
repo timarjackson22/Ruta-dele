@@ -65,6 +65,10 @@ If no: say so in the commit message ("costs: no impact").
 - Build: tools/ sources are the truth — edit the source, then embed. Every `tools/patch_*.py` must be a no-op on index.html: `node tools/profe-tests/sSRC.js` must pass (five stale sources once reverted newer work when re-embedded).
 - Every drill screen has «‹ All practice» (`pr-exit`; adaptive.js `.adexit`).
 
+## Plan mode and phone lip-sync — v244
+- The study-plan conversation is a short mode (`planChatOn()`): only while answers are about the plan (`pcAbout`), never in a call, off after 15 min; anything else pauses it once with a note (`__planPause`), draft kept, «continue my study plan» resumes. Plan code lives in tools/plan.js (embed with patch_plan.py). `node tools/profe-tests/sPLAN.js` and `sN.js` must pass.
+- Call lip-sync on phones: the sound is the authority (`vcTtsNat()` = `AndroidTTS.speaking()`): word events faster than speech are ignored for the call (`AV.earlyEv`, Samsung reports synthesis), a sentence with no «start» begins when sound does (`AV.pend`), and the mouth's clock waits while no sound plays. sLIP covers early / nostart / late engines.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

@@ -28,6 +28,9 @@ Checkpoint before changes: git tag `checkpoint-v241` (pushed). Rollback: `git ch
 | 8 | Mic error 11 / busy on first try | S24 | Start of sentence lost | Medium (device) | native: handled in APK v222/v226 (3 native retries + one page retry) | — | sMIC, sMG (simulated) | Watch on device |
 | 9 | Voices without word events | Some network voices | Highlight / lip-sync drift | Medium (device) | v237/v240 learned pace | — | sLIP, sSYNC | Watch on device |
 
+| 10 | Profe keeps steering to the study plan | Start plan setup once, then talk about anything else (even days later, even in a call) | Profe «stuck» on the plan | High | `S.plan.chat.on` was saved and `pvRoute` sent every message to `planChatTurn` unless it was one of 6 exact commands. High | v244: plan mode only for plan answers (`pcAbout`), off in calls and after 15 min, pauses with a note, draft kept | sPLAN (9), sN (29) | Fixed |
+| 11 | Mouth stops after a sentence or two while the voice continues (phone) | Samsung engine in a call | Avatar looks broken | High (device) | the mouth trusted the engine's events; engines that report words while synthesising (all at once) or skip «start» left it at rest (old code: 6 % / 0 % open). Medium–high (reproduced in simulation, not yet on the S24) | v244: `AndroidTTS.speaking()` is the authority; early word events ignored; missing start recovered; clock waits for sound | sLIP 7 modes | Fixed, confirm on device |
+
 ## One owner per resource (the rule going forward)
 - **Microphone**: the mic guard (`micGuard`, `MICG.cur`). Anything that listens goes through it; the wake listener asks
   `window.__micOwned()` and `__vcOn` via `hfBusy()` before it listens.
