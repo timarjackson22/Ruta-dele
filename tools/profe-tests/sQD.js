@@ -12,7 +12,7 @@ const URL = process.env.URL || "http://localhost:8766/";
   await p.click('#app .sgrid a.stile[href="#drill"]'); await p.waitForTimeout(900);
   let st = await p.evaluate(() => ({ lv: [...document.querySelectorAll('[data-act="qd-lv"]')].map((x) => x.textContent + (x.getAttribute("aria-pressed") === "true" ? "*" : "")).join(" "), f: [...document.querySelectorAll('[data-act="qd-f"]')].map((x) => x.textContent).join(","), n: window.__qd().ex.length, sk: window.__qd().ex.filter((e) => e.t === "sk").length, top: document.querySelector(".qdctl").getBoundingClientRect().top }));
   rec("Level picker A1–C2 at the top of the drill", /A1.*A2.*B1.*B2.*C1.*C2/.test(st.lv) && st.top < 200, JSON.stringify(st));
-  rec("Focus chips: Mixed + the seven skills", st.f === "Mixed,Listening,Speaking,Pronunciation,Spelling,Grammar,Vocabulary,Reading", st.f);
+  rec("Focus chips: Mixed + the seven skills + Pictures (v268)", st.f === "Mixed,Listening,Speaking,Pronunciation,Spelling,Grammar,Vocabulary,Reading,Pictures", st.f);
   rec("Mixed drill includes skill questions", st.sk >= 3 && st.n >= 11, JSON.stringify(st));
   // pick a level: the drill restarts at that level, and the words come from it
   await p.click('[data-act="qd-lv"][data-v="b1"]'); await p.waitForTimeout(700);

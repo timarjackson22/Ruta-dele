@@ -87,7 +87,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
   const hub = await p.evaluate(() => ({ h: location.hash, chips: document.querySelectorAll('[data-act="qd-f"]').length }));
   await p.evaluate(() => { location.hash = "#ejercicios/skill/pro/a1"; }); await H.wait(800);
   const sp = await p.evaluate(() => (window.__qd() ? window.__qd().ex.map((e) => e.d && e.d.type) : []));
-  rec("Skill drills page → Quick drill with 7 skills + Mixed; a pronunciation focus uses only pronunciation drills", hub.h === "#drill" && hub.chips === 8 && sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
+  rec("Skill drills page → Quick drill with 7 skills + Mixed; a pronunciation focus uses only pronunciation drills", hub.h === "#drill" && hub.chips === 9 && /* + Pictures, v268 */ sp.length >= 5 && sp.every((t) => /whichsound|syll|stress|say/.test(t)), JSON.stringify({ hub, sp }));
   // 9b. lesson questions keep their task: gap-less "stressed syllable" items become tap-the-syllable drills; no "Complete the sentence" without a gap
   const task = await p.evaluate(async () => { const K = window.__sk, bad = [], conv = []; COURSE.forEach((c) => c.units.forEach((u, i) => { const id = c.id + "-u" + (i + 1); K.topic(id).secs.forEach((_, si) => K.bank(id, si, 4).forEach((d) => { if (d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q) && !d.it.ins) bad.push(id + ": " + d.it.q); if (d.type === "stress" && d.it) conv.push(d.w + "→" + d.syl[d.k]); })); }));
     const rv = (await K.review("a1-u1", 3)).filter((d) => d.type === "acad" && d.it.t === "x" && !/_{2,}|…/.test(d.it.q)).length; return { bad, conv: conv.slice(0, 5), rv }; });

@@ -17,4 +17,6 @@
 .vd-it svg { width: 72px; height: 72px } .vd-it b { font-size: .92rem; text-align: center; line-height: 1.2 } .vd-it small { color: #6b7387; font-size: .74rem; text-align: center }
 .vd-it.on { border-color: #e0592e; box-shadow: 0 0 0 2px color-mix(in srgb, #e0592e 30%, transparent) }
 [data-theme="dark"] .vd-list button, [data-theme="dark"] .vd-card { background: var(--surface) }
+.vd-h { font-size: 1.02rem; margin: 18px 2px 4px; color: var(--ink) }
+.vd-top { margin: 2px 0 0; gap: 8px; flex-wrap: wrap } .vd-how { color: var(--muted); margin: 4px 2px 0 } .vd-hubrow { margin-top: 16px; gap: 8px }
 /* ==/VISUAL-CSS== */

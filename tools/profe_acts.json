@@ -202,6 +202,7 @@
  "dr-next": "drill.do",
  "dr-pick": "drill.do",
  "dr-play": "drill.do",
+ "dr-pp": "drill.do",
  "dr-skip": "drill.do",
  "dr-un": "drill.do",
  "ex-again": {
@@ -1319,6 +1320,10 @@
  "vd-deck": {
   "voice": "pending",
   "why": "picture dictionary: add the topic's words to a deck"
+ },
+ "vd-drill": {
+  "voice": "pending",
+  "why": "picture dictionary: open Quick drill on the Pictures focus"
  },
  "vd-say": {
   "voice": "pending",
