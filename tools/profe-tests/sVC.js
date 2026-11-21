@@ -143,7 +143,7 @@ const INIT = () => {
   const an = await p.evaluate(async () => { const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); const R = window.__rawSS;
     const fresh = { speak: (u) => R.speak(u), cancel: () => R.cancel(), getVoices: () => R.ss.getVoices(), get speaking() { return R.ss.speaking; }, get pending() { return R.ss.pending; } };
     Object.defineProperty(window, "speechSynthesis", { value: fresh, configurable: true, writable: true }); window.__noB = true;
-    window.__vc.open(); await sleep(400); let peak = 0, shapes = new Set(), lit = new Set();
+    window.__vc.open(); await sleep(2000); /* v258: the greeting starts after the ~1.6 s ring */ let peak = 0, shapes = new Set(), lit = new Set();
     for (let i = 0; i < 40; i++) { peak = Math.max(peak, window.__vcMouthH()); shapes.add(document.querySelector("#vcall .vc-mouth").getAttribute("d")); const on = document.querySelector("#vc-pro span.on"); if (on) lit.add(on.dataset.w); await sleep(60); }
     window.__vc.end(); window.__noB = false; return { peak: +peak.toFixed(2), shapes: shapes.size, lit: lit.size }; });
   rec("Phone voices (bridge installed late, no word events): the mouth still talks and captions follow", an.peak > 3 && an.shapes >= 8 && an.lit >= 3, JSON.stringify(an));

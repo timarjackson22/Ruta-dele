@@ -84,4 +84,15 @@ body.vc-open .tabbar, body.vc-open .tutor-fab, body.vc-open #tabpeek { visibilit
 /* v250 safe mode (after the app restarted during a call): no blur filters, still background — less memory and work for the phone */
 #vcall.vc-safe .vc-scene [filter] { filter: none !important }
 #vcall.vc-safe .vc-scene .vc-bokeh, #vcall.vc-safe .vc-scene [class*="bokeh"] { display: none }
+/* v258: which AI is answering, and the «Claude stopped» banner */
+#vcall .vc-model{margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.18);font-size:11px;font-weight:600;white-space:nowrap}
+#vcall .vc-model:empty{display:none}
+#vcall .vc-banner{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:6;padding:12px 34px 12px 14px;border-radius:16px;background:rgba(20,20,28,.82);color:#fff;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:14px;line-height:1.35}
+#vcall .vc-banner[hidden]{display:none}
+#vcall .vc-banner p{margin:0}
+#vcall .vc-bbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+#vcall .vc-bb{border:0;border-radius:999px;padding:6px 12px;background:#fff;color:#111;font-weight:700;font-size:13px}
+#vcall .vc-bx{position:absolute;top:6px;right:8px;border:0;background:none;color:#fff;font-size:20px;line-height:1}
+#vcall[data-state="calling"] .vc-dot,#vcall[data-state="aiswitch"] .vc-dot{background:#f5b301;animation:vcBlink 1s infinite}
+@keyframes vcBlink{50%{opacity:.25}}
 /* ==/VCALL-CSS== */

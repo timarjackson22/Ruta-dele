@@ -11,7 +11,7 @@
   const VC = { on: false, st: "idle", muted: false, cc: true, cam: null, t0: 0, rec: null, gen: 0, lastPro: "", paused: false, metrics: [], instr: [], empties: 0, fails: 0, wasWake: false };
   const VC_FLAG = true; // rollback: set to false (or TS.vcall = false) and the call button disappears
   const vcEnabled = () => VC_FLAG && TS.vcall !== false && !!window.speechSynthesis;
-  const VC_ST = { idle: "", connecting: "Connecting…", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", muted: "Muted", reconnecting: "Reconnecting the mic…", paused: "Paused", disconnected: "Call ended" };
+  const VC_ST = { calling: "Calling…", aiswitch: "Reconnecting…", idle: "", connecting: "Connecting…", listening: "Listening…", thinking: "Thinking…", speaking: "Speaking", muted: "Muted", reconnecting: "Reconnecting the mic…", paused: "Paused", disconnected: "Call ended" };
   const VC_LANG = { immersion: ["Spanish only", "Speak only Spanish, slowly and simply at the learner's level; never switch to English unless they explicitly ask."], bilingual: ["Spanish first", "Speak Spanish the whole call, at the learner's level; don't translate your replies into English. If the learner speaks English, understand them, give them the Spanish way to say it and invite them to say it themselves (e.g. «Puedes decir: “Perdí el autobús”. Ahora inténtalo tú: ¿por qué llegaste tarde?»), warmly, without making it feel like a punishment. One English word inside a Spanish sentence is not a request to switch. Use English only when they explicitly ask for an explanation in English (brief, then back to Spanish) or when told below to coach a repeated mistake."], english: ["Mostly English", "Explain in English and use Spanish for the examples and the practice phrases."] };
   const VC_CORR = { every: ["Correct every mistake (gently)", "Correct real mistakes the app hasn't already corrected: «Se dice: …» with the corrected sentence and the reason in a few words when it helps (recast small slips naturally instead), then carry on with the conversation. Never repeat a wrong sentence back as if it were right. After explaining something new, check it by having them use it; if they are still confused, find which part and explain it another way with one example."], flow: ["Conversation first", "Correct only big or repeated mistakes, in one short phrase, then carry on with the conversation."], now: ["Immediate coaching", "When the learner makes a mistake, give the corrected Spanish and a one-line reason, invite a quick retry, then continue."], end: ["End-of-session review", "Don't correct during the call (only if meaning is unclear); the learner gets a review at the end."] };
   const vcP = (k, d) => (TS["vc_" + k] != null ? TS["vc_" + k] : d);
@@ -404,7 +404,7 @@
     const rate = vcRate();
     return '<button type="button" class="vc-stage" data-act="vc-tap" aria-label="' + esc(pName()) + '. Tap to interrupt or to talk">' +
         (VC.audioOnly ? '<span class="vc-audio"><span class="vc-aav">' + esc(pName()[0]) + "</span><small>Audio only · the animation couldn’t load</small></span>" : '<span class="vc-face">' + face + "</span>") + "</button>" +
-      '<div class="vc-top"><span class="vc-who"><b>' + esc(pName()) + '</b><span class="vc-ai" title="Profe is an AI tutor">AI tutor</span></span><span class="vc-pill"><i class="vc-dot" aria-hidden="true"></i><span class="vc-st" id="vc-st" role="status" aria-live="polite"></span><span class="vc-time" id="vc-time">0:00</span></span>' +
+      '<div class="vc-top"><span class="vc-who"><b>' + esc(pName()) + '</b><span class="vc-ai" title="Profe is an AI tutor">AI tutor</span><span class="vc-model" id="vc-model" title="The AI answering right now"></span></span><span class="vc-pill"><i class="vc-dot" aria-hidden="true"></i><span class="vc-st" id="vc-st" role="status" aria-live="polite"></span><span class="vc-time" id="vc-time">0:00</span></span>' +
         '<button class="vc-ibtn" data-act="vc-set" aria-label="Call settings">' + vcI("gear") + "</button></div>" +
       '<video class="vc-self" id="vc-self" playsinline muted autoplay hidden aria-label="Your camera (only on your screen)"></video>' +
       '<div class="vc-bottom"><span class="vc-hint" id="vc-hint"></span>' +
@@ -431,10 +431,39 @@
       '<p class="vc-note">Profe is an AI tutor, an animated character drawn on your phone. Your phone’s speech service turns your voice into text (on Android, Google’s); the app keeps no audio or video. Your camera, if you turn it on, is only shown to you: Profe can’t see it. The words of the call are saved in Profe › History, where you can delete them.</p>' +
       (med != null ? '<p class="vc-note">This call: Profe starts answering about ' + (vcMed("total") / 1000).toFixed(1) + " s after you stop talking (" + (vcMed("eot") / 1000).toFixed(1) + " s waiting to be sure you’ve finished, " + (med / 1000).toFixed(1) + " s to answer · " + ms.length + " turns).</p>" : "") + "</div>";
   }
+  /* v258 — a phone-like call. «Calling…» with a soft ringback (two tones, WebAudio, no files) while Profe's AI gets ready
+     (Gemma loading into memory, or the first second of every call), then «Connected». When Claude stops working mid-call
+     (credit, limit, busy, offline), a banner says why with «Add credit» / «Use free AI», the status shows «Reconnecting…»,
+     then «Calling…» while Gemma loads in the background, then «Connected · Gemma», and Profe answers the same turn. */
+  const RING = { ctx: null, on: false, tm: 0 };
+  function vcRing(on) {
+    if (!on) { RING.on = false; clearTimeout(RING.tm); return; } if (RING.on) return; RING.on = true;
+    try { RING.ctx = RING.ctx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    const beat = () => { if (!RING.on || !VC.on) { RING.on = false; return; } try { const c = RING.ctx, t0 = c.currentTime, g = c.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.045, t0 + 0.05); g.gain.setValueAtTime(0.045, t0 + 1.6); g.gain.linearRampToValueAtTime(0, t0 + 1.7); g.connect(c.destination);
+        [440, 480].forEach((f) => { const o = c.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t0); o.stop(t0 + 1.75); }); } catch (e) {}
+      window.__vcRings = (window.__vcRings || 0) + 1; RING.tm = setTimeout(beat, 3600); };
+    beat();
+  }
+  window.__vcRingOn = () => RING.on;
+  function vcBanner(text, btns) { const root = document.getElementById("vcall"); if (!root) return; let b = root.querySelector(".vc-banner"); if (!b) { b = document.createElement("div"); b.className = "vc-banner"; b.setAttribute("role", "alert"); root.appendChild(b); }
+    b.innerHTML = "<p>" + esc(text) + "</p>" + (btns ? '<div class="vc-bbtns">' + btns + "</div>" : "") + '<button class="vc-bx" data-act="vc-bclose" aria-label="Close">×</button>'; b.hidden = false; }
+  // wait for Gemma to be ready: «Calling…» + ring while it loads, then «Connected»
+  function vcAwaitPhoneAI(after) { const g0 = VC.gen, t0 = Date.now(); VC.awaiting = 1;
+    const tick = () => { if (!VC.on || g0 !== VC.gen) { vcRing(false); VC.awaiting = 0; return; }
+      const st = window.__natState; if (AV.speaking) { vcRing(false); VC.awaiting = 0; return; } // the answer already started
+      if (st !== "loaded" && Date.now() - t0 < 120000) { if (VC.st !== "calling") vcSet("calling", "Gemma is getting ready on your phone…"); vcRing(true); setTimeout(tick, 400); return; }
+      vcRing(false); VC.awaiting = 0; vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "")); if (VC.st === "calling" || VC.st === "aiswitch") vcSet("thinking"); if (after) after(); };
+    tick(); }
+  window.__vcAiSwitch = (why, canPhone, note) => { if (!VC.on) return;
+    vcBanner(note, (why === "credit" || why === "limit" ? '<button class="vc-bb" data-act="vc-credit">Add credit</button>' : "") + (canPhone && TS.engine === "api" ? '<button class="vc-bb" data-act="vc-free">Use free AI</button>' : ""));
+    if (!canPhone) return; vcSet("aiswitch", "Switching to Gemma on your phone…"); setTimeout(() => { if (VC.on && VC.st === "aiswitch") vcAwaitPhoneAI(); }, 900); };
+  window.__vcAiBack = () => { if (!VC.on) return; vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "Claude")); const b = document.querySelector("#vcall .vc-banner"); if (b) b.hidden = true; vcSet(VC.st); };
   function vcSet(st, hint) {
     if (VC.st !== st) try { window.__vlog("call", "state → " + st); } catch (e) {}
     VC.st = st; const root = document.getElementById("vcall"); if (!root) return;
     root.dataset.state = st; const e = document.getElementById("vc-st"); if (e) e.textContent = VC_ST[st] || "";
+    const mc = document.getElementById("vc-model"); if (mc) { const l = window.__aiLabel ? window.__aiLabel() : ""; if (mc.textContent !== l) mc.textContent = l; }
+    if (st !== "calling") vcRing(false);
     const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "" : st === "paused" ? "Tap to talk" : "";
   }
   const vcPlain = (t) => String(t || "").replace(/\*\*|__|`|#+\s/g, "").replace(/\[[^\]]*\]\([^)]*\)/g, "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
@@ -687,8 +716,10 @@
     /* v253 (5th and 6th S24 logs): opening Profe starts loading the AI model; a call started while it was still loading
        restarted the app both times (22:04 «DURING A CALL, AI model loading»), and the call started after «loaded» ran 12 min.
        The greeting waits for the model to finish loading (at most 90 s). */
-    const go = () => { const g0 = VC.gen, w0 = Date.now(); const wait = () => { if (!VC.on || g0 !== VC.gen) return;
-      if (window.__natState === "loading" && Date.now() - w0 < 90000) { if (!VC.waitLog) { VC.waitLog = 1; try { window.__vlog("call", "waiting for the AI model to finish loading before the greeting"); } catch (e) {} } vcSet("connecting"); setTimeout(wait, 500); return; }
+    const go = () => { const g0 = VC.gen, w0 = Date.now(); vcSet("calling"); vcRing(true); const wait = () => { if (!VC.on || g0 !== VC.gen) { vcRing(false); return; }
+      if (window.__natState === "loading" && Date.now() - w0 < 90000) { if (!VC.waitLog) { VC.waitLog = 1; try { window.__vlog("call", "waiting for the AI model to finish loading before the greeting"); } catch (e) {} } if (VC.st !== "calling") vcSet("calling"); setTimeout(wait, 500); return; }
+      if (Date.now() - w0 < 1600) { setTimeout(wait, 1600 - (Date.now() - w0)); return; } // one ring, like a real call
+      vcRing(false); vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "")); vcSet("connecting");
       // v254 (7th S24 log): the app still restarted when the greeting began 1.4 s after «model loaded» (a call that began
       // 2 s later ran fine); the greeting starts at least 4 s after the model finished loading
       const since = Date.now() - (window.__natLoadedAt || 0), settle = since < 4000 ? 4000 - since : 0;
@@ -744,6 +775,9 @@
     if (a === "vc-cam") { vcCam(); return; }
     if (a === "vc-report") { const txt = (window.__pvDiagText ? window.__pvDiagText() : (window.__vcLipDiag ? window.__vcLipDiag() : "")); const done = () => vcToast("Call report copied. Paste it into the chat with Claude.");
       try { navigator.clipboard.writeText(txt).then(done, () => { prompt("Copy this report:", txt); }); } catch (x) { try { prompt("Copy this report:", txt); } catch (y) {} } return; }
+    if (a === "vc-credit") { try { window.open("https://console.anthropic.com/settings/billing", "_blank", "noopener"); } catch (x) {} return; }
+    if (a === "vc-free") { TS.engine = "auto"; tsave(); const b = document.querySelector("#vcall .vc-banner"); if (b) b.hidden = true; vcToast("Using Gemma, the free AI on your phone"); vcSet(VC.st); return; }
+    if (a === "vc-bclose") { const b = document.querySelector("#vcall .vc-banner"); if (b) b.hidden = true; return; }
     if (a === "vc-set") { const s = document.getElementById("vc-sheet"); if (!s) return; s.hidden = !s.hidden; if (!s.hidden) s.innerHTML = vcSheet(); const r = document.getElementById("vcall"); if (r) r.classList.toggle("vc-sheet-on", !s.hidden);
       if (!s.hidden && !s.__sw) { s.__sw = 1; let y0 = null; s.addEventListener("touchstart", (e) => { y0 = (s.querySelector(".vc-sh-in") || s).scrollTop > 0 ? null : e.touches[0].clientY; }, { passive: true });
         s.addEventListener("touchend", (e) => { if (y0 != null && e.changedTouches[0].clientY - y0 > 70) { s.hidden = true; if (r) r.classList.remove("vc-sheet-on"); } y0 = null; }, { passive: true }); }

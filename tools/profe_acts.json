@@ -1415,5 +1415,17 @@
  "pv-vit-clear": {
   "voice": "unsuitable",
   "why": "clears the session vitals"
+ },
+ "vc-credit": {
+  "voice": "unsuitable",
+  "why": "opens Anthropic billing in the browser"
+ },
+ "vc-free": {
+  "voice": "unsuitable",
+  "why": "switches the call to the free phone AI"
+ },
+ "vc-bclose": {
+  "voice": "unsuitable",
+  "why": "closes the call banner"
  }
 }

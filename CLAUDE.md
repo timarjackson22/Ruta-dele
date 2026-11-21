@@ -138,6 +138,12 @@ If no: say so in the commit message ("costs: no impact").
 
 - v257: with Claude as the brain, a call never loads the on-device model (the call's own preload checks `__TB() !== "api"`; `tOpen` already did).
 
+## Claude ↔ Gemma coordination and a phone-like call — v258
+- One brain at a time: `resolveTB()` (re-checked at the start of every reply in `ask()`) uses Claude while `TS.apiDown` is not active; a failed Claude request (`apiFallback(status, msg)`, `apiClass`: credit / limit / rate / busy / offline / key / error) pauses Claude (`API_BACK`: 1 min rate/offline, 2 min busy, 30 min credit/limit, until a new key for a refused key) and, when Gemma is installed (`natReady()`), the SAME turn is answered by Gemma (`ask0(..., onText0, ...)`); also an «overloaded» stream error before the first word. A new key, or choosing Claude in Settings, clears the pause. Without a phone AI the learner is told plainly.
+- Learner notices: call banner (`vcBanner`, `window.__vcAiSwitch`) with the reason + «Add credit» (`vc-credit` → console billing) / «Use free AI» (`vc-free` → `TS.engine = "auto"`); in chat a ⚠️ note. «Connected · Claude …» toast when Claude is back (`__vcAiBack`).
+- Phone-like call states: «Calling…» + a soft ringback (WebAudio 440+480 Hz, `vcRing`) at every call start (≥ 1.6 s) and while Gemma loads (`vcAwaitPhoneAI`), «Reconnecting…» (`aiswitch`) while switching, then «Connected · <AI>». The top bar shows the AI answering (`#vc-model`, `window.__aiLabel()`: «Claude Sonnet 5.5» / «Gemma · on this phone» / «Practice mode»); Profe's panel header shows the same chip (`.t-model`).
+- Tests: `window.__apiFail(status, msg)`, `__aiDown()`, `__aiDownExpire()`, `__vcRingOn()`. `node tools/profe-tests/sFAIL.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
