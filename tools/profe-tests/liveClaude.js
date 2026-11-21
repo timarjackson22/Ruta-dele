@@ -31,15 +31,22 @@ const S = [
     if (ONLY.length && !ONLY.includes(n)) continue;
     const H = await open(); const p = H.p; const T = []; let fails = [];
     await p.evaluate(([k, m]) => { window.__useApi(k, m); window.__setName("Timar", true); }, [KEY, MODEL]);
-    const said = async (fn, ms) => { const k = (await H.tts()).length; await fn(); await H.wait(ms); await H.idle(25000); return (await H.tts()).slice(k).map((e) => e.text).join(" "); };
+    // wait for the whole turn: Profe leaves «listening», answers (Claude over the network), and is listening again (≤ 60 s)
+    const said = async (fn, ms) => { const k = (await H.tts()).length; await fn(); const t0 = Date.now(); await H.wait(1500);
+      while (Date.now() - t0 < 60000) { const st = await p.evaluate(() => window.__vc && window.__vc.state()); const busy = await p.evaluate(() => !!(window.__T.cur || window.__T.log.some((e) => !e.t1 && !e.dropped)));
+        if (st === "listening" && !busy && Date.now() - t0 > (ms || 2500)) { await H.wait(800); const st2 = await p.evaluate(() => window.__vc.state()); if (st2 === "listening") break; } await H.wait(300); }
+      return (await H.tts()).slice(k).map((e) => e.text).join(" "); };
     const listening = () => p.waitForFunction(() => window.__vc.state() === "listening" && window.__R.on, null, { timeout: 60000 }).catch(() => fails.push("never back to listening"));
     T.push("**Profe:** " + (await said(() => p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()), 6000)));
     for (let line of lines) {
       await listening();
-      if (line === "@RELOAD") { await p.reload(); await H.wait(4000); await p.evaluate(([k, m]) => { window.__useApi(k, m); }, [KEY, MODEL]); T.push("*(app reloaded mid-exercise; call reopened)*"); T.push("**Profe:** " + (await said(() => p.evaluate(() => { if (window.tOpen) tOpen(); document.querySelector('[data-act="vc-open"]').click(); }), 6000))); continue; }
+      if (line === "@RELOAD") { await p.reload(); await H.wait(5000); await p.evaluate(([k, m]) => { window.__useApi(k, m); }, [KEY, MODEL]);
+        await p.evaluate(() => { const b = document.querySelector('[data-act="t-open"]'); if (b) b.click(); }); await H.wait(2500);
+        T.push("*(app reloaded mid-exercise; call reopened)*"); T.push("**Profe:** " + (await said(() => p.evaluate(() => { const v = document.querySelector('[data-act="vc-open"]'); if (v) v.click(); }), 6000))); continue; }
       if (line === "@ALT") line = await p.evaluate(() => { const a = window.__trd() && window.__trd().it.ans[0]; return a ? (/^(yo|tú|él|ella|nosotros|ellos) /i.test(a) ? a.replace(/^\S+\s+/, "") : "yo " + a.charAt(0).toLowerCase() + a.slice(1)) : "no sé"; });
       const item0 = await p.evaluate(() => (window.__trd() && !window.__trd().done && window.__trd().it) ? window.__trd().it.src : "");
       T.push("**Learner:** " + line);
+      await H.wait(1500); // a learner takes a moment before answering
       const r = await said(() => H.say(line), 4000);
       T.push("**Profe:** " + (r || "*(nothing said)*")); if (!r) fails.push("no reply to «" + line + "»");
       if (/por qué/.test(line) && item0) { const item1 = await p.evaluate(() => window.__trd() && window.__trd().it.src); if (item1 !== item0) fails.push("exercise item changed after a side question"); }

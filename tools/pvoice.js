@@ -104,13 +104,15 @@
     return false;
   }
   const PV_RT = { n: 0 }; addEventListener("hashchange", () => setTimeout(() => { PV_RT.n++; }, 0)); // counts page renders (after the app's own hashchange handler)
-  async function pvGo(h, label) {
-    if (location.hash.slice(1) === h) return { ok: true, say: "You're already in " + label + "." };
+  async function pvGo(h, label, labelEs) {
+    // v256 (live Claude test): in a Spanish call the confirmation was English («Here's the guide: Ser vs. estar.»)
+    const es = !!window.__vcOn, le = labelEs || "la página";
+    if (location.hash.slice(1) === h) return { ok: true, say: es ? "Ya estás en " + le + "." : "You're already in " + label + "." };
     pvMark();
     pvCloseProfe(); const n0 = PV_RT.n; location.hash = h;
     // wait for the app to actually render the new page (the old page's content must not count as success)
     const ok = await pvUntil(() => location.hash.slice(1) === h && PV_RT.n > n0 && app.children.length && !/^\s*Loading/.test(app.textContent), 3000);
-    return ok ? { ok: true, say: "Here's " + label + "." } : { ok: false, say: "I couldn't open " + label + "." };
+    return ok ? { ok: true, say: es ? "¡Listo! Aquí tienes " + le + "." : "Here's " + label + "." } : { ok: false, say: es ? "No he podido abrir " + le + ". ¿Seguimos hablando mientras tanto?" : "I couldn't open " + label + "." };
   }
   const pvLvName = (lv) => lv.toUpperCase();
   const pvUnitLabel = (lv, i) => { const L = LV[lv], u = L && L.units[i]; return u ? pvLvName(lv) + ", unit " + (i + 1) + ": " + u.t : pvLvName(lv) + " unit " + (i + 1); };
@@ -149,7 +151,7 @@
     "nav.verbs": () => pvGo("verbos", "the verbs"), "nav.grammar": () => pvGo("gramatica", "Grammar"),
     "nav.gcat": (s) => { const c = pvFind(s, PV_GCAT); if (!c) return { ok: false, say: "Which part of speech?" }; return c === "reflexivos" ? pvGo("verbos-reflexivos", "reflexive verbs") : pvGo("g-" + c, (GCAT.find((x) => x.id === c) || { en: c }).en); },
     "nav.guides": () => pvGo("guias", "the guides"),
-    "nav.guide": (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return { ok: false, say: "Which topic?" }; return pvGo("guia-" + t, "the guide: " + (GUIDES.find((g) => g.id === t) || { en: t }).en); },
+    "nav.guide": (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return { ok: false, say: "Which topic?" }; return pvGo("guia-" + t, "the guide: " + (GUIDES.find((g) => g.id === t) || { en: t }).en, "la guía «" + (GUIDES.find((g) => g.id === t) || { t: t }).t + "»"); },
     "practise.topic": async (s) => { const t = pvFind(s, PV_TOPIC); if (!t) return { ok: false, say: "Which topic would you like to practise?" }; const g = GUIDES.find((x) => x.id === t), r = await pvGo("guia-" + t, "the guide: " + (g ? g.en : t)); if (!r.ok) return r;
       return pvAskProfe("Let's practise " + (g ? g.en : t) + ". Give me one short exercise at my level, then wait for my answer and correct it."); },
     "practise.translate": async () => { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); prGo("trans"); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.kind === "tr" && !!PR.it, 4000); return { ok, say: ok ? "" : "I couldn't start the translation practice.", own: ok ? 1 : 0 }; },

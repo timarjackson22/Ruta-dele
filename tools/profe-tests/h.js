@@ -63,7 +63,9 @@ const WAKE = () => {
   window.__hear = (t, final) => { if (!W.on) return false; window.__awake.ev(final ? "final" : "partial", t); return true; };
 };
 async function open(o = {}) {
-  const b = await chromium.launch(); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" });
+  // LIVE_PROXY=1 (live Claude runs only): reach the internet through the workspace proxy; the page itself stays on localhost
+  const LP = process.env.LIVE_PROXY && (process.env.HTTPS_PROXY || process.env.https_proxy);
+  const b = await chromium.launch(LP ? { proxy: { server: LP, bypass: "localhost,127.0.0.1" } } : {}); const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block", ...(LP ? { ignoreHTTPSErrors: true } : {}) });
   await c.addInitScript(MOCKS); await c.addInitScript(BRIDGE);
   if (o.wake) await c.addInitScript(WAKE);
   if (o.init) await c.addInitScript(o.init);
