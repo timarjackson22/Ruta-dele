@@ -1,7 +1,7 @@
 // P. Hands-free page awareness: arriving on a page says where you are, and every phrase it suggests really works there (round 4, 15 Nov 2026)
 const { open } = require("./h.js");
 const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (!ok && info != null ? "  " + String(info).slice(0, 400) : "")); };
-const PAGES = ["#hoy", "#curso", "#a1", "#a1-u1", "#a1-examenes", "#a1-examen-1", "#a1-examen-1-lectura", "#examenes", "#drill", "#practicar", "#repaso", "#errores", "#biblioteca", "#escuchar", "#leer", "#escritura", "#videos", "#verbos", "#palabras", "#gramatica", "#guias", "#nivel", "#progreso", "#ajustes", "#costes"];
+const PAGES = ["#hoy", "#curso", "#a1", "#a1-u1", "#a1-examenes", "#a1-examen-1", "#a1-examen-1-lectura", "#examenes", "#drill", "#practicar", "#repaso", "#errores", "#biblioteca", "#leer", "#escritura", "#videos", "#verbos", "#palabras", "#gramatica", "#guias", "#nivel", "#progreso", "#ajustes", "#costes"];
 (async () => {
   const H = await open({ hash: "#hoy", noOpen: true }); const p = H.p;
   for (const h of PAGES) {

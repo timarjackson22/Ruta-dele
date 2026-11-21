@@ -8,7 +8,7 @@ U = G["usage"]
 def qty(stage_users, stage):
     mau = stage_users * U["mau_share"][stage]; d = U["days_per_month"]
     return {"mau": mau, "ai_turns": mau * d * U["ai_turns_per_day"], "stt_min": mau * d * U["stt_min_per_day"],
-            "tts_chars": mau * d * U["tts_chars_per_day"] * (1 - U["tts_cache_saving"]), "tr_chars": mau * d * U["tr_chars_per_day"], "pron_min": mau * d * U["pron_min_per_day"], "call_min": mau * d * U.get("call_min_per_day", 0)}  # per month
+            "tts_chars": mau * d * U["tts_chars_per_day"] * (1 - U["tts_cache_saving"]), "tr_chars": mau * d * U["tr_chars_per_day"], "pron_min": mau * d * U["pron_min_per_day"], "call_min": mau * d * U.get("call_min_per_day", 0), "ocr_pages": mau * U.get("ocr_pages_per_month", 0)}  # per month
 def year_cost(calc, q):
     t = calc["type"]
     if t == "quote": return None

@@ -1,4 +1,8 @@
 {
+ "accent": {
+  "voice": "pending",
+  "why": "Settings › Spanish variety: Spain, Mexico, Panama, Colombia or any LatAm accent"
+ },
  "ad-back": {
   "voice": "complete",
   "why": "adaptive practice: «back» / «atrás» by voice"
@@ -38,6 +42,14 @@
  "badge-info": {
   "voice": "unsuitable",
   "why": "shows what a badge earned today means (tap target)"
+ },
+ "bk-auto": {
+  "voice": "unsuitable",
+  "why": "Settings › Backup: automatic backup on/off (a privacy setting, by tap)"
+ },
+ "bk-nothanks": {
+  "voice": "unsuitable",
+  "why": "one-time Home card after a fresh install: dismiss the restore offer"
  },
  "bk-save": {
   "voice": "unsuitable",
@@ -236,6 +248,26 @@
   "voice": "pending",
   "why": "flashcards"
  },
+ "fr-cat": {
+  "voice": "unsuitable",
+  "why": "topic filter on the sentence patterns list"
+ },
+ "fr-lv": {
+  "voice": "unsuitable",
+  "why": "level filter on the sentence patterns list"
+ },
+ "fr-profe": {
+  "voice": "unsuitable",
+  "why": "opens Profe's sentence-pattern practice (voice: «practise sentence patterns» is not wired yet)"
+ },
+ "fr-q": {
+  "voice": "unsuitable",
+  "why": "search box"
+ },
+ "fr-tg": {
+  "voice": "unsuitable",
+  "why": "tense filter on the sentence patterns list"
+ },
  "fx-say": {
   "voice": "unsuitable",
   "why": "listen to a correction (tap target)"
@@ -288,6 +320,10 @@
   "voice": "pending",
   "why": "guide player controls: pause/resume by voice planned"
  },
+ "gtm-st": {
+  "voice": "unsuitable",
+  "why": "admin go-to-market model switch"
+ },
  "hf-online": {
   "voice": "unsuitable",
   "why": "privacy consent must be given by touch"
@@ -333,6 +369,10 @@
   "voice": "pending",
   "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
  },
+ "l-jump": {
+  "voice": "unsuitable",
+  "why": "in-page shortcut to a section of the same text (scrolling)"
+ },
  "l-lf": {
   "voice": "unsuitable",
   "why": "reading font chooser"
@@ -357,6 +397,10 @@
   "voice": "pending",
   "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
  },
+ "l-rk": {
+  "voice": "unsuitable",
+  "why": "type filter on the Reading list (like the level filter)"
+ },
  "l-saysel": {
   "voice": "pending",
   "why": "listening/reading item controls: play, pause, speed and English are covered by the playback commands where the reading player is used"
@@ -377,6 +421,10 @@
   "voice": "pending",
   "why": "lesson flow: close a word meaning"
  },
+ "lf-end": {
+  "voice": "pending",
+  "why": "lesson flow: go to the end of the lesson"
+ },
  "lf-more": {
   "voice": "pending",
   "why": "lesson flow: full dictionary entry"
@@ -384,6 +432,10 @@
  "lf-say": {
   "voice": "pending",
   "why": "lesson flow: hear a word"
+ },
+ "lf-top": {
+  "voice": "pending",
+  "why": "lesson flow: go to the start of the lesson"
  },
  "lh-opts": {
   "voice": "unsuitable",
@@ -505,6 +557,10 @@
   "voice": "pending",
   "why": "lesson flow: previous page"
  },
+ "pg-read": {
+  "voice": "pending",
+  "why": "lesson flow: read this page aloud"
+ },
  "pg-tab": {
   "voice": "pending",
   "why": "switch Progress tabs by voice"
@@ -616,6 +672,10 @@
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"
  },
+ "pr-pat": {
+  "voice": "unsuitable",
+  "why": "starts sentence-pattern practice in Profe; spoken start not wired yet"
+ },
  "pr-report": {
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"
@@ -664,6 +724,18 @@
   "voice": "unsuitable",
   "why": "pronunciation of a word: tap targets"
  },
+ "pv-vit-clear": {
+  "voice": "unsuitable",
+  "why": "clears the session vitals"
+ },
+ "pv-vit-copy": {
+  "voice": "unsuitable",
+  "why": "copies the session vitals"
+ },
+ "pv-vit-show": {
+  "voice": "unsuitable",
+  "why": "shows the session vitals"
+ },
  "pv-vosk-dl": {
   "voice": "unsuitable",
   "why": "download the offline Ok Profe listener"
@@ -701,6 +773,14 @@
   "voice": "unsuitable",
   "why": "reveal one inline answer"
  },
+ "qd-f": {
+  "voice": "unsuitable",
+  "why": "skill focus chips on the Quick drill"
+ },
+ "qd-lv": {
+  "voice": "unsuitable",
+  "why": "level chips on the Quick drill; «quick drill» opens it and the level is a tap"
+ },
  "ra-next": {
   "voice": "pending",
   "why": "read-aloud controls beyond start/pause/resume"
@@ -733,6 +813,10 @@
  "reveal": {
   "voice": "unsuitable",
   "why": "tap to reveal"
+ },
+ "rl-ck": {
+  "voice": "pending",
+  "why": "ticking a checklist item in Read & Listen: tap the box (the list is read aloud by the player)"
  },
  "say": {
   "voice": "unsuitable",
@@ -851,6 +935,10 @@
   "why": "flashcard grading by voice (again/hard/good/easy) is planned"
  },
  "t-ask": "profe.explain",
+ "t-chatmic": {
+  "voice": "unsuitable",
+  "why": "the mic in Profe's chat bar is itself a voice start; «Ok Profe» / «let's talk» already do this"
+ },
  "t-check": {
   "voice": "unsuitable",
   "why": "Profe panel buttons: Profe is driven by talking to it directly"
@@ -1136,13 +1224,29 @@
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
  },
+ "vc-bclose": {
+  "voice": "unsuitable",
+  "why": "closes the call banner"
+ },
+ "vc-cam": {
+  "voice": "unsuitable",
+  "why": "camera needs a deliberate tap (privacy)"
+ },
  "vc-catch": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
  },
+ "vc-cc": {
+  "voice": "unsuitable",
+  "why": "captions toggle on the call screen"
+ },
  "vc-close": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
+ },
+ "vc-credit": {
+  "voice": "unsuitable",
+  "why": "opens Anthropic billing in the browser"
  },
  "vc-cue": {
   "voice": "pending",
@@ -1152,9 +1256,41 @@
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
  },
+ "vc-end": {
+  "voice": "complete",
+  "why": "in a call: «end the call» / «termina la llamada»"
+ },
+ "vc-free": {
+  "voice": "unsuitable",
+  "why": "switches the call to the free phone AI"
+ },
  "vc-hide": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
+ },
+ "vc-mute": {
+  "voice": "unsuitable",
+  "why": "muting is a deliberate tap: a muted mic can't hear a voice command to unmute"
+ },
+ "vc-open": {
+  "voice": "unsuitable",
+  "why": "the video-call button in Profe's header"
+ },
+ "vc-opt": {
+  "voice": "unsuitable",
+  "why": "call settings options; «only Spanish» / «explain in English» also work by voice"
+ },
+ "vc-rate": {
+  "voice": "complete",
+  "why": "in a call: «speak slower» / «más despacio» / «faster»"
+ },
+ "vc-report": {
+  "voice": "unsuitable",
+  "why": "copies the call report to the clipboard"
+ },
+ "vc-resume": {
+  "voice": "unsuitable",
+  "why": "the paused call's bubble: the mic is off while content plays"
  },
  "vc-retry": {
   "voice": "pending",
@@ -1164,9 +1300,29 @@
   "voice": "unsuitable",
   "why": "tap a caption line to jump"
  },
+ "vc-set": {
+  "voice": "unsuitable",
+  "why": "call settings sheet"
+ },
+ "vc-tap": {
+  "voice": "complete",
+  "why": "in a call: «stop» / «wait» / «espera» (and speaking, with interrupt by voice on)"
+ },
  "vc-w": {
   "voice": "pending",
   "why": "video page controls: pause/resume covered; captions and words by touch"
+ },
+ "vd-all": {
+  "voice": "pending",
+  "why": "picture dictionary: «hear them all» button (reads every label)"
+ },
+ "vd-deck": {
+  "voice": "pending",
+  "why": "picture dictionary: add the topic's words to a deck"
+ },
+ "vd-say": {
+  "voice": "pending",
+  "why": "picture dictionary label: tap to hear the word"
  },
  "vl-auto": {
   "voice": "unsuitable",
@@ -1287,145 +1443,5 @@
  "wod-save": {
   "voice": "unsuitable",
   "why": "save the word of the day (a tap target on Home)"
- },
- "pg-read": {
-  "voice": "pending",
-  "why": "lesson flow: read this page aloud"
- },
- "lf-top": {
-  "voice": "pending",
-  "why": "lesson flow: go to the start of the lesson"
- },
- "lf-end": {
-  "voice": "pending",
-  "why": "lesson flow: go to the end of the lesson"
- },
- "gtm-st": {
-  "voice": "unsuitable",
-  "why": "admin go-to-market model switch"
- },
- "l-jump": {
-  "voice": "unsuitable",
-  "why": "in-page shortcut to a section of the same text (scrolling)"
- },
- "fr-cat": {
-  "voice": "unsuitable",
-  "why": "topic filter on the sentence patterns list"
- },
- "fr-tg": {
-  "voice": "unsuitable",
-  "why": "tense filter on the sentence patterns list"
- },
- "fr-lv": {
-  "voice": "unsuitable",
-  "why": "level filter on the sentence patterns list"
- },
- "fr-q": {
-  "voice": "unsuitable",
-  "why": "search box"
- },
- "fr-profe": {
-  "voice": "unsuitable",
-  "why": "opens Profe's sentence-pattern practice (voice: «practise sentence patterns» is not wired yet)"
- },
- "pr-pat": {
-  "voice": "unsuitable",
-  "why": "starts sentence-pattern practice in Profe; spoken start not wired yet"
- },
- "t-chatmic": {
-  "voice": "unsuitable",
-  "why": "the mic in Profe's chat bar is itself a voice start; «Ok Profe» / «let's talk» already do this"
- },
- "qd-lv": {
-  "voice": "unsuitable",
-  "why": "level chips on the Quick drill; «quick drill» opens it and the level is a tap"
- },
- "qd-f": {
-  "voice": "unsuitable",
-  "why": "skill focus chips on the Quick drill"
- },
- "l-rk": {
-  "voice": "unsuitable",
-  "why": "type filter on the Reading list (like the level filter)"
- },
- "vc-end": {
-  "voice": "complete",
-  "why": "in a call: «end the call» / «termina la llamada»"
- },
- "vc-rate": {
-  "voice": "complete",
-  "why": "in a call: «speak slower» / «más despacio» / «faster»"
- },
- "vc-tap": {
-  "voice": "complete",
-  "why": "in a call: «stop» / «wait» / «espera» (and speaking, with interrupt by voice on)"
- },
- "vc-mute": {
-  "voice": "unsuitable",
-  "why": "muting is a deliberate tap: a muted mic can't hear a voice command to unmute"
- },
- "vc-cc": {
-  "voice": "unsuitable",
-  "why": "captions toggle on the call screen"
- },
- "vc-cam": {
-  "voice": "unsuitable",
-  "why": "camera needs a deliberate tap (privacy)"
- },
- "vc-set": {
-  "voice": "unsuitable",
-  "why": "call settings sheet"
- },
- "vc-opt": {
-  "voice": "unsuitable",
-  "why": "call settings options; «only Spanish» / «explain in English» also work by voice"
- },
- "vc-resume": {
-  "voice": "unsuitable",
-  "why": "the paused call's bubble: the mic is off while content plays"
- },
- "vc-open": {
-  "voice": "unsuitable",
-  "why": "the video-call button in Profe's header"
- },
- "accent": {
-  "voice": "pending",
-  "why": "Settings › Spanish variety: Spain, Mexico, Panama, Colombia or any LatAm accent"
- },
- "bk-nothanks": {
-  "voice": "unsuitable",
-  "why": "one-time Home card after a fresh install: dismiss the restore offer"
- },
- "bk-auto": {
-  "voice": "unsuitable",
-  "why": "Settings › Backup: automatic backup on/off (a privacy setting, by tap)"
- },
- "vc-report": {
-  "voice": "unsuitable",
-  "why": "copies the call report to the clipboard"
- },
- "pv-vit-copy": {
-  "voice": "unsuitable",
-  "why": "copies the session vitals"
- },
- "pv-vit-show": {
-  "voice": "unsuitable",
-  "why": "shows the session vitals"
- },
- "pv-vit-clear": {
-  "voice": "unsuitable",
-  "why": "clears the session vitals"
- },
- "vc-credit": {
-  "voice": "unsuitable",
-  "why": "opens Anthropic billing in the browser"
- },
- "vc-free": {
-  "voice": "unsuitable",
-  "why": "switches the call to the free phone AI"
- },
- "vc-bclose": {
-  "voice": "unsuitable",
-  "why": "closes the call banner"
  }
 }

@@ -8,7 +8,7 @@ const PASS = (() => { try { return fs.readFileSync("/tmp/crpass", "utf8").trim()
 (async () => {
   const H = await open({ hash: "#inicio", noOpen: true, init: () => { localStorage.setItem("ruta-v3", localStorage.getItem("ruta-v3") || ""); } }); const p = H.p; await H.wait(1200);
   p.on("dialog", (d) => d.accept("test note").catch(() => {}));
-  const learnerBefore = await p.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => k !== "ruta-curric-admin" && k !== "rd-live").map((k) => [k, (localStorage.getItem(k) || "").length])));
+  const learnerBefore = await p.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => k !== "ruta-curric-admin" && k !== "rd-live" && k !== "ruta-vitals").map((k) => [k, (localStorage.getItem(k) || "").length])));
   // 1. gate
   const row = await p.evaluate(() => { location.hash = "#ajustes"; return new Promise((r) => setTimeout(() => r(!!document.querySelector('#app a[href="#cobertura"]')), 600)); });
   await p.evaluate(() => { location.hash = "#cobertura"; }); await H.wait(700);
@@ -69,7 +69,7 @@ const PASS = (() => { try { return fs.readFileSync("/tmp/crpass", "utf8").trim()
       pack: /Curriculum Alignment Evidence Pack/.test(pack) && /does not imply accreditation/i.test(pack) && /Verified findings/.test(pack) && /Unvalidated claims/.test(pack) && /Internal estimates/.test(pack) }; });
   rec("Exports: .xlsx (zip, 10 sheets), register CSV (one row per outcome), evidence pack separates verified/estimates/unvalidated and disclaims accreditation", ex.zip && ex.sheets === 10 && ex.regRows === ex.nOut + 1 && ex.csvLines === ex.nOut + 1 && ex.pack, JSON.stringify(ex));
   // 7. learner data untouched, no errors
-  const learnerAfter = await p.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => k !== "ruta-curric-admin" && k !== "rd-live").map((k) => [k, (localStorage.getItem(k) || "").length])));
+  const learnerAfter = await p.evaluate(() => JSON.stringify(Object.keys(localStorage).filter((k) => k !== "ruta-curric-admin" && k !== "rd-live" && k !== "ruta-vitals").map((k) => [k, (localStorage.getItem(k) || "").length])));
   rec("Learner data untouched (the dashboard only writes its own admin key)", learnerBefore === learnerAfter, learnerBefore + " → " + learnerAfter);
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
   await H.close(); console.log(R.filter(Boolean).length + "/" + R.length + " passed"); process.exit(R.every(Boolean) ? 0 : 1);

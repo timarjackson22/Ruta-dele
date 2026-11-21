@@ -552,16 +552,16 @@
        },
        "cloud_share": 0.037,
        "cost": {
-        "running": 42369,
-        "running_all": 58115,
+        "running": 42387,
+        "running_all": 58133,
         "running_cheap_all": 5805,
         "quotes": 1,
         "acquisition": 560,
         "people": 0,
-        "total": 42929
+        "total": 42947
        },
-       "net": -41483,
-       "net_all": -57229
+       "net": -41501,
+       "net_all": -57247
       },
       {
        "id": "launch",
@@ -578,16 +578,16 @@
        },
        "cloud_share": 0.077,
        "cost": {
-        "running": 139697,
-        "running_all": 277073,
+        "running": 140003,
+        "running_all": 277379,
         "running_cheap_all": 50093,
         "quotes": 1,
         "acquisition": 5040,
         "people": 24000,
-        "total": 168737
+        "total": 169043
        },
-       "net": -151356,
-       "net_all": -288732
+       "net": -151662,
+       "net_all": -289038
       },
       {
        "id": "growth",
@@ -604,16 +604,16 @@
        },
        "cloud_share": 0.073,
        "cost": {
-        "running": 505904,
-        "running_all": 1047292,
+        "running": 507326,
+        "running_all": 1048714,
         "running_cheap_all": 221707,
         "quotes": 1,
         "acquisition": 16800,
         "people": 90000,
-        "total": 612704
+        "total": 614126
        },
-       "net": -537397,
-       "net_all": -1078784
+       "net": -538819,
+       "net_all": -1080206
       },
       {
        "id": "mature",
@@ -630,16 +630,16 @@
        },
        "cloud_share": 0.083,
        "cost": {
-        "running": 982954,
-        "running_all": 1961598,
+        "running": 985816,
+        "running_all": 1964460,
         "running_cheap_all": 443144,
         "quotes": 1,
         "acquisition": 19600,
         "people": 180000,
-        "total": 1182554
+        "total": 1185416
        },
-       "net": -1023209,
-       "net_all": -2001853
+       "net": -1026071,
+       "net_all": -2004715
       }
      ]
     },
@@ -662,16 +662,16 @@
        },
        "cloud_share": 0.068,
        "cost": {
-        "running": 42860,
-        "running_all": 58115,
+        "running": 42878,
+        "running_all": 58133,
         "running_cheap_all": 5805,
         "quotes": 1,
         "acquisition": 560,
         "people": 0,
-        "total": 43420
+        "total": 43438
        },
-       "net": -40888,
-       "net_all": -56143
+       "net": -40906,
+       "net_all": -56161
       },
       {
        "id": "launch",
@@ -688,16 +688,16 @@
        },
        "cloud_share": 0.107,
        "cost": {
-        "running": 144164,
-        "running_all": 277073,
+        "running": 144470,
+        "running_all": 277379,
         "running_cheap_all": 50093,
         "quotes": 1,
         "acquisition": 5040,
         "people": 24000,
-        "total": 173204
+        "total": 173510
        },
-       "net": -146047,
-       "net_all": -278955
+       "net": -146353,
+       "net_all": -279261
       },
       {
        "id": "growth",
@@ -714,16 +714,16 @@
        },
        "cloud_share": 0.103,
        "cost": {
-        "running": 523434,
-        "running_all": 1047292,
+        "running": 524856,
+        "running_all": 1048714,
         "running_cheap_all": 221707,
         "quotes": 1,
         "acquisition": 16800,
         "people": 90000,
-        "total": 630234
+        "total": 631656
        },
-       "net": -511475,
-       "net_all": -1035332
+       "net": -512897,
+       "net_all": -1036754
       },
       {
        "id": "mature",
@@ -740,16 +740,16 @@
        },
        "cloud_share": 0.113,
        "cost": {
-        "running": 1014953,
-        "running_all": 1961598,
+        "running": 1017815,
+        "running_all": 1964460,
         "running_cheap_all": 443144,
         "quotes": 1,
         "acquisition": 19600,
         "people": 180000,
-        "total": 1214553
+        "total": 1217415
        },
-       "net": -968305,
-       "net_all": -1914949
+       "net": -971167,
+       "net_all": -1917811
       }
      ]
     },
@@ -772,16 +772,16 @@
        },
        "cloud_share": 0.098,
        "cost": {
-        "running": 43351,
-        "running_all": 58115,
+        "running": 43369,
+        "running_all": 58133,
         "running_cheap_all": 5805,
         "quotes": 1,
         "acquisition": 560,
         "people": 0,
-        "total": 43911
+        "total": 43929
        },
-       "net": -40292,
-       "net_all": -55057
+       "net": -40310,
+       "net_all": -55075
       },
       {
        "id": "launch",
@@ -798,16 +798,16 @@
        },
        "cloud_share": 0.138,
        "cost": {
-        "running": 148632,
-        "running_all": 277073,
+        "running": 148938,
+        "running_all": 277379,
         "running_cheap_all": 50093,
         "quotes": 1,
         "acquisition": 5040,
         "people": 24000,
-        "total": 177672
+        "total": 177978
        },
-       "net": -140738,
-       "net_all": -269179
+       "net": -141044,
+       "net_all": -269485
       },
       {
        "id": "growth",
@@ -824,16 +824,16 @@
        },
        "cloud_share": 0.134,
        "cost": {
-        "running": 540965,
-        "running_all": 1047292,
+        "running": 542387,
+        "running_all": 1048714,
         "running_cheap_all": 221707,
         "quotes": 1,
         "acquisition": 16800,
         "people": 90000,
-        "total": 647765
+        "total": 649187
        },
-       "net": -485553,
-       "net_all": -991880
+       "net": -486975,
+       "net_all": -993302
       },
       {
        "id": "mature",
@@ -850,16 +850,16 @@
        },
        "cloud_share": 0.142,
        "cost": {
-        "running": 1046952,
-        "running_all": 1961598,
+        "running": 1049814,
+        "running_all": 1964460,
         "running_cheap_all": 443144,
         "quotes": 1,
         "acquisition": 19600,
         "people": 180000,
-        "total": 1246552
+        "total": 1249414
        },
-       "net": -913400,
-       "net_all": -1828045
+       "net": -916262,
+       "net_all": -1830907
       }
      ]
     }
@@ -868,49 +868,49 @@
     "soft": {
      "name": "Soft launch",
      "net_arppu": 6.03,
-     "cost_per_mau_month_all_cloud": 9.686,
-     "cost_per_payer_month_all_cloud": 161.43,
-     "cost_per_payer_month": 118.71,
-     "contribution_month": -112.68,
-     "ltv": -1014.12,
+     "cost_per_mau_month_all_cloud": 9.689,
+     "cost_per_payer_month_all_cloud": 161.48,
+     "cost_per_payer_month": 118.76,
+     "contribution_month": -112.73,
+     "ltv": -1014.57,
      "cac": 18.67,
-     "ltv_cac": -54.3,
+     "ltv_cac": -54.4,
      "payback_months": null
     },
     "launch": {
      "name": "Launch",
      "net_arppu": 6.03,
-     "cost_per_mau_month_all_cloud": 5.131,
-     "cost_per_payer_month_all_cloud": 85.52,
-     "cost_per_payer_month": 42.31,
-     "contribution_month": -36.28,
-     "ltv": -326.49,
+     "cost_per_mau_month_all_cloud": 5.137,
+     "cost_per_payer_month_all_cloud": 85.61,
+     "cost_per_payer_month": 42.41,
+     "contribution_month": -36.37,
+     "ltv": -327.34,
      "cac": 20.74,
-     "ltv_cac": -15.7,
+     "ltv_cac": -15.8,
      "payback_months": null
     },
     "growth": {
      "name": "Growth",
      "net_arppu": 6.03,
-     "cost_per_mau_month_all_cloud": 4.364,
-     "cost_per_payer_month_all_cloud": 72.73,
-     "cost_per_payer_month": 34.58,
-     "contribution_month": -28.55,
-     "ltv": -256.94,
+     "cost_per_mau_month_all_cloud": 4.37,
+     "cost_per_payer_month_all_cloud": 72.83,
+     "cost_per_payer_month": 34.68,
+     "contribution_month": -28.65,
+     "ltv": -257.83,
      "cac": 23.33,
-     "ltv_cac": -11.0,
+     "ltv_cac": -11.1,
      "payback_months": null
     },
     "mature": {
      "name": "Maturity",
      "net_arppu": 6.03,
-     "cost_per_mau_month_all_cloud": 4.087,
-     "cost_per_payer_month_all_cloud": 68.11,
-     "cost_per_payer_month": 33.3,
-     "contribution_month": -27.26,
-     "ltv": -245.36,
+     "cost_per_mau_month_all_cloud": 4.093,
+     "cost_per_payer_month_all_cloud": 68.21,
+     "cost_per_payer_month": 33.4,
+     "contribution_month": -27.36,
+     "ltv": -246.25,
      "cac": 23.33,
-     "ltv_cac": -10.5,
+     "ltv_cac": -10.6,
      "payback_months": null
     }
    },

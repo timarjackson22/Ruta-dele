@@ -1,4 +1,4 @@
-// v225 Reading hub: like Listening: level, then kinds of text (with counts and their own icons), then the list; own texts under "My texts".
+// v262 Read & Listen hub (reading + listening in one): level, then kinds of text (with counts and their own icons), then the list; your own texts in «My texts» at the bottom.
 const { chromium, devices } = require("playwright");
 const URL = process.env.URL || "http://localhost:8766/";
 (async () => {
@@ -6,13 +6,14 @@ const URL = process.env.URL || "http://localhost:8766/";
   const p = await c.newPage(); const er = []; p.on("pageerror", (x) => er.push(x.message));
   const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (ok || !i ? "" : "  " + i)); };
   await p.goto(URL + "#leer"); await p.waitForTimeout(1500);
-  let st = await p.evaluate(() => { const y = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().top) : -1; }; return { seg: y(".lh-seg"), pills: y(".lh-pills"), list: y(".lh-group, .lh-list"), chips: [...document.querySelectorAll('[data-act="l-rk"]')].map((x) => x.textContent.trim()), n: document.querySelectorAll(".lh-row:not(.lh-add)").length, tiles: new Set([...document.querySelectorAll(".lh-row:not(.lh-add) .lh-tile")].map((t) => t.className)).size, lectura: /Lectura ·/.test(document.getElementById("app").innerText), bigAdd: !!document.querySelector(".lh-my") }; });
+  let st = await p.evaluate(() => { const y = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().top) : -1; }; return { seg: y(".lh-seg"), pills: y(".lh-pills"), list: y(".lh-group, .lh-list"), chips: [...document.querySelectorAll('[data-act="l-rk"]')].map((x) => x.textContent.trim()), n: document.querySelectorAll(".lh-row:not(.lh-add)").length, tiles: new Set([...document.querySelectorAll(".lh-row:not(.lh-add) .lh-tile")].map((t) => t.className)).size, lectura: /Lectura ·/.test(document.getElementById("app").innerText), myBottom: (() => { const m = document.querySelector("#rl-mine"), g = [...document.querySelectorAll(".lh-group:not(.lh-my)")].pop(); return !!m && (!g || m.getBoundingClientRect().top > g.getBoundingClientRect().top); })(), listening: !!document.querySelector('.lh-row[href^="#podcast"]') && !!document.querySelector('.lh-row[href^="#reading"]') }; });
   rec("Order: level, kinds, list (like Listening)", st.seg > 0 && st.seg < st.pills && st.pills < st.list, JSON.stringify(st));
-  rec("Kinds of text with counts: Messages, Notices, Articles, Opinion, Literature, My texts", /Everything/.test(st.chips[0]) && st.chips.some((c) => /^Messages/.test(c)) && st.chips.some((c) => /^Notices/.test(c)) && st.chips.some((c) => /^Articles/.test(c)) && /My texts/.test(st.chips[st.chips.length - 1]), st.chips.join(" | "));
-  rec("Each kind has its own icon colour; no 'Lectura' on every line; no old Add box", st.tiles >= 4 && !st.lectura && !st.bigAdd, JSON.stringify(st));
-  rec("'Add a text' (your own articles) is one tap away at the top", await p.evaluate(() => { const a = document.querySelector('#app .rd-addbtn[href="#leer-add"]'); return a && a.getBoundingClientRect().top < 360; }));
+  rec("Kinds of text with counts (chats, conversations, notices, menus, announcements, weather, lists, news…), My texts last", /Everything/.test(st.chips[0]) && ["Chats", "Conversations", "Notices", "Menus", "Announcements", "Weather", "Lists", "News", "Stories", "Songs"].every((k) => st.chips.some((c) => c.startsWith(k))) && /My texts/.test(st.chips[st.chips.length - 1]), st.chips.join(" | "));
+  rec("Reading and listening are one list: podcasts and readings together; My texts at the bottom", st.listening && st.myBottom, JSON.stringify(st));
+  rec("Each kind has its own icon colour; no 'Lectura' on every line", st.tiles >= 6 && !st.lectura, JSON.stringify(st));
+  rec("'Add your own' is one tap away at the top", await p.evaluate(() => { const a = document.querySelector('#app .rd-addbtn[href="#leer-add"]'); return a && a.getBoundingClientRect().top < 360; }));
   await p.click('[data-act="l-rk"][data-v="notice"]'); await p.waitForTimeout(300);
-  const nt = await p.evaluate(() => [...document.querySelectorAll(".lh-row:not(.lh-add) .lh-tile")].every((t) => t.classList.contains("t-rnotice")) && document.querySelectorAll(".lh-row:not(.lh-add)").length);
+  const nt = await p.evaluate(() => [...document.querySelectorAll(".lh-row:not(.lh-add) .lh-tile")].every((t) => t.classList.contains("t-knotice")) && document.querySelectorAll(".lh-row:not(.lh-add)").length);
   rec("Notices & ads chip shows only notices", nt > 0, String(nt));
   await p.click('[data-act="l-rf"][data-v="b2"]'); await p.waitForTimeout(300);
   rec("Level and kind combine (or say nothing here yet)", await p.evaluate(() => [...document.querySelectorAll(".lh-row:not(.lh-add) .lh-meta")].length === 0 || true));
@@ -22,6 +23,7 @@ const URL = process.env.URL || "http://localhost:8766/";
   rec("Add your own text opens the importer", await p.evaluate(() => location.hash === "#leer-add"));
   await p.goto(URL + "#leer"); await p.waitForTimeout(800); await p.click('[data-act="l-rk"][data-v="all"]'); await p.click('[data-act="l-rf"][data-v="all"]'); await p.waitForTimeout(300);
   await p.click(".lh-row:not(.lh-add)"); await p.waitForTimeout(900);
+  rec("#escuchar opens Read & Listen", await (async () => { await p.goto(URL + "#escuchar"); await p.waitForTimeout(900); const ok = await p.evaluate(() => location.hash === "#leer" && /Read & Listen/.test(document.querySelector("h1").textContent)); await p.goto(URL + "#leer"); await p.waitForTimeout(700); await p.click(".lh-row:not(.lh-add)"); await p.waitForTimeout(900); return ok; })());
   rec("A reading opens", await p.evaluate(() => /^#[a-z0-9-]+$/.test(location.hash) && location.hash !== "#leer" && !!document.querySelector("#ltext, .sent")));
   rec("No sideways scroll at 360px; no page errors", (await p.evaluate(() => document.documentElement.scrollWidth <= 361)) && !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);

@@ -52,7 +52,9 @@
   "app_download_mb_per_update": 1.9,
   "app_download_note": "The app is one page (about 1.9 MB compressed). Since v210 it is downloaded once per release, not on every launch (service worker answers from cache; version.json triggers the update).",
   "call_min_per_day": 3,
-  "call_min_note": "Video-call minutes per active learner per active day (calls are optional; most practice is taps and short turns)."
+  "call_min_note": "Video-call minutes per active learner per active day (calls are optional; most practice is taps and short turns).",
+  "ocr_pages_per_month": 4,
+  "ocr_pages_note": "Photos of pages or scanned PDF pages read per active learner per month (Read & Listen › Add your own; v262). Optional; most learners use the built-in texts."
  },
  "metrics": [
   [
@@ -1013,6 +1015,84 @@
      }
     }
    ]
+  },
+  {
+   "id": "ocr",
+   "name": "Reading photos and scanned pages (OCR)",
+   "today": "Tesseract.js (Apache-2.0) on the phone: Spanish model ≈ 2 MB plus the reader (≈ 4 MB) loaded once from jsDelivr, then cached. Free, nothing uploaded. Typed PDFs and Word files are read as before (pdf.js, mammoth).",
+   "gap": "Weaker than Google's readers on curved book pages, poor light and handwriting; slow on older phones (≈ 5–15 s a page); the first use needs a 6 MB download and the internet.",
+   "driver": "per page photographed or scanned",
+   "tiers": [
+    {
+     "t": "cheap",
+     "name": "Google ML Kit Text Recognition v2 inside the Android app (on-device, free)",
+     "unit": "free per page; ≈ 260 KB with Play services; needs an APK update (window.AndroidOCR bridge is ready)",
+     "src": "https://developers.google.com/ml-kit/vision/text-recognition/v2/android",
+     "impact": {
+      "teach": 2,
+      "voice": 0,
+      "rel": 6,
+      "scale": 10,
+      "legal": 9
+     },
+     "from": false,
+     "quote": false,
+     "once": false,
+     "year": {
+      "test": 0,
+      "soft": 0,
+      "launch": 0,
+      "growth": 0,
+      "mature": 0
+     }
+    },
+    {
+     "t": "modest",
+     "name": "Google Cloud Vision DOCUMENT_TEXT_DETECTION",
+     "unit": "first 1,000 pages a month free, then $1.50 / 1,000 (to 5 M), $0.60 / 1,000 above",
+     "src": "https://cloud.google.com/vision/pricing",
+     "impact": {
+      "teach": 3,
+      "voice": 0,
+      "rel": 8,
+      "scale": 9,
+      "legal": 7
+     },
+     "from": false,
+     "quote": false,
+     "once": false,
+     "year": {
+      "test": 0.0,
+      "soft": 18.0,
+      "launch": 306.0,
+      "growth": 1422.0,
+      "mature": 2862.0
+     }
+    },
+    {
+     "t": "best",
+     "name": "Licensed digital editions of graded readers (no photos needed)",
+     "unit": "quote-based (publisher licensing)",
+     "src": "",
+     "impact": {
+      "teach": 6,
+      "voice": 0,
+      "rel": 9,
+      "scale": 9,
+      "legal": 10
+     },
+     "from": false,
+     "quote": true,
+     "once": false,
+     "year": {
+      "test": null,
+      "soft": null,
+      "launch": null,
+      "growth": null,
+      "mature": null
+     }
+    }
+   ]
   }
  ],
  "totals": {
@@ -1050,50 +1130,50 @@
     "per_mau": 378.8
    },
    "soft": {
-    "sum": 58115.37,
+    "sum": 58133.37,
     "quotes": 1,
-    "per_mau": 116.23
+    "per_mau": 116.27
    },
    "launch": {
-    "sum": 277072.55,
+    "sum": 277378.55,
     "quotes": 1,
-    "per_mau": 61.57
+    "per_mau": 61.64
    },
    "growth": {
-    "sum": 1047291.64,
+    "sum": 1048713.64,
     "quotes": 1,
-    "per_mau": 52.36
+    "per_mau": 52.44
    },
    "mature": {
-    "sum": 1961597.56,
+    "sum": 1964459.56,
     "quotes": 1,
-    "per_mau": 49.04
+    "per_mau": 49.11
    }
   },
   "best": {
    "test": {
     "sum": 42775.64,
-    "quotes": 3,
+    "quotes": 4,
     "per_mau": 2036.94
    },
    "soft": {
     "sum": 91514.22,
-    "quotes": 3,
+    "quotes": 4,
     "per_mau": 183.03
    },
    "launch": {
     "sum": 498516.97,
-    "quotes": 3,
+    "quotes": 4,
     "per_mau": 110.78
    },
    "growth": {
     "sum": 2075652.64,
-    "quotes": 3,
+    "quotes": 4,
     "per_mau": 103.78
    },
    "mature": {
     "sum": 4110666.4,
-    "quotes": 3,
+    "quotes": 4,
     "per_mau": 102.77
    }
   }

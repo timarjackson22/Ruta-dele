@@ -12,6 +12,7 @@ const { open } = require("./h.js");
   await p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()); await H.wait(6000);
   const g1 = (await H.tts()).slice(n0).map((e) => e.text).join(" ");
   rec("First call: Profe introduces himself and asks the name", /Soy .+profes?or|Soy .+profesora/.test(g1) && /¿Cómo te llamas\?/.test(g1), g1);
+  for (let i = 0; i < 40 && (await p.evaluate(() => (document.getElementById("vcall") || {}).dataset?.state)) !== "listening"; i++) await H.wait(250); // v258+: the greeting follows the ringing
   const n0b = (await H.tts()).length; await H.say("Hola profe"); await H.wait(5000);
   const g1b = (await H.tts()).slice(n0b).map((e) => e.text).join(" ");
   rec("«Hola profe» instead of a name: a friendly «¡Hola! ¿Y cómo te llamas?»", /¿Y cómo te llamas\?/.test(g1b) && !/no te he oído/.test(g1b), g1b);
