@@ -120,6 +120,13 @@ If no: say so in the commit message ("costs: no impact").
 - Checker: «me gusta pollo» → «me gusta el pollo», «me gusta frijoles» → «me gustan los frijoles» (`nounArt()` from VOCAB + common foods + plurals).
 - Compact brief: Profe is the teacher (never «I practise Spanish»), no general fact in every reply. `node tools/profe-tests/sCALL6.js` must pass.
 
+## Profe leads the session — v254 (upgrade brief + 7th S24 log)
+- Session state (`tCur.ss`, saved with the chat; `ssGet/ssUser/ssPro/ssFix/ssDone`): topic + turns on it, the learner's details, questions already asked, recent praise, recurring mistakes, items to revisit, finished activities. `ssNote()` goes into the on-device model's message EVERY turn (not the cached system prompt), so a fresh model session keeps the activity, item, pending question and history. `ssRecap()`: practised (score), what went well, one thing to revisit, next step — on «terminamos/stop» in drills and before goodbye in calls.
+- «Vamos a practicar» with nothing specific (calls): `ssOffer()` gives three options (translation, verbs, conversation on their topic); «uno/dos/tres», the activity's name or «tú eliges» starts one.
+- Drills: a question mid-exercise («¿por qué…?», «what does…») is answered by the AI with the item in the state, then «Volvemos a la frase» + the SAME item (`D.side`). JS `\b` does not treat «é» as a letter: use `(?![a-záéíóúñ])` after accented words. Translation: hints name the problem (`trdHint`: correct start → «Bien empezado… termina la frase», verb form, ser/estar, agreement, article, extra/missing word, order); after the answer, «Ahora dilo tú» waits for the retry; another valid phrasing is accepted with «También se puede decir…»; notes in brackets become «Usa «tú».».
+- Brief and steering: no rigid rules (25 words, a question every turn, no topic changes); one correction owner (the app's checker says «Se dice»; the model recasts); teacher role, no invented experiences; `steerNote` no longer asks the model to «share something yourself»; the keyword follow-up is skipped when that question was already asked.
+- 7th log: greeting ≥ 4 s after «model loaded» (`__natLoadedAt`); no warm-up generation during a call; short echoes (2–4 of Profe's words from the last 15 s, heard < 3 s after he stopped); coming back to the app repeats a cut-off question (`__drillAsk`). `node tools/profe-tests/sSESS.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

@@ -38,14 +38,17 @@
     const L = VC_LANG[vcP("lang", "bilingual")] || VC_LANG.bilingual, C = VC_CORR[vcP("corr", "every")] || VC_CORR.every;
     // v247: the on-device model holds ~2,048 tokens in all; the full call brief (~4,300 characters) filled most of it, so a
     // compact brief carries the essentials of good spoken tutoring for it
-    if (compact) return "\n\nLIVE VIDEO CALL, spoken aloud. You are Profe, a warm, enthusiastic Spanish tutor." +
-      "\n- Say 1–2 short sentences (under 25 words). No lists, markdown or emojis." +
-      "\n- React to what they said with real interest, then ask ONE open question built on it." +
-      "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + ". If they answer in English, reply in simple Spanish and give them the Spanish for what they said." +
-      "\n- Do NOT correct the learner and never say «Se dice», «Es correcto» or «Es una frase correcta»: the app checks their Spanish before you answer. If you notice a mistake, just use the right form naturally in your reply. Praise one specific thing; vary your words; use their name sometimes." +
-      "\n- If they want to practise verbs or translation, the app runs the drill; never ask «¿Quieres practicar…?» twice in a row: talk about their life instead." +
-      "\n- You are the TEACHER: never talk about yourself practising, studying or learning Spanish. Don't add a general fact to every reply («Es una comida muy…»); ask about THEIR life, plans and opinions." +
-      "\n- After you explain something, ask «¿Está claro?». If not, find which part is confusing and explain it another way with one example." +
+    /* v254: coherent policies instead of rigid rules (every turn a question, ≤25 words, no topic changes, «don't correct»
+       while the checker interrupts). The session state (activity, item, details, what was asked) comes with each message. */
+    if (compact) return "\n\nLIVE VIDEO CALL, spoken aloud. You are Profe, a warm, attentive Spanish TEACHER." +
+      "\n- Length: usually 1–3 short sentences; up to about 60 words when you explain something they asked or they are stuck. No lists, markdown or emojis." +
+      "\n- Respond to what they actually said, using their details. Then move it forward in the most useful way: a follow-up that builds on their answer (why, how, when, with whom, what happened — not chains of «¿Te gusta…?»), a short example, or, when the topic goes in circles, a related new angle or a short activity (translating sentences, practising verbs). A question is not required every turn." +
+      "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + "; rephrase more simply before switching to English." +
+      "\n- Corrections: the app has already said «Se dice…» for clear grammar mistakes, before you. Don't say «Se dice», «Es correcto» or «Es una frase correcta». For other slips, just use the right form naturally in your reply." +
+      "\n- Explain only when asked or when they are stuck: one clear point, one example, then let them try it (check by having them use it, not «¿Está claro?» every time)." +
+      "\n- You are the teacher: never talk about yourself practising or learning Spanish; don't invent personal experiences (say «por ejemplo» for a made-up example). Vary your praise and make it specific." +
+      "\n- Speech recognition makes mistakes: if a word looks misheard, ask what they meant before treating it as an error." +
+      "\n- Follow the SESSION STATE in their message: keep the current activity, never greet again, don't repeat questions already asked." +
       (VC.fixSaid ? "\n- You have JUST told them: «Se dice: " + VC.fixSaid + "». Don't repeat it; carry on from it." : "") +
       "\n- Unsure what they said? Ask. Never invent facts." +
       "\n- Language: " + String(L[1]).slice(0, 160) + (vcP("corr", "every") === "every" ? "" : "\n- Corrections: " + String(C[1]).slice(0, 140)) +
@@ -96,7 +99,11 @@
   // an echo carries a run of 5+ consecutive words exactly as Profe said them (a learner's own answer that reuses his words
   // — «sí, me gusta el mercado» — doesn't)
   function vcIsEcho(text) {
-    const ws = vcEW(text); if (ws.length < 5) return false; const now = Date.now();
+    const ws = vcEW(text), now = Date.now();
+    // v254 (7th S24 log): «traduce al español» — Profe's last words, heard 40 ms after the mic opened — was graded as an
+    // answer. Two or more words that all come, in order, from what he said in the last 3 s count as his voice too.
+    if (ws.length >= 2 && ws.length < 5 && now - (AV.lastEnd || 0) < 3000) { for (const r of (AV.recent || []).filter((x) => now - x.t < 15000)) if ((" " + r.w.join(" ") + " ").includes(" " + ws.join(" ") + " ")) return true; }
+    if (ws.length < 5) return false;
     for (const r of (AV.recent || []).filter((x) => now - x.t < 30000)) { const pw = " " + r.w.join(" ") + " ";
       for (let i = 0; i + 5 <= ws.length; i++) if (pw.includes(" " + ws.slice(i, i + 5).join(" ") + " ")) return true; }
     return false;
@@ -592,7 +599,9 @@
       else if (VC.askName === 1) { VC.askName = 2; vcSay([["Perdona, no te he oído bien. ¿Cómo te llamas?", true], ["You can say: «Me llamo…»", false]], () => vcListen()); return; }
       VC.askName = 0; // asked twice: carry on without a name
     }
-    if (cmd === "end") { vcSay([["¡Hasta luego!", true], ["Great talking with you.", false]], () => vcEnd()); return; }
+    // v254: a short, evidence-based recap before goodbye (what was practised, what went well, one thing to revisit, next step)
+    if (cmd === "end") { let rc = ""; try { const s = window.__ss && window.__ss(); if (s && (s.done.length || s.revisit.length || s.details.length >= 2)) rc = window.__ssRecap(); } catch (e) {}
+      vcSay((rc ? [[rc, true]] : []).concat([["¡Hasta luego!", true], ["Great talking with you.", false]]), () => vcEnd()); return; }
     if (cmd === "stop" && !(window.__drillOn && window.__drillOn())) { VC.patient = Date.now() + 30000; vcListen(); return; }
     if (cmd === "repeat" && !(window.__drillOn && window.__drillOn())) { if (VC.lastPro) { vcSay(VC.lastPro, () => vcListen()); } else vcListen(); return; }
     if (cmd === "slower" || cmd === "faster") { const r0 = vcRate(), r1 = Math.max(0.7, Math.min(1.2, +(r0 + (cmd === "slower" ? -0.1 : 0.1)).toFixed(1))); TS.vc_rate = r1; tsave(); window.__vcRate = r1; vcPaintBar();
@@ -617,7 +626,7 @@
     try { const mode = vcP("corr", "every");
       if (mode !== "end" && mode !== "flow" && !VC.coachNow && !(window.__drillOn && window.__drillOn()) && nW >= 2 && typeof quickFixes === "function" && typeof applyFixes === "function") {
         const fx = quickFixes(t); const better = fx.length ? applyFixes(t, fx) : "";
-        if (better && better.toLowerCase().replace(/\W+/g, "") !== t.toLowerCase().replace(/\W+/g, "")) { VC.fixSaid = better; try { window.__vlog("call", "correction: «" + t + "» → «" + better + "»"); } catch (e) {}
+        if (better && better.toLowerCase().replace(/\W+/g, "") !== t.toLowerCase().replace(/\W+/g, "")) { VC.fixSaid = better; try { window.__vlog("call", "correction: «" + t + "» → «" + better + "»"); } catch (e) {} try { window.__ssFix && window.__ssFix(better, String((fx[0] && fx[0].why) || "grammar").slice(0, 70)); } catch (e) {}
           await new Promise((r) => vcSay([["Se dice: «" + better.replace(/^./, (c) => c.toUpperCase()).replace(/[.!?]*$/, "") + "».", true]], r)); if (!VC.on || g !== VC.gen) return; } } } catch (e) {}
     vcSet("thinking"); VC.tTurn = Date.now(); VC.thinkT = performance.now(); VC.thinkSide = Math.random() < 0.5 ? -1 : 1; VC.handOn = !VC.handLast && Math.random() < 0.6; VC.handLast = VC.handOn; const h0 = location.hash; vcHold(t, g);
     if (window.__vcThinkDelay) await new Promise((r) => setTimeout(r, window.__vcThinkDelay)); // tests: a slow answer
@@ -678,7 +687,11 @@
        The greeting waits for the model to finish loading (at most 90 s). */
     const go = () => { const g0 = VC.gen, w0 = Date.now(); const wait = () => { if (!VC.on || g0 !== VC.gen) return;
       if (window.__natState === "loading" && Date.now() - w0 < 90000) { if (!VC.waitLog) { VC.waitLog = 1; try { window.__vlog("call", "waiting for the AI model to finish loading before the greeting"); } catch (e) {} } vcSet("connecting"); setTimeout(wait, 500); return; }
-      VC.waitLog = 0; setTimeout(() => { if (VC.on && g0 === VC.gen) vcSay(greet, () => vcListen()); }, Date.now() - w0 > 600 ? 1200 : 0); }; wait(); };
+      // v254 (7th S24 log): the app still restarted when the greeting began 1.4 s after «model loaded» (a call that began
+      // 2 s later ran fine); the greeting starts at least 4 s after the model finished loading
+      const since = Date.now() - (window.__natLoadedAt || 0), settle = since < 4000 ? 4000 - since : 0;
+      if (settle) try { window.__vlog("call", "model just loaded: greeting in " + (settle / 1000).toFixed(1) + " s"); } catch (e) {}
+      VC.waitLog = 0; setTimeout(() => { if (VC.on && g0 === VC.gen) vcSay(greet, () => vcListen()); }, settle); }; wait(); };
     try { const vm = window.__pvVoiceMatch && window.__pvVoiceMatch(); if (vm && vm.m === "mismatch") setTimeout(() => vcToast("This phone has no " + (vm.want === "m" ? "man’s" : "woman’s") + " voice for " + pName() + " in your Spanish variety. Profe › Profe’s look: pick another look, or add voices in your phone’s settings."), 1500); } catch (e) {}
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK && typeof micAsk === "function") micAsk().then(() => go()); else go();
   }
@@ -741,5 +754,8 @@
     document.addEventListener("pointermove", (e) => { if (!d) return; const W = innerWidth, H = innerHeight, r = d.v.getBoundingClientRect(); d.v.style.left = Math.max(8, Math.min(W - r.width - 8, e.clientX - d.dx)) + "px"; d.v.style.top = Math.max(8, Math.min(H - r.height - 8, e.clientY - d.dy)) + "px"; d.v.style.right = "auto"; });
     document.addEventListener("pointerup", () => { d = null; }); })();
   // app in the background / screen locked: stop listening; back in front: carry on
-  document.addEventListener("visibilitychange", () => { if (!VC.on || VC.paused) return; if (document.hidden) { vcStopMic(); try { speechSynthesis.cancel(); } catch (e) {} avStopAll(); vcSet("paused", "Tap to talk"); } else { VC.empties = 0; vcListen(); } });
+  // v254 (7th S24 log): switching away cut Profe off mid-question; coming back, he says the question again
+  document.addEventListener("visibilitychange", () => { if (!VC.on || VC.paused) return; if (document.hidden) { VC.cutSpeech = !!(AV.speaking || AV.q > 0); vcStopMic(); try { speechSynthesis.cancel(); } catch (e) {} avStopAll(); vcSet("paused", "Tap to talk"); }
+    else { VC.empties = 0; const cut = VC.cutSpeech; VC.cutSpeech = false; if (cut) { const dq = window.__drillAsk && window.__drillAsk(); const lastQ = (String(VC.lastPro || "").match(/[^.!?¿¡]*[¿¡][^?!]*[?!]|[^.!?]+[.!?]?\s*$/g) || []).pop(); const again = dq || (lastQ && lastQ.trim());
+      if (again) { try { window.__vlog("call", "back in front: saying the cut-off question again"); } catch (e) {} vcSay(again, () => vcListen()); return; } } vcListen(); } });
   /* ==================== /Profe video call ==================== */

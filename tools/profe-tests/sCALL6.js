@@ -42,7 +42,7 @@ const { open } = require("./h.js");
   rec("«Me gusta pollo» → «Se dice: Me gusta el pollo»", /Se dice: «?Me gusta el pollo/.test(s), s);
   rec("Checker: «me gusta frijoles con arroz» → «me gustan los frijoles con arroz»", await p.evaluate(() => /^me gustan los frijoles con arroz/.test(window.__qf("me gusta frijoles con arroz"))));
   rec("Checker leaves «me gusta comer» and «me gusta mucho» alone", await p.evaluate(() => !window.__qf("me gusta comer") && !window.__qf("me gusta mucho")));
-  rec("The call brief says Profe is the teacher (never «I practise Spanish»)", await p.evaluate(() => /You are the TEACHER/.test(window.__vcNote(true))));
+  rec("The call brief says Profe is the teacher (never «I practise Spanish»)", await p.evaluate(() => /You are the teacher: never talk about yourself/.test(window.__vcNote(true))));
   await H.say("adiós"); await H.wait(2000);
   const ok = R.filter(Boolean).length; console.log(ok === R.length ? "ALL " + R.length + " PASS" : (R.length - ok) + " FAILED of " + R.length);
   await H.close(); process.exit(ok === R.length ? 0 : 1);
