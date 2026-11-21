@@ -486,7 +486,7 @@
   window.__vcEot = vcEot;
   function vcListen(seed) {
     if (!VC.on || VC.paused) return; vcStopMic();
-    if (VC.preloadAt === 1) { VC.preloadAt = 0; setTimeout(() => { try { if (VC.on && window.__natState !== "loaded" && window.AndroidLLM && AndroidLLM.preload) { window.__vlog("ai", "loading the model after the greeting"); AndroidLLM.preload(); } } catch (e) {} }, 1200); }
+    if (VC.preloadAt === 1) { VC.preloadAt = 0; setTimeout(() => { try { if (VC.on && window.__natState !== "loaded" && window.AndroidLLM && AndroidLLM.preload && !(window.__TB && window.__TB() === "api")) { /* v257: not when Claude is the brain (2 GB for nothing; loading it during calls caused the restarts) */ window.__vlog("ai", "loading the model after the greeting"); AndroidLLM.preload(); } } catch (e) {} }, 1200); }
     if (VC.muted) { vcSet("muted", "You’re muted. Tap the mic to talk."); return; }
     if (!CAN_MIC) { vcSet("paused", "This browser can’t listen. Use Chrome on Android or Safari on iPhone."); return; }
     const r = new SR(); VC.rec = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
