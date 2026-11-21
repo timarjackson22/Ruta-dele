@@ -85,8 +85,12 @@ body.vc-open .tabbar, body.vc-open .tutor-fab, body.vc-open #tabpeek { visibilit
 #vcall.vc-safe .vc-scene [filter] { filter: none !important }
 #vcall.vc-safe .vc-scene .vc-bokeh, #vcall.vc-safe .vc-scene [class*="bokeh"] { display: none }
 /* v258: which AI is answering, and the «Claude stopped» banner */
-#vcall .vc-model{margin-left:6px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.18);font-size:11px;font-weight:600;white-space:nowrap}
+#vcall .vc-who{flex-direction:column;align-items:flex-start;gap:0;padding:6px 14px;min-width:0;max-width:52vw}
+#vcall .vc-who b{line-height:1.15}
+#vcall .vc-model{font-size:11px;font-weight:500;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.2}
 #vcall .vc-model:empty{display:none}
+#vcall .vc-top .vc-ibtn{flex:none;margin-left:auto}
+#vcall .vc-top .vc-pill{flex:none}
 #vcall .vc-banner{position:absolute;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:6;padding:12px 34px 12px 14px;border-radius:16px;background:rgba(20,20,28,.82);color:#fff;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 6px 24px rgba(0,0,0,.3);font-size:14px;line-height:1.35}
 #vcall .vc-banner[hidden]{display:none}
 #vcall .vc-banner p{margin:0}

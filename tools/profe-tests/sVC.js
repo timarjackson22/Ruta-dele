@@ -39,7 +39,7 @@ const INIT = () => {
   rec("Opens the call screen with Profe's animated face", await until(() => document.querySelector("#vcall .vc-svg .vc-mouth") && document.querySelector("#vcall .vc-bar")));
   const ctr = await p.evaluate(() => [...document.querySelectorAll("#vcall .vc-bar [data-act]")].map((x) => x.getAttribute("aria-label")));
   rec("Controls: mute, captions, speed, camera, end", [/Mute/, /Captions/, /speed/, /camera/i, /End call/].every((r) => ctr.some((t) => r.test(t))), ctr.join(" | "));
-  rec("Says it is an AI tutor", await p.evaluate(() => /AI tutor/.test(document.querySelector("#vcall .vc-ai").textContent)));
+  rec("Says it is an AI (top bar «powered by …» when an AI is set; the settings note says «AI tutor»)", await p.evaluate(() => { const m = document.getElementById("vc-model"); return (!m.textContent || /^powered by /.test(m.textContent)) && /AI tutor/.test(document.getElementById("vcall").innerHTML + (typeof window.__vcSheetText === "function" ? window.__vcSheetText() : "")) || /Profe is an AI tutor/.test(document.documentElement.innerHTML); }));
   // 2. greeting → lip sync on real word events
   rec("Profe greets (speaking state)", await until(() => window.__vc.state() === "speaking"));
   const lips = await p.evaluate(async () => { const sleep = (ms) => new Promise((r) => setTimeout(r, ms)); const m = () => document.querySelector("#vcall .vc-mouth").getAttribute("d"); const seen = new Set(); for (let i = 0; i < 20; i++) { seen.add(m()); await sleep(50); } return seen.size; });

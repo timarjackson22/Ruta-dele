@@ -20,7 +20,7 @@ const { open } = require("./h.js");
   await p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()); await H.wait(400);
   const st0 = await p.evaluate(() => ({ st: document.getElementById("vcall").dataset.state, ring: window.__vcRingOn(), chip: document.getElementById("vc-model").textContent }));
   rec("The call opens on «Calling…» with a ringback tone", st0.st === "calling" && st0.ring, JSON.stringify(st0));
-  rec("The top bar shows which AI is answering (Claude Sonnet 5.5)", /Claude Sonnet 5\.5/.test(st0.chip), st0.chip);
+  rec("The top bar shows which AI is answering («powered by Sonnet 5.5»)", /^powered by Sonnet 5\.5$/.test(st0.chip), st0.chip);
   await H.wait(7000); await listening();
   rec("…then the ring stops", !(await p.evaluate(() => window.__vcRingOn())));
   let s = await said(() => H.say("ayer fui al mercado con mi hermana"), 7000);
@@ -35,7 +35,7 @@ const { open } = require("./h.js");
   const states = await p.evaluate(() => window.__states.join(">"));
   rec("…status «Reconnecting…» then «Calling…» while Gemma gets ready", /aiswitch/.test(states) && /calling/.test(states), states);
   rec("…and Gemma answers the SAME turn", /Qué compraste en el mercado/.test(s), s);
-  rec("…the top bar now says Gemma · on this phone", /Gemma/.test(await p.evaluate(() => document.getElementById("vc-model").textContent)));
+  rec("…the top bar now says «powered by Gemma»", /powered by Gemma/.test(await p.evaluate(() => document.getElementById("vc-model").textContent)));
   const down = await p.evaluate(() => window.__aiDown());
   rec("Claude is paused for 30 min after a credit error", down && down.why === "credit" && down.until - Date.now() > 25 * 60e3, JSON.stringify(down));
   // the next turn stays on Gemma (no request wasted on Claude)
@@ -45,7 +45,7 @@ const { open } = require("./h.js");
   // credit added: the pause ends and Claude is back
   mode = "ok"; await p.evaluate(() => window.__aiDownExpire()); // the 30-minute pause is over (credit was added)
   await listening(); s = await said(() => H.say("hoy quiero hablar de mi trabajo"), 8000);
-  rec("When Claude works again, it answers and the chip says Claude", /Soy Claude/.test(s) && /Claude/.test(await p.evaluate(() => document.getElementById("vc-model").textContent)), s);
+  rec("When Claude works again, it answers and the chip says Claude", /Soy Claude/.test(s) && /Sonnet 5\.5/.test(await p.evaluate(() => document.getElementById("vc-model").textContent)), s);
   // a rate limit pauses Claude for a minute only
   rec("Rate limit → 1 minute pause; overloaded → 2 minutes; no internet → 1 minute", await p.evaluate(() => { const r = []; window.__apiFail(429, "rate limit exceeded"); r.push(window.__aiDown()); window.__apiFail(529, "Overloaded"); r.push(window.__aiDown()); window.__apiFail(0, "Failed to fetch"); r.push(window.__aiDown()); window.__useApi("sk-ant-test"); const d = r.map((x) => [x.why, Math.round((x.until - Date.now()) / 1000)]); return d[0][0] === "rate" && d[0][1] <= 61 && d[1][0] === "busy" && d[1][1] > 100 && d[1][1] <= 121 && d[2][0] === "offline" ? true : JSON.stringify(d); }));
   await H.say("termina la llamada"); await H.wait(3000);

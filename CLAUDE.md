@@ -144,6 +144,8 @@ If no: say so in the commit message ("costs: no impact").
 - Phone-like call states: «Calling…» + a soft ringback (WebAudio 440+480 Hz, `vcRing`) at every call start (≥ 1.6 s) and while Gemma loads (`vcAwaitPhoneAI`), «Reconnecting…» (`aiswitch`) while switching, then «Connected · <AI>». The top bar shows the AI answering (`#vc-model`, `window.__aiLabel()`: «Claude Sonnet 5.5» / «Gemma · on this phone» / «Practice mode»); Profe's panel header shows the same chip (`.t-model`).
 - Tests: `window.__apiFail(status, msg)`, `__aiDown()`, `__aiDownExpire()`, `__vcRingOn()`. `node tools/profe-tests/sFAIL.js` must pass.
 
+- v259 (S24 screenshots): the call's top bar is «Profe» + «powered by Sonnet 5.5 / Gemma» (`#vc-model`, `__aiShort()`), no «AI tutor» pill, the settings button always on screen; no model chip in Profe's panel header. The ring's AudioContext is CLOSED when it stops and before any mic start (`vcRing(false)` in `vcListen`; an open one kept Android's recogniser from starting: «Connecting…/Reconnecting the mic…»); greeting +350 ms after the ring; Call settings › «Ringing when the call connects» (`vc_ring`).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

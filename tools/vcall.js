@@ -404,7 +404,7 @@
     const rate = vcRate();
     return '<button type="button" class="vc-stage" data-act="vc-tap" aria-label="' + esc(pName()) + '. Tap to interrupt or to talk">' +
         (VC.audioOnly ? '<span class="vc-audio"><span class="vc-aav">' + esc(pName()[0]) + "</span><small>Audio only · the animation couldn’t load</small></span>" : '<span class="vc-face">' + face + "</span>") + "</button>" +
-      '<div class="vc-top"><span class="vc-who"><b>' + esc(pName()) + '</b><span class="vc-ai" title="Profe is an AI tutor">AI tutor</span><span class="vc-model" id="vc-model" title="The AI answering right now"></span></span><span class="vc-pill"><i class="vc-dot" aria-hidden="true"></i><span class="vc-st" id="vc-st" role="status" aria-live="polite"></span><span class="vc-time" id="vc-time">0:00</span></span>' +
+      '<div class="vc-top"><span class="vc-who"><b>' + esc(pName()) + '</b><small class="vc-model" id="vc-model"></small></span><span class="vc-pill"><i class="vc-dot" aria-hidden="true"></i><span class="vc-st" id="vc-st" role="status" aria-live="polite"></span><span class="vc-time" id="vc-time">0:00</span></span>' +
         '<button class="vc-ibtn" data-act="vc-set" aria-label="Call settings">' + vcI("gear") + "</button></div>" +
       '<video class="vc-self" id="vc-self" playsinline muted autoplay hidden aria-label="Your camera (only on your screen)"></video>' +
       '<div class="vc-bottom"><span class="vc-hint" id="vc-hint"></span>' +
@@ -427,6 +427,7 @@
       "<p class=\"vc-l\">Language</p>" + opt("lang", VC_LANG, "bilingual") +
       "<p class=\"vc-l\">Corrections</p>" + opt("corr", VC_CORR, "every") +
       '<p class="vc-l">English help for a repeated mistake</p>' + opt("enhelp", { "2": ["After 2 times"], "3": ["After 3 times"], off: ["Only when I ask"] }, "3") +
+      '<p class="vc-l">Ringing when the call connects</p>' + opt("ring", { on: ["On"], off: ["Off"] }, "on") +
       '<p class="vc-l">Interrupt Profe by speaking</p><div class="vc-opts"><button class="vc-o" data-act="vc-opt" data-k="barge" data-v="' + (vcP("barge", "off") === "on" ? "off" : "on") + '" aria-pressed="' + (vcP("barge", "off") === "on") + '">' + (vcP("barge", "off") === "on" ? "On · best with headphones" : "Off · tap Profe to interrupt") + "</button></div>" +
       '<p class="vc-note">Profe is an AI tutor, an animated character drawn on your phone. Your phone’s speech service turns your voice into text (on Android, Google’s); the app keeps no audio or video. Your camera, if you turn it on, is only shown to you: Profe can’t see it. The words of the call are saved in Profe › History, where you can delete them.</p>' +
       (med != null ? '<p class="vc-note">This call: Profe starts answering about ' + (vcMed("total") / 1000).toFixed(1) + " s after you stop talking (" + (vcMed("eot") / 1000).toFixed(1) + " s waiting to be sure you’ve finished, " + (med / 1000).toFixed(1) + " s to answer · " + ms.length + " turns).</p>" : "") + "</div>";
@@ -437,7 +438,8 @@
      then «Calling…» while Gemma loads in the background, then «Connected · Gemma», and Profe answers the same turn. */
   const RING = { ctx: null, on: false, tm: 0 };
   function vcRing(on) {
-    if (!on) { RING.on = false; clearTimeout(RING.tm); return; } if (RING.on) return; RING.on = true;
+    if (!on) { const was = RING.on || RING.ctx; RING.on = false; clearTimeout(RING.tm); if (RING.ctx) { try { RING.ctx.close(); } catch (e) {} RING.ctx = null; } if (was) try { window.__vlog("call", "ring off, audio released"); } catch (e) {} return; }
+    if (RING.on || vcP("ring", "on") === "off") return; RING.on = true;
     try { RING.ctx = RING.ctx || new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
     const beat = () => { if (!RING.on || !VC.on) { RING.on = false; return; } try { const c = RING.ctx, t0 = c.currentTime, g = c.createGain(); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.045, t0 + 0.05); g.gain.setValueAtTime(0.045, t0 + 1.6); g.gain.linearRampToValueAtTime(0, t0 + 1.7); g.connect(c.destination);
         [440, 480].forEach((f) => { const o = c.createOscillator(); o.frequency.value = f; o.connect(g); o.start(t0); o.stop(t0 + 1.75); }); } catch (e) {}
@@ -452,17 +454,17 @@
     const tick = () => { if (!VC.on || g0 !== VC.gen) { vcRing(false); VC.awaiting = 0; return; }
       const st = window.__natState; if (AV.speaking) { vcRing(false); VC.awaiting = 0; return; } // the answer already started
       if (st !== "loaded" && Date.now() - t0 < 120000) { if (VC.st !== "calling") vcSet("calling", "Gemma is getting ready on your phone…"); vcRing(true); setTimeout(tick, 400); return; }
-      vcRing(false); VC.awaiting = 0; vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "")); if (VC.st === "calling" || VC.st === "aiswitch") vcSet("thinking"); if (after) after(); };
+      vcRing(false); VC.awaiting = 0; vcToast("Connected" + (window.__aiShort && window.__aiShort() ? " · " + window.__aiShort() : "")); if (VC.st === "calling" || VC.st === "aiswitch") vcSet("thinking"); if (after) after(); };
     tick(); }
   window.__vcAiSwitch = (why, canPhone, note) => { if (!VC.on) return;
     vcBanner(note, (why === "credit" || why === "limit" ? '<button class="vc-bb" data-act="vc-credit">Add credit</button>' : "") + (canPhone && TS.engine === "api" ? '<button class="vc-bb" data-act="vc-free">Use free AI</button>' : ""));
     if (!canPhone) return; vcSet("aiswitch", "Switching to Gemma on your phone…"); setTimeout(() => { if (VC.on && VC.st === "aiswitch") vcAwaitPhoneAI(); }, 900); };
-  window.__vcAiBack = () => { if (!VC.on) return; vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "Claude")); const b = document.querySelector("#vcall .vc-banner"); if (b) b.hidden = true; vcSet(VC.st); };
+  window.__vcAiBack = () => { if (!VC.on) return; vcToast("Connected · " + (window.__aiShort ? window.__aiShort() : "Claude")); const b = document.querySelector("#vcall .vc-banner"); if (b) b.hidden = true; vcSet(VC.st); };
   function vcSet(st, hint) {
     if (VC.st !== st) try { window.__vlog("call", "state → " + st); } catch (e) {}
     VC.st = st; const root = document.getElementById("vcall"); if (!root) return;
     root.dataset.state = st; const e = document.getElementById("vc-st"); if (e) e.textContent = VC_ST[st] || "";
-    const mc = document.getElementById("vc-model"); if (mc) { const l = window.__aiLabel ? window.__aiLabel() : ""; if (mc.textContent !== l) mc.textContent = l; }
+    const mc = document.getElementById("vc-model"); if (mc) { const s = window.__aiShort ? window.__aiShort() : "", l = s ? "powered by " + s : ""; if (mc.textContent !== l) mc.textContent = l; }
     if (st !== "calling") vcRing(false);
     const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "" : st === "paused" ? "Tap to talk" : "";
   }
@@ -514,6 +516,7 @@
   }
   window.__vcEot = vcEot;
   function vcListen(seed) {
+    vcRing(false); // v259: never open the mic while the ring's audio is still held (Android's recogniser couldn't start)
     if (!VC.on || VC.paused) return; vcStopMic();
     if (VC.preloadAt === 1) { VC.preloadAt = 0; setTimeout(() => { try { if (VC.on && window.__natState !== "loaded" && window.AndroidLLM && AndroidLLM.preload && !(window.__TB && window.__TB() === "api")) { /* v257: not when Claude is the brain (2 GB for nothing; loading it during calls caused the restarts) */ window.__vlog("ai", "loading the model after the greeting"); AndroidLLM.preload(); } } catch (e) {} }, 1200); }
     if (VC.muted) { vcSet("muted", "You’re muted. Tap the mic to talk."); return; }
@@ -719,12 +722,12 @@
     const go = () => { const g0 = VC.gen, w0 = Date.now(); vcSet("calling"); vcRing(true); const wait = () => { if (!VC.on || g0 !== VC.gen) { vcRing(false); return; }
       if (window.__natState === "loading" && Date.now() - w0 < 90000) { if (!VC.waitLog) { VC.waitLog = 1; try { window.__vlog("call", "waiting for the AI model to finish loading before the greeting"); } catch (e) {} } if (VC.st !== "calling") vcSet("calling"); setTimeout(wait, 500); return; }
       if (Date.now() - w0 < 1600) { setTimeout(wait, 1600 - (Date.now() - w0)); return; } // one ring, like a real call
-      vcRing(false); vcToast("Connected · " + (window.__aiLabel ? window.__aiLabel() : "")); vcSet("connecting");
+      vcRing(false); vcToast("Connected" + (window.__aiShort && window.__aiShort() ? " · " + window.__aiShort() : "")); vcSet("connecting");
       // v254 (7th S24 log): the app still restarted when the greeting began 1.4 s after «model loaded» (a call that began
       // 2 s later ran fine); the greeting starts at least 4 s after the model finished loading
       const since = Date.now() - (window.__natLoadedAt || 0), settle = since < 4000 ? 4000 - since : 0;
       if (settle) try { window.__vlog("call", "model just loaded: greeting in " + (settle / 1000).toFixed(1) + " s"); } catch (e) {}
-      VC.waitLog = 0; setTimeout(() => { if (VC.on && g0 === VC.gen) vcSay(greet, () => vcListen()); }, settle); }; wait(); };
+      VC.waitLog = 0; setTimeout(() => { if (VC.on && g0 === VC.gen) vcSay(greet, () => vcListen()); }, settle + 350); }; wait(); }; // v259: +350 ms so the ring's audio is released before Profe speaks
     try { const vm = window.__pvVoiceMatch && window.__pvVoiceMatch(); if (vm && vm.m === "mismatch") setTimeout(() => vcToast("This phone has no " + (vm.want === "m" ? "man’s" : "woman’s") + " voice for " + pName() + " in your Spanish variety. Profe › Profe’s look: pick another look, or add voices in your phone’s settings."), 1500); } catch (e) {}
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK && typeof micAsk === "function") micAsk().then(() => go()); else go();
   }
