@@ -127,6 +127,11 @@ If no: say so in the commit message ("costs: no impact").
 - Brief and steering: no rigid rules (25 words, a question every turn, no topic changes); one correction owner (the app's checker says «Se dice»; the model recasts); teacher role, no invented experiences; `steerNote` no longer asks the model to «share something yourself»; the keyword follow-up is skipped when that question was already asked.
 - 7th log: greeting ≥ 4 s after «model loaded» (`__natLoadedAt`); no warm-up generation during a call; short echoes (2–4 of Profe's words from the last 15 s, heard < 3 s after he stopped); coming back to the app repeats a cut-off question (`__drillAsk`). `node tools/profe-tests/sSESS.js` must pass.
 
+## Claude as Profe's brain again — v255
+- Learner's own Anthropic key: Profe › Settings › AI brain (`pv-engine`, `t-key` + `t-savekey`/`t-forgetkey`, `pv-apimodel`: Haiku / Sonnet (default) / Opus 5.5, `apiModel()`). `resolveTB()` → "api" when `TS.apiKey` and `TS.engine === "api"`; no key or «AI on this phone» → the on-device model. The key stays in Profe's settings and goes only to api.anthropic.com (direct browser access, streaming). Test hook `window.__useApi(key, model)`.
+- With Claude the app still runs its own activities first (`ask()`: `ssOffer` → `trdAnswer` → `drillAnswer`); Claude gets conversation, explanations and side questions with `ssNote()` in the system prompt, and the reply gets the same follow-through (back to the paused item, `ssPro`). `dropFix` stays on-device only (Claude may correct what the checker didn't). The full call brief follows the v254 policy (no 25-word / every-turn-question rule; session state; teacher role).
+- Costs: gap `ai` description updated (learner pays Anthropic directly; no cost to the app). `node tools/profe-tests/sAPI.js` must pass (Anthropic stubbed). Real-Claude scenarios: `ANTHROPIC_API_KEY=… node tools/profe-tests/liveClaude.js [model] [n…]` → transcripts in /tmp/live (costs real usage; not run yet).
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

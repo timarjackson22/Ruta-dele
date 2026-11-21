@@ -41,7 +41,7 @@ const { open } = require("./h.js");
   rec("After the guest's call the owner's name is back, and nothing was overwritten", (await p.evaluate(() => window.__pvTSname ? window.__pvTSname() : "")) !== "Ana" && /"lnameOwner":"Timar"/.test(await p.evaluate(() => localStorage.getItem("ruta-dele-tutor-v1") || "")));
   await p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()); await H.wait(5000);
   const note = await p.evaluate(() => window.__vc.note());
-  rec("Call brief carries the tutoring practices (recasts, short turns, open questions, level)", /recasting/.test(note) && /under about 25 words/.test(note) && /open questions/.test(note) && /learner's level/.test(note));
+  rec("Call brief carries the tutoring practices (recasts, short turns, open questions, level)", /recasting/.test(note) && /keep most turns short/.test(note) && /open questions/.test(note) && /learner's level/.test(note));
   for (const side of [1, -1]) {
     await p.evaluate((sd) => { speechSynthesis.cancel(); window.__vc.pose("thinking", sd); }, side); await H.wait(2600);
     const r = await p.evaluate(() => { const hd = document.querySelector(".vc-head").getAttribute("transform"), rot = +(/rotate\(([-\d.]+)/.exec(hd) || [0, 0])[1], ir = document.querySelector(".vc-iris").getAttribute("transform"), gx = +(/translate\(([-\d.]+)/.exec(ir) || [0, 0])[1];

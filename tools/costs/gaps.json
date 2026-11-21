@@ -79,7 +79,7 @@
   {
    "id": "ai",
    "name": "Profe's AI brain",
-   "today": "A small AI that runs on the phone (free, offline, makes Spanish mistakes) or each learner's own Claude plan / API key.",
+   "today": "A small AI that runs on the phone (free, offline, makes Spanish mistakes), or Claude with the learner's own Anthropic API key (Profe › Settings › AI brain, re-enabled v255: Haiku / Sonnet / Opus 5.5; the learner pays Anthropic directly, no cost to the app).",
    "gap": "Most learners have no Claude key, so the strongest tutor is unavailable; the on-device model is slow and weaker at grammar.",
    "driver": "per AI reply: input + output tokens",
    "tiers": [
