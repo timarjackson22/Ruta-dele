@@ -25,6 +25,11 @@ const URL = process.env.URL || "http://localhost:8766/";
   await p.click(".lh-row:not(.lh-add)"); await p.waitForTimeout(900);
   rec("#escuchar opens Read & Listen", await (async () => { await p.goto(URL + "#escuchar"); await p.waitForTimeout(900); const ok = await p.evaluate(() => location.hash === "#leer" && /Read & Listen/.test(document.querySelector("h1").textContent)); await p.goto(URL + "#leer"); await p.waitForTimeout(700); await p.click(".lh-row:not(.lh-add)"); await p.waitForTimeout(900); return ok; })());
   rec("A reading opens", await p.evaluate(() => /^#[a-z0-9-]+$/.test(location.hash) && location.hash !== "#leer" && !!document.querySelector("#ltext, .sent")));
+  { const bad = []; for (const id of ["reading-a1-01", "chat-a1-mama", "chat-a2-cumple", "chat-b1-trabajo", "chat-a2-vecinos", "chat-b1-clinica"]) { await p.goto(URL + "#" + id); await p.waitForTimeout(700);
+      const r = await p.evaluate(() => { const b = [...document.querySelectorAll("#ltext .rl-chat .rl-bub")]; return { n: b.length, raw: b.filter((x) => /^[^,]{1,40}, \d{1,2}[:.]\d{2}:/.test(x.querySelector(".es").textContent.trim())).length, me: document.querySelectorAll("#ltext .rl-bub.me").length, them: document.querySelectorAll("#ltext .rl-bub.them").length, spoken: [...document.querySelectorAll("#ltext .sent")].length }; });
+      if (!r.n || r.raw || !r.me || !r.them) bad.push(id + " " + JSON.stringify(r)); }
+    rec("Chats (one-to-one and groups) are phone chats: names and times on the bubbles, you on the right, others on the left", !bad.length, bad.join(" | ")); }
+  await p.goto(URL + "#leer"); await p.waitForTimeout(600);
   rec("No sideways scroll at 360px; no page errors", (await p.evaluate(() => document.documentElement.scrollWidth <= 361)) && !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();
