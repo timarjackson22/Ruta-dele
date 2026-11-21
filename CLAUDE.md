@@ -206,3 +206,9 @@ If no: say so in the commit message ("costs: no impact").
   If version.json is newer than the page's stamp, the update check reloads for ever ("Updating to the latest version…").
 - Bump the `sw.js` cache name (ruta-dele-vNNN) with each release.
 - Updates (v243): the page reloads itself onto a newer build (version.json) at start, on coming back to the front and every 30 min, with Profe open too; it waits only while something is happening (call, mic owner, speech, typing, player) and retries a failed try after 5 min. `node tools/profe-tests/sUPD.js` must pass. Profe's diagnostics text starts with «Version: build …».
+
+## Talk-now mic, word pointer, Listen button — v261 (S24 log 12:22 + screenshots)
+- «You can talk now» is ONE look everywhere: a green flashing mic (`micgo`; call: `vcmicgo` on `vc-mute` while `data-state="listening"`, hint «Your turn · speak now»). Profe's mic shows the mic, never a red ✓ (`uiVoice`); «opening the mic» stays soft blue (`.wait` / `.mic-wait`). Covers `.micbtn.on`, `.sk-mic.rec`, `.pcmic.on`, quick drill `dr-mic.rec`, exam `.ex-live`, lesson/video/chat-bar mics (`window.__micBtn` + `.mic-live`), «Ok Profe» and exam dots. No red for listening.
+- Listen/Read: following the voice, the meaning pointer sits just ABOVE the spoken word (`.cue.up`, arrow down; below only when there is no room under the header; the dock above the player only when the word is off screen). sLR checks it never covers the next line.
+- Top-bar Listen button (`.nb-ra`): its CSS lives in tools/lessonflow.css (v241 lost it because it existed only in the page) — 34 px, blue; amber while reading; icon-only ≤ 440 px.
+- Call: between streamed sentences on Android the mic waits 1.2 s of quiet and ≥ 1 s after the last sentence ended (`vcQuietThen`; the phone starts the next sentence 0.5–0.9 s later).

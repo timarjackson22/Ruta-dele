@@ -466,7 +466,7 @@
     root.dataset.state = st; const e = document.getElementById("vc-st"); if (e) e.textContent = VC_ST[st] || "";
     const mc = document.getElementById("vc-model"); if (mc) { const s = window.__aiShort ? window.__aiShort() : "", l = s ? "powered by " + s : ""; if (mc.textContent !== l) mc.textContent = l; }
     if (st !== "calling") vcRing(false);
-    const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "" : st === "paused" ? "Tap to talk" : "";
+    const h = document.getElementById("vc-hint"); if (h) h.textContent = hint != null ? hint : st === "speaking" ? "Tap to interrupt" : st === "listening" ? "Your turn · speak now" : st === "paused" ? "Tap to talk" : "";
   }
   const vcPlain = (t) => String(t || "").replace(/\*\*|__|`|#+\s/g, "").replace(/\[[^\]]*\]\([^)]*\)/g, "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, "").replace(/\n+/g, " ").replace(/\s{2,}/g, " ").trim();
   const CAP = { gen: -1, text: "", n: 0 };
@@ -501,7 +501,7 @@
   function vcStopMic() { vcHoldStop(); const r = VC.rec; VC.rec = null; if (r) { try { r._vcDead = 1; r.abort(); } catch (e) {} } clearTimeout(VC.qT); clearTimeout(VC.sT); }
   function vcQuietThen(fn) { // wait until Profe has finished speaking (all queued parts), then go on
     const g = VC.gen; let quiet = 0; clearInterval(VC.qi);
-    VC.qi = setInterval(() => { if (!VC.on || g !== VC.gen) return clearInterval(VC.qi); let sp = false; try { sp = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {} if (AV.speaking || AV.q > 0 || sp || (typeof tBusy !== "undefined" && tBusy) || (window.__spkBusy && window.__spkBusy())) quiet = 0; else quiet++; if (quiet >= 3) { clearInterval(VC.qi); fn(); } }, 150);
+    VC.qi = setInterval(() => { if (!VC.on || g !== VC.gen) return clearInterval(VC.qi); let sp = false; try { sp = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {} if (AV.speaking || AV.q > 0 || sp || (typeof tBusy !== "undefined" && tBusy) || (window.__spkBusy && window.__spkBusy()) || (AV.pendQ && AV.pendQ.length)) quiet = 0; else quiet++; const andr = !!(window.AndroidTTS || window.AndroidSTT); if (quiet >= (andr ? 8 : 3) && (!andr || Date.now() - (AV.lastEnd || 0) > 1000)) { /* v261: Android starts the next sentence 0.5–0.9 s after the last ended; a 0.45 s check opened the mic in that gap and cut him off */ clearInterval(VC.qi); fn(); } }, 150);
   }
   function vcLang() { const es = typeof sttLang === "function" ? sttLang() : "es-US"; return window.AndroidSTT && window.AndroidSTT.multiLang ? es + "|en-US" : es; }
   // v235 end of turn, tuned for language learners: how long a silence must last before Profe answers.

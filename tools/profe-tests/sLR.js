@@ -1,5 +1,5 @@
-// v237 Listen/Read presentation: sentence by sentence, slim header while playing, follow-along meaning docked (never over
-// the text), a highlighted fragment gets its own translation, the top-bar title never under a button, voices that send no
+// v237 Listen/Read presentation: sentence by sentence, slim header while playing, follow-along pointer just above the spoken word (v261;
+// never over the next line), a highlighted fragment gets its own translation, the top-bar title never under a button, voices that send no
 // word positions are learned and ranked lower.
 const { chromium, devices } = require("playwright"); const fs = require("fs");
 const URL = process.env.URL || "http://localhost:8766/";
@@ -11,9 +11,9 @@ const src = fs.readFileSync(__dirname + "/sVC.js", "utf8"); const INIT = eval(sr
   const lay = await p.evaluate(() => { const s = [...document.querySelectorAll("#ltext .story .sl")].slice(0, 3).map((x) => x.getBoundingClientRect()); return { block: getComputedStyle(document.querySelector("#ltext .story .sl")).display, stacked: s.length === 3 && s[1].top >= s[0].bottom - 1 && s[2].top >= s[1].bottom - 1 }; });
   rec("A story reads sentence by sentence (each sentence starts on its own line)", lay.block === "block" && lay.stacked, JSON.stringify(lay));
   await p.evaluate(() => document.querySelector('[aria-label^="Play"]').click()); await p.waitForTimeout(2600);
-  const hd = await p.evaluate(() => ({ h: document.querySelector("#litem .lhead").getBoundingClientRect().height, cue: (() => { const c = document.getElementById("cue"); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(), pl = document.querySelector("#litem .player").getBoundingClientRect(); return { fixed: getComputedStyle(c).position, above: r.bottom <= pl.top + 1 }; })() }));
+  const hd = await p.evaluate(() => ({ h: document.querySelector("#litem .lhead").getBoundingClientRect().height, cue: (() => { const c = document.getElementById("cue"); if (!c || c.hidden) return null; const r = c.getBoundingClientRect(), pl = document.querySelector("#litem .player").getBoundingClientRect(); const sp = document.querySelector("#litem .w.spk"), sr = sp && sp.getBoundingClientRect(); let next = null; if (sr) { const ws = [...document.querySelectorAll("#ltext .w")].map((w) => w.getBoundingClientRect()).filter((q) => q.top > sr.bottom + 2); next = ws.length ? ws[0] : null; } return { up: c.classList.contains("up"), dock: c.classList.contains("dock"), aboveWord: !!sr && r.bottom <= sr.top + 1, near: !!sr && sr.top - r.bottom < 30, clearNext: !next || r.top >= next.bottom || r.bottom <= next.top, abovePlayer: r.bottom <= pl.top + 1 }; })() }));
   rec("While playing, the header is a slim bar (≤ 90 px)", hd.h <= 90, hd.h);
-  rec("The follow-along meaning sits above the player, not over the next line", hd.cue && hd.cue.fixed === "fixed" && hd.cue.above, JSON.stringify(hd.cue));
+  rec("The follow-along pointer sits just above the spoken word (v261), never over the next line or the player", hd.cue && hd.cue.up && hd.cue.aboveWord && hd.cue.near && hd.cue.clearNext && hd.cue.abovePlayer, JSON.stringify(hd.cue));
   await p.evaluate(() => { const b = document.querySelector('[aria-label^="Pause"]'); b && b.click(); }); await p.waitForTimeout(300);
   await p.evaluate(() => { const s = [...document.querySelectorAll("#ltext .sent")].find((x) => /pero ahora vivo/.test(x.textContent)); const ws = [...s.querySelectorAll(".w")]; const a = ws.find((w) => w.textContent === "pero"), z = ws.find((w) => w.textContent === "Madrid"); const r = document.createRange(); r.setStart(a.firstChild, 0); r.setEnd(z.firstChild, z.textContent.length); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); });
   await p.waitForTimeout(900);
