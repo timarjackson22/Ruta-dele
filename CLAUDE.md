@@ -146,6 +146,8 @@ If no: say so in the commit message ("costs: no impact").
 
 - v259 (S24 screenshots): the call's top bar is «Profe» + «powered by Sonnet 5.5 / Gemma» (`#vc-model`, `__aiShort()`), no «AI tutor» pill, the settings button always on screen; no model chip in Profe's panel header. The ring's AudioContext is CLOSED when it stops and before any mic start (`vcRing(false)` in `vcListen`; an open one kept Android's recogniser from starting: «Connecting…/Reconnecting the mic…»); greeting +350 ms after the ring; Call settings › «Ringing when the call connects» (`vc_ring`).
 
+- v260 (S24 log 11:17–11:21, Gemma after Claude refused the key): the streaming speaker reports `window.__spkBusy()` (playing / queued / not finished); `vcQuietThen` and `vcListen` wait for it, so the mic never opens in the gap between two streamed sentences (Android stopped the next one: «…stopped: interrupted» as the AI finished). Listen-while-thinking (`vcHold`) is off on Android (it restarted while Profe spoke and fed his words back as the learner's turn). Doubled / overlapping finals are merged in `vcListen` (`quiero practicar quiero practicar`, `Claro que` + `Claro que sí`). `node tools/profe-tests/sCALL8.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).

@@ -24,7 +24,7 @@ const INIT = () => {
 (async () => {
   const b = await chromium.launch(); const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (ok ? "" : "  " + (i || ""))); };
   const c = await b.newContext({ ...devices["Pixel 7"], serviceWorkers: "block" }); await c.addInitScript(INIT); const p = await c.newPage();
-  await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1500); await p.evaluate(() => window.__vc.open()); await p.waitForTimeout(2600); /* v258: calls open with a ~1.6 s «Calling…» ring before the greeting */
+  await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1500); await p.evaluate(() => window.__vc.open()); await p.waitForTimeout(3500); /* v258: calls open with a ~1.6 s «Calling…» ring before the greeting */
   const res = await p.evaluate(async (SENTS) => {
     const sleep = (ms) => new Promise((x) => setTimeout(x, ms)); speechSynthesis.cancel(); await sleep(300); window.__lipLog = [];
     SENTS.forEach((s) => speechSynthesis.speak(new SpeechSynthesisUtterance(s)));

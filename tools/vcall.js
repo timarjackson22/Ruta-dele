@@ -501,7 +501,7 @@
   function vcStopMic() { vcHoldStop(); const r = VC.rec; VC.rec = null; if (r) { try { r._vcDead = 1; r.abort(); } catch (e) {} } clearTimeout(VC.qT); clearTimeout(VC.sT); }
   function vcQuietThen(fn) { // wait until Profe has finished speaking (all queued parts), then go on
     const g = VC.gen; let quiet = 0; clearInterval(VC.qi);
-    VC.qi = setInterval(() => { if (!VC.on || g !== VC.gen) return clearInterval(VC.qi); let sp = false; try { sp = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {} if (AV.speaking || AV.q > 0 || sp || (typeof tBusy !== "undefined" && tBusy)) quiet = 0; else quiet++; if (quiet >= 3) { clearInterval(VC.qi); fn(); } }, 150);
+    VC.qi = setInterval(() => { if (!VC.on || g !== VC.gen) return clearInterval(VC.qi); let sp = false; try { sp = speechSynthesis.speaking || speechSynthesis.pending; } catch (e) {} if (AV.speaking || AV.q > 0 || sp || (typeof tBusy !== "undefined" && tBusy) || (window.__spkBusy && window.__spkBusy())) quiet = 0; else quiet++; if (quiet >= 3) { clearInterval(VC.qi); fn(); } }, 150);
   }
   function vcLang() { const es = typeof sttLang === "function" ? sttLang() : "es-US"; return window.AndroidSTT && window.AndroidSTT.multiLang ? es + "|en-US" : es; }
   // v235 end of turn, tuned for language learners: how long a silence must last before Profe answers.
@@ -516,6 +516,7 @@
   }
   window.__vcEot = vcEot;
   function vcListen(seed) {
+    if (!seed && (AV.speaking || AV.q > 0 || (window.__spkBusy && window.__spkBusy()))) { vcQuietThen(() => vcListen()); return; } // v260
     vcRing(false); // v259: never open the mic while the ring's audio is still held (Android's recogniser couldn't start)
     if (!VC.on || VC.paused) return; vcStopMic();
     if (VC.preloadAt === 1) { VC.preloadAt = 0; setTimeout(() => { try { if (VC.on && window.__natState !== "loaded" && window.AndroidLLM && AndroidLLM.preload && !(window.__TB && window.__TB() === "api")) { /* v257: not when Claude is the brain (2 GB for nothing; loading it during calls caused the restarts) */ window.__vlog("ai", "loading the model after the greeting"); AndroidLLM.preload(); } } catch (e) {} }, 1200); }
@@ -530,7 +531,8 @@
     r.onstart = () => { if (r._vcDead) return; VC.fails = 0; vcSet("listening"); clearTimeout(VC.sT); VC.sT = setTimeout(() => finish(live), 20000);
       if (seed) { VC.lastHeard = Date.now(); vcCapYou(seed, ""); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(seed, true)); } }; // a continued turn: answer after the usual pause if nothing more comes
     if (!seed) VC.heardAt = 0;
-    r.onresult = (e) => { if (r._vcDead) return; if (!VC.heardAt) VC.heardAt = Date.now(); let f = "", im = ""; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) f += x + " "; else im += x + " "; }
+    r.onresult = (e) => { if (r._vcDead) return; if (!VC.heardAt) VC.heardAt = Date.now(); let f = "", im = ""; const fins = []; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) fins.push(x); else im += x + " "; }
+      { const nz = (s) => String(s).toLowerCase().replace(/[^a-záéíóúüñ0-9 ]/gi, "").replace(/\s+/g, " ").trim(); const keep = []; fins.forEach((x) => { const k = nz(x), p = keep.length ? nz(keep[keep.length - 1]) : ""; if (!k) return; if (k === p || (p && p.endsWith(k))) return; if (p && k.startsWith(p)) { keep[keep.length - 1] = x; return; } keep.push(x); }); f = keep.join(" ") + (keep.length ? " " : ""); } // v260: «quiero practicar quiero practicar»
       fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCapYou(fin, im.trim()); VC.lastHeard = Date.now();
       { const nw = (live.match(/\S+/g) || []).length; if (nw - (VC.nodN || 0) >= 4) { VC.nodN = nw; AV.nodL = performance.now(); } }
       clearTimeout(VC.sT); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(live, !im.trim())); };
@@ -577,8 +579,8 @@
   ];
   // while Profe is thinking (before any speech), keep listening: more words from the learner mean the turn wasn't over
   function vcHold(text, g) {
-    vcHoldStop(); if (VC.muted || !CAN_MIC) return; let r; try { r = new SR(); } catch (e) { return; } VC.hold = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
-    r.onresult = (e) => { if (r._dead || VC.hold !== r || g !== VC.gen || AV.speaking || AV.q > 0) return; let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " "; t = t.trim();
+    vcHoldStop(); if (VC.muted || !CAN_MIC || window.AndroidTTS || window.AndroidSTT) return; /* v260: off on Android (self-echo loop in the S24 log) */ let r; try { r = new SR(); } catch (e) { return; } VC.hold = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true;
+    r.onresult = (e) => { if (r._dead || VC.hold !== r || g !== VC.gen || AV.speaking || AV.q > 0 || (window.__spkBusy && window.__spkBusy() && AV.lastBegin > VC.tTurn)) return; let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " "; t = t.trim();
       const n = (t.match(/[\p{L}\d']+/gu) || []).length, fin = [...e.results].some((x) => x.isFinal); if (n < 2 && !fin) return;
       vcHoldStop(); VC.gen++; VC.conts = (VC.conts || 0) + 1; VC.contDrop = text; try { speechSynthesis.cancel(); } catch (x) {} try { if (typeof speechCut === "function") speechCut(); } catch (x) {}
       vcListen(text + " " + t); };
