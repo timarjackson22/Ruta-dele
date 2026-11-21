@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.View;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
@@ -21,7 +22,10 @@ import android.webkit.WebViewClient;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
 
+import androidx.core.content.FileProvider;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -29,7 +33,8 @@ import java.util.Collections;
 public class MainActivity extends Activity {
     static final String HOST = "timarjackson22.github.io";
     static final String URL = "https://" + HOST + "/Ruta-dele/";
-    static final int REQ_MIC = 7, REQ_NOTIF = 8, REQ_FILE = 9, REQ_CAM = 10;
+    static final int REQ_MIC = 7, REQ_NOTIF = 8, REQ_FILE = 9, REQ_CAM = 10, REQ_SHOT = 11, REQ_SHOTP = 12;
+    Uri shotUri = null; boolean camShotPending = false;
     PermissionRequest camReq = null;
     ValueCallback<Uri[]> fileCb;
     LlmBridge llm;
@@ -132,11 +137,33 @@ public class MainActivity extends Activity {
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
                 if (fileCb != null) fileCb.onReceiveValue(null);
                 fileCb = cb;
-                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                i.addCategory(Intent.CATEGORY_OPENABLE);
-                i.setType("*/*");
-                i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/html", "text/markdown", "application/x-subrip", "text/vtt", "application/octet-stream"});
-                try { startActivityForResult(i, REQ_FILE); } catch (Exception e) { fileCb = null; return false; }
+                // v263: the page says what it wants: a camera photo (capture), photos from the gallery (image/*), or a document
+                boolean images = false;
+                for (String a : params.getAcceptTypes()) if (a != null && a.startsWith("image/")) images = true;
+                boolean onlyImages = images;
+                for (String a : params.getAcceptTypes()) if (a != null && !a.isEmpty() && !a.startsWith("image/")) onlyImages = false;
+                boolean multi = params.getMode() == FileChooserParams.MODE_OPEN_MULTIPLE;
+                if (onlyImages && params.isCaptureEnabled()) {
+                    if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) { camShotPending = true; requestPermissions(new String[]{Manifest.permission.CAMERA}, REQ_SHOT); return true; }
+                    if (openCamera()) return true;
+                }
+                Intent i;
+                if (onlyImages && Build.VERSION.SDK_INT >= 33) { // Android's photo picker: the gallery / albums
+                    i = new Intent(MediaStore.ACTION_PICK_IMAGES);
+                    if (multi) i.putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, 20);
+                } else if (onlyImages) {
+                    i = new Intent(Intent.ACTION_GET_CONTENT); i.addCategory(Intent.CATEGORY_OPENABLE); i.setType("image/*");
+                    if (multi) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                } else {
+                    i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                    i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain", "text/html", "text/markdown", "application/x-subrip", "text/vtt", "application/octet-stream", "image/*"});
+                    if (multi) i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                }
+                try { startActivityForResult(i, REQ_FILE); } catch (Exception e) {
+                    try { Intent g = new Intent(Intent.ACTION_GET_CONTENT); g.addCategory(Intent.CATEGORY_OPENABLE); g.setType(onlyImages ? "image/*" : "*/*"); startActivityForResult(g, REQ_FILE); } catch (Exception e2) { fileCb.onReceiveValue(null); fileCb = null; }
+                }
                 return true;
             }
         });
@@ -171,10 +198,32 @@ public class MainActivity extends Activity {
         if (code == AudioCapBridge.REQ_PROJ && aud != null) { aud.onProjection(result, data); return; }
         if (code == REQ_FILE && fileCb != null) {
             Uri[] r = null;
-            if (result == RESULT_OK && data != null && data.getData() != null) r = new Uri[]{data.getData()};
+            if (result == RESULT_OK && data != null) {
+                if (data.getClipData() != null && data.getClipData().getItemCount() > 0) { int n = data.getClipData().getItemCount(); r = new Uri[n]; for (int k = 0; k < n; k++) r[k] = data.getClipData().getItemAt(k).getUri(); }
+                else if (data.getData() != null) r = new Uri[]{data.getData()};
+            }
             fileCb.onReceiveValue(r);
             fileCb = null;
         }
+        if (code == REQ_SHOTP && fileCb != null) { // the camera saved the photo into our file
+            fileCb.onReceiveValue(result == RESULT_OK && shotUri != null ? new Uri[]{shotUri} : null);
+            fileCb = null; shotUri = null;
+        }
+    }
+
+    // v263: «Take a photo» → the camera writes a full-size picture into the app's cache (shared through the FileProvider)
+    boolean openCamera() {
+        try {
+            File dir = new File(getCacheDir(), "shots"); dir.mkdirs();
+            File[] old = dir.listFiles(); if (old != null) for (File f : old) if (System.currentTimeMillis() - f.lastModified() > 86400000L) f.delete();
+            File f = new File(dir, "page-" + System.currentTimeMillis() + ".jpg");
+            shotUri = FileProvider.getUriForFile(this, getPackageName() + ".files", f);
+            Intent c = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            c.putExtra(MediaStore.EXTRA_OUTPUT, shotUri);
+            c.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            startActivityForResult(c, REQ_SHOTP);
+            return true;
+        } catch (Exception e) { shotUri = null; return false; }
     }
 
     void askNotifications() {
@@ -191,6 +240,7 @@ public class MainActivity extends Activity {
     public void onRequestPermissionsResult(int code, String[] perms, int[] res) {
         if (code == REQ_MIC) { boolean ok = res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED; stt.onPermission(ok); if (wake != null) wake.onPermission(ok); }
         if (code == AudioCapBridge.REQ_MIC2 && aud != null) aud.onMic(res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED);
+        if (code == REQ_SHOT && camShotPending) { camShotPending = false; boolean ok = res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED; if (!(ok && openCamera()) && fileCb != null) { fileCb.onReceiveValue(null); fileCb = null; } }
         if (code == REQ_CAM && camReq != null) { PermissionRequest r = camReq; camReq = null; if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) r.grant(r.getResources()); else r.deny(); }
     }
 

@@ -27,6 +27,10 @@ public class AppBridge {
         catch (Exception e) { return "{}"; }
     }
 
+    /** v263: the file chooser opens the camera for «Take a photo» and the photo picker for «Choose photos» */
+    @JavascriptInterface
+    public boolean photos() { return true; }
+
     /** Save a text file (a progress backup) to Downloads. Returns where it went, or "ERR:…". */
     @JavascriptInterface
     public String saveText(String name, String text) {
