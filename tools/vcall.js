@@ -43,7 +43,8 @@
       "\n- React to what they said with real interest, then ask ONE open question built on it." +
       "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + ". If they answer in English, reply in simple Spanish and give them the Spanish for what they said." +
       "\n- Do NOT correct the learner and never say «Se dice», «Es correcto» or «Es una frase correcta»: the app checks their Spanish before you answer. If you notice a mistake, just use the right form naturally in your reply. Praise one specific thing; vary your words; use their name sometimes." +
-      "\n- If they want to practise verbs, the app runs the drill; never ask «¿Quieres practicar…?» twice in a row: talk about their life instead." +
+      "\n- If they want to practise verbs or translation, the app runs the drill; never ask «¿Quieres practicar…?» twice in a row: talk about their life instead." +
+      "\n- You are the TEACHER: never talk about yourself practising, studying or learning Spanish. Don't add a general fact to every reply («Es una comida muy…»); ask about THEIR life, plans and opinions." +
       "\n- After you explain something, ask «¿Está claro?». If not, find which part is confusing and explain it another way with one example." +
       (VC.fixSaid ? "\n- You have JUST told them: «Se dice: " + VC.fixSaid + "». Don't repeat it; carry on from it." : "") +
       "\n- Unsure what they said? Ask. Never invent facts." +
@@ -672,7 +673,12 @@
       : (en ? [["Hi" + nm + "! I'm " + pName() + ", your Spanish tutor.", false], ["¿De qué quieres hablar hoy?", true]] : [["¡Hola" + nm + "! Soy " + pName() + ", tu " + prof + " de español. ¡Qué alegría conocerte!", true], ["¿De qué quieres hablar hoy?", true]]);
     if (!TS.vc_intro) { TS.vc_intro = 1; tsave(); }
     VC.lastPro = vcPlain(greet.map((x) => x[0]).join(" ")); vcCap("", VC.lastPro);
-    const go = () => vcSay(greet, () => vcListen());
+    /* v253 (5th and 6th S24 logs): opening Profe starts loading the AI model; a call started while it was still loading
+       restarted the app both times (22:04 «DURING A CALL, AI model loading»), and the call started after «loaded» ran 12 min.
+       The greeting waits for the model to finish loading (at most 90 s). */
+    const go = () => { const g0 = VC.gen, w0 = Date.now(); const wait = () => { if (!VC.on || g0 !== VC.gen) return;
+      if (window.__natState === "loading" && Date.now() - w0 < 90000) { if (!VC.waitLog) { VC.waitLog = 1; try { window.__vlog("call", "waiting for the AI model to finish loading before the greeting"); } catch (e) {} } vcSet("connecting"); setTimeout(wait, 500); return; }
+      VC.waitLog = 0; setTimeout(() => { if (VC.on && g0 === VC.gen) vcSay(greet, () => vcListen()); }, Date.now() - w0 > 600 ? 1200 : 0); }; wait(); };
     try { const vm = window.__pvVoiceMatch && window.__pvVoiceMatch(); if (vm && vm.m === "mismatch") setTimeout(() => vcToast("This phone has no " + (vm.want === "m" ? "man’s" : "woman’s") + " voice for " + pName() + " in your Spanish variety. Profe › Profe’s look: pick another look, or add voices in your phone’s settings."), 1500); } catch (e) {}
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK && typeof micAsk === "function") micAsk().then(() => go()); else go();
   }

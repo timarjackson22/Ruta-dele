@@ -113,6 +113,13 @@ If no: say so in the commit message ("costs: no impact").
 - Drill: «quiero practicar (los) verbos (regulares / irregulares / de movimiento)» and a short answer to Profe's «¿Qué verbos…?» start a multi-verb drill at once. «Sí, sigue» during a question asks for the form (it used to end the drill and the next «sí» restarted it); a form inside a short answer is graded; saying the answer back after «¿Está claro?» counts as understood. Verbs like gustar (`DR_GUST`) are drilled as «A nosotros…» → «nos gusta» (`drAns`, `DR_GP`, `DR_CL`). teach.js adds no «¿Seguimos…?» nudge in calls, during a drill or after a question ending in «…».
 - Names: «me llamo» with the name cut off → «Dime solo tu nombre»; a sure «me llamo X» later in a call with no name yet is greeted, not sent to the AI. `node tools/profe-tests/sCALL5.js` must pass.
 
+## 6th S24 call log — v253
+- Opening Profe starts loading the AI model; a call started while it was loading restarted the app (5th and 6th logs). The greeting waits while `window.__natState === "loading"` (≤ 90 s, logged «waiting for the AI model…»).
+- Translation practice in calls is the app's (`trdAnswer`, before the verb drill): «practicar traduciendo / traducir oraciones» → English sentences from the lessons (`adBank`, en→es, length by level), graded by `adCheckEs`; clue (first words) → answer → next; six items; «repite», «no sé», «terminamos». `tCur.trd`; `__drillOn` covers it. The English sentence is spoken in the English voice (`vcVoiceTag` splits it out, `keep` flag).
+- A verb in a longer sentence only starts a drill when it follows «practicar» («…usar las lecciones… para practicar» drilled «usar»).
+- Checker: «me gusta pollo» → «me gusta el pollo», «me gusta frijoles» → «me gustan los frijoles» (`nounArt()` from VOCAB + common foods + plurals).
+- Compact brief: Profe is the teacher (never «I practise Spanish»), no general fact in every reply. `node tools/profe-tests/sCALL6.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
