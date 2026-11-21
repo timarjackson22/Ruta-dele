@@ -42,11 +42,12 @@
       "\n- Say 1–2 short sentences (under 25 words). No lists, markdown or emojis." +
       "\n- React to what they said with real interest, then ask ONE open question built on it." +
       "\n- Speak simple Spanish at their level" + (function () { try { return " (" + String(learnerLevel(pageCtx())).toUpperCase() + ")"; } catch (e) { return ""; } })() + ". If they answer in English, reply in simple Spanish and give them the Spanish for what they said." +
-      "\n- Mistakes: start with «Se dice: …» and the correct sentence (a few words of why if useful). Never repeat a wrong sentence back as if it were right. Praise one specific thing; vary your words; use their name sometimes." +
+      "\n- Do NOT correct the learner and never say «Se dice», «Es correcto» or «Es una frase correcta»: the app checks their Spanish before you answer. If you notice a mistake, just use the right form naturally in your reply. Praise one specific thing; vary your words; use their name sometimes." +
+      "\n- If they want to practise verbs, the app runs the drill; never ask «¿Quieres practicar…?» twice in a row: talk about their life instead." +
       "\n- After you explain something, ask «¿Está claro?». If not, find which part is confusing and explain it another way with one example." +
       (VC.fixSaid ? "\n- You have JUST told them: «Se dice: " + VC.fixSaid + "». Don't repeat it; carry on from it." : "") +
       "\n- Unsure what they said? Ask. Never invent facts." +
-      "\n- Language: " + String(L[1]).slice(0, 160) + "\n- Corrections: " + String(C[1]).slice(0, 140) +
+      "\n- Language: " + String(L[1]).slice(0, 160) + (vcP("corr", "every") === "every" ? "" : "\n- Corrections: " + String(C[1]).slice(0, 140)) +
       (VC.wantEn ? "\n- THIS TURN they asked for English: explain in 2 short English sentences, give the Spanish, then a short Spanish question." : "") +
       (VC.coachNow ? "\n- THIS TURN, in one short English sentence, coach the mistake they keep making (" + VC.coachNow.why + "): correct Spanish «" + VC.coachNow.to + "», invite a retry, then carry on in Spanish." : "") +
       (VC.instr.length ? "\n- For this call they asked: " + VC.instr.map((x) => "«" + x.slice(0, 80) + "»").join("; ") + "." : "");
@@ -574,6 +575,9 @@
       VC.askName = 2; vcSay([["Perdona. ¿Cómo te llamas? Dime «me llamo…» y tu nombre.", true], ["Say «me llamo» and your name.", false]], () => vcListen()); return;
     }
     if (window.__notMyName && window.__notMyName(t) && !(vcNameFrom(t) && vcNameFrom.sure && !/no me llamo/i.test(low))) { TS.lname = ""; tsave(); VC.askName = 2; vcSay([["¡Perdona! ¿Cómo te llamas? Dime «me llamo…» y tu nombre.", true]], () => vcListen()); return; }
+    // v252: no name yet and they say «me llamo Timar» later in the call → greet them by name (the AI answered it before)
+    if (!VC.askName && !TS.lname && cmd !== "end" && nW <= 6) { const nm4 = vcNameFrom(t); if (nm4 && vcNameFrom.sure) { const fem4 = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })(); TS.lname = nm4; tsave();
+      vcSay([["¡Mucho gusto, " + nm4 + "! " + (fem4 ? "Encantada" : "Encantado") + " de conocerte.", true], ["¿De qué quieres hablar hoy?", true]], () => vcListen()); return; } }
     if (VC.askName && cmd !== "end") {
       const nm2 = vcNameFrom(t), fem = (() => { try { return pvGender() === "f"; } catch (e) { return false; } })();
       if (nm2 && !vcNameFrom.sure) { VC.askName = "confirm"; VC.nameGuess = nm2; vcSay([["¿Te llamas " + nm2 + "?", true]], () => vcListen()); return; } // a guess: check before saving
@@ -581,6 +585,8 @@
         // a name guessed from a bare word may be a recognition slip («number Smart»): say how to fix it
         vcSay([["¡Mucho gusto, " + nm2 + "! " + (fem ? "Encantada" : "Encantado") + " de conocerte.", true]].concat(vcNameFrom.sure ? [] : [["Si no lo he oído bien, dime «me llamo…» y lo cambio.", true]]).concat([["¿De qué quieres hablar hoy? Puede ser de tu día, de tus planes o de lo que estás estudiando.", true]]), () => vcListen()); return; }
       if (nW <= 3 && /^(hola|hello|hi|hey|buenas|buenos|qu[eé] tal|ol[aá])\b/i.test(t.trim())) { vcSay([["¡Hola! ¿Y cómo te llamas?", true]], () => vcListen()); return; } // a greeting, not a name: ask kindly
+      // v252 (5th S24 log): «me llamo» with the name cut off by the mic is not «carry on without a name»
+      if (/^(me llamo|mi nombre es|my name is|soy|i'?m)[\s.!?]*$/i.test(t.trim())) { VC.askName = 2; vcSay([["¿Cómo? Dime solo tu nombre.", true]], () => vcListen()); return; }
       if (nW > 3) VC.askName = 0; // they went straight into a sentence: don't insist, answer it
       else if (VC.askName === 1) { VC.askName = 2; vcSay([["Perdona, no te he oído bien. ¿Cómo te llamas?", true], ["You can say: «Me llamo…»", false]], () => vcListen()); return; }
       VC.askName = 0; // asked twice: carry on without a name

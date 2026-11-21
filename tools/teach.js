@@ -60,6 +60,9 @@
     const cur = TCH.cur; teachTrack(cur);
     if (!um || !teachIsPractice(um.c)) return;
     if (typeof PR !== "undefined" && PR) return; // role-plays have their own next step
+    // v252 (5th S24 log): a drill question («Presente de gustar. Tú…») got «¿Seguimos con otra pregunta o prefieres cambiar de
+    // tema?» added, so the learner said «sigue» instead of the answer; drills and calls end their own turns
+    if (window.__vcOn || (window.__drillOn && window.__drillOn()) || /…\s*$/.test(String(live.c))) return;
     const txt = String(live.c);
     if (/[?¿]/.test(txt) || /\b(try|say|tell me|now you|your turn|repeat|intenta|prueba|dime|cuéntame|cuentame|ahora tú|ahora tu|repite|te toca)\b/i.test(txt)) return;
     const lvl = (typeof learnerLevel === "function" ? learnerLevel(pageCtx()) : "a2").toUpperCase(), en = /A1|A2/.test(lvl) && !window.__vcOn; // v251: a call is Spanish first

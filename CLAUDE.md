@@ -108,6 +108,11 @@ If no: say so in the commit message ("costs: no impact").
 - Instant (on-device / no-AI) replies add «Back to the exercise: …» only outside calls and never to a reply the drill itself gave (`expertAnswer0.dr`).
 - Outside calls a chat drill takes only answer-shaped text (pronoun + form, «otro verbo», «repite», sí/no, one word); app commands still route (sH 70/70).
 
+## 5th S24 call log — v252
+- On-device calls: the app corrects (quickFixes «Se dice» before the AI); the compact brief tells the model not to correct, and `dropFix()` removes its own «Se dice…» / «Es correcto» / «Es una frase correcta» sentences (it said them for right answers and with wrong Spanish). The checker now also fixes «un otro» → «otro» (`window.__qf` test hook).
+- Drill: «quiero practicar (los) verbos (regulares / irregulares / de movimiento)» and a short answer to Profe's «¿Qué verbos…?» start a multi-verb drill at once. «Sí, sigue» during a question asks for the form (it used to end the drill and the next «sí» restarted it); a form inside a short answer is graded; saying the answer back after «¿Está claro?» counts as understood. Verbs like gustar (`DR_GUST`) are drilled as «A nosotros…» → «nos gusta» (`drAns`, `DR_GP`, `DR_CL`). teach.js adds no «¿Seguimos…?» nudge in calls, during a drill or after a question ending in «…».
+- Names: «me llamo» with the name cut off → «Dime solo tu nombre»; a sure «me llamo X» later in a call with no name yet is greeted, not sent to the AI. `node tools/profe-tests/sCALL5.js` must pass.
+
 ## Exams
 - Formats follow the current Instituto Cervantes specs (A1/A2 v2020; C1/C2 2024). Tasks not in the official exam stay only as `extra: true` (labelled, outside clock and score). Open items: tools/AUDIT_2026-11-16.md.
 - Curriculum content fixes for dashboard gaps: tools/content/add_*.py (each re-runnable; appended so saved answers keep their indexes).
