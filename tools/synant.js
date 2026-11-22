@@ -177,46 +177,73 @@
     app.innerHTML = '<div class="ui-page syn">' + uiTitle("Synonyms &amp; antonyms", SA.length + " words · ≈ same meaning · ≠ opposite", "", "Sinónimos y antónimos") +
       '<div class="syn-hero"><svg class="syn-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="' + R + '" class="bg"/><circle cx="32" cy="32" r="' + R + '" class="fg" stroke-dasharray="' + (C * pct / 100).toFixed(1) + " " + C.toFixed(1) + '"/><text x="32" y="37" text-anchor="middle">' + pct + '%</text></svg>' +
       '<div class="syn-stats"><b>' + seen + "</b> of " + SY_CARDS.length + " cards started<br><b>" + learned + "</b> learned · <b>" + due + '</b> due now</div><button class="btn primary syn-go" data-act="syn-prac">⚡ ' + (due ? "Practise · " + due + " due" : "Practise") + "</button></div>" +
-      '<div class="syn-spot" id="syn-spot"></div>' +
+      '<div class="row syn-ra"><button class="btn syn-rab" data-act="syn-ra">🔊 Read the list aloud</button><span class="small muted">Hands-free: each word, its meaning, then its synonyms and antonyms.</span></div>' +
       '<input id="syn-q" type="search" placeholder="Search a word in Spanish or English" aria-label="Search" autocomplete="off">' +
       '<div class="syn-kinds" role="group" aria-label="Kind of word">' + SY_KINDS.map(([k, n]) => '<button class="syn-kind k-' + k + '" data-act="syn-pos" data-v="' + k + '" aria-pressed="' + (k === kd) + '">' + n + " <small>" + (k === "all" ? SA.length : SA.filter((e) => syKindOf(e) === k).length) + "</small></button>").join("") + "</div>" +
       '<div class="row syn-lvs" role="group" aria-label="Level">' + ["all"].concat(SY_LV).map((l) => '<button class="btn small" data-act="syn-lv" data-v="' + l + '" aria-pressed="' + (l === lv) + '">' + (l === "all" ? "All levels" : l.toUpperCase()) + "</button>").join("") + "</div>" +
       '<nav class="syn-az" id="syn-az" aria-label="Jump to a letter"></nav><div id="syn-list"></div></div>';
     const q = document.getElementById("syn-q"); if (q) q.addEventListener("input", () => synList());
-    synSpot(); synList();
+    synList();
   }
-  function synSpot(flip) {
-    const box = document.getElementById("syn-spot"); if (!box) return;
-    if (!flip || !SY_SPOT) SY_SPOT = SA[Math.floor(Math.random() * SA.length)];
-    const e = SY_SPOT, open = !!flip, chip = (w) => '<button class="sychip" data-act="say" data-t="' + esc(w) + '" lang="es">' + esc(w) + "</button>";
-    box.className = "syn-spot" + (open ? " open" : "");
-    box.innerHTML = '<p class="syn-spot-k">Word spotlight · ' + e.lv.toUpperCase() + " · " + (SY_POS[e.pos] || e.pos) + "</p>" +
-      '<button class="syn-spot-w" data-act="syn-flip" lang="es" aria-label="' + esc(e.w) + ': show its synonyms and antonyms">' + esc(e.w) + "</button><p class=\"syn-spot-en\">" + esc(e.en) + "</p>" +
-      (open ? (e.syn.length ? '<p class="syl"><span class="syk syn">≈</span>' + e.syn.map(chip).join("") + "</p>" : "") + (e.ant.length ? '<p class="syl"><span class="syk ant">≠</span>' + e.ant.map(chip).join("") + "</p>" : "")
-        : '<p class="syn-spot-tap">Can you think of a synonym and an antonym? Tap the word to check.</p>') +
-      '<div class="row syn-spot-b"><button class="btn small" data-act="say" data-t="' + esc(e.w) + '">🔊 Hear it</button><button class="btn small" data-act="syn-shuf">🔀 Another word</button></div>';
-  }
-  let SY_SPOT = null;
   function synList() {
     const box = document.getElementById("syn-list"); if (!box) return; const lv = S.synLv || "all", kd = S.synPos || "all", q = syN((document.getElementById("syn-q") || {}).value || ""), s = sySt();
     const hit = (e) => (lv === "all" || e.lv === lv) && (kd === "all" || syKindOf(e) === kd) && (!q || [e.w, e.en].concat(e.syn, e.ant).some((x) => syN(x).includes(q)));
     const chip = (w) => '<button class="sychip" data-act="say" data-t="' + esc(w) + '" lang="es">' + esc(w) + "</button>";
-    const L = SA.filter(hit).sort((a, b) => syN(a.w).localeCompare(syN(b.w)));
+    const L = SA.filter(hit).sort((a, b) => syN(a.w).localeCompare(syN(b.w))); SY_L = L; if (SYR.on) { SYR.i = 0; synRaGo(0); }
     const groups = []; L.forEach((e) => { const k = syLetter(e.w); if (!groups.length || groups[groups.length - 1][0] !== k) groups.push([k, []]); groups[groups.length - 1][1].push(e); });
     const az = document.getElementById("syn-az"); if (az) az.innerHTML = groups.length > 1 ? groups.map(([k]) => '<button data-act="syn-az" data-v="' + k + '">' + k + "</button>").join("") : "";
     box.innerHTML = groups.length ? '<p class="small muted syn-count">' + L.length + " word" + (L.length === 1 ? "" : "s") + " · tap a word to open it</p>" + groups.map(([k, G]) => '<h2 class="syn-h" id="syn-l-' + k + '">' + k + "</h2><div class=\"syn-grid\">" + G.map((e) => {
       const st = [s.c[e.w + "|s"], s.c[e.w + "|a"]].filter(Boolean), dot = !st.length ? "" : st.some((c) => c.i >= 21) ? '<i class="sydot ok" title="Learned"></i>' : '<i class="sydot" title="Practising"></i>';
-      return '<div class="syrow p-' + syKindOf(e) + (q ? " open" : "") + '"><div class="syh" data-act="syn-open"><button class="sychip head" data-act="say" data-t="' + esc(e.w) + '" lang="es">' + esc(e.w) + "</button>" + dot + '<small class="sy-en">' + esc(e.en) + '</small><span class="sy-meta"><i class="sylv">' + e.lv.toUpperCase() + "</i>" + (e.syn.length ? '<i class="sycnt syn">≈' + e.syn.length + "</i>" : "") + (e.ant.length ? '<i class="sycnt ant">≠' + e.ant.length + "</i>" : "") + '<i class="sychev" aria-hidden="true">›</i></span></div>' +
+      return '<div class="syrow p-' + syKindOf(e) + (q ? " open" : "") + '" data-w="' + esc(e.w) + '"><div class="syh" data-act="syn-open"><button class="sychip head" data-act="say" data-t="' + esc(e.w) + '" lang="es">' + esc(e.w) + "</button>" + dot + '<small class="sy-en">' + esc(e.en) + '</small><span class="sy-meta"><i class="sylv">' + e.lv.toUpperCase() + "</i>" + (e.syn.length ? '<i class="sycnt syn">≈' + e.syn.length + "</i>" : "") + (e.ant.length ? '<i class="sycnt ant">≠' + e.ant.length + "</i>" : "") + '<i class="sychev" aria-hidden="true">›</i></span></div>' +
         '<div class="sybody">' + (e.syn.length ? '<p class="syl"><span class="syk syn" title="Synonyms">≈</span>' + e.syn.map(chip).join("") + "</p>" : "") + (e.ant.length ? '<p class="syl"><span class="syk ant" title="Antonyms">≠</span>' + e.ant.map(chip).join("") + "</p>" : "") + "</div></div>"; }).join("") + "</div>").join("")
       : '<p class="muted">No word matches' + (q ? " «" + esc(q) + "»" : "") + ".</p>";
   }
+  // ---------- read the list aloud (v284): hands-free, follows the filters; the word being read is lit and opened, the list scrolls with it
+  let SY_L = [];
+  const SYR = { on: 0, i: 0, paused: 0, gen: 0, rate: 1 }, SYR_RATES = [0.75, 1, 1.25];
+  window.__synSeq = [];
+  function synRaSay(txt, lang, g, done) {
+    if (g !== SYR.gen || !document.querySelector(".syn")) return; window.__synSeq.push(lang + ":" + txt);
+    let fin = 0; const next = () => { if (fin) return; fin = 1; if (g === SYR.gen) setTimeout(() => g === SYR.gen && done(), (lang === "en" ? 350 : 450) / SYR.rate); };
+    try { const u = utter(txt, lang, (lang === "es" ? 0.88 : 0.95) * SYR.rate); u.onend = next; u.onerror = next; speechSynthesis.speak(u); setTimeout(next, (1200 + txt.length * 140) / SYR.rate); } catch (x) { next(); }
+  }
+  function synRaUI() {
+    const on = !!SYR.on, b = document.querySelector('[data-act="syn-ra"]'); if (b) b.textContent = on ? "⏹ Stop reading" : "🔊 Read the list aloud";
+    document.body.classList.toggle("syn-on", on); let bar = document.getElementById("syn-player");
+    if (on && !bar && document.querySelector(".syn")) { document.querySelector(".syn").insertAdjacentHTML("beforeend", '<div class="player vd-player syn-player" id="syn-player" role="group" aria-label="List reader"><button class="pbtn" data-act="syn-ra-prev" aria-label="Previous word">' + PREV + '</button><button class="pbtn main" id="syn-ra-play" data-act="syn-ra-play" aria-label="Pause">' + PAUSE + '</button><button class="pbtn" data-act="syn-ra-next" aria-label="Next word">' + NEXT + '</button><span class="ppos" id="syn-ra-pos"></span><button class="pbtn vd-rate" data-act="syn-ra-rate" id="syn-ra-rate" aria-label="Speed">1×</button><button class="pbtn vd-x" data-act="syn-ra-x" aria-label="Stop reading">✕</button></div>'); }
+    if (!on && bar) bar.remove(); if (!on) document.querySelectorAll(".syrow.on").forEach((r) => r.classList.remove("on")); synRaBar();
+  }
+  function synRaBar() { const b = document.getElementById("syn-ra-play"), pos = document.getElementById("syn-ra-pos"), r = document.getElementById("syn-ra-rate");
+    if (b) { b.innerHTML = SYR.paused ? PLAY : PAUSE; b.setAttribute("aria-label", SYR.paused ? "Play" : "Pause"); } if (pos) pos.textContent = (SY_L.length ? Math.min(SY_L.length, SYR.i + 1) : 0) + " / " + SY_L.length; if (r) r.textContent = String(SYR.rate).replace(/^0/, "") + "×"; }
+  function synRaShow(i) {
+    document.querySelectorAll(".syrow.on").forEach((r) => r.classList.remove("on")); const e = SY_L[i]; if (!e) return;
+    const r = document.querySelector('.syrow[data-w="' + CSS.escape(e.w) + '"]'); if (!r) return; r.classList.add("on", "open");
+    const az = document.getElementById("syn-az"), top = (az ? az.getBoundingClientRect().bottom : 110) + 8, bar = document.getElementById("syn-player"), bot = (bar ? bar.getBoundingClientRect().top : innerHeight) - 10, R = r.getBoundingClientRect();
+    if (R.top < top || R.bottom > bot) scrollTo({ top: Math.max(0, scrollY + R.top - top - 4), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function synRaStep(g) {
+    if (g !== SYR.gen || SYR.paused || !SYR.on) return;
+    if (SYR.i >= SY_L.length) { SYR.paused = 1; SYR.i = Math.max(0, SY_L.length - 1); synRaBar(); return; }
+    const e = SY_L[SYR.i]; synRaShow(SYR.i); synRaBar();
+    const seq = [[e.w, "es"], [e.en, "en"]]; if (e.syn.length) seq.push(["Sinónimos: " + e.syn.join(", ") + ".", "es"]); if (e.ant.length) seq.push(["Antónimos: " + e.ant.join(", ") + ".", "es"]);
+    const run = (k) => { if (k >= seq.length) { SYR.i++; setTimeout(() => synRaStep(g), 700 / SYR.rate); return; } synRaSay(seq[k][0], seq[k][1], g, () => run(k + 1)); };
+    run(0);
+  }
+  function synRaGo(i) { const g = ++SYR.gen; try { speechSynthesis.cancel(); } catch (x) {} SYR.i = Math.max(0, Math.min(SY_L.length - 1, i)); if (SYR.paused) { synRaShow(SYR.i); synRaBar(); } else synRaStep(g); }
+  function synRaStop() { SYR.gen++; SYR.on = 0; SYR.paused = 0; try { speechSynthesis.cancel(); } catch (x) {} synRaUI(); }
+  addEventListener("hashchange", () => { if (SYR.on) { SYR.gen++; SYR.on = 0; try { speechSynthesis.cancel(); } catch (x) {} document.body.classList.remove("syn-on"); } });
   document.addEventListener("click", (e) => {
-    const b = e.target.closest && e.target.closest('[data-act="syn-pos"],[data-act="syn-az"],[data-act="syn-flip"],[data-act="syn-shuf"],[data-act="syn-open"]'); if (!b) return; const a = b.dataset.act;
+    const b = e.target.closest && e.target.closest('[data-act="syn-pos"],[data-act="syn-az"],[data-act="syn-open"],[data-act^="syn-ra"]'); if (!b) return; const a = b.dataset.act;
     if (a === "syn-pos") { S.synPos = b.dataset.v; try { save(); } catch (x) {} document.querySelectorAll('[data-act="syn-pos"]').forEach((x) => x.setAttribute("aria-pressed", x.dataset.v === S.synPos)); synList(); }
     else if (a === "syn-az") { const h = document.getElementById("syn-l-" + b.dataset.v); if (h) { const top = h.getBoundingClientRect().top + scrollY - ((document.getElementById("syn-az") || {}).offsetHeight || 0) - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdrH")) || 56) - 6; scrollTo({ top, behavior: "smooth" }); } }
-    else if (a === "syn-flip") synSpot(!document.getElementById("syn-spot").classList.contains("open"));
-    else if (a === "syn-shuf") { SY_SPOT = null; synSpot(false); }
-    else if (a === "syn-open") { if (e.target.closest('[data-act="say"]')) return; b.parentElement.classList.toggle("open"); }
+    else if (a === "syn-open") { if (SYR.on) { const k = SY_L.findIndex((x) => x.w === b.parentElement.dataset.w); if (k >= 0) { e.preventDefault(); e.stopPropagation(); SYR.paused = 0; synRaGo(k); return; } } if (e.target.closest('[data-act="say"]')) return; b.parentElement.classList.toggle("open"); }
+    else if (a === "syn-ra") { if (SYR.on) synRaStop(); else { const v = document.querySelector(".syrow"), k = Math.max(0, SY_L.findIndex((x) => { const r = document.querySelector('.syrow[data-w="' + CSS.escape(x.w) + '"]'); return r && r.getBoundingClientRect().top > 120; })); SYR.on = 1; SYR.paused = 0; synRaUI(); synRaGo(v ? k : 0); } }
+    else if (a === "syn-ra-play") { SYR.paused = SYR.paused ? 0 : 1; if (SYR.paused) { SYR.gen++; try { speechSynthesis.cancel(); } catch (x) {} synRaBar(); } else synRaGo(SYR.i); }
+    else if (a === "syn-ra-prev") synRaGo(SYR.i - 1);
+    else if (a === "syn-ra-next") synRaGo(SYR.i + 1);
+    else if (a === "syn-ra-rate") { SYR.rate = SYR_RATES[(SYR_RATES.indexOf(SYR.rate) + 1) % SYR_RATES.length]; synRaBar(); if (!SYR.paused) synRaGo(SYR.i); }
+    else if (a === "syn-ra-x") synRaStop();
   });
+  window.__synRa = () => ({ on: SYR.on, i: SYR.i, paused: SYR.paused, rate: SYR.rate, n: SY_L.length, w: SY_L[SYR.i] && SY_L[SYR.i].w, seq: window.__synSeq });
   window.__sy = { cards: () => SY_CARDS.length, words: () => SA.length, find: (s, l, p) => syFind(s, l, p), plan: (c, g) => syPlan(c, g), st: () => sySt(), pr: () => PR, start: (lv) => startSyn(lv), answer: (s) => syAnswer(s), next: () => syNext(), counts: (lv) => syCounts(lv), when: syWhen };
   /* ==/SYNANT== */

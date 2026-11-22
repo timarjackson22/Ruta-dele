@@ -19,9 +19,18 @@ const { open } = require("./h.js");
   rec("Kind chips filter (verbs only) and the A–Z bar jumps to each letter group (sticky)", nav.verbs && nav.n > 50 && nav.az === nav.heads && nav.az > 10 && nav.sticky === "sticky", JSON.stringify(nav));
   await p.click('[data-act="syn-pos"][data-v="all"]'); await H.wait(200);
   const row = await p.evaluate(() => { const r = document.querySelector(".syrow"), b = r.querySelector(".sybody"), hid = getComputedStyle(b).display === "none"; r.querySelector(".sy-en").click(); return { hid, shown: getComputedStyle(b).display !== "none" }; });
-  await p.click('[data-act="syn-flip"]'); await H.wait(100);
-  const spot = await p.evaluate(() => ({ open: document.getElementById("syn-spot").classList.contains("open"), chips: document.querySelectorAll("#syn-spot .sychip").length, ring: !!document.querySelector(".syn-ring") }));
-  rec("Rows open on tap; the word spotlight turns over to its synonyms and antonyms; progress ring shown", row.hid && row.shown && spot.open && spot.chips > 0 && spot.ring, JSON.stringify([row, spot]));
+  const ra0 = await p.evaluate(() => ({ spot: !!document.getElementById("syn-spot"), ring: !!document.querySelector(".syn-ring") }));
+  rec("Rows open on tap; no word spotlight; progress ring shown", row.hid && row.shown && !ra0.spot && ra0.ring, JSON.stringify([row, ra0]));
+  await p.evaluate(() => scrollTo(0, 0)); await p.click('[data-act="syn-ra"]'); await H.wait(2500);
+  const ra = await p.evaluate(() => { const st = window.__synRa(), r = document.querySelector(".syrow.on"); return { st, lit: r && r.dataset.w, open: r && r.classList.contains("open"), bar: !!document.getElementById("syn-player"), tab: getComputedStyle(document.querySelector(".tabbar") || document.body).display }; });
+  const sq = ra.st.seq.join(" | ");
+  rec("Read the list aloud: word in Spanish, meaning in English, then its synonyms and antonyms; the row is lit and opened; player at the bottom, no tab bar", ra.st.on && ra.lit === ra.st.w && ra.open && ra.bar && /^es:[^|]+ \| en:/.test(sq) && /Sinónimos:|Antónimos:/.test(sq) && ra.tab === "none", JSON.stringify(ra).slice(0, 400));
+  const i0 = ra.st.i; await p.click('[data-act="syn-ra-next"]'); await H.wait(300); const i1 = await p.evaluate(() => window.__synRa().i);
+  const tgt = await p.evaluate(() => document.querySelectorAll(".syrow")[8].dataset.w); await p.click('.syrow[data-w="' + tgt + '"] .sy-en'); await H.wait(300);
+  const jump = await p.evaluate(() => ({ w: window.__synRa().w, lit: (document.querySelector(".syrow.on") || {}).dataset }));
+  await p.click('[data-act="syn-ra-play"]'); await H.wait(200); const paused = await p.evaluate(() => window.__synRa().paused);
+  await p.click('[data-act="syn-ra-x"]'); await H.wait(200); const off = await p.evaluate(() => ({ on: window.__synRa().on, bar: !!document.getElementById("syn-player"), lit: !!document.querySelector(".syrow.on") }));
+  rec("Reader: Next moves on, tapping a row jumps there, Pause pauses, ✕ stops and removes the player", i1 === i0 + 1 && jump.w === tgt && jump.lit && jump.lit.w === tgt && paused === 1 && !off.on && !off.bar && !off.lit, JSON.stringify([i0, i1, tgt, jump.w, paused, off]));
   // answer checking
   const F = await p.evaluate(() => { const f = window.__sy.find; return {
     plain: f("enorme", ["enorme", "amplio"], "adj"), gender: f("contenta", ["contento", "alegre"], "adj"), plural: f("son alegres", ["contento", "alegre"], "adj"), accentless: f("rapido", ["rápido", "veloz"], "adj"),

@@ -959,10 +959,6 @@
   "voice": "unsuitable",
   "why": "Synonyms page: A–Z jump bar (screen only)"
  },
- "syn-flip": {
-  "voice": "unsuitable",
-  "why": "Synonyms page: word spotlight turns over (screen only)"
- },
  "syn-lv": {
   "voice": "pending",
   "why": "synonyms & antonyms page: level filter"
@@ -979,9 +975,29 @@
   "voice": "pending",
   "why": "synonyms & antonyms page: open Profe's synonyms practice"
  },
- "syn-shuf": {
-  "voice": "unsuitable",
-  "why": "Synonyms page: another spotlight word (screen only)"
+ "syn-ra": {
+  "voice": "pending",
+  "why": "Synonyms page: read the list aloud (hands-free)"
+ },
+ "syn-ra-next": {
+  "voice": "pending",
+  "why": "Synonyms list reader: next word"
+ },
+ "syn-ra-play": {
+  "voice": "pending",
+  "why": "Synonyms list reader: play / pause"
+ },
+ "syn-ra-prev": {
+  "voice": "pending",
+  "why": "Synonyms list reader: previous word"
+ },
+ "syn-ra-rate": {
+  "voice": "pending",
+  "why": "Synonyms list reader: speed"
+ },
+ "syn-ra-x": {
+  "voice": "pending",
+  "why": "Synonyms list reader: stop"
  },
  "t-ask": "profe.explain",
  "t-chatmic": {
