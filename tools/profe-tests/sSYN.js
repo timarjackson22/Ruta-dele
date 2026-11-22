@@ -13,7 +13,15 @@ const { open } = require("./h.js");
   const found = await p.evaluate(() => [...document.querySelectorAll(".syrow .syh .head")].map((x) => x.textContent));
   rec("Search finds words through their synonyms («enorme» → grande, pequeño…)", found.includes("grande") && found.includes("pequeño"), found.join(","));
   await p.fill("#syn-q", ""); await p.click('[data-act="syn-lv"][data-v="c1"]'); await H.wait(300);
-  rec("Level chips filter the list (C1)", await p.evaluate(() => [...document.querySelectorAll(".syn-h")].map((x) => x.textContent.slice(0, 2)).join() === "C1"));
+  rec("Level chips filter the list (C1)", await p.evaluate(() => { const L = [...document.querySelectorAll(".syrow .sylv")].map((x) => x.textContent); return L.length > 5 && L.every((x) => x === "C1"); }));
+  await p.click('[data-act="syn-lv"][data-v="all"]'); await p.click('[data-act="syn-pos"][data-v="verb"]'); await H.wait(300);
+  const nav = await p.evaluate(() => ({ verbs: [...document.querySelectorAll(".syrow")].every((r) => r.classList.contains("p-verb")), n: document.querySelectorAll(".syrow").length, az: document.querySelectorAll("#syn-az button").length, heads: document.querySelectorAll(".syn-h").length, sticky: getComputedStyle(document.getElementById("syn-az")).position }));
+  rec("Kind chips filter (verbs only) and the A–Z bar jumps to each letter group (sticky)", nav.verbs && nav.n > 50 && nav.az === nav.heads && nav.az > 10 && nav.sticky === "sticky", JSON.stringify(nav));
+  await p.click('[data-act="syn-pos"][data-v="all"]'); await H.wait(200);
+  const row = await p.evaluate(() => { const r = document.querySelector(".syrow"), b = r.querySelector(".sybody"), hid = getComputedStyle(b).display === "none"; r.querySelector(".sy-en").click(); return { hid, shown: getComputedStyle(b).display !== "none" }; });
+  await p.click('[data-act="syn-flip"]'); await H.wait(100);
+  const spot = await p.evaluate(() => ({ open: document.getElementById("syn-spot").classList.contains("open"), chips: document.querySelectorAll("#syn-spot .sychip").length, ring: !!document.querySelector(".syn-ring") }));
+  rec("Rows open on tap; the word spotlight turns over to its synonyms and antonyms; progress ring shown", row.hid && row.shown && spot.open && spot.chips > 0 && spot.ring, JSON.stringify([row, spot]));
   // answer checking
   const F = await p.evaluate(() => { const f = window.__sy.find; return {
     plain: f("enorme", ["enorme", "amplio"], "adj"), gender: f("contenta", ["contento", "alegre"], "adj"), plural: f("son alegres", ["contento", "alegre"], "adj"), accentless: f("rapido", ["rápido", "veloz"], "adj"),

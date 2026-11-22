@@ -7,7 +7,7 @@
      second try = Hard, third try or shown = Again. Again comes back in the same session after three other cards; due cards first, then up to 20 new cards a day
      (the chosen level first). Saved in S.syn (cards {key: {e ease, i interval days, r reps, l lapses, d due ms}}, nd/nn new per day).
      Source of truth: tools/synant.js + tools/synant.css + tools/synant_data.js, embedded by python3 tools/patch_synant.py index.html. */
-  const SY_LV = ["a1", "a2", "b1", "b2", "c1"], SY_POS = { adj: "adjective", verb: "verb", noun: "noun", adv: "adverb" }, SY_NEW = 20, SY_DAY = 864e5;
+  const SY_LV = ["a1", "a2", "b1", "b2", "c1"], SY_POS = { adj: "adjective", verb: "verb", noun: "noun", adv: "adverb", prep: "preposition" }, SY_NEW = 20, SY_DAY = 864e5;
   const SA = SA_DATA.map(([w, en, lv, pos, s, a]) => ({ w, en, lv, pos, syn: s ? s.split("|") : [], ant: a ? a.split("|") : [] }));
   const syHash = (t) => { let h = 2166136261; for (const ch of String(t)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return (h >>> 0) % 100000; };
   const SY_CARDS = []; SA.forEach((e) => { if (e.syn.length) SY_CARDS.push({ k: e.w + "|s", t: "s", e }); if (e.ant.length) SY_CARDS.push({ k: e.w + "|a", t: "a", e }); });
@@ -166,29 +166,57 @@
     else if (a === "syn-lv") { S.synLv = b.dataset.v; try { save(); } catch (x) {} synList(); document.querySelectorAll('[data-act="syn-lv"]').forEach((x) => x.setAttribute("aria-pressed", x.dataset.v === S.synLv)); }
     else if (a === "syn-prac") { try { tOpen(); } catch (x) {} setTimeout(() => startSyn(S.synLv && S.synLv !== "all" ? S.synLv : null), 60); }
   });
-  // ---------- the Library page ----------
+  // ---------- the Library page (v283: progress card, word spotlight, kind / level filters, A–Z bar, rows that open) ----------
+  const SY_KINDS = [["all", "All"], ["adj", "Adjectives"], ["verb", "Verbs"], ["noun", "Nouns"], ["adv", "Adverbs & more"]];
+  const syKindOf = (e) => (e.pos === "prep" ? "adv" : e.pos);
+  const syLetter = (w) => syN(w).charAt(0).toUpperCase();
   function synHub() {
-    const lv = S.synLv || "all";
-    app.innerHTML = '<div class="ui-page syn">' + uiTitle("Synonyms &amp; antonyms", SA.length + " words with their synonyms (≈ same meaning) and antonyms (≠ opposite), A1 to C1. Tap any word to hear it. Practise them with Profe: he shows each word like a flashcard and brings back the ones you find hard more often.", "", "Sinónimos y antónimos") +
-      '<div class="row syn-top"><button class="btn primary" data-act="syn-prac">⚡ Practise with Profe</button><input id="syn-q" type="search" placeholder="Search a word (Spanish or English)" aria-label="Search" autocomplete="off"></div>' +
-      '<div class="row syn-lvs" role="group" aria-label="Level">' + ["all"].concat(SY_LV).map((l) => '<button class="btn small" data-act="syn-lv" data-v="' + l + '" aria-pressed="' + (l === lv) + '">' + (l === "all" ? "All" : l.toUpperCase()) + "</button>").join("") + "</div>" +
-      '<div id="syn-list"></div></div>';
+    const lv = S.synLv || "all", kd = S.synPos || "all", s = sySt(), now = Date.now();
+    const seen = SY_CARDS.filter((c) => s.c[c.k]).length, learned = SY_CARDS.filter((c) => s.c[c.k] && s.c[c.k].i >= 21).length, due = SY_CARDS.filter((c) => s.c[c.k] && s.c[c.k].d <= now).length;
+    const pct = Math.round(100 * seen / SY_CARDS.length), R = 26, C = 2 * Math.PI * R;
+    app.innerHTML = '<div class="ui-page syn">' + uiTitle("Synonyms &amp; antonyms", SA.length + " words · ≈ same meaning · ≠ opposite", "", "Sinónimos y antónimos") +
+      '<div class="syn-hero"><svg class="syn-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="' + R + '" class="bg"/><circle cx="32" cy="32" r="' + R + '" class="fg" stroke-dasharray="' + (C * pct / 100).toFixed(1) + " " + C.toFixed(1) + '"/><text x="32" y="37" text-anchor="middle">' + pct + '%</text></svg>' +
+      '<div class="syn-stats"><b>' + seen + "</b> of " + SY_CARDS.length + " cards started<br><b>" + learned + "</b> learned · <b>" + due + '</b> due now</div><button class="btn primary syn-go" data-act="syn-prac">⚡ ' + (due ? "Practise · " + due + " due" : "Practise") + "</button></div>" +
+      '<div class="syn-spot" id="syn-spot"></div>' +
+      '<input id="syn-q" type="search" placeholder="Search a word in Spanish or English" aria-label="Search" autocomplete="off">' +
+      '<div class="syn-kinds" role="group" aria-label="Kind of word">' + SY_KINDS.map(([k, n]) => '<button class="syn-kind k-' + k + '" data-act="syn-pos" data-v="' + k + '" aria-pressed="' + (k === kd) + '">' + n + " <small>" + (k === "all" ? SA.length : SA.filter((e) => syKindOf(e) === k).length) + "</small></button>").join("") + "</div>" +
+      '<div class="row syn-lvs" role="group" aria-label="Level">' + ["all"].concat(SY_LV).map((l) => '<button class="btn small" data-act="syn-lv" data-v="' + l + '" aria-pressed="' + (l === lv) + '">' + (l === "all" ? "All levels" : l.toUpperCase()) + "</button>").join("") + "</div>" +
+      '<nav class="syn-az" id="syn-az" aria-label="Jump to a letter"></nav><div id="syn-list"></div></div>';
     const q = document.getElementById("syn-q"); if (q) q.addEventListener("input", () => synList());
-    synList();
+    synSpot(); synList();
   }
+  function synSpot(flip) {
+    const box = document.getElementById("syn-spot"); if (!box) return;
+    if (!flip || !SY_SPOT) SY_SPOT = SA[Math.floor(Math.random() * SA.length)];
+    const e = SY_SPOT, open = !!flip, chip = (w) => '<button class="sychip" data-act="say" data-t="' + esc(w) + '" lang="es">' + esc(w) + "</button>";
+    box.className = "syn-spot" + (open ? " open" : "");
+    box.innerHTML = '<p class="syn-spot-k">Word spotlight · ' + e.lv.toUpperCase() + " · " + (SY_POS[e.pos] || e.pos) + "</p>" +
+      '<button class="syn-spot-w" data-act="syn-flip" lang="es" aria-label="' + esc(e.w) + ': show its synonyms and antonyms">' + esc(e.w) + "</button><p class=\"syn-spot-en\">" + esc(e.en) + "</p>" +
+      (open ? (e.syn.length ? '<p class="syl"><span class="syk syn">≈</span>' + e.syn.map(chip).join("") + "</p>" : "") + (e.ant.length ? '<p class="syl"><span class="syk ant">≠</span>' + e.ant.map(chip).join("") + "</p>" : "")
+        : '<p class="syn-spot-tap">Can you think of a synonym and an antonym? Tap the word to check.</p>') +
+      '<div class="row syn-spot-b"><button class="btn small" data-act="say" data-t="' + esc(e.w) + '">🔊 Hear it</button><button class="btn small" data-act="syn-shuf">🔀 Another word</button></div>';
+  }
+  let SY_SPOT = null;
   function synList() {
-    const box = document.getElementById("syn-list"); if (!box) return; const lv = S.synLv || "all", q = syN((document.getElementById("syn-q") || {}).value || ""), s = sySt();
-    const hit = (e) => !q || [e.w, e.en].concat(e.syn, e.ant).some((x) => syN(x).includes(q));
+    const box = document.getElementById("syn-list"); if (!box) return; const lv = S.synLv || "all", kd = S.synPos || "all", q = syN((document.getElementById("syn-q") || {}).value || ""), s = sySt();
+    const hit = (e) => (lv === "all" || e.lv === lv) && (kd === "all" || syKindOf(e) === kd) && (!q || [e.w, e.en].concat(e.syn, e.ant).some((x) => syN(x).includes(q)));
     const chip = (w) => '<button class="sychip" data-act="say" data-t="' + esc(w) + '" lang="es">' + esc(w) + "</button>";
-    let h = "", n = 0;
-    SY_LV.filter((l) => lv === "all" || l === lv).forEach((l) => {
-      const L = SA.filter((e) => e.lv === l && hit(e)); if (!L.length) return; n += L.length;
-      h += '<h2 class="syn-h">' + l.toUpperCase() + ' <span class="muted small">' + L.length + " words</span></h2><div class=\"syn-grid\">" + L.map((e) => {
-        const st = [s.c[e.w + "|s"], s.c[e.w + "|a"]].filter(Boolean), dot = !st.length ? "" : st.some((c) => c.i >= 21) ? '<i class="sydot ok" title="Learned"></i>' : '<i class="sydot" title="Practising"></i>';
-        return '<div class="syrow"><p class="syh"><button class="sychip head" data-act="say" data-t="' + esc(e.w) + '" lang="es">' + esc(e.w) + "</button>" + dot + ' <small>' + esc(e.en) + " · " + (SY_POS[e.pos] || e.pos) + "</small></p>" +
-          (e.syn.length ? '<p class="syl"><span class="syk syn" title="Synonyms">≈</span>' + e.syn.map(chip).join("") + "</p>" : "") + (e.ant.length ? '<p class="syl"><span class="syk ant" title="Antonyms">≠</span>' + e.ant.map(chip).join("") + "</p>" : "") + "</div>"; }).join("") + "</div>";
-    });
-    box.innerHTML = h || '<p class="muted">No word matches «' + esc(q) + "».</p>";
+    const L = SA.filter(hit).sort((a, b) => syN(a.w).localeCompare(syN(b.w)));
+    const groups = []; L.forEach((e) => { const k = syLetter(e.w); if (!groups.length || groups[groups.length - 1][0] !== k) groups.push([k, []]); groups[groups.length - 1][1].push(e); });
+    const az = document.getElementById("syn-az"); if (az) az.innerHTML = groups.length > 1 ? groups.map(([k]) => '<button data-act="syn-az" data-v="' + k + '">' + k + "</button>").join("") : "";
+    box.innerHTML = groups.length ? '<p class="small muted syn-count">' + L.length + " word" + (L.length === 1 ? "" : "s") + " · tap a word to open it</p>" + groups.map(([k, G]) => '<h2 class="syn-h" id="syn-l-' + k + '">' + k + "</h2><div class=\"syn-grid\">" + G.map((e) => {
+      const st = [s.c[e.w + "|s"], s.c[e.w + "|a"]].filter(Boolean), dot = !st.length ? "" : st.some((c) => c.i >= 21) ? '<i class="sydot ok" title="Learned"></i>' : '<i class="sydot" title="Practising"></i>';
+      return '<div class="syrow p-' + syKindOf(e) + (q ? " open" : "") + '"><div class="syh" data-act="syn-open"><button class="sychip head" data-act="say" data-t="' + esc(e.w) + '" lang="es">' + esc(e.w) + "</button>" + dot + '<small class="sy-en">' + esc(e.en) + '</small><span class="sy-meta"><i class="sylv">' + e.lv.toUpperCase() + "</i>" + (e.syn.length ? '<i class="sycnt syn">≈' + e.syn.length + "</i>" : "") + (e.ant.length ? '<i class="sycnt ant">≠' + e.ant.length + "</i>" : "") + '<i class="sychev" aria-hidden="true">›</i></span></div>' +
+        '<div class="sybody">' + (e.syn.length ? '<p class="syl"><span class="syk syn" title="Synonyms">≈</span>' + e.syn.map(chip).join("") + "</p>" : "") + (e.ant.length ? '<p class="syl"><span class="syk ant" title="Antonyms">≠</span>' + e.ant.map(chip).join("") + "</p>" : "") + "</div></div>"; }).join("") + "</div>").join("")
+      : '<p class="muted">No word matches' + (q ? " «" + esc(q) + "»" : "") + ".</p>";
   }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest && e.target.closest('[data-act="syn-pos"],[data-act="syn-az"],[data-act="syn-flip"],[data-act="syn-shuf"],[data-act="syn-open"]'); if (!b) return; const a = b.dataset.act;
+    if (a === "syn-pos") { S.synPos = b.dataset.v; try { save(); } catch (x) {} document.querySelectorAll('[data-act="syn-pos"]').forEach((x) => x.setAttribute("aria-pressed", x.dataset.v === S.synPos)); synList(); }
+    else if (a === "syn-az") { const h = document.getElementById("syn-l-" + b.dataset.v); if (h) { const top = h.getBoundingClientRect().top + scrollY - ((document.getElementById("syn-az") || {}).offsetHeight || 0) - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--hdrH")) || 56) - 6; scrollTo({ top, behavior: "smooth" }); } }
+    else if (a === "syn-flip") synSpot(!document.getElementById("syn-spot").classList.contains("open"));
+    else if (a === "syn-shuf") { SY_SPOT = null; synSpot(false); }
+    else if (a === "syn-open") { if (e.target.closest('[data-act="say"]')) return; b.parentElement.classList.toggle("open"); }
+  });
   window.__sy = { cards: () => SY_CARDS.length, words: () => SA.length, find: (s, l, p) => syFind(s, l, p), plan: (c, g) => syPlan(c, g), st: () => sySt(), pr: () => PR, start: (lv) => startSyn(lv), answer: (s) => syAnswer(s), next: () => syNext(), counts: (lv) => syCounts(lv), when: syWhen };
   /* ==/SYNANT== */

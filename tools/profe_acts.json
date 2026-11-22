@@ -955,13 +955,33 @@
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers): «no sé» shows the answer"
  },
+ "syn-az": {
+  "voice": "unsuitable",
+  "why": "Synonyms page: A–Z jump bar (screen only)"
+ },
+ "syn-flip": {
+  "voice": "unsuitable",
+  "why": "Synonyms page: word spotlight turns over (screen only)"
+ },
  "syn-lv": {
   "voice": "pending",
   "why": "synonyms & antonyms page: level filter"
  },
+ "syn-open": {
+  "voice": "unsuitable",
+  "why": "Synonyms page: tap a word row to open it (screen only)"
+ },
+ "syn-pos": {
+  "voice": "unsuitable",
+  "why": "Synonyms page: kind of word chips (screen only)"
+ },
  "syn-prac": {
   "voice": "pending",
   "why": "synonyms & antonyms page: open Profe's synonyms practice"
+ },
+ "syn-shuf": {
+  "voice": "unsuitable",
+  "why": "Synonyms page: another spotlight word (screen only)"
  },
  "t-ask": "profe.explain",
  "t-chatmic": {
