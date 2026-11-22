@@ -685,6 +685,10 @@
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"
  },
+ "pr-rpnext": {
+  "voice": "pending",
+  "why": "finished role-play: go to the next situation"
+ },
  "pr-skip": {
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"

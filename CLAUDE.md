@@ -269,3 +269,6 @@ If no: say so in the commit message ("costs: no impact").
 - The chosen voices are pinned (`VXPIN`, saved as `ruta-vxpin`, keyed by region | accent | gender): online/offline, a refreshed voice list and the word-event learning never swap them; only a learner's pick, a variety or picture change, or the voice disappearing does. Before the Android voice list arrives, `utter()` names the pinned voice (bridge.js reads only the name). APK `TtsBridge.setVoice` keeps the last voice per language when no name comes (never the engine's default, often a woman's). Hooks: `__vxPin()`, `__vxUnpin()`, `__setPav(k)`.
 - Reading stops when you leave its page: Read & Listen texts (`plStop` on hashchange away from `PL.id`) and read-aloud started on a guide or grammar page (`RA.from`; lesson pages `RA_LESSON` keep their own rules). The picture dictionary and the global player already stopped.
 - `node tools/profe-tests/sVOX.js` (8) must pass.
+
+## Role-play: Next situation — v276
+- A finished role-play shows a big «Next situation: <title> ›» bar at the bottom (`.prnextbar`, `pr-rpnext`), flashing 8 times then resting (`.rpflash`; off with reduced motion). `rpNext(sc)`: the next role-play at the same level in list order, then the first of the next level. Hooks `__startRp(id)`, `__rpCur()`, `__rpModel()`, `__rpNext(id)`. sPH (22) checks it.

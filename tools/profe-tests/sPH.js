@@ -76,6 +76,19 @@ const INIT = () => {
   await p.waitForTimeout(1600);
   const w2 = await p.evaluate(() => ({ live: (document.getElementById("t-live") || {}).textContent || "", wait: document.querySelector('#tutor [data-act="pr-mic"]').classList.contains("wait") }));
   rec("Mic tapped: 'opening the mic' until it is really open, then 'Listening'", /opening the mic/.test(w1.live) && w1.wait && /Listening/.test(w2.live) && !w2.wait, JSON.stringify([w1, w2]));
+  // v276: a finished role-play shows a flashing «Next situation» bar that starts the next one
+  const nid = await p.evaluate(() => window.__rpNext("rp-a1-01"));
+  await p.evaluate(() => { const b = document.querySelector('#tutor [data-act="pr-exit"]'); if (b) b.click(); }); await p.waitForTimeout(300);
+  const started = await p.evaluate(() => { const b = document.querySelector('#tutor [data-act="pr-rp"][data-id="rp-a1-01"]') || document.querySelector('#tutor [data-act="pa-rp"]'); if (b && b.dataset.id) { b.click(); return "list"; } return window.__startRp ? (window.__startRp("rp-a1-01"), "hook") : ""; }); await p.waitForTimeout(500);
+  for (let k = 0; k < 12; k++) {
+    const m = await p.evaluate(() => { if (document.querySelector('#tutor [data-act="pr-rpnext"]')) return null; const mod = window.__rpModel && window.__rpModel(); return mod; });
+    if (!m) break; await p.fill("#pr-input", m); await p.evaluate(() => document.querySelector("#pr-form").requestSubmit()); await p.waitForTimeout(500);
+  }
+  const nb = await p.evaluate(() => { const b = document.querySelector('#tutor [data-act="pr-rpnext"]'); if (!b) return null; const r = b.getBoundingClientRect(), cs = getComputedStyle(b); return { id: b.dataset.id, txt: b.textContent, anim: cs.animationName, bottom: r.bottom, vh: innerHeight, w: r.width }; });
+  rec("Finished role-play: a big flashing «Next situation» bar at the bottom", !!nb && nb.id === nid && /rpflash/.test(nb.anim) && nb.bottom >= nb.vh - 40 && nb.w > 250, JSON.stringify({ started, nid, nb }));
+  if (nb) { await p.evaluate(() => document.querySelector('#tutor [data-act="pr-rpnext"]').click()); await p.waitForTimeout(500); }
+  const now = await p.evaluate(() => window.__rpCur && window.__rpCur());
+  rec("«Next situation» starts the next role-play straight away", now === nid, JSON.stringify({ now, nid }));
   rec("No page errors", !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();
