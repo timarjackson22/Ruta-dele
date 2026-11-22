@@ -1,4 +1,4 @@
-  /* ==VISUAL== Library › Picture dictionary (#visual, #visual/<topic>) — v262, redrawn v268. One card per topic: an original SVG drawing with
+  /* ==VISUAL== Library › Picture dictionary (#visual, #visual/<topic>) — v262, redrawn v268, premium finish v269 (vdLux). One card per topic: an original SVG drawing with
      each thing labelled (callouts for scenes, laid out by vdLay; a labelled grid for things), grouped on the hub (VD_GRP). Tap a label: hear it;
      «Hear them all» says each word in English once and in Spanish three times. Every word is also in Flashcards (built-in deck «visual») and in
      Quick drill › Pictures (`__vd.pool`, `__vd.pic`). Words follow the learner's Spanish variety (es / lat). Source of truth:
@@ -13,19 +13,29 @@
   const vLimb = (pts, w) => vP("M" + pts.join("L"), "", "#b9805e", w + 3) + vP("M" + pts.join("L"), "", "#f3c9a6", w);
   // scene item: [es (Spain), en, x, y, label side "l"|"r", (unused), lat (Latin America, optional)] — labels are laid out automatically (vdLay)
   const VDT = [
-    { id: "cara", grp: "body", bg: "#fdf6ec", es: "La cara", en: "The face", lvl: "a1", kind: "scene",
-      svg: vR(0, 0, 400, 340, "#fdf6ec") + vP("M118 340q4-40 64-44h36q60 4 64 44z", "#5b8def", "#3d6cc4") + vR(182, 240, 36, 62, "#f3c9a6", "#b9805e") + vP("M182 290q18 10 36 0", "", "#b9805e", 1.4) +
-        vE(130, 170, 13, 21, "#f3c9a6", "#b9805e") + vE(270, 170, 13, 21, "#f3c9a6", "#b9805e") + vP("M126 162q-5 8 2 16M274 162q5 8-2 16", "", "#b9805e", 1.6) + vE(200, 165, 70, 95, "#f3c9a6", "#b9805e") +
-        vP("M128 166C116 80 160 54 200 54C244 54 290 80 272 166C268 128 256 108 238 98C214 112 168 114 148 104C138 118 132 138 128 166Z", "#5b3a29") +
-        vP("M160 138q14-9 30-1M210 137q16-8 30 1", "", "#5b3a29", 5) +
-        vE(175, 157, 13, 8, "#fff", "#6b4a3a", 1.5) + vE(225, 157, 13, 8, "#fff", "#6b4a3a", 1.5) + vC(175, 157, 5.5, "#4a6fa5") + vC(225, 157, 5.5, "#4a6fa5") + vC(175, 157, 2.5, "#1b1b1b") + vC(225, 157, 2.5, "#1b1b1b") + vC(177, 155, 1.2, "#fff") + vC(227, 155, 1.2, "#fff") +
-        vP("M162 156q13-11 26 0M212 156q13-11 26 0", "", "#6b4a3a", 2) + vP("M164 152l-3-4M169 149l-1-5M175 148v-5M181 149l1-5M186 152l3-4M214 152l-3-4M219 149l-1-5M225 148v-5M231 149l1-5M236 152l3-4", "", "#2a1d15", 1.6) +
-        vP("M200 160q-2 16-7 24q-4 7 3 8q4 2 8 0q7-1 3-8", "", "#b9805e", 2.2) + vE(195, 190, 2.4, 1.4, "#a8705a") + vE(205, 190, 2.4, 1.4, "#a8705a") +
-        '<circle cx="160" cy="198" r="12" fill="#f2a58e" opacity=".55"/><circle cx="240" cy="198" r="12" fill="#f2a58e" opacity=".55"/>' +
-        vP("M176 212Q188 204 200 208Q212 204 224 212Q200 242 176 212Z", "#c24f5a", "#9b3a44", 1.2) + vP("M183 214Q200 218 217 214Q200 230 183 214Z", "#6a1f2a") + vP("M185 214.5Q200 218 215 214.5L213 219Q200 221.5 187 219Z", "#fff") +
-        vE(200, 249, 17, 7, "#f8dcc4") + '<path d="M186 238q14 7 28 0" fill="none" stroke="#b9805e" stroke-width="1.6" stroke-linecap="round" opacity=".75"/>',
-      items: [["el pelo", "hair", 170, 72, "l"], ["la frente", "forehead", 198, 120, "l"], ["la ceja", "eyebrow", 176, 134, "l"], ["el ojo", "eye", 175, 157, "l"], ["la mejilla", "cheek", 158, 198, "l"], ["la barbilla", "chin", 200, 250, "l"], ["el cuello", "neck", 192, 280, "l"],
-        ["las pestañas", "eyelashes", 226, 145, "r"], ["la oreja", "ear", 280, 170, "r"], ["la nariz", "nose", 203, 186, "r"], ["los dientes", "teeth", 207, 216, "r"], ["los labios", "lips", 212, 225, "r"], ["la boca", "mouth", 186, 213, "l"]] },
+    { id: "cara", grp: "body", bg: "#f4efe8", es: "La cara", en: "The face", lvl: "a1", kind: "scene",
+      svg: '<defs><radialGradient id="vdfSkin" cx=".46" cy=".36" r=".72"><stop offset="0" stop-color="#fbe2cc"/><stop offset=".62" stop-color="#f1c4a1"/><stop offset="1" stop-color="#dfa47c"/></radialGradient>' +
+        '<radialGradient id="vdfIris" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#9a7246"/><stop offset=".7" stop-color="#5e3d22"/><stop offset="1" stop-color="#3b2614"/></radialGradient>' +
+        '<linearGradient id="vdfBeard" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3d2b"/><stop offset="1" stop-color="#36241a"/></linearGradient></defs>' +
+        vR(0, 0, 400, 340, "#f4efe8") + vP("M110 340q6-46 72-52h36q66 6 72 52z", "#4f7fc9", "#3a62a3") + vP("M176 292q24 18 48 0", "", "#3a62a3", 3) +
+        '<rect x="180" y="232" width="40" height="66" fill="url(#vdfSkin)"/><path d="M180 244q20 26 40 0v18q-20 14-40 0z" fill="#c98a63" opacity=".45"/>' +
+        '<ellipse cx="131" cy="166" rx="12" ry="20" fill="url(#vdfSkin)" stroke="#c48b66" stroke-width="1.4"/><ellipse cx="269" cy="166" rx="12" ry="20" fill="url(#vdfSkin)" stroke="#c48b66" stroke-width="1.4"/>' +
+        '<path d="M127 158q-6 9 2 18M273 158q6 9-2 18" fill="none" stroke="#c48b66" stroke-width="1.6" stroke-linecap="round"/>' +
+        '<path d="M130 150C130 96 162 70 200 70C238 70 270 96 270 150C270 196 258 228 236 250C222 263 212 268 200 268C188 268 178 263 164 250C142 228 130 196 130 150Z" fill="url(#vdfSkin)" stroke="#c48b66" stroke-width="1.4" stroke-opacity=".7"/>' +
+        '<path d="M128 150C120 88 156 58 200 58C246 58 282 88 272 150C268 120 258 104 244 96C226 108 178 112 156 100C142 112 134 128 128 150Z" fill="url(#vdfBeard)"/><path d="M166 72q34-14 68 0M150 92q10-14 24-20" fill="none" stroke="#8a6248" stroke-width="4" stroke-linecap="round" opacity=".55"/>' +
+        '<path d="M156 134q16-11 35-3q-17-1-35 6z" fill="#3e2a1d"/><path d="M244 134q-16-11-35-3q17-1 35 6z" fill="#3e2a1d"/>' +
+        [175, 225].map((x) => '<path d="M' + (x - 14) + ' 157q14-12 28 0q-14 9-28 0z" fill="#fff" stroke="#8a6a58" stroke-width=".8"/><circle cx="' + x + '" cy="156" r="6.2" fill="url(#vdfIris)"/><circle cx="' + x + '" cy="156" r="2.8" fill="#140c06"/><circle cx="' + (x + 2.2) + '" cy="153.8" r="1.6" fill="#fff"/>' +
+          '<path d="M' + (x - 15) + ' 156q15-14 30 0" fill="none" stroke="#4a2f1f" stroke-width="2.2" stroke-linecap="round"/><path d="M' + (x - 11) + ' 147q11-6 22 0" fill="none" stroke="#d9a07a" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>' +
+          '<path d="M' + (x - 11) + ' 151l-3-4M' + (x - 6) + ' 148.5l-1.5-4.5M' + x + ' 147.6v-4.6M' + (x + 6) + ' 148.5l1.5-4.5M' + (x + 11) + ' 151l3-4" stroke="#24160e" stroke-width="1.4" stroke-linecap="round"/>').join("") +
+        '<path d="M200 156c-1 14-5 22-9 28" fill="none" stroke="#c48b66" stroke-width="2" stroke-linecap="round" opacity=".75"/><ellipse cx="200" cy="187" rx="10" ry="5.5" fill="#e3a982" opacity=".5"/>' +
+        '<path d="M189 190q-5-7 2-10M211 190q5-7-2-10" fill="none" stroke="#b97c58" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="195" cy="191" rx="2.6" ry="1.5" fill="#8e5a3e"/><ellipse cx="205" cy="191" rx="2.6" ry="1.5" fill="#8e5a3e"/>' +
+        '<circle cx="160" cy="188" r="13" fill="#ee9c86" opacity=".3"/><circle cx="240" cy="188" r="13" fill="#ee9c86" opacity=".3"/>' +
+        '<path d="M140 196C146 228 168 262 200 270C232 262 254 228 260 196C252 214 240 226 226 230C220 240 210 245 200 245C190 245 180 240 174 230C160 226 148 214 140 196Z" fill="url(#vdfBeard)"/>' +
+        '<path d="M150 216l3 4M158 230l3 4M168 242l3 3M180 252l2 4M192 258l1 4M208 258l-1 4M220 252l-2 4M232 242l-3 3M242 230l-3 4M250 216l-3 4M200 262v4" stroke="#7a5640" stroke-width="1.3" stroke-linecap="round" opacity=".7"/>' +
+        '<path d="M184 216q8-5 16-2q8-3 16 2q-16 4-32 0z" fill="#b25c57"/><path d="M186 217q14 3 28 0l-2 4.6q-12 2-24 0z" fill="#fff"/><path d="M186 222q14 2 28 0q-4 9-14 9t-14-9z" fill="#c9736b"/><path d="M193 225q7 2 14 0" fill="none" stroke="#e6a19a" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>' +
+        '<path d="M176 211C184 202 195 203 200 207C205 203 216 202 224 211C216 213 207 212 200 210C193 212 184 213 176 211Z" fill="url(#vdfBeard)"/>',
+      items: [["el pelo", "hair", 176, 70, "l"], ["la frente", "forehead", 200, 118, "l"], ["la ceja", "eyebrow", 172, 132, "l"], ["el ojo", "eye", 175, 156, "l"], ["la mejilla", "cheek", 160, 186, "l"], ["la boca", "mouth", 186, 221, "l"], ["la barba", "beard", 152, 222, "l"], ["la barbilla", "chin", 200, 258, "l"], ["el cuello", "neck", 190, 286, "l"],
+        ["las pestañas", "eyelashes", 226, 145, "r"], ["la oreja", "ear", 280, 166, "r"], ["la nariz", "nose", 204, 186, "r"], ["el bigote", "moustache", 214, 207, "r"], ["los dientes", "teeth", 202, 219, "r"], ["los labios", "lips", 208, 228, "r"]] },
 
     { id: "cuerpo", grp: "body", bg: "#f2f7fd", es: "El cuerpo", en: "The body", lvl: "a1", kind: "scene",
       svg: vR(0, 0, 400, 340, "#f2f7fd") + vE(200, 326, 64, 6, "#dfe7f1") + vR(193, 56, 14, 18, "#f3c9a6", "#b9805e") + vC(200, 40, 20, "#f3c9a6", "#b9805e") + vP("M180 38q-2-24 20-24t20 24q-6-12-20-12t-20 12z", "#3b2a20") + vC(193, 41, 1.8, "#333") + vC(207, 41, 1.8, "#333") + vP("M194 50q6 4 12 0", "", "#9b5a46", 1.5) +
@@ -353,6 +363,28 @@
         ["el tractor", "tractor", vP("M30 48V28h20l4 20z", "#4caf50", "#2e7d32") + vR(34, 30, 12, 10, "#cfe8fb") + vP("M10 48h44v8H10z", "#4caf50", "#2e7d32") + vC(46, 54, 14, "#2b2b2b") + vC(46, 54, 6, "#f2c94c") + vC(16, 60, 8, "#2b2b2b") + vC(16, 60, 3, "#f2c94c") + vP("M20 40V24", "", "#3b3f47", 3)],
         ["el patinete", "scooter", vP("M18 60h40M54 60L46 14M38 14h16", "", "#3b3f47", 4) + vC(16, 62, 7, "none", "#2b2b2b", 4) + vC(58, 62, 7, "none", "#2b2b2b", 4) + vP("M20 58h32", "", "#4f8cff", 5), "el scooter"]] },
   ];
+  // premium finish (v269): each flat colour becomes a soft top-lit gradient (lighter above, deeper below), outlines go quiet,
+  // things in a grid sit on a gentle shadow. Colours given as url(#…) (hand-made gradients, e.g. the face) are kept as drawn.
+  const vdHex = (c) => { c = c.slice(1); if (c.length === 3) c = c.split("").map((x) => x + x).join(""); return [0, 2, 4].map((i) => parseInt(c.substr(i, 2), 16)); };
+  const vdMix = (c, to, k) => "#" + vdHex(c).map((v, i) => Math.round(v + (to[i] - v) * k).toString(16).padStart(2, "0")).join("");
+  let VDN = 0; const VDM = new Map();
+  function vdLux(svg, shadow) {
+    const key = (shadow ? "s" : "f") + svg; if (VDM.has(key)) return VDM.get(key);
+    const n = ++VDN, used = new Map();
+    const body = svg.replace(/<(rect|circle|ellipse|path)\b([^>]*?)\/>/g, (m, tag, at) => {
+      const f = at.match(/ fill="(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})"/), s = at.match(/ stroke="(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6})"/);
+      if (f && / height="340"/.test(at)) return m; // the wall/background stays flat, so the picture and its margins match
+      if (f) { const id = "vg" + n + "_" + f[1].slice(1).toLowerCase(); used.set(id, f[1]); at = at.replace(f[0], ' fill="url(#' + id + ')"'); }
+      if (f && s) at = at.replace(s[0], ' stroke="' + vdMix(s[1], [0, 0, 0], 0.06) + '" stroke-opacity=".6"');
+      let hi = ""; // a soft highlight on round things in the grids (fruit, wheels' hubs, lamps…)
+      if (shadow && f && (tag === "circle" || tag === "ellipse")) { const g = (k) => +((at.match(new RegExp(" " + k + '="([\\d.]+)"')) || [])[1] || 0), rx = tag === "circle" ? g("r") : g("rx"), ry = tag === "circle" ? g("r") : g("ry"), [r0, g0, b0] = vdHex(f[1]), sat = Math.max(r0, g0, b0) - Math.min(r0, g0, b0);
+        if (rx >= 9 && ry >= 9 && sat > 40) hi = '<ellipse cx="' + (g("cx") - rx * 0.32).toFixed(1) + '" cy="' + (g("cy") - ry * 0.42).toFixed(1) + '" rx="' + (rx * 0.38).toFixed(1) + '" ry="' + (ry * 0.22).toFixed(1) + '" fill="#fff" opacity=".38"/>'; }
+      return "<" + tag + at + "/>" + hi; });
+    const defs = "<defs>" + [...used].map(([id, c]) => '<linearGradient id="' + id + '" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="' + vdMix(c, [255, 255, 255], 0.24) + '"/><stop offset=".55" stop-color="' + c + '"/><stop offset="1" stop-color="' + vdMix(c, [16, 22, 40], 0.16) + '"/></linearGradient>').join("") +
+      (shadow ? '<filter id="vs' + n + '" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="1.6" stdDeviation="1.6" flood-color="#1b2338" flood-opacity=".2"/></filter>' : "") + "</defs>";
+    const out = defs + (shadow ? '<g filter="url(#vs' + n + ')">' + body + "</g>" : body); VDM.set(key, out); return out;
+  }
+  const vdIcon = (svg) => '<svg viewBox="0 0 80 80" aria-hidden="true">' + vdLux(svg, 1) + "</svg>";
   const VD_GRP = [["body", "The body"], ["home", "At home"], ["food", "Food & the kitchen"], ["clothes", "Clothes"], ["things", "Things we use"], ["move", "Getting around"]];
   VDT.sort((a, b) => VD_GRP.findIndex((g) => g[0] === a.grp) - VD_GRP.findIndex((g) => g[0] === b.grp));
   const vdLat = () => (typeof S !== "undefined" && S.region === "latam");
@@ -365,8 +397,8 @@
       '<div class="row vd-hubrow"><a class="btn" href="#repaso-visual">🃏 Flashcards</a><a class="btn" href="#drill" data-act="vd-drill">⚡ Quick drill</a></div></div>';
   }
   function vdThumb(t) {
-    if (t.kind === "grid") return '<svg viewBox="0 0 160 160">' + t.items.slice(0, 4).map((it, k) => '<g transform="translate(' + (k % 2) * 80 + "," + Math.floor(k / 2) * 80 + ')">' + it[2] + "</g>").join("") + "</svg>";
-    return '<svg viewBox="70 0 260 220" preserveAspectRatio="xMidYMid slice">' + t.svg + "</svg>";
+    if (t.kind === "grid") return '<svg viewBox="0 0 160 160">' + t.items.slice(0, 4).map((it, k) => '<g transform="translate(' + (k % 2) * 80 + "," + Math.floor(k / 2) * 80 + ')">' + vdLux(it[2], 1) + "</g>").join("") + "</svg>";
+    return '<svg viewBox="70 0 260 220" preserveAspectRatio="xMidYMid slice">' + vdLux(t.svg) + "</svg>";
   }
   // labels: each side sorted by the point it names, then spread so no two labels touch (lines never cross on one side)
   function vdLay(t) {
@@ -387,17 +419,17 @@
   }
   // one item as a picture on its own (drills): grid icons as they are, scene items zoomed in with a ring round the point
   function vdPic(t, i) {
-    const it = t.items[i]; if (t.kind === "grid") return '<svg viewBox="0 0 80 80" aria-hidden="true">' + it[2] + "</svg>";
+    const it = t.items[i]; if (t.kind === "grid") return vdIcon(it[2]);
     const w = 120, h = 102, x = Math.max(0, Math.min(400 - w, it[2] - w / 2)), y = Math.max(0, Math.min(340 - h, it[3] - h / 2));
-    return '<svg viewBox="' + x + " " + y + " " + w + " " + h + '" aria-hidden="true">' + t.svg + '<circle cx="' + it[2] + '" cy="' + it[3] + '" r="9" fill="none" stroke="#e0592e" stroke-width="3"/><circle cx="' + it[2] + '" cy="' + it[3] + '" r="2.6" fill="#e0592e"/></svg>';
+    return '<svg viewBox="' + x + " " + y + " " + w + " " + h + '" aria-hidden="true">' + vdLux(t.svg) + '<circle cx="' + it[2] + '" cy="' + it[3] + '" r="9" fill="none" stroke="#e0592e" stroke-width="3"/><circle cx="' + it[2] + '" cy="' + it[3] + '" r="2.6" fill="#e0592e"/></svg>';
   }
   function vdView(id) {
     const t = VDT.find((x) => x.id === id); if (!t) { vdHub(); return; }
     const k = VDT.indexOf(t), prev = VDT[k - 1], next = VDT[k + 1];
     let pic;
-    if (t.kind === "grid") pic = '<div class="vd-items">' + t.items.map((it, i) => '<button type="button" class="vd-it" data-act="vd-say" data-i="' + i + '"><svg viewBox="0 0 80 80" aria-hidden="true">' + it[2] + '</svg><b lang="es">' + esc(vdW(t, it)) + "</b><small>" + esc(it[1]) + "</small></button>").join("") + "</div>";
+    if (t.kind === "grid") pic = '<div class="vd-items">' + t.items.map((it, i) => '<button type="button" class="vd-it" data-act="vd-say" data-i="' + i + '">' + vdIcon(it[2]) + '<b lang="es">' + esc(vdW(t, it)) + "</b><small>" + esc(it[1]) + "</small></button>").join("") + "</div>";
     else { const Y = vdLay(t);
-      pic = '<div class="vd-pic"><svg viewBox="-56 0 512 340" role="img" aria-label="' + esc(t.en) + '">' + '<rect x="-56" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/><rect x="400" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/>' + t.svg +
+      pic = '<div class="vd-pic"><svg viewBox="-56 0 512 340" role="img" aria-label="' + esc(t.en) + '">' + '' + vdLux('<rect x="-56" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/><rect x="400" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/>' + t.svg) +
         t.items.map((it, i) => { const L = it[4] === "l", lx = L ? 98 : 302, w = vdW(t, it), ly = Y[i];
           return '<g class="vd-lab" data-act="vd-say" data-i="' + i + '" tabindex="0" role="button" aria-label="' + esc(w + ", " + it[1]) + '"><path d="M' + lx + " " + ly + "L" + (L ? lx + 8 : lx - 8) + " " + ly + "L" + it[2] + " " + it[3] + '" class="vd-line"/><circle cx="' + it[2] + '" cy="' + it[3] + '" r="3.2" class="vd-dot"/>' +
             '<text x="' + (L ? lx - 2 : lx + 2) + '" y="' + (ly + 4) + '" text-anchor="' + (L ? "end" : "start") + '" class="vd-t">' + esc(w) + "</text></g>"; }).join("") + "</svg></div>" +
