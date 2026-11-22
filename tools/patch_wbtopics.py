@@ -105,7 +105,7 @@ for key, ic, en, es, tops, kw in CT:
             if i not in seen: seen.add(i); ids.append(i)
     ids.sort(); WCT.append([key, ic, en, es, ids])
 # v286: the textbook topics join the theme chips (English names; the topic dropdown is gone)
-TOPIC_CHIP = {"Synonyms & antonyms": "≈ Synonyms & antonyms"}  # v287: every other topic is folded into a broad theme (crossthemes.py tops)
+TOPIC_CHIP = {}  # v290: every topic is folded into a broad theme; synonyms & antonyms have their own page (#sinonimos)
 for es_, en_, ids_, deck_ in themes:
     if en_ in TOPIC_CHIP:
         ic_, nm_ = TOPIC_CHIP[en_].split(" ", 1); WCT.append(["t:" + en_, ic_, nm_, es_, sorted(set(ids_))])
