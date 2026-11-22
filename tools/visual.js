@@ -157,16 +157,28 @@
         ["el timbre", "bell", 236, 152, "r"], ["el manillar", "handlebars", 250, 155, "r", 0, "el manubrio"], ["el freno", "brake lever", 260, 164, "r"], ["la luz", "light", 270, 168, "r"], ["el cuadro", "frame", 220, 210, "r", 0, "el marco"], ["la horquilla", "fork", 252, 210, "r", 0, "la horquilla"], ["el plato", "chainring", 205, 236, "r"], ["el pedal", "pedal", 214, 262, "r"]] },
 
     { id: "coche", grp: "move", bg: "#eef2f8", es: "El coche", en: "Parts of a car", lvl: "a2", kind: "scene",
-      svg: vR(0, 0, 400, 340, "#eef2f8") + vR(0, 282, 400, 58, "#9aa1ab") + vP("M0 312h400", "", "#fff", 3) +
-        vP("M104 262V230Q106 214 124 210L156 206L178 178Q184 170 196 170H244Q254 170 262 180L278 204L290 208Q298 212 298 228V262Z", "#e05a47", "#a8392b") +
-        vP("M182 178Q186 174 196 174H218V204H162Z", "#cfe8fb", "#7a2a20", 1.5) + vP("M222 174H244Q250 174 256 182L270 204H222Z", "#cfe8fb", "#7a2a20", 1.5) + vP("M264 184L280 206", "", "#bfe2f8", 5) +
-        vP("M220 174v88M162 206v56M266 206v56", "", "#a8392b", 1.6) + vR(196, 212, 14, 4, "#7a2a20", "", 2) + vR(244, 212, 14, 4, "#7a2a20", "", 2) +
-        vP("M264 196l8-2v8h-6z", "#2b2b2b") + vP("M272 202l12-6", "", "#2b2b2b", 2) + vP("M104 216h10v10h-10z", "#b31d1d") + vP("M288 212h10v8h-8z", "#fff3a0", "#c9a227", 1) +
-        vR(98, 242, 22, 10, "#3b3f47", "", 3) + vR(282, 242, 20, 10, "#3b3f47", "", 3) + vR(124, 222, 8, 8, "#a8392b", "#7a2a20", 4, 1) + vP("M98 258h-8", "", "#666", 4) +
-        vP("M286 208q-14-4-24-4", "", "#a8392b", 1.4) + vP("M118 210q14-2 38-4", "", "#a8392b", 1.4) +
-        [140, 260].map((x) => vC(x, 262, 20, "#2b2b2b") + vC(x, 262, 10, "#c4ccd5") + vC(x, 262, 3, "#666")).join(""),
-      items: [["el maletero", "boot", 124, 212, "l", 0, "la cajuela"], ["la luz trasera", "rear light", 108, 220, "l"], ["el tapón de gasolina", "fuel cap", 128, 226, "l", 0, "la tapa de gasolina"], ["el tubo de escape", "exhaust pipe", 94, 258, "l", 0, "el escape"], ["la ventanilla", "side window", 194, 190, "l"], ["la puerta", "door", 186, 240, "l"], ["la rueda", "wheel", 140, 270, "l"],
-        ["el techo", "roof", 230, 171, "r"], ["el parabrisas", "windscreen", 272, 194, "r"], ["el retrovisor", "wing mirror", 267, 198, "r", 0, "el espejo lateral"], ["el limpiaparabrisas", "windscreen wiper", 278, 199, "r"], ["el capó", "bonnet", 283, 207, "r", 0, "el cofre"], ["la manija", "door handle", 251, 214, "r"], ["el faro", "headlight", 293, 216, "r"], ["el parachoques", "bumper", 292, 247, "r", 0, "la defensa"], ["el neumático", "tyre", 279, 266, "r", 0, "la llanta"]] },
+      // v273: two views — the side (top) and the front (bottom), so every part has room for its label
+      svg: vR(0, 0, 400, 340, "#eef2f8") + vR(0, 150, 400, 10, "#c4ccd5") + vR(0, 302, 400, 38, "#c4ccd5") +
+        // side view, facing right
+        vP("M102 136V114Q104 100 120 97L150 94L172 64Q178 56 190 56H238Q249 56 257 65L277 92L290 95Q300 99 300 114V136Z", "#e05a47", "#a8392b") +
+        vP("M176 66Q180 62 190 62H214V92H158Z", "#cfe8fb", "#7a2a20", 1.5) + vP("M220 62H238Q245 62 251 69L268 92H220Z", "#cfe8fb", "#7a2a20", 1.5) +
+        vP("M158 96V132M218 62V132M272 96V132M158 96H272", "", "#a8392b", 1.6) + vR(198, 102, 14, 4, "#7a2a20", "", 2) + vR(252, 102, 14, 4, "#7a2a20", "", 2) +
+        vR(102, 102, 10, 11, "#c81e1e", "#8f1414", 2, 1) + vR(290, 101, 10, 9, "#fff3a0", "#c9a227", 2, 1) + vC(128, 106, 4.5, "#c4483a", "#7a2a20", 1.2) +
+        vR(100, 122, 18, 10, "#3b3f47", "", 3) + vR(286, 122, 16, 10, "#3b3f47", "", 3) + vP("M100 133h-8", "", "#6b7480", 4) +
+        vP("M268 86l9-3v8h-7z", "#2b2b2b") +
+        [140, 262].map((x) => vP("M" + (x - 24) + " 136a24 24 0 0 1 48 0", "#a8392b") + vC(x, 136, 19, "#2b2b2b") + vC(x, 136, 10, "#c4ccd5") + vC(x, 136, 3, "#6b7480")).join("") +
+        // front view
+        vR(116, 230, 12, 10, "#2b2b2b", "", 3) + vR(272, 230, 12, 10, "#2b2b2b", "", 3) +
+        vR(128, 280, 24, 24, "#2b2b2b", "", 4) + vR(248, 280, 24, 24, "#2b2b2b", "", 4) +
+        vP("M120 290V262Q120 247 134 243L150 239L162 207Q166 196 178 196H222Q234 196 238 207L250 239L266 243Q280 247 280 262V290Z", "#e05a47", "#a8392b") +
+        vP("M168 205Q170 201 178 201H222Q230 201 232 205L242 234H158Z", "#cfe8fb", "#7a2a20", 1.5) +
+        vP("M168 232l26-9M206 232l26-9", "", "#2b2b2b", 2.2) +
+        vE(142, 255, 14, 7, "#fff3a0", "#c9a227", 1.2) + vE(258, 255, 14, 7, "#fff3a0", "#c9a227", 1.2) + vR(270, 249, 8, 5, "#f59a2c", "", 2) + vR(122, 249, 8, 5, "#f59a2c", "", 2) +
+        vR(172, 251, 56, 14, "#3b3f47", "", 4) + vP("M176 256h48M176 260h48", "", "#6b7480", 1.4) +
+        vR(122, 268, 156, 18, "#9aa1ab", "#6b7480", 5) + vR(182, 271, 36, 12, "#fff", "#6b7480", 2, 1.2) + vP("M187 277h26", "", "#3b3f47", 2),
+      items: [["el maletero", "boot", 122, 98, "l", 0, "la cajuela"], ["la luz trasera", "rear light", 106, 107, "l"], ["el tapón de gasolina", "fuel cap", 128, 106, "l", 0, "la tapa de gasolina"], ["el tubo de escape", "exhaust pipe", 94, 133, "l", 0, "el escape"], ["la ventanilla", "side window", 188, 78, "l"], ["la puerta", "door", 186, 116, "l"], ["la rueda", "wheel", 140, 140, "l"],
+        ["el capó", "bonnet", 200, 245, "l", 0, "el cofre"], ["la rejilla", "grille", 186, 258, "l", 0, "la parrilla"], ["la matrícula", "number plate", 200, 277, "l", 0, "la placa"], ["el parachoques", "bumper", 134, 278, "l", 0, "la defensa"],
+        ["el techo", "roof", 226, 57, "r"], ["el retrovisor", "wing mirror", 280, 235, "r", 0, "el espejo lateral"], ["la manija", "door handle", 259, 104, "r"], ["el parabrisas", "windscreen", 214, 214, "r"], ["el limpiaparabrisas", "wiper", 226, 225, "r"], ["el intermitente", "indicator", 274, 251, "r", 0, "la direccional"], ["el faro", "headlight", 258, 256, "r"], ["el neumático", "tyre", 262, 296, "r", 0, "la llanta"]] },
     { id: "ropa", grp: "clothes", es: "La ropa", en: "Clothes", lvl: "a1", kind: "grid",
       items: [["la camisa", "shirt", '<path d="M26 14l-12 8 4 14 6-3v34h32V33l6 3 4-14-12-8-6 6h-16z" fill="#cfe2f8" stroke="#4f7cac" stroke-width="2.4"/><path d="M34 14l6 10 6-10" fill="none" stroke="#4f7cac" stroke-width="2.4"/><path d="M40 24v42" stroke="#4f7cac" stroke-width="1.6"/><circle cx="43" cy="34" r="1.5" fill="#4f7cac"/><circle cx="43" cy="46" r="1.5" fill="#4f7cac"/><circle cx="43" cy="58" r="1.5" fill="#4f7cac"/>'],
         ["la camiseta", "T-shirt", '<path d="M26 16l-14 10 6 12 8-4v32h28V34l8 4 6-12-14-10q-6 8-14 8t-14-8z" fill="#ff8a6b" stroke="#c4502f" stroke-width="2.4"/>'],

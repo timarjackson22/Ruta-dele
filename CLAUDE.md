@@ -260,3 +260,4 @@ If no: say so in the commit message ("costs: no impact").
 - «Hear them all» and «Add to my deck» are at the top; «Quick drill» and «Flashcards» (`#repaso-visual`) are at the bottom (`.vd-more`). sVD (15) checks the mode, the controls and the layout.
 - patch_visual.py replaces its CSS block in place (later `<style>` blocks such as rl-frame must stay last).
 - v272: each scene's frame hugs its labels (`vdFrame(t)`: label widths measured with a canvas in the label font, 14 px; the viewBox spans only the margin the longest left/right label needs, never narrower than x 84–316), so drawings fill more of the phone's width at their natural proportions and labels read larger; label spacing 22.
+- v273: the car is two views — side view (top: boot, rear light, fuel cap, exhaust, side window, door, handle, roof, wheel) and front view (bottom: windscreen, wiper, bonnet, grille, number plate, bumper, wing mirror, indicator, headlight, tyre), so no labels pile up on the nose.
