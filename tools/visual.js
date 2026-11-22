@@ -121,9 +121,10 @@
         // window with a herb pot on the sill
         '<rect x="158" y="86" width="50" height="46" fill="url(#ckSky)"/>' + vP("M164 120q10-10 22-6q10 3 22-4V132H164z", "#bfe3b0") + vR(156, 84, 54, 50, "none", "#fff", 2, 4) + vP("M183 86v46M158 109h50", "", "#fff", 3) + vR(152, 132, 62, 5, "#e8ddd0", "#cbbba5", 1, 1) +
         vP("M194 132l2-10h12l2 10z", "#d9774f", "#a9552f", 1) + vP("M199 122q-4-8 2-12M202 122q0-9 5-11M205 122q5-6 8-4", "", "#4f9a4a", 2.2) +
-        // fridge-freezer
-        '<rect x="102" y="70" width="46" height="218" rx="6" fill="url(#ckSteel)" stroke="#8d99a6" stroke-width="1.5"/>' + vP("M103 134h44", "", "#8d99a6", 1.6) + vR(139, 84, 3.6, 34, "#7d8a98", "", 1.8) + vR(139, 146, 3.6, 60, "#7d8a98", "", 1.8) +
-        vP("M108 76v52M108 140v140", "", "#fff", 2) + vR(106, 286, 6, 3, "#555") + vR(138, 286, 6, 3, "#555") + vR(112, 96, 16, 10, "#e9eef3", "#a9b4bf", 2, 1) + vP("M115 101h10", "", "#4f8cff", 1.6) +
+        // fridge-freezer (v279: real proportions, about 0.4 wide to tall, like a 70 × 180 cm fridge)
+        '<ellipse cx="111" cy="289" rx="40" ry="3" fill="black" opacity=".12"/>' + '<rect x="72" y="76" width="76" height="212" rx="7" fill="url(#ckSteel)" stroke="#8d99a6" stroke-width="1.5"/>' + vP("M73 144h74", "", "#8d99a6", 1.6) +
+        vR(136, 92, 4.4, 40, "#7d8a98", "", 2.2) + vR(136, 156, 4.4, 70, "#7d8a98", "", 2.2) + vP("M80 84v54M80 150v130", "", "#fff", 2.4) + vR(78, 285, 8, 3, "#555") + vR(134, 285, 8, 3, "#555") +
+        vR(90, 104, 22, 13, "#e9eef3", "#a9b4bf", 2.4, 1) + vP("M94 110.5h14", "", "#4f8cff", 1.8) +
         // microwave over the cooker
         '<rect x="226" y="92" width="70" height="36" rx="3" fill="url(#ckSteel)" stroke="#8d99a6" stroke-width="1.4"/><rect x="231" y="97" width="44" height="26" rx="2" fill="url(#ckGlass)"/>' + vP("M235 101l10 18M243 101l7 12", "", "#fff", 1.2) + vR(279, 98, 13, 6, "#1d2129", "", 1) + vP("M281 108h9M281 112h9M281 116h9M281 120h9", "", "#9aa7b4", 1.6) + '<rect x="226" y="128" width="70" height="4" fill="black" opacity=".08"/>' +
         // worktop, sink and tap
@@ -138,7 +139,7 @@
         vP("M274 156q-4-6 0-12t0-12M284 152q-4-6 0-12", "", "#c9d2dc", 2) +
         vR(228, 200, 68, 14, "#e9eef3", "", 1) + [236, 248, 260, 272].map((x) => vC(x, 207, 3.8, "#3b3f47") + vP("M" + x + " 204v3", "", "#e9eef3", 1.2)).join("") + vR(282, 203, 10, 8, "#1d2129", "", 1.5) + vP("M284 207h6", "", "#7fe08a", 1.4) +
         vR(234, 218, 56, 6, "#9aa7b4", "#7d8a98", 3, 1) + '<rect x="234" y="230" width="56" height="44" rx="3" fill="url(#ckGlass)" stroke="#5b6470" stroke-width="1.2"/>' + vP("M240 236l14 30M250 236l9 20", "", "#fff", 1.2) + vP("M236 268h52", "", "#e9633c", 1.2) + vR(226, 280, 72, 8, "#c9d2dc", "#8d99a6", 0, 1),
-      items: [["los armarios", "cupboards", 220, 50, "l", 0, "los gabinetes"], ["el congelador", "freezer", 124, 112, "l"], ["la ventana", "window", 172, 98, "l"], ["el grifo", "tap", 193, 168, "l", 0, "la llave del agua"], ["la nevera", "fridge", 124, 220, "l", 0, "el refrigerador"], ["el fregadero", "sink", 172, 198, "l"], ["los cajones", "drawers", 168, 243, "l"], ["el suelo", "floor", 130, 322, "l", 0, "el piso"],
+      items: [["los armarios", "cupboards", 220, 50, "l", 0, "los gabinetes"], ["el congelador", "freezer", 118, 126, "l"], ["la ventana", "window", 172, 98, "l"], ["el grifo", "tap", 193, 168, "l", 0, "la llave del agua"], ["la nevera", "fridge", 118, 220, "l", 0, "el refrigerador"], ["el fregadero", "sink", 172, 198, "l"], ["los cajones", "drawers", 168, 243, "l"], ["el suelo", "floor", 130, 322, "l", 0, "el piso"],
         ["el microondas", "microwave", 254, 110, "r"], ["la olla", "pot", 286, 182, "r"], ["el fuego", "burner", 242, 192, "r", 0, "el quemador"], ["la encimera", "worktop", 214, 200, "r", 0, "el mesón"], ["los mandos", "knobs", 260, 207, "r", 0, "las perillas"], ["el horno", "oven", 262, 252, "r"], ["la cocina", "stove", 294, 284, "r", 0, "la estufa"]] },
 
     { id: "sala", grp: "home", bg: "#eef3ea", es: "El salón", en: "The living room", lvl: "a1", kind: "scene",
