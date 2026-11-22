@@ -194,6 +194,8 @@ WBF = '''<style id="wb-frame">
 body[data-sec="palabras"] .tabbar, body[data-sec="palabras"] #tabpeek, body[data-sec="palabras"] #px-dock { display: none !important }
 body[data-sec="palabras"] .stack > .player { position: sticky !important; bottom: 0 !important; margin-bottom: 0 !important; border-radius: 16px 16px 0 0 !important; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important }
 body[data-sec="palabras"] .ebar > div + div { display: none }
+.rk .core.inf { color: #6d4bd0; background: color-mix(in srgb, #8b5cf6 13%, transparent); white-space: nowrap }
+body[data-sec="palabras"] .winf-note { margin: 0 0 8px }
 body[data-sec="palabras"] table.words th:nth-child(5), body[data-sec="palabras"] table.words td:nth-child(5) { display: none !important }
 body[data-sec="palabras"] .ebar { grid-template-columns: 1fr }
 .wsec { margin: 2px 0 10px } .wlab { margin: 0 0 6px; font-size: .74rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px }

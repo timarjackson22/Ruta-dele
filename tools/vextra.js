@@ -123,9 +123,10 @@
   function infHTML(q) {
     const nq = (x) => String(x).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""), qq = nq(q || "");
     const rows = infRows().filter((r) => !qq || nq(r[0]).includes(qq) || nq(r[1]).includes(qq));
-    return '<p class="muted small">' + rows.length + " informal words, shortened forms, expressions and jargon" + (Object.keys(vLex()).length ? ", including " + Object.keys(vLex()).length + " heard in your videos" : "") + ". They're coloured in the video captions; tap one there to hear it in context.</p>" +
-      '<div class="tbl"><table class="words inf"><thead><tr><th>Spanish</th><th>English</th><th>Kind</th></tr></thead><tbody>' +
-      rows.map((r) => '<tr><td lang="es"><b>' + esc(r[0]) + "</b>" + (r[3] ? '<br><span class="muted small">«' + esc(r[3]) + "»</span>" : "") + "</td><td>" + esc(r[1]) + '</td><td class="muted small">' + esc(r[2]) + "</td></tr>").join("") + "</tbody></table></div>";
+    const nv = Object.keys(vLex()).length;
+    return '<p class="muted small winf-note">' + rows.length + " informal words, shortened forms and jargon" + (nv ? " · " + nv + " heard in your videos (coloured in the captions)" : "") + ".</p>" +
+      '<div class="tbl"><table class="words inf"><thead><tr><th>Kind</th><th>English</th><th></th><th>Spanish</th></tr></thead><tbody>' +
+      rows.map((r) => '<tr><td class="rk"><span class="core inf">' + esc(r[2].split(" · ")[0]) + '</span></td><td class="gl">' + esc(r[1]) + '</td><td class="sp">' + sayBtn(r[0]) + '</td><td class="ww"><b class="wlink" lang="es">' + esc(r[0]) + "</b>" + (r[3] ? '<small class="forms">«' + esc(r[3]) + "»</small>" : "") + "</td></tr>").join("") + "</tbody></table></div>";
   }
 
   // C. ads: YouTube's own signals, when its player sends them, plus a playback report to send if anything still drifts
