@@ -1,5 +1,9 @@
 # Ruta DELE: rules for every update
 
+## Design & documentation doc — update with EVERY release
+- The system's readable overview lives in a Claude Doc: «Ruta DELE — System design & documentation», https://claude.ai/artifact/Q8s4vv6qr2djKjySRNRwJR (doc id `bb5b403c-269d-4218-9329-4eb5b02834da`). Sections: Overview, Architecture (diagram), Feature map (table), Profe, Data/privacy/services (table), Quality, Known gaps, Release history (table, newest first).
+- Every release, after the commit: with the docs tools, (1) add a row at the top of the Release history table (version · date · one line) and set the Overview's version and date; (2) revise any section the change touches (a new route → Feature map row; a new outside service → services table; a new test suite → Quality). Change only what the release changed. CLAUDE.md stays the detailed engineering record.
+
 ## Service gaps & costs dashboard (Settings → Service gaps & costs, route #costes)
 Every change must be checked against `tools/costs/gaps.json`:
 - Does it add, remove or change a dependency on an outside service (AI, speech, translation, hosting, analytics, accounts)?
