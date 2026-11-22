@@ -51,7 +51,15 @@ const URL = process.env.URL || "http://localhost:8766/";
   await p.evaluate(() => document.querySelector('[data-act="vd-all"]').click()); await p.waitForTimeout(6500);
   const seq = await p.evaluate(() => window.__vd.seq());
   rec("«Hear them all»: English once, then Spanish three times, word after word", seq.length >= 8 && /^en:/.test(seq[0]) && seq.slice(1, 4).every((x) => x === "es:" + seq[1].slice(3)) && /^es:/.test(seq[1]) && /^en:/.test(seq[4]), seq.slice(0, 8).join(" | "));
-  await p.evaluate(() => document.querySelector('[data-act="vd-all"]').click());
+  // v271 listening mode: picture pinned under the top bar, reading player at the bottom, no tab bar, list moving up
+  const md = await p.evaluate(() => { const h = document.querySelector("header.top").getBoundingClientRect(), pic = document.querySelector(".vd-pic").getBoundingClientRect(), bar = document.getElementById("vd-player"), br = bar.getBoundingClientRect(), tb = document.querySelector(".tabbar");
+    return { on: document.body.classList.contains("vd-on"), pinned: Math.abs(pic.top - h.bottom) <= 2, wide: pic.width >= innerWidth - 1, bar: !bar.hidden && Math.abs(br.bottom - innerHeight) <= 1, tabs: !!tb && getComputedStyle(tb).display !== "none", lit: (() => { const e = document.querySelector(".vd-list button.on"); if (!e) return false; const r = e.getBoundingClientRect(); return r.top >= pic.bottom - 1 && r.bottom <= br.top + 1; })() }; });
+  rec("«Hear them all» opens a listening mode: picture edge to edge pinned under the top bar, the reading player flush at the bottom, no tab bar, the word being said in view between them", md.on && md.pinned && md.wide && md.bar && !md.tabs && md.lit, JSON.stringify(md));
+  const ctl = await p.evaluate(async () => { const sl = (ms) => new Promise((r) => setTimeout(r, ms)), cl = (a) => document.querySelector('[data-act="' + a + '"]').click(), st = () => window.__vd.st(), o = {};
+    cl("vd-play"); await sl(200); o.paused = st().paused; const i0 = st().i; cl("vd-next"); await sl(150); o.next = st().i === i0 + 1; cl("vd-prev"); await sl(150); o.prev = st().i === i0; cl("vd-rate"); await sl(100); o.rate = st().rate; o.rateTxt = document.getElementById("vd-rate").textContent;
+    cl("vd-play"); await sl(200); o.resumed = !st().paused; cl("vd-close"); await sl(200); o.closed = document.getElementById("vd-player").hidden && !document.body.classList.contains("vd-on"); return o; });
+  rec("Player: pause/play, next and previous word, speed, close", ctl.paused === 1 && ctl.next && ctl.prev && ctl.rate === 1.25 && ctl.rateTxt === "1.25×" && ctl.resumed && ctl.closed, JSON.stringify(ctl));
+  rec("Quick drill and Flashcards sit at the bottom of the topic", await p.evaluate(() => { const m = document.querySelector(".vd-more"), c = document.querySelector(".vd-card2"); return !!m && !!m.querySelector('[href="#drill"]') && !!m.querySelector('[href="#repaso-visual"]') && !!(c.compareDocumentPosition(m) & Node.DOCUMENT_POSITION_FOLLOWING) && !document.querySelector(".vd-top [href=\"#drill\"]"); }));
   // flashcards: the whole dictionary is a built-in deck
   const N = await p.evaluate(() => window.__vd.n());
   await p.goto(URL + "#repaso"); await p.waitForTimeout(900);

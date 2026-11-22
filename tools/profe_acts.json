@@ -1317,6 +1317,10 @@
   "voice": "pending",
   "why": "picture dictionary: «hear them all» button (reads every label)"
  },
+ "vd-close": {
+  "voice": "pending",
+  "why": "picture dictionary player: close"
+ },
  "vd-deck": {
   "voice": "pending",
   "why": "picture dictionary: add the topic's words to a deck"
@@ -1324,6 +1328,22 @@
  "vd-drill": {
   "voice": "pending",
   "why": "picture dictionary: open Quick drill on the Pictures focus"
+ },
+ "vd-next": {
+  "voice": "pending",
+  "why": "picture dictionary player: next word"
+ },
+ "vd-play": {
+  "voice": "pending",
+  "why": "picture dictionary player: play / pause «Hear them all»"
+ },
+ "vd-prev": {
+  "voice": "pending",
+  "why": "picture dictionary player: previous word"
+ },
+ "vd-rate": {
+  "voice": "pending",
+  "why": "picture dictionary player: speed"
  },
  "vd-say": {
   "voice": "pending",

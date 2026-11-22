@@ -34,4 +34,20 @@
 .vd-it.on { box-shadow: 0 0 0 2.5px #ff6a3d, var(--vd-sh) }
 .vd-list button { border: 0; box-shadow: 0 1px 2px rgba(20,28,50,.06), 0 3px 10px rgba(20,28,50,.05); border-radius: 14px }
 .drill .qdpic svg, .qdpicopt { box-shadow: 0 1px 2px rgba(20,28,50,.06), 0 6px 18px rgba(20,28,50,.07) }
+.vd-more { margin: 14px 0 0; gap: 8px; flex-wrap: wrap }
+/* v271 «Hear them all» listening mode: the picture pinned edge to edge under the top bar, the list moving up, the reading player at the bottom */
+body.vd-on .tabbar, body.vd-on #tabpeek, body.vd-on .tutor-fab { display: none !important }
+.vdplay .vd-card2:has(.vd-pic) { margin-left: calc(50% - 50vw) !important; margin-right: calc(50% - 50vw) !important; border-radius: 0 !important; padding: 0 0 8px !important; box-shadow: none !important; background: transparent !important }
+.vdplay .vd-pic { position: sticky; top: var(--hdrH, 52px); z-index: 5; background: var(--vdbg, #fffdf8); box-shadow: 0 10px 20px -14px rgba(20,28,50,.45) }
+.vdplay .vd-list { padding: 0 16px 120px }
+.vdplay .vd-pic svg { border-radius: 0; max-height: calc(100vh - var(--hdrH, 52px) - 250px); min-height: 0 }
+.vdplay .vd-en { display: none !important; position: fixed; left: 10px; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 8; box-shadow: 0 2px 10px rgba(20,28,50,.12); margin: 0; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,.88); font-size: .9rem; min-height: 0 } .vdplay .vd-en:empty { display: none }
+.vdplay .vd-items { padding-bottom: 110px }
+.vd-player[hidden] { display: none !important }
+.vd-player { position: fixed !important; left: 0; right: 0; bottom: 0 !important; z-index: 9; margin: 0 !important; border-radius: 20px 20px 0 0 !important; padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)) !important; flex-wrap: nowrap !important; gap: 8px !important; box-shadow: 0 -6px 22px rgba(20,28,50,.10) !important }
+.vd-player .vd-rate { margin-left: auto; width: auto !important; padding: 0 12px !important; font: 700 .9rem/1 -apple-system, system-ui, sans-serif; border-radius: 999px !important }
+.vd-player .vd-x { font-size: 1rem; font-weight: 700 }
+@media (min-width: 821px) { .vd-player { left: 50%; right: auto; width: min(720px, 94vw); transform: translateX(-50%); border-radius: 20px !important; bottom: 12px !important } }
+.vdplay .vd-list button.on, .vdplay .vd-it.on { background: linear-gradient(180deg, #fff3ec, #ffe6d9) !important; box-shadow: 0 0 0 2.5px #ff6a3d, 0 8px 22px rgba(255,106,61,.18) !important; transform: scale(1.02); transition: transform .2s, box-shadow .2s }
+.vdplay .vd-list button.on b, .vdplay .vd-it.on b { color: #c2410c }
 /* ==/VISUAL-CSS== */

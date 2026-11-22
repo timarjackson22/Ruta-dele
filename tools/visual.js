@@ -435,30 +435,60 @@
             '<text x="' + (L ? lx - 2 : lx + 2) + '" y="' + (ly + 4) + '" text-anchor="' + (L ? "end" : "start") + '" class="vd-t">' + esc(w) + "</text></g>"; }).join("") + "</svg></div>" +
         '<ol class="vd-list">' + t.items.map((it, i) => '<li><button type="button" data-act="vd-say" data-i="' + i + '"><b lang="es">' + esc(vdW(t, it)) + "</b><small>" + esc(it[1]) + "</small></button></li>").join("") + "</ol>"; }
     app.innerHTML = '<div class="stack vd"><p class="crumbs"><a href="#visual">Picture dictionary</a><span aria-hidden="true">›</span><span>' + esc(t.en) + '</span></p><div><p class="eyebrow">' + esc(t.en) + " · " + t.lvl.toUpperCase() + " · " + t.items.length + " words</p><h1>" + esc(t.es) + '</h1><p class="lead2">Tap any label to hear it. ' + (vdLat() ? "Words as they are said in Latin America." : "Words as they are said in Spain.") + " Change this in Settings › Spanish variety.</p></div>" +
-      '<div class="row vd-top"><button class="btn primary" data-act="vd-all">🔊 Hear them all</button><button class="btn" data-act="vd-deck">＋ Add to my deck</button><a class="btn" href="#drill" data-act="vd-drill">⚡ Drill</a></div><p class="small vd-how">«Hear them all»: each word in English once, then in Spanish three times.</p>' +
+      '<div class="row vd-top"><button class="btn primary" data-act="vd-all">🔊 Hear them all</button><button class="btn" data-act="vd-deck">＋ Add to my deck</button></div><p class="small vd-how">«Hear them all»: each word in English once, then in Spanish three times.</p>' +
       '<section class="block vd-card2" data-vd="' + t.id + '">' + pic + '<p class="vd-en" id="vd-en" aria-live="polite"></p></section>' +
+      '<div class="row vd-more"><a class="btn" href="#drill" data-act="vd-drill">⚡ Quick drill</a><a class="btn" href="#repaso-visual">🃏 Flashcards</a></div>' +
+      '<div class="player vd-player" id="vd-player" role="group" aria-label="Word player" hidden><button class="pbtn" data-act="vd-prev" aria-label="Previous word">' + PREV + '</button><button class="pbtn main" id="vd-play" data-act="vd-play" aria-label="Pause">' + PAUSE + '</button><button class="pbtn" data-act="vd-next" aria-label="Next word">' + NEXT + '</button>' +
+        '<span class="ppos" id="vd-pos">1 / ' + t.items.length + '</span><button class="pbtn vd-rate" data-act="vd-rate" id="vd-rate" aria-label="Speed">1×</button><button class="pbtn vd-x" data-act="vd-close" aria-label="Close the player">✕</button></div>' +
       '<div class="unav">' + (prev ? '<a class="btn" href="#visual/' + prev.id + '">‹ ' + esc(prev.es) + "</a>" : '<a class="btn" href="#visual">‹ All topics</a>') + (next ? '<a class="btn" href="#visual/' + next.id + '">' + esc(next.es) + " ›</a>" : "") + "</div></div>";
   }
   const vdItems = () => { const c = document.querySelector("[data-vd]"), t = c && VDT.find((x) => x.id === c.dataset.vd); return t ? t.items.map((it) => [vdW(t, it), it[1]]) : []; };
   function vdLight(i) { document.querySelectorAll(".vd .on").forEach((x) => x.classList.remove("on")); document.querySelectorAll('.vd [data-i="' + i + '"]').forEach((x) => x.classList.add("on")); const w = vdItems()[i], e = document.getElementById("vd-en"); if (e && w) e.innerHTML = "<b lang=\"es\">" + esc(w[0]) + "</b> · " + esc(w[1]); }
-  const VDP = { gen: 0, on: 0 };
+  // «Hear them all» (v271): a listening mode — the picture pinned at the top, edge to edge, the word list moving up under it,
+  // the reading player at the bottom (previous · play/pause · next · speed · close). Each word: English once, then Spanish three times.
+  const VDP = { gen: 0, on: 0, i: 0, paused: 0, rate: 1 }, VD_RATES = [0.75, 1, 1.25];
   function vdAllBtn(on) { const b = document.querySelector('[data-act="vd-all"]'); if (b) b.textContent = on ? "⏹ Stop" : "🔊 Hear them all"; VDP.on = on ? 1 : 0; }
-  // «Hear them all»: English once, then the Spanish three times, word by word
   function vdSay(txt, lang, g, done) {
-    if (g !== VDP.gen || !document.querySelector(".vd")) return vdAllBtn(false);
-    let fin = 0; const next = () => { if (fin) return; fin = 1; setTimeout(done, lang === "en" ? 380 : 520); };
-    try { const u = utter(txt, lang, lang === "es" ? 0.85 : 0.95); u.onend = next; u.onerror = next; speechSynthesis.speak(u); setTimeout(next, 900 + txt.length * 160); } catch (x) { next(); }
+    if (g !== VDP.gen || !document.querySelector(".vd")) return;
+    let fin = 0; const next = () => { if (fin) return; fin = 1; if (g === VDP.gen) setTimeout(() => g === VDP.gen && done(), (lang === "en" ? 380 : 520) / VDP.rate); };
+    try { const u = utter(txt, lang, (lang === "es" ? 0.85 : 0.95) * VDP.rate); u.onend = next; u.onerror = next; speechSynthesis.speak(u); setTimeout(next, (900 + txt.length * 160) / VDP.rate); } catch (x) { next(); }
   }
+  function vdBar() { const L = vdItems(), b = document.getElementById("vd-play"), pos = document.getElementById("vd-pos"), r = document.getElementById("vd-rate");
+    if (b) { b.innerHTML = VDP.paused ? PLAY : PAUSE; b.setAttribute("aria-label", VDP.paused ? "Play" : "Pause"); } if (pos) pos.textContent = Math.min(L.length, VDP.i + 1) + " / " + L.length; if (r) r.textContent = String(VDP.rate).replace(/^0/, "") + "×"; }
+  // keep the word being said in view: the list moves up a row at a time, under the pinned picture and above the player
+  function vdKeep(i) {
+    const el = document.querySelector('.vd-list [data-i="' + i + '"]') || document.querySelector('.vd-it[data-i="' + i + '"]'); if (!el) return;
+    const pin = document.querySelector(".vdplay .vd-pic"), top = pin ? pin.getBoundingClientRect().bottom + 6 : (document.querySelector("header.top") || { getBoundingClientRect: () => ({ bottom: 56 }) }).getBoundingClientRect().bottom + 8;
+    const bar = document.getElementById("vd-player"), bot = (bar && !bar.hidden ? bar.getBoundingClientRect().top : innerHeight) - 8, r = el.getBoundingClientRect();
+    const row = r.height + 8; // finished rows move up: the word being said sits on the second visible row (the row just done stays above it)
+    if (r.bottom > bot || r.top < top || r.top > top + row * 1.3) scrollTo({ top: Math.max(0, scrollY + r.top - top - (r.top - row < top ? 0 : row)), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); else if (0) scrollTo({ top: Math.max(0, scrollY + r.top - top), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function vdStep(g) {
+    if (g !== VDP.gen || VDP.paused) return; const L = vdItems();
+    if (VDP.i >= L.length) { VDP.paused = 1; VDP.i = Math.max(0, L.length - 1); vdBar(); vdAllBtn(false); return; }
+    const w = L[VDP.i]; vdLight(VDP.i); vdKeep(VDP.i); vdBar();
+    const say = (x, l, d) => { window.__vdSeq.push(l + ":" + x); vdSay(x, l, g, d); };
+    say(w[1], "en", () => say(w[0], "es", () => say(w[0], "es", () => say(w[0], "es", () => { VDP.i++; setTimeout(() => vdStep(g), 500 / VDP.rate); }))));
+  }
+  function vdGo(i) { const g = ++VDP.gen; try { speechSynthesis.cancel(); } catch (x) {} VDP.i = Math.max(0, Math.min(vdItems().length - 1, i)); if (VDP.paused) { vdLight(VDP.i); vdKeep(VDP.i); vdBar(); } else vdStep(g); }
+  function vdMode(on) {
+    const page = document.querySelector(".stack.vd"), bar = document.getElementById("vd-player"); if (!page) return;
+    page.classList.toggle("vdplay", on); document.body.classList.toggle("vd-on", on); if (bar) bar.hidden = !on;
+    const h = document.querySelector("header.top"); document.documentElement.style.setProperty("--hdrH", Math.round(h ? h.getBoundingClientRect().height : 52) + "px");
+    if (on) { const pic = document.querySelector(".vd-pic") || document.querySelector(".vd-card2"); if (pic) scrollTo({ top: Math.max(0, pic.getBoundingClientRect().top + scrollY - (h ? h.getBoundingClientRect().height : 52)), behavior: "auto" }); }
+  }
+  function vdStop() { VDP.gen++; VDP.paused = 1; try { speechSynthesis.cancel(); } catch (x) {} vdAllBtn(false); vdMode(false); }
+  addEventListener("hashchange", () => { if (VDP.on || document.body.classList.contains("vd-on")) { VDP.gen++; VDP.on = 0; try { speechSynthesis.cancel(); } catch (x) {} document.body.classList.remove("vd-on"); } });
   window.__vdSeq = [];
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest("[data-act^='vd-']"); if (!b || !document.querySelector(".vd")) return; const a = b.dataset.act;
-    if (a === "vd-say") { VDP.gen++; vdAllBtn(false); const i = +b.dataset.i, w = vdItems()[i]; vdLight(i); try { speechSynthesis.cancel(); speechSynthesis.speak(utter(w[0], "es", 0.85)); } catch (x) {} }
-    else if (a === "vd-all") { if (VDP.on) { VDP.gen++; vdAllBtn(false); try { speechSynthesis.cancel(); } catch (x) {} return; }
-      const g = ++VDP.gen, L = vdItems(); let i = 0; window.__vdSeq = []; vdAllBtn(true);
-      const say = (t, l, d) => { window.__vdSeq.push(l + ":" + t); vdSay(t, l, g, d); };
-      const step = () => { if (g !== VDP.gen) return; if (i >= L.length) return vdAllBtn(false); const w = L[i]; vdLight(i); i++;
-        say(w[1], "en", () => say(w[0], "es", () => say(w[0], "es", () => say(w[0], "es", step)))); };
-      try { speechSynthesis.cancel(); } catch (x) {} step(); }
+    if (a === "vd-say") { const i = +b.dataset.i, w = vdItems()[i]; if (VDP.on) { VDP.paused = 0; vdGo(i); return; } VDP.gen++; vdLight(i); try { speechSynthesis.cancel(); speechSynthesis.speak(utter(w[0], "es", 0.85)); } catch (x) {} }
+    else if (a === "vd-all") { if (VDP.on) { vdStop(); return; } window.__vdSeq = []; VDP.i = 0; VDP.paused = 0; vdAllBtn(true); vdMode(true); vdGo(0); }
+    else if (a === "vd-play") { if (!VDP.on) { vdAllBtn(true); vdMode(true); } VDP.paused = VDP.paused ? 0 : 1; if (VDP.paused) { VDP.gen++; try { speechSynthesis.cancel(); } catch (x) {} vdBar(); } else vdGo(VDP.i); }
+    else if (a === "vd-prev") vdGo(VDP.i - 1);
+    else if (a === "vd-next") vdGo(VDP.i + 1);
+    else if (a === "vd-rate") { VDP.rate = VD_RATES[(VD_RATES.indexOf(VDP.rate) + 1) % VD_RATES.length]; vdBar(); if (!VDP.paused) vdGo(VDP.i); }
+    else if (a === "vd-close") vdStop();
     else if (a === "vd-deck") { const c = document.querySelector("[data-vd]"), tp = c && VDT.find((x) => x.id === c.dataset.vd); if (!tp) return; const name = "🖼 " + tp.es; let D = SRD.decks.find((d) => d.name === name); if (!D) { D = dkNew(name); D.ic = "🖼"; }
       let n = 0; vdItems().forEach((w) => { if (dkAdd(D.id, w[0], w[1], "Picture dictionary · " + tp.es)) n++; }); srSave(); dkToast(n ? "Added " + n + " words to «" + esc(name) + "» · <a href=\"#repaso\">Flashcards</a>" : "These words are already in «" + esc(name) + "»"); }
     else if (a === "vd-drill") { try { S.qdF = "pic"; save(); } catch (x) {} }
@@ -469,5 +499,5 @@
   // Quick drill › Pictures: words with their pictures, up to the chosen level (A1 → A1 topics; A2 and up → every topic)
   const vdPool = (lv) => { const out = []; VDT.forEach((t) => { if (lv === "a1" && t.lvl !== "a1") return; t.items.forEach((it, i) => out.push({ t: t.id, i, es: vdW(t, it), en: it[1] })); }); return out; };
   window.__vd = { topics: () => VDT.map((t) => ({ id: t.id, n: t.items.length, kind: t.kind, grp: t.grp })), deck: (re) => { const d = SRD.decks.find((x) => new RegExp(re).test(x.name)); return d ? d.w.length : 0; }, lat: () => vdLat(),
-    pool: vdPool, pic: (tid, i) => { const t = VDT.find((x) => x.id === tid); return t ? vdPic(t, i) : ""; }, lay: (tid) => { const t = VDT.find((x) => x.id === tid); return t ? vdLay(t) : []; }, n: vdN, seq: () => window.__vdSeq };
+    pool: vdPool, pic: (tid, i) => { const t = VDT.find((x) => x.id === tid); return t ? vdPic(t, i) : ""; }, lay: (tid) => { const t = VDT.find((x) => x.id === tid); return t ? vdLay(t) : []; }, n: vdN, seq: () => window.__vdSeq, st: () => ({ on: VDP.on, i: VDP.i, paused: VDP.paused, rate: VDP.rate }) };
   /* ==/VISUAL== */
