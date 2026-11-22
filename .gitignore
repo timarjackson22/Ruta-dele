@@ -6,3 +6,4 @@ eval/out/
 eval/node_modules/
 eval/package*.json
 tools/exgen/__pycache__/
+__pycache__/
