@@ -96,6 +96,11 @@ def matcher(kw):
             if w in ex or b in ex or any(w.startswith(q) for q in pre): return True
         return False
     return f
+# v291: popularity rank for every entry (tools/wordbank/rank_extra.py → ranks.json); themes list the most used words first
+_rp = os.path.join(_D, "wordbank", "ranks.json")
+_rk = json.load(open(_rp)) if os.path.exists(_rp) else {"n": 0, "ranks": []}
+WRK = _rk["ranks"] if _rk["n"] == len(allw) else []
+rank = lambda i: i + 1 if i < 7000 else (WRK[i - 7000] if WRK else 99999)
 WCT = []
 for key, ic, en, es, tops, kw in CT:
     f = matcher(kw); ids = [i for i, e in enumerate(allw) if e[1] not in ("det", "pron", "conj", "prep", "art", "contr") and f(e[2])]
@@ -103,14 +108,14 @@ for key, ic, en, es, tops, kw in CT:
     for tn in tops:
         for i in tnames.get(tn, []):
             if i not in seen: seen.add(i); ids.append(i)
-    ids.sort(); WCT.append([key, ic, en, es, ids])
+    ids.sort(key=lambda i: (rank(i), i)); WCT.append([key, ic, en, es, ids])
 # v286: the textbook topics join the theme chips (English names; the topic dropdown is gone)
 TOPIC_CHIP = {}  # v290: every topic is folded into a broad theme; synonyms & antonyms have their own page (#sinonimos)
 for es_, en_, ids_, deck_ in themes:
     if en_ in TOPIC_CHIP:
         ic_, nm_ = TOPIC_CHIP[en_].split(" ", 1); WCT.append(["t:" + en_, ic_, nm_, es_, sorted(set(ids_))])
 block = ("/* ==WTHEME== */ const WTH0 = W.length; W.push(..." + dump(reg) + "); const WTHT = " +
-         dump([[t[0], t[1], t[2]] for t in themes]) + "; const WCT = " + dump(WCT) + "; const WTHS = new Set(WTHT.flatMap((t) => t[2])); /* ==/WTHEME== */")
+         dump([[t[0], t[1], t[2]] for t in themes]) + "; const WRK = " + dump(WRK) + "; const WCT = " + dump(WCT) + "; const WTHS = new Set(WTHT.flatMap((t) => t[2])); /* ==/WTHEME== */")
 if "/* ==WTHEME== */" in s:
     a = s.index("/* ==WTHEME== */"); b = s.index("/* ==/WTHEME== */") + len("/* ==/WTHEME== */"); s = s[:a] + block + s[b:]
 else:
@@ -133,7 +138,7 @@ rep('''  function wvPool() { if (WV.types.length)''', '''  WV.th = -1;
   const wvList = () => { if (WV.th >= 0 && WTHT[WV.th]) return WTHT[WV.th][2]; if (WV.ct >= 0 && WCT[WV.ct]) return WV.types.length ? WCT[WV.ct][4].filter((i) => WV.types.includes(POSGRP(W[i][1])) || (WV.types.includes("biz") && WBIZS.has(i))) : WCT[WV.ct][4]; return null; };
   function wvPool() { const L = wvList(); if (L) return L.slice(WV.page * BAND, (WV.page + 1) * BAND); if (WV.types.length)''')
 rep('''idx = idx.filter((i) => (!WV.types.length || WV.types''', '''idx = idx.filter((i) => (WV.th >= 0 || WV.ct >= 0 || !WV.types.length || WV.types''')
-rep('''(i < WN ? i + 1 : i >= WBIZ0 ?''', '''(i < WN ? i + 1 : i >= WTH0 ? '<span class="core th" title="Word from your textbook topics">topic</span>' : i >= WBIZ0 ?''')
+rep('''(i < WN ? i + 1 : i >= WBIZ0 ?''', ''''<span class="wrk">#' + (i < WN ? i + 1 : WRK[i - WN] || "") + "</span> " + (i < WN ? "" : i >= WTH0 ? '<span class="core th" title="Word from your textbook topics">topic</span>' : i >= WBIZ0 ?''')
 rep('''" matches across all " + W.length.toLocaleString("en") + " words (7,000 most used + core and business words)</p>"''',
     '''" matches across all " + W.length.toLocaleString("en") + " words in the word bank</p>"''')
 # the page: new name, topic picker
@@ -223,7 +228,6 @@ body[data-sec="palabras"] .wtools input[type=search] { flex: 1 1 100%; min-width
   body[data-sec="palabras"] .bands { margin: 0 !important; min-height: 0 }
   body[data-sec="palabras"] table.words td.gl { grid-area: gl; font-size: .95rem; color: var(--ink) }
   body[data-sec="palabras"] table.words td.rk { grid-area: rk; font-size: .75rem; color: var(--muted) }
-  body[data-sec="palabras"] table.words td.rk:not(:has(.core))::before { content: "#" }
   body[data-sec="palabras"] table.words .core { font-size: .7rem; padding: 1px 6px }
 }
 </style>
