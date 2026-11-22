@@ -402,7 +402,7 @@
   }
   // labels: each side sorted by the point it names, then spread so no two labels touch (lines never cross on one side)
   function vdLay(t) {
-    const Y = new Array(t.items.length), sp = 21, top = 14, bot = 332;
+    const Y = new Array(t.items.length), sp = 22, top = 14, bot = 330;
     ["l", "r"].forEach((sd) => { const ix = t.items.map((_, i) => i).filter((i) => t.items[i][4] === sd).sort((a, b) => t.items[a][3] - t.items[b][3] || t.items[a][2] - t.items[b][2]);
       // labels that would touch form a group, centred on the points it names (the least sliding, so the fewest sloping lines)
       let G = ix.map((i) => ({ d: [t.items[i][3]], y: 0 }));
@@ -417,6 +417,14 @@
       ord.forEach((i) => (Y[i] = ys[k++])); });
     return Y;
   }
+  // v272 the frame hugs the labels: measured label widths decide how much margin each side needs, so the drawing fills more of the
+  // screen width (natural proportions: the picture simply gets taller) and the labels come out bigger
+  let VDC = null; const VD_FONT = '650 14px -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif';
+  const vdTW = (s) => { try { VDC = VDC || document.createElement("canvas").getContext("2d"); VDC.font = VD_FONT; return VDC.measureText(s).width; } catch (e) { return s.length * 7.6; } };
+  function vdFrame(t) {
+    let L = 0, R = 0; t.items.forEach((it) => { const w = vdTW(vdW(t, it)) * 1.06 + 6; if (it[4] === "l") L = Math.max(L, w); else R = Math.max(R, w); });
+    const x = Math.floor(Math.min(84, 96 - L - 6)), r = Math.ceil(Math.max(316, 304 + R + 6)); return { x, w: r - x };
+  }
   // one item as a picture on its own (drills): grid icons as they are, scene items zoomed in with a ring round the point
   function vdPic(t, i) {
     const it = t.items[i]; if (t.kind === "grid") return vdIcon(it[2]);
@@ -428,8 +436,8 @@
     const k = VDT.indexOf(t), prev = VDT[k - 1], next = VDT[k + 1];
     let pic;
     if (t.kind === "grid") pic = '<div class="vd-items">' + t.items.map((it, i) => '<button type="button" class="vd-it" data-act="vd-say" data-i="' + i + '">' + vdIcon(it[2]) + '<b lang="es">' + esc(vdW(t, it)) + "</b><small>" + esc(it[1]) + "</small></button>").join("") + "</div>";
-    else { const Y = vdLay(t);
-      pic = '<div class="vd-pic"><svg viewBox="-56 0 512 340" role="img" aria-label="' + esc(t.en) + '">' + '' + vdLux('<rect x="-56" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/><rect x="400" y="0" width="56" height="340" fill="' + (t.bg || "#fffdf8") + '"/>' + t.svg) +
+    else { const Y = vdLay(t), F = vdFrame(t), bg = t.bg || "#fffdf8";
+      pic = '<div class="vd-pic"><svg viewBox="' + F.x + " 0 " + F.w + ' 340" role="img" aria-label="' + esc(t.en) + '">' + vdLux((F.x < 0 ? '<rect x="' + F.x + '" y="0" width="' + -F.x + '" height="340" fill="' + bg + '"/>' : "") + (F.x + F.w > 400 ? '<rect x="400" y="0" width="' + (F.x + F.w - 400) + '" height="340" fill="' + bg + '"/>' : "") + t.svg) +
         t.items.map((it, i) => { const L = it[4] === "l", lx = L ? 98 : 302, w = vdW(t, it), ly = Y[i];
           return '<g class="vd-lab" data-act="vd-say" data-i="' + i + '" tabindex="0" role="button" aria-label="' + esc(w + ", " + it[1]) + '"><path d="M' + lx + " " + ly + "L" + (L ? lx + 8 : lx - 8) + " " + ly + "L" + it[2] + " " + it[3] + '" class="vd-line"/><circle cx="' + it[2] + '" cy="' + it[3] + '" r="3.2" class="vd-dot"/>' +
             '<text x="' + (L ? lx - 2 : lx + 2) + '" y="' + (ly + 4) + '" text-anchor="' + (L ? "end" : "start") + '" class="vd-t">' + esc(w) + "</text></g>"; }).join("") + "</svg></div>" +
