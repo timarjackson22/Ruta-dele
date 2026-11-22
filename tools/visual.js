@@ -38,14 +38,38 @@
         ["las pestañas", "eyelashes", 226, 145, "r"], ["la oreja", "ear", 280, 166, "r"], ["la nariz", "nose", 204, 186, "r"], ["el bigote", "moustache", 214, 207, "r"], ["los dientes", "teeth", 202, 219, "r"], ["los labios", "lips", 208, 228, "r"]] },
 
     { id: "cuerpo", grp: "body", bg: "#f2f7fd", es: "El cuerpo", en: "The body", lvl: "a1", kind: "scene",
-      svg: vR(0, 0, 400, 340, "#f2f7fd") + vE(200, 326, 64, 6, "#dfe7f1") + vR(193, 56, 14, 18, "#f3c9a6", "#b9805e") + vC(200, 40, 20, "#f3c9a6", "#b9805e") + vP("M180 38q-2-24 20-24t20 24q-6-12-20-12t-20 12z", "#3b2a20") + vC(193, 41, 1.8, "#333") + vC(207, 41, 1.8, "#333") + vP("M194 50q6 4 12 0", "", "#9b5a46", 1.5) +
-        vLimb(["164 84", "152 142", "148 196"], 14) + vLimb(["236 84", "248 142", "252 196"], 14) + vE(147, 206, 8, 11, "#f3c9a6", "#b9805e") + vP("M246 210v10M250 211v12M254 211v12M258 210v10", "", "#b9805e", 5.4) + vP("M246 210v10M250 211v12M254 211v12M258 210v10", "", "#f3c9a6", 3) + vE(252, 204, 8.5, 9, "#f3c9a6", "#b9805e") +
-        vLimb(["181 216", "179 262", "179 308"], 16) + vLimb(["219 216", "221 262", "221 308"], 16) + vP("M173 263q6 4 12 0M215 263q6 4 12 0", "", "#b9805e", 1.4) +
-        vS("M187 304v12h-26q-7 0-5-6q2-6 15-6z") + vS("M213 304v12h26q7 0 5-6q-2-6-15-6z") + vP("M164 312v4M169 311v5M231 311v5M236 312v4", "", "#b9805e", 1.2) +
-        vP("M166 166L234 166L240 224L206 224L200 198L194 224L160 224Z", "#2f3a56", "#1d253a") + vP("M166 173h68", "", "#1d253a", 2) +
-        vP("M166 76Q200 66 234 76L256 110L240 118L234 106L234 170L166 170L166 106L160 118L144 110Z", "#4f8cff", "#2f5fd0") + vP("M190 72q10 10 20 0", "", "#2f5fd0", 2),
-      items: [["la cabeza", "head", 190, 28, "l"], ["el hombro", "shoulder", 168, 80, "l"], ["el brazo", "arm", 155, 128, "l"], ["el codo", "elbow", 152, 142, "l"], ["la mano", "hand", 147, 208, "l"], ["la pierna", "leg", 180, 240, "l"], ["la rodilla", "knee", 179, 262, "l"], ["el pie", "foot", 168, 312, "l"],
-        ["el cuello", "neck", 205, 66, "r"], ["el pecho", "chest", 214, 98, "r"], ["el estómago", "stomach", 204, 142, "r"], ["la cintura", "waist", 234, 170, "r"], ["la muñeca", "wrist", 149, 192, "l"], ["la cadera", "hip", 238, 194, "r"], ["los dedos", "fingers", 254, 220, "r"], ["el tobillo", "ankle", 221, 302, "r"]] },
+      // v277: a clean, shaded figure in a T-shirt (crew neck, short sleeves, folds) and shorts; arms come out of the sleeves
+      svg: '<defs><linearGradient id="bdSkin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e4ab85"/><stop offset=".45" stop-color="#f8d6b8"/><stop offset="1" stop-color="#e8b18c"/></linearGradient>' +
+        '<radialGradient id="bdFace" cx=".45" cy=".38" r=".7"><stop offset="0" stop-color="#fbe0c8"/><stop offset=".7" stop-color="#f1c4a1"/><stop offset="1" stop-color="#e0a67e"/></radialGradient>' +
+        '<linearGradient id="bdShirt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3c6fd3"/><stop offset=".42" stop-color="#6b9ef6"/><stop offset="1" stop-color="#3a69c8"/></linearGradient>' +
+        '<linearGradient id="bdShorts" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#232b40"/><stop offset=".45" stop-color="#3a4766"/><stop offset="1" stop-color="#202839"/></linearGradient>' +
+        '<linearGradient id="bdHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5a3d2b"/><stop offset="1" stop-color="#2e1f15"/></linearGradient></defs>' +
+        vR(0, 0, 400, 340, "#f2f7fd") + '<ellipse cx="200" cy="322" rx="58" ry="5" fill="#1b2338" opacity=".08"/>' +
+        // legs and feet (behind the shorts)
+        '<path d="M170 222L192 222L190 262L187 304L175 304L172 262Z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/><path d="M230 222L208 222L210 262L213 304L225 304L228 262Z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/>' +
+        '<path d="M175 262q6 4 12 0M213 262q6 4 12 0" fill="none" stroke="#c48b66" stroke-width="1.3" opacity=".6"/>' +
+        '<path d="M176 300h12l1 12q0 6-6 6h-22q-6 0-4-6q2-6 12-7z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/><path d="M224 300h-12l-1 12q0 6 6 6h22q6 0 4-6q-2-6-12-7z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/>' +
+        // arms and hands (behind the sleeves)
+        '<path d="M144 116L162 122L157 160L153 196L139 196L138 160Z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/><path d="M256 116L238 122L243 160L247 196L261 196L262 160Z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/>' +
+        '<path d="M141 160q6 3 12 0M247 160q6 3 12 0" fill="none" stroke="#c48b66" stroke-width="1.2" opacity=".55"/>' +
+        '<path d="M138 195h16q2 8 0 15q-1 6-8 8q-7-2-8-8q-2-7 0-15z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/><path d="M246 195h16q2 8 0 15q-1 6-8 8q-7-2-8-8q-2-7 0-15z" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/>' +
+        '<path d="M142 209v6M146 210v7M150 209v6M250 209v6M254 210v7M258 209v6" stroke="#c48b66" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>' +
+        // neck and head
+        '<rect x="191" y="62" width="18" height="30" fill="url(#bdSkin)"/><path d="M191 74q9 6 18 0" fill="none" stroke="#c48b66" stroke-width="1" opacity=".5"/>' +
+        '<ellipse cx="179" cy="48" rx="4" ry="6" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1"/><ellipse cx="221" cy="48" rx="4" ry="6" fill="url(#bdSkin)" stroke="#c48b66" stroke-width="1"/>' +
+        '<ellipse cx="200" cy="46" rx="21" ry="25" fill="url(#bdFace)" stroke="#c48b66" stroke-width="1.2" stroke-opacity=".7"/>' +
+        '<path d="M179 44q-2-25 21-26q23 1 21 26q-4-11-12-13q-10 5-22 2q-6 3-8 11z" fill="url(#bdHair)"/>' +
+        '<path d="M188 40q5-3 9 0M203 40q5-3 9 0" fill="none" stroke="#3e2a1d" stroke-width="1.8" stroke-linecap="round"/><circle cx="192.5" cy="46" r="2" fill="#2a1d15"/><circle cx="207.5" cy="46" r="2" fill="#2a1d15"/><circle cx="193.2" cy="45.3" r=".6" fill="#fff"/><circle cx="208.2" cy="45.3" r=".6" fill="#fff"/>' +
+        '<path d="M200 48q-1 5-3 7q2 1 4 0" fill="none" stroke="#c48b66" stroke-width="1.2" stroke-linecap="round"/><path d="M193 60q7 5 14 0" fill="none" stroke="#a5534b" stroke-width="1.8" stroke-linecap="round"/><circle cx="187" cy="55" r="3.5" fill="#ee9c86" opacity=".3"/><circle cx="213" cy="55" r="3.5" fill="#ee9c86" opacity=".3"/>' +
+        // T-shirt: crew neck, short sleeves with hems, side shading and folds
+        '<path d="M187 80Q200 94 213 80L234 86Q246 90 250 100L258 124L240 130L234 112L234 176Q200 182 166 176L166 112L160 130L142 124L150 100Q154 90 166 86Z" fill="url(#bdShirt)" stroke="#2c5bb8" stroke-width="1.2"/>' +
+        '<path d="M187 81Q200 95 213 81" fill="none" stroke="#2c5bb8" stroke-width="3.2" stroke-linecap="round"/><path d="M143 121L160 127M257 121L240 127" stroke="#2c5bb8" stroke-width="3" stroke-linecap="round"/>' +
+        '<path d="M176 136q6 9 2 22M224 136q-6 9-2 22M186 160q14 6 28 0" fill="none" stroke="#24499a" stroke-width="1.3" stroke-linecap="round" opacity=".35"/><path d="M168 96q4-6 12-8" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".35"/>' +
+        // shorts: waistband, fly, pockets, hems
+        '<path d="M166 168L234 168L240 228L205 228L200 200L195 228L160 228Z" fill="url(#bdShorts)" stroke="#151b2a" stroke-width="1.2"/><rect x="166" y="168" width="68" height="9" rx="2" fill="#1a2133"/>' +
+        '<path d="M200 177v20M172 179q6 10 13 11M228 179q-6 10-13 11M161 222h33M206 222h33" fill="none" stroke="#5d6b8f" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>',
+      items: [["la cabeza", "head", 192, 30, "l"], ["el hombro", "shoulder", 170, 88, "l"], ["el brazo", "arm", 150, 142, "l"], ["el codo", "elbow", 147, 161, "l"], ["la muñeca", "wrist", 146, 195, "l"], ["la mano", "hand", 146, 206, "l"], ["la pierna", "leg", 181, 242, "l"], ["la rodilla", "knee", 181, 263, "l"], ["el pie", "foot", 166, 312, "l"],
+        ["el cuello", "neck", 205, 72, "r"], ["el pecho", "chest", 214, 106, "r"], ["el estómago", "stomach", 206, 148, "r"], ["la cintura", "waist", 230, 172, "r"], ["la cadera", "hip", 237, 198, "r"], ["los dedos", "fingers", 256, 215, "r"], ["el tobillo", "ankle", 219, 302, "r"]] },
 
     { id: "mano", grp: "body", bg: "#fdf6ec", es: "La mano", en: "The hand", lvl: "a2", kind: "scene",
       svg: vR(0, 0, 400, 340, "#fdf6ec") + vR(178, 246, 62, 94, "#f3c9a6", "#b9805e") + vR(170, 302, 78, 38, "#5b8def", "#3d6cc4") +

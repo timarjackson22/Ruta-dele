@@ -276,3 +276,4 @@ If no: say so in the commit message ("costs: no impact").
 
 ## Role-play: Next situation — v276
 - A finished role-play shows a big «Next situation: <title> ›» bar at the bottom (`.prnextbar`, `pr-rpnext`), flashing 8 times then resting (`.rpflash`; off with reduced motion). `rpNext(sc)`: the next role-play at the same level in list order, then the first of the next level. Hooks `__startRp(id)`, `__rpCur()`, `__rpModel()`, `__rpNext(id)`. sPH (22) checks it.
+- v277: the body («El cuerpo») is a clean shaded figure like the face: T-shirt with crew neck, short sleeves with hems, folds and side shading; arms come out of the sleeves; shorts with waistband, fly and pockets; hands with fingers; bare feet. Hand-made gradients (`bdSkin`, `bdShirt`, `bdShorts`, `bdHair`).
