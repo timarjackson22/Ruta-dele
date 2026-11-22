@@ -697,6 +697,10 @@
   "voice": "complete",
   "why": "Profe's practice drills are already voice-driven (they listen for answers)"
  },
+ "pr-syn": {
+  "voice": "pending",
+  "why": "starts the synonyms & antonyms practice in Profe; spoken start not wired yet"
+ },
  "pr-type": {
   "voice": "complete",
   "why": "Profe's practice-type picker (role-plays / speaking tasks list)"
@@ -938,6 +942,30 @@
  "sr-xnew": {
   "voice": "pending",
   "why": "flashcard grading by voice (again/hard/good/easy) is planned"
+ },
+ "sy-extra": {
+  "voice": "pending",
+  "why": "synonyms practice: practise again after everything due is done"
+ },
+ "sy-grade": {
+  "voice": "pending",
+  "why": "synonyms practice: change the spaced-repetition grade (Again / Hard / Good / Easy) by touch"
+ },
+ "sy-more": {
+  "voice": "pending",
+  "why": "synonyms practice: learn 10 more new words today"
+ },
+ "sy-show": {
+  "voice": "complete",
+  "why": "Profe's practice drills are already voice-driven (they listen for answers): «no sé» shows the answer"
+ },
+ "syn-lv": {
+  "voice": "pending",
+  "why": "synonyms & antonyms page: level filter"
+ },
+ "syn-prac": {
+  "voice": "pending",
+  "why": "synonyms & antonyms page: open Profe's synonyms practice"
  },
  "t-ask": "profe.explain",
  "t-chatmic": {

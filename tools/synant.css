@@ -1,0 +1,37 @@
+/* ==SYNANT-CSS== Synonyms & antonyms: Library page and Profe's flashcard practice (v281) */
+.syn .syn-top { gap: 10px; flex-wrap: wrap; align-items: center; margin: 4px 0 10px; }
+.syn #syn-q { flex: 1 1 220px; min-width: 0; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.syn .syn-lvs { gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
+.syn .syn-h { margin: 18px 0 8px; font-size: 1.05rem; }
+.syn .syn-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.syn .syrow { background: var(--surface); border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(20,30,60,.06), 0 6px 18px rgba(20,30,60,.06); }
+.syn .syh { margin: 0 0 6px; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.syn .syh small { color: var(--muted); }
+.syn .syl { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.syk { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; font-weight: 800; font-size: .95rem; color: #fff; flex: none; }
+.syk.syn { background: #2e9d6a; } .syk.ant { background: #d9583b; }
+.sychip { border: 0; background: color-mix(in srgb, var(--ink) 6%, transparent); color: var(--ink); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: .92rem; cursor: pointer; }
+.sychip.head { background: none; padding: 0; font-weight: 800; font-size: 1.12rem; }
+.sychip:active { transform: scale(.97); }
+.sydot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #f0b429; align-self: center; } .sydot.ok { background: #2e9d6a; }
+/* Profe practice: the flashcard */
+#tutor .sycard { position: relative; margin: 10px 0 12px; padding: 26px 18px 20px; border-radius: 22px; text-align: center; background: linear-gradient(160deg, #ffffff, #f3f6fb); color: #1b2338; box-shadow: 0 2px 4px rgba(20,30,60,.08), 0 14px 34px rgba(20,30,60,.14); }
+#tutor .sycard.over { animation: syflip .5s ease; }
+@keyframes syflip { 0% { transform: perspective(900px) rotateY(0); } 50% { transform: perspective(900px) rotateY(90deg); } 100% { transform: perspective(900px) rotateY(0); } }
+@media (prefers-reduced-motion: reduce) { #tutor .sycard.over { animation: none; } }
+#tutor .sytag { position: absolute; top: 12px; left: 14px; font-size: .74rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fff; padding: 3px 9px; border-radius: 999px; }
+#tutor .sytag.syn { background: #2e9d6a; } #tutor .sytag.ant { background: #d9583b; }
+#tutor .synew { position: absolute; top: 12px; right: 14px; font-size: .72rem; font-weight: 700; color: #4f6ad8; background: #e8edff; padding: 3px 8px; border-radius: 999px; }
+#tutor .syword { margin: 14px 0 2px; font-size: 2.1rem; font-weight: 800; letter-spacing: -.01em; display: flex; align-items: center; justify-content: center; gap: 8px; }
+#tutor .syen { margin: 0; color: #5b6478; font-size: .95rem; }
+#tutor .syask { margin: 14px 0 0; font-size: 1rem; color: #33405c; }
+#tutor .syback { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cdd5e3; }
+#tutor .syans { font-size: 1.3rem; margin: 0 0 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+#tutor .syans.ok b { color: #1f7a50; } #tutor .syans.bad b { color: #b5402a; }
+#tutor .sygrades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+#tutor .syg { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; line-height: 1.15; }
+#tutor .syg span { font-size: .74rem; opacity: .75; font-weight: 500; }
+#tutor .syg.on { outline: 2px solid currentColor; outline-offset: 1px; }
+#tutor .syg.g1.on { color: #b5402a; } #tutor .syg.g2.on { color: #a86a00; } #tutor .syg.g3.on { color: #1f7a50; } #tutor .syg.g4.on { color: #2f5fd0; }
+#tutor .sydone .row { gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+/* ==/SYNANT-CSS== */

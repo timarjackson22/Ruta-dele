@@ -59,6 +59,7 @@
     if (!live || !live.c || live.err || live.superseded) return;
     const cur = TCH.cur; teachTrack(cur);
     if (!um || !teachIsPractice(um.c)) return;
+    try { if (window.__aiTurn && window.__aiTurn().k) return; } catch (e) {} // v280: a question or request to Profe gets its answer, no practice prompt on top
     if (typeof PR !== "undefined" && PR) return; // role-plays have their own next step
     // v252 (5th S24 log): a drill question («Presente de gustar. Tú…») got «¿Seguimos con otra pregunta o prefieres cambiar de
     // tema?» added, so the learner said «sigue» instead of the answer; drills and calls end their own turns

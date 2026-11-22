@@ -157,7 +157,7 @@
     "practise.translate": async () => { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); prGo("trans"); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.kind === "tr" && !!PR.it, 4000); return { ok, say: ok ? "" : "I couldn't start the translation practice.", own: ok ? 1 : 0 }; },
     "practise.conj": async () => { tOpen(); await pvUntil(() => document.body.classList.contains("tutor-open"), 800); prGo("conj"); const ok = await pvUntil(() => typeof PR !== "undefined" && PR && PR.kind === "cj" && !!PR.it, 4000); return { ok, say: ok ? "" : "I couldn't start the conjugation drill.", own: ok ? 1 : 0 }; },
     "practise.convo": async () => { tOpen(); tView = "practice"; tRender(); return { ok: await pvUntil(() => document.body.classList.contains("tutor-open"), 800), say: "Pick a role-play, or just start talking in Spanish." }; },
-    "nav.frases": () => pvGo("frases", "the Survival Kit"), "nav.visual": () => pvGo("visual", "the Picture dictionary"),
+    "nav.frases": () => pvGo("frases", "the Survival Kit"), "nav.visual": () => pvGo("visual", "the Picture dictionary"), "nav.sinonimos": () => pvGo("sinonimos", "Synonyms & antonyms"),
     "nav.words": () => pvGo("palabras", "the word lists"),
     "nav.vocab": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-vocab", "the " + pvLvName(lv) + " vocabulary"); },
     "nav.cards": (s) => { const lv = pvLv(s) || pvHere() || curLevel(); return pvGo(lv + "-cards", "the " + pvLvName(lv) + " flashcards"); },
