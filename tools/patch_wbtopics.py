@@ -194,6 +194,7 @@ WBF = '''<style id="wb-frame">
 body[data-sec="palabras"] .tabbar, body[data-sec="palabras"] #tabpeek, body[data-sec="palabras"] #px-dock { display: none !important }
 body[data-sec="palabras"] .stack > .player { position: sticky !important; bottom: 0 !important; margin-bottom: 0 !important; border-radius: 16px 16px 0 0 !important; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important }
 body[data-sec="palabras"] .ebar > div + div { display: none }
+body[data-sec="palabras"] table.words th:nth-child(5), body[data-sec="palabras"] table.words td:nth-child(5) { display: none !important }
 body[data-sec="palabras"] .ebar { grid-template-columns: 1fr }
 .wsec { margin: 2px 0 10px } .wlab { margin: 0 0 6px; font-size: .74rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 8px }
 .wclr { border: 0; background: none; color: var(--cobalt, #2f6fd6); font: inherit; font-size: .74rem; letter-spacing: .04em; cursor: pointer; padding: 0 }
@@ -209,7 +210,7 @@ body[data-sec="palabras"] .wtools input[type=search] { flex: 1 1 100%; min-width
 @media (max-width: 600px) {
   body[data-sec="palabras"] table.words { table-layout: auto; border-collapse: separate; border-spacing: 0 }
   body[data-sec="palabras"] table.words thead { display: none }
-  body[data-sec="palabras"] table.words tr { display: grid; grid-template-columns: 44px auto minmax(0, 1fr) 48px; grid-template-areas: "sp w tg kn" "sp gl gl kn" "sp fm fm kn" "sp rk rk kn"; column-gap: 10px; row-gap: 2px; padding: 10px 8px; border-bottom: 1px solid var(--line); align-items: start }
+  body[data-sec="palabras"] table.words tr { display: grid; grid-template-columns: 44px auto minmax(0, 1fr); grid-template-areas: "sp w tg" "sp gl gl" "sp fm fm" "sp rk rk"; column-gap: 10px; row-gap: 2px; padding: 10px 8px; border-bottom: 1px solid var(--line); align-items: start }
   body[data-sec="palabras"] table.words td { display: block; padding: 0 !important; border: 0; width: auto !important; min-width: 0 }
   body[data-sec="palabras"] table.words td.sp { grid-area: sp; align-self: center }
   body[data-sec="palabras"] table.words td.ww { display: contents }
@@ -221,7 +222,6 @@ body[data-sec="palabras"] .wtools input[type=search] { flex: 1 1 100%; min-width
   body[data-sec="palabras"] table.words td.gl { grid-area: gl; font-size: .95rem; color: var(--ink) }
   body[data-sec="palabras"] table.words td.rk { grid-area: rk; font-size: .75rem; color: var(--muted) }
   body[data-sec="palabras"] table.words td.rk:not(:has(.core))::before { content: "#" }
-  body[data-sec="palabras"] table.words td:last-child { grid-area: kn; align-self: center }
   body[data-sec="palabras"] table.words .core { font-size: .7rem; padding: 1px 6px }
 }
 </style>
