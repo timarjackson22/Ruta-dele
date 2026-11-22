@@ -105,12 +105,7 @@ for key, ic, en, es, tops, kw in CT:
             if i not in seen: seen.add(i); ids.append(i)
     ids.sort(); WCT.append([key, ic, en, es, ids])
 # v286: the textbook topics join the theme chips (English names; the topic dropdown is gone)
-TOPIC_CHIP = {"Nationality": "🌎 Nationalities", "Family": "👨‍👩‍👧 Family", "Physical characteristics": "🧍 Looks", "Personality": "🙂 Personality",
-  "Emotions and feelings": "😊 Emotions", "House and rooms": "🚪 Rooms", "Furniture and appliances": "🛋 Furniture & appliances", "Housework": "🧹 Housework",
-  "Animals": "🐾 Animals", "Meals": "🍳 Meals", "Cutlery and tableware": "🍴 Tableware", "Illnesses": "🤒 Illnesses", "Health: related words": "💊 Health",
-  "School subjects": "📐 School subjects", "School activities": "🎭 School clubs", "Jobs and professions": "👩‍🔧 Jobs", "Sports": "🏅 Sports",
-  "The telephone": "📞 Telephone", "The post office": "✉️ Post office", "The bank": "🏦 Bank", "Colours": "🎨 Colours", "Fabrics and materials": "🧵 Fabrics",
-  "Jewellery": "💍 Jewellery", "Gems and metals": "💎 Gems & metals", "Politics": "🗳 Politics", "Cultural life": "🎻 Arts & culture", "Synonyms & antonyms": "≈ Synonyms & antonyms"}
+TOPIC_CHIP = {"Synonyms & antonyms": "≈ Synonyms & antonyms"}  # v287: every other topic is folded into a broad theme (crossthemes.py tops)
 for es_, en_, ids_, deck_ in themes:
     if en_ in TOPIC_CHIP:
         ic_, nm_ = TOPIC_CHIP[en_].split(" ", 1); WCT.append(["t:" + en_, ic_, nm_, es_, sorted(set(ids_))])
