@@ -1,0 +1,1820 @@
+[
+[
+"centroamericano",
+"adj",
+"Central American",
+""
+],
+[
+"costarricense",
+"adj",
+"Costa Rican",
+""
+],
+[
+"griego",
+"adj",
+"Greek",
+""
+],
+[
+"guyanés",
+"adj",
+"Guyanese",
+""
+],
+[
+"haitiano",
+"adj",
+"Haitian",
+""
+],
+[
+"hondureño",
+"adj",
+"Honduran",
+""
+],
+[
+"indio",
+"adj",
+"Indian",
+""
+],
+[
+"jamaiquino",
+"adj",
+"Jamaican",
+""
+],
+[
+"paraguayo",
+"adj",
+"Paraguayan",
+""
+],
+[
+"salvadoreño",
+"adj",
+"Salvadoran",
+""
+],
+[
+"sudamericano",
+"adj",
+"South American",
+""
+],
+[
+"vietnamita",
+"adj",
+"Vietnamese",
+""
+],
+[
+"cuñado",
+"noun",
+"brother-in-law",
+""
+],
+[
+"cuñada",
+"noun",
+"sister-in-law",
+""
+],
+[
+"madrina",
+"noun",
+"godmother",
+""
+],
+[
+"padrinos",
+"noun",
+"godparents",
+""
+],
+[
+"suegros",
+"noun",
+"in-laws",
+""
+],
+[
+"calvo",
+"adj",
+"bald",
+""
+],
+[
+"minusválido",
+"adj",
+"disabled",
+""
+],
+[
+"musculoso",
+"adj",
+"muscular",
+""
+],
+[
+"tener … años",
+"expr",
+"to be … years old",
+""
+],
+[
+"tener los ojos azules",
+"expr",
+"to have blue eyes",
+""
+],
+[
+"tener los ojos cafés",
+"expr",
+"to have brown eyes",
+""
+],
+[
+"tener los ojos negros",
+"expr",
+"to have dark eyes",
+""
+],
+[
+"tener los ojos verdes",
+"expr",
+"to have green eyes",
+""
+],
+[
+"tener el pelo rubio",
+"expr",
+"to have blond hair",
+""
+],
+[
+"tener el pelo moreno",
+"expr",
+"to have dark hair",
+""
+],
+[
+"tener el pelo castaño",
+"expr",
+"to have brown hair",
+""
+],
+[
+"tener el pelo negro",
+"expr",
+"to have black hair",
+""
+],
+[
+"tener el pelo rojo",
+"expr",
+"to have red hair",
+""
+],
+[
+"tener el pelo rizado",
+"expr",
+"to have curly hair",
+""
+],
+[
+"tener el pelo ondulado",
+"expr",
+"to have wavy hair",
+""
+],
+[
+"tener el pelo lacio",
+"expr",
+"to have straight hair",
+""
+],
+[
+"antipático",
+"adj",
+"unpleasant",
+""
+],
+[
+"atlético",
+"adj",
+"athletic",
+""
+],
+[
+"bondadoso",
+"adj",
+"kind",
+""
+],
+[
+"benévolo",
+"adj",
+"benevolent",
+""
+],
+[
+"cortés",
+"adj",
+"polite",
+""
+],
+[
+"imaginativo",
+"adj",
+"imaginative",
+""
+],
+[
+"impulsivo",
+"adj",
+"impulsive",
+""
+],
+[
+"supersticioso",
+"adj",
+"superstitious",
+""
+],
+[
+"cuarto de baño",
+"noun",
+"bathroom",
+""
+],
+[
+"desván",
+"noun",
+"attic",
+""
+],
+[
+"edificio de apartamentos",
+"noun",
+"block of flats",
+""
+],
+[
+"fregadero",
+"noun",
+"kitchen sink",
+""
+],
+[
+"planta baja",
+"noun",
+"ground floor",
+""
+],
+[
+"aspiradora",
+"noun",
+"vacuum cleaner",
+""
+],
+[
+"butaca",
+"noun",
+"armchair",
+""
+],
+[
+"cómoda",
+"noun",
+"chest of drawers",
+""
+],
+[
+"estéreo",
+"noun",
+"stereo",
+""
+],
+[
+"estufa",
+"noun",
+"stove, cooker",
+""
+],
+[
+"horno de microondas",
+"noun",
+"microwave oven",
+""
+],
+[
+"lavadora",
+"noun",
+"washing machine",
+""
+],
+[
+"lavaplatos",
+"noun",
+"dishwasher",
+""
+],
+[
+"librero",
+"noun",
+"bookcase",
+""
+],
+[
+"mueble",
+"noun",
+"piece of furniture",
+""
+],
+[
+"reloj despertador",
+"noun",
+"alarm clock",
+""
+],
+[
+"reproductor de blu-ray",
+"noun",
+"Blu-ray player",
+""
+],
+[
+"reproductor de MP3",
+"noun",
+"MP3 player",
+""
+],
+[
+"secadora",
+"noun",
+"tumble dryer",
+""
+],
+[
+"tocador",
+"noun",
+"dressing table",
+""
+],
+[
+"cortar el césped",
+"expr",
+"to mow the lawn",
+""
+],
+[
+"cuidar a los niños",
+"expr",
+"to look after the children",
+""
+],
+[
+"ir de compras",
+"expr",
+"to go shopping",
+""
+],
+[
+"lavar los platos",
+"expr",
+"to wash the dishes",
+""
+],
+[
+"limpiar la casa",
+"expr",
+"to clean the house",
+""
+],
+[
+"pasar la aspiradora",
+"expr",
+"to vacuum",
+""
+],
+[
+"planchar la ropa",
+"expr",
+"to iron the clothes",
+""
+],
+[
+"poner la mesa",
+"expr",
+"to set the table",
+""
+],
+[
+"quitar la mesa",
+"expr",
+"to clear the table",
+""
+],
+[
+"sacar la basura",
+"expr",
+"to take out the rubbish",
+""
+],
+[
+"sacudir los muebles",
+"expr",
+"to dust the furniture",
+""
+],
+[
+"carnicería",
+"noun",
+"butcher's",
+""
+],
+[
+"centro juvenil",
+"noun",
+"youth centre",
+""
+],
+[
+"cuartel de policía",
+"noun",
+"police station",
+""
+],
+[
+"ferretería",
+"noun",
+"hardware shop",
+""
+],
+[
+"florería",
+"noun",
+"florist's",
+""
+],
+[
+"frutería",
+"noun",
+"fruit shop",
+""
+],
+[
+"iglesia",
+"noun",
+"church",
+""
+],
+[
+"panadería",
+"noun",
+"bakery",
+""
+],
+[
+"estación de bomberos",
+"noun",
+"fire station",
+""
+],
+[
+"pastelería",
+"noun",
+"cake shop",
+""
+],
+[
+"perfumería",
+"noun",
+"perfume shop",
+""
+],
+[
+"rascacielos",
+"noun",
+"skyscraper",
+""
+],
+[
+"sinagoga",
+"noun",
+"synagogue",
+""
+],
+[
+"terminal de autobuses",
+"noun",
+"bus station",
+""
+],
+[
+"tienda de ropa",
+"noun",
+"clothes shop",
+""
+],
+[
+"tintorería",
+"noun",
+"dry cleaner's",
+""
+],
+[
+"zapatería",
+"noun",
+"shoe shop",
+""
+],
+[
+"canguro",
+"noun",
+"kangaroo",
+""
+],
+[
+"cebra",
+"noun",
+"zebra",
+""
+],
+[
+"cochino",
+"noun",
+"pig",
+""
+],
+[
+"jirafa",
+"noun",
+"giraffe",
+""
+],
+[
+"leopardo",
+"noun",
+"leopard",
+""
+],
+[
+"pantera",
+"noun",
+"panther",
+""
+],
+[
+"cuchara",
+"noun",
+"spoon",
+""
+],
+[
+"cucharita",
+"noun",
+"teaspoon",
+""
+],
+[
+"mantel",
+"noun",
+"tablecloth",
+""
+],
+[
+"agua mineral",
+"noun",
+"mineral water",
+""
+],
+[
+"bistec",
+"noun",
+"steak",
+""
+],
+[
+"carne de res",
+"noun",
+"beef",
+""
+],
+[
+"chícharo",
+"noun",
+"pea",
+""
+],
+[
+"cordero",
+"noun",
+"lamb",
+""
+],
+[
+"elote",
+"noun",
+"corn on the cob (Mexico)",
+""
+],
+[
+"espinaca",
+"noun",
+"spinach",
+""
+],
+[
+"judías verdes",
+"noun",
+"green beans",
+""
+],
+[
+"kétchup",
+"noun",
+"ketchup",
+""
+],
+[
+"leche",
+"noun",
+"milk",
+""
+],
+[
+"legumbres",
+"noun",
+"pulses, vegetables",
+""
+],
+[
+"mariscos",
+"noun",
+"seafood",
+""
+],
+[
+"mayonesa",
+"noun",
+"mayonnaise",
+""
+],
+[
+"melocotón",
+"noun",
+"peach",
+""
+],
+[
+"pan tostado",
+"noun",
+"toast",
+""
+],
+[
+"panecillo",
+"noun",
+"bread roll",
+""
+],
+[
+"papa",
+"noun",
+"potato",
+""
+],
+[
+"papas fritas",
+"noun",
+"chips, French fries",
+""
+],
+[
+"pizza",
+"noun",
+"pizza",
+""
+],
+[
+"dedo del pie",
+"noun",
+"toe",
+""
+],
+[
+"muela",
+"noun",
+"molar, back tooth",
+""
+],
+[
+"oído",
+"noun",
+"(inner) ear",
+""
+],
+[
+"pantorrilla",
+"noun",
+"calf",
+""
+],
+[
+"pestañas",
+"noun",
+"eyelashes",
+""
+],
+[
+"tener dolor de cabeza",
+"expr",
+"to have a headache",
+""
+],
+[
+"tener dolor de estómago",
+"expr",
+"to have stomach ache",
+""
+],
+[
+"tener dolor de garganta",
+"expr",
+"to have a sore throat",
+""
+],
+[
+"tener dolor de pie",
+"expr",
+"to have a sore foot",
+""
+],
+[
+"apendicitis",
+"noun",
+"appendicitis",
+""
+],
+[
+"neumonía",
+"noun",
+"pneumonia",
+""
+],
+[
+"paperas",
+"noun",
+"mumps",
+""
+],
+[
+"pulmonía",
+"noun",
+"pneumonia",
+""
+],
+[
+"rotura",
+"noun",
+"break, fracture",
+""
+],
+[
+"sarampión",
+"noun",
+"measles",
+""
+],
+[
+"varicela",
+"noun",
+"chickenpox",
+""
+],
+[
+"pomada",
+"noun",
+"ointment",
+""
+],
+[
+"dictado",
+"noun",
+"dictation",
+""
+],
+[
+"escuela primaria",
+"noun",
+"primary school",
+""
+],
+[
+"escuela secundaria",
+"noun",
+"secondary school",
+""
+],
+[
+"goma de borrar",
+"noun",
+"rubber, eraser",
+""
+],
+[
+"gramática",
+"noun",
+"grammar",
+""
+],
+[
+"horario de clases",
+"noun",
+"timetable",
+""
+],
+[
+"sala de clases",
+"noun",
+"classroom",
+""
+],
+[
+"tiza",
+"noun",
+"chalk",
+""
+],
+[
+"útiles",
+"noun",
+"school supplies",
+""
+],
+[
+"vocabulario",
+"noun",
+"vocabulary",
+""
+],
+[
+"álgebra",
+"noun",
+"algebra",
+""
+],
+[
+"artes industriales",
+"noun",
+"design and technology",
+""
+],
+[
+"artesanía",
+"noun",
+"arts and crafts",
+""
+],
+[
+"química",
+"noun",
+"chemistry",
+""
+],
+[
+"educación física",
+"noun",
+"PE",
+""
+],
+[
+"física",
+"noun",
+"physics",
+""
+],
+[
+"círculo de matemáticas",
+"noun",
+"maths club",
+""
+],
+[
+"círculo dramático",
+"noun",
+"drama club",
+""
+],
+[
+"círculo español",
+"noun",
+"Spanish club",
+""
+],
+[
+"círculo internacional",
+"noun",
+"international club",
+""
+],
+[
+"equipo de béisbol",
+"noun",
+"baseball team",
+""
+],
+[
+"equipo de fútbol",
+"noun",
+"football team",
+""
+],
+[
+"panadero",
+"noun",
+"baker",
+"panadera"
+],
+[
+"peluquero",
+"noun",
+"hairdresser",
+"peluquera"
+],
+[
+"poetisa",
+"noun",
+"poet (female)",
+""
+],
+[
+"isla tropical",
+"noun",
+"tropical island",
+""
+],
+[
+"naipes",
+"noun",
+"playing cards",
+""
+],
+[
+"parque nacional",
+"noun",
+"national park",
+""
+],
+[
+"parque zoológico",
+"noun",
+"zoo",
+""
+],
+[
+"alpinismo",
+"noun",
+"mountaineering",
+""
+],
+[
+"atletismo",
+"noun",
+"athletics",
+""
+],
+[
+"barco de vela",
+"noun",
+"sailing boat",
+""
+],
+[
+"esquí acuático",
+"noun",
+"water-skiing",
+""
+],
+[
+"fútbol americano",
+"noun",
+"American football",
+""
+],
+[
+"buceo",
+"noun",
+"diving",
+""
+],
+[
+"golf",
+"noun",
+"golf",
+""
+],
+[
+"cabina telefónica",
+"noun",
+"phone box",
+""
+],
+[
+"tarjeta telefónica",
+"noun",
+"phone card",
+""
+],
+[
+"descolgar",
+"verb",
+"to pick up (the phone)",
+""
+],
+[
+"guía telefónica",
+"noun",
+"phone book",
+""
+],
+[
+"larga distancia",
+"expr",
+"long distance",
+""
+],
+[
+"llamada",
+"noun",
+"call",
+""
+],
+[
+"contestador automático",
+"noun",
+"answering machine",
+""
+],
+[
+"auricular",
+"noun",
+"receiver",
+""
+],
+[
+"apartado postal",
+"noun",
+"PO box",
+""
+],
+[
+"código postal",
+"noun",
+"postcode",
+""
+],
+[
+"giro postal",
+"noun",
+"money order",
+""
+],
+[
+"por avión",
+"expr",
+"by airmail",
+""
+],
+[
+"tarjeta postal",
+"noun",
+"postcard",
+""
+],
+[
+"caja fuerte",
+"noun",
+"safe",
+""
+],
+[
+"cheque de viajero",
+"noun",
+"traveller's cheque",
+""
+],
+[
+"transferencia electrónica",
+"noun",
+"bank transfer",
+""
+],
+[
+"chaqueta",
+"noun",
+"jacket",
+""
+],
+[
+"impermeable",
+"noun",
+"raincoat",
+""
+],
+[
+"pantalón corto",
+"noun",
+"shorts",
+""
+],
+[
+"medias",
+"noun",
+"tights, pantyhose",
+""
+],
+[
+"sandalias",
+"noun",
+"sandals",
+""
+],
+[
+"tirantes",
+"noun",
+"braces, suspenders",
+""
+],
+[
+"traje de baño",
+"noun",
+"swimsuit",
+""
+],
+[
+"anaranjado",
+"adj",
+"orange",
+""
+],
+[
+"fieltro",
+"noun",
+"felt",
+""
+],
+[
+"franela",
+"noun",
+"flannel",
+""
+],
+[
+"gamuza",
+"noun",
+"suede",
+""
+],
+[
+"lino",
+"noun",
+"linen",
+""
+],
+[
+"nailon",
+"noun",
+"nylon",
+""
+],
+[
+"poliéster",
+"noun",
+"polyester",
+""
+],
+[
+"raso",
+"noun",
+"satin",
+""
+],
+[
+"terciopelo",
+"noun",
+"velvet",
+""
+],
+[
+"arete",
+"noun",
+"earring",
+""
+],
+[
+"argolla",
+"noun",
+"wedding ring",
+""
+],
+[
+"broche",
+"noun",
+"brooch",
+""
+],
+[
+"prendedor",
+"noun",
+"pin, brooch",
+""
+],
+[
+"sortija",
+"noun",
+"ring",
+""
+],
+[
+"esmeralda",
+"noun",
+"emerald",
+""
+],
+[
+"rubí",
+"noun",
+"ruby",
+""
+],
+[
+"zafiro",
+"noun",
+"sapphire",
+""
+],
+[
+"topacio",
+"noun",
+"topaz",
+""
+],
+[
+"platino",
+"noun",
+"platinum",
+""
+],
+[
+"bicicleta",
+"noun",
+"bicycle",
+""
+],
+[
+"brújula",
+"noun",
+"compass",
+""
+],
+[
+"compartimiento",
+"noun",
+"compartment",
+""
+],
+[
+"medio de transporte",
+"noun",
+"means of transport",
+""
+],
+[
+"puerta de embarque",
+"noun",
+"boarding gate",
+""
+],
+[
+"ayudante militar",
+"noun",
+"military aide",
+""
+],
+[
+"cámara de diputados",
+"noun",
+"chamber of deputies",
+""
+],
+[
+"insurrección",
+"noun",
+"uprising",
+""
+],
+[
+"jefe de estado",
+"noun",
+"head of state",
+"jefa de estado"
+],
+[
+"noticiero",
+"noun",
+"news programme",
+""
+],
+[
+"poder ejecutivo",
+"noun",
+"executive power",
+""
+],
+[
+"primer ministro",
+"noun",
+"prime minister",
+"primera ministra"
+],
+[
+"primera dama",
+"noun",
+"first lady",
+""
+],
+[
+"rebeldía",
+"noun",
+"rebellion",
+""
+],
+[
+"senado",
+"noun",
+"senate",
+""
+],
+[
+"acomodador",
+"noun",
+"usher",
+"acomodadora"
+],
+[
+"ballet",
+"noun",
+"ballet",
+""
+],
+[
+"dramaturgo",
+"noun",
+"playwright",
+"dramaturga"
+],
+[
+"escultor",
+"noun",
+"sculptor",
+"escultora"
+],
+[
+"obra de teatro",
+"noun",
+"play",
+""
+],
+[
+"despertarse",
+"verb",
+"to wake up",
+""
+],
+[
+"levantarse",
+"verb",
+"to get up",
+""
+],
+[
+"sentarse",
+"verb",
+"to sit down",
+""
+],
+[
+"acostarse",
+"verb",
+"to go to bed",
+""
+],
+[
+"ponerse",
+"verb",
+"to put on (clothes)",
+""
+],
+[
+"quitarse",
+"verb",
+"to take off (clothes)",
+""
+],
+[
+"esta noche",
+"adv",
+"tonight",
+""
+],
+[
+"no",
+"adv",
+"no",
+""
+],
+[
+"tacaño",
+"adj",
+"stingy",
+""
+],
+[
+"acordarse",
+"verb",
+"to remember",
+""
+],
+[
+"pararse",
+"verb",
+"to stop",
+""
+],
+[
+"enfadarse",
+"verb",
+"to get angry",
+""
+],
+[
+"enojarse",
+"verb",
+"to get angry",
+""
+],
+[
+"irse",
+"verb",
+"to go away, to leave",
+""
+],
+[
+"quedarse",
+"verb",
+"to stay, to remain",
+""
+],
+[
+"olvidarse",
+"verb",
+"to forget",
+""
+],
+[
+"callarse",
+"verb",
+"to keep quiet",
+""
+],
+[
+"dormirse",
+"verb",
+"to fall asleep",
+""
+],
+[
+"sociable",
+"adj",
+"sociable",
+""
+],
+[
+"acercarse",
+"verb",
+"to approach",
+""
+],
+[
+"juntos",
+"adv",
+"together",
+""
+],
+[
+"a menudo",
+"adv",
+"often",
+""
+],
+[
+"detenerse",
+"verb",
+"to stop",
+""
+],
+[
+"marcharse",
+"verb",
+"to go away, to leave",
+""
+],
+[
+"alejarse",
+"verb",
+"to move away",
+""
+],
+[
+"tenaz",
+"adj",
+"tenacious",
+""
+],
+[
+"previsible",
+"adj",
+"predictable",
+""
+],
+[
+"minucioso",
+"adj",
+"meticulous",
+""
+],
+[
+"perjudicial",
+"adj",
+"harmful",
+""
+],
+[
+"diligente",
+"adj",
+"diligent",
+""
+],
+[
+"aprisa",
+"adv",
+"quickly",
+""
+],
+[
+"efímero",
+"adj",
+"fleeting",
+""
+],
+[
+"perdurable",
+"adj",
+"lasting",
+""
+],
+[
+"locuaz",
+"adj",
+"talkative",
+""
+],
+[
+"taciturno",
+"adj",
+"taciturn",
+""
+],
+[
+"diáfano",
+"adj",
+"crystal clear",
+""
+],
+[
+"ambiguo",
+"adj",
+"ambiguous",
+""
+],
+[
+"meticuloso",
+"adj",
+"meticulous",
+""
+],
+[
+"perspicaz",
+"adj",
+"perceptive",
+""
+],
+[
+"obstinado",
+"adj",
+"obstinate",
+""
+],
+[
+"austero",
+"adj",
+"austere",
+""
+],
+[
+"ostentoso",
+"adj",
+"showy",
+""
+],
+[
+"pródigo",
+"adj",
+"lavish",
+""
+],
+[
+"ecuánime",
+"adj",
+"even-tempered",
+""
+],
+[
+"inverosímil",
+"adj",
+"implausible",
+""
+],
+[
+"fehaciente",
+"adj",
+"irrefutable",
+""
+],
+[
+"exhaustivo",
+"adj",
+"exhaustive",
+""
+],
+[
+"tosco",
+"adj",
+"coarse",
+""
+],
+[
+"inocuo",
+"adj",
+"harmless",
+""
+],
+[
+"nocivo",
+"adj",
+"harmful",
+""
+],
+[
+"incipiente",
+"adj",
+"incipient",
+""
+],
+[
+"obsoleto",
+"adj",
+"obsolete",
+""
+],
+[
+"reacio",
+"adj",
+"reluctant",
+""
+],
+[
+"proclive",
+"adj",
+"inclined",
+""
+],
+[
+"paulatino",
+"adj",
+"gradual",
+""
+],
+[
+"menoscabo",
+"noun",
+"detriment",
+""
+],
+[
+"declive",
+"noun",
+"decline",
+""
+],
+[
+"penuria",
+"noun",
+"hardship",
+""
+],
+[
+"desdén",
+"noun",
+"disdain",
+""
+],
+[
+"vaticinar",
+"verb",
+"to predict",
+""
+],
+[
+"socavar",
+"verb",
+"to undermine",
+""
+],
+[
+"subsanar",
+"verb",
+"to put right",
+""
+],
+[
+"acrecentar",
+"verb",
+"to increase",
+""
+],
+[
+"menguar",
+"verb",
+"to dwindle",
+""
+],
+[
+"dilucidar",
+"verb",
+"to elucidate",
+""
+],
+[
+"desestimar",
+"verb",
+"to dismiss",
+""
+],
+[
+"atenuar",
+"verb",
+"to tone down",
+""
+],
+[
+"encomiar",
+"verb",
+"to extol",
+""
+],
+[
+"necio",
+"adj",
+"foolish, stupid",
+""
+],
+[
+"principiar",
+"verb",
+"to begin",
+""
+],
+[
+"convidar",
+"verb",
+"to invite",
+""
+]
+]

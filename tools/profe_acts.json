@@ -1461,6 +1461,10 @@
   "voice": "unsuitable",
   "why": "writing tasks need typing"
  },
+ "w-ct": {
+  "voice": "pending",
+  "why": "Word bank: theme filter chips"
+ },
  "w-en": {
   "voice": "unsuitable",
   "why": "writing tasks need typing"
@@ -1500,6 +1504,10 @@
  "w-page": {
   "voice": "unsuitable",
   "why": "writing tasks need typing"
+ },
+ "w-pg": {
+  "voice": "pending",
+  "why": "Word bank: previous / next 200 words"
  },
  "w-play": {
   "voice": "unsuitable",
