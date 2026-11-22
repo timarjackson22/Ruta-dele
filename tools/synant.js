@@ -3,9 +3,8 @@
      a flashcard (SINÓNIMO / ANTÓNIMO), the learner says or types ONE right word (any gender/number, accents not judged when spoken),
      then the card turns over with every synonym and antonym. Three tries with clues (first letter, then half of the word), like the
      other practices; after the answer the mic stays off and one big Next waits.
-     Spaced repetition, Anki style (SM-2): each word has two cards (synonym, antonym). How it went sets the grade — first try = Good,
-     second try = Hard, third try / shown = Again — and the learner can change it (Again · Hard · Good · Easy, each showing when the
-     card comes back). Again comes back in the same session after three other cards; due cards first, then up to 20 new cards a day
+     Spaced repetition, Anki style (SM-2), decided in the background from the number of tries (v282, no buttons): first try = Good,
+     second try = Hard, third try or shown = Again. Again comes back in the same session after three other cards; due cards first, then up to 20 new cards a day
      (the chosen level first). Saved in S.syn (cards {key: {e ease, i interval days, r reps, l lapses, d due ms}}, nd/nn new per day).
      Source of truth: tools/synant.js + tools/synant.css + tools/synant_data.js, embedded by python3 tools/patch_synant.py index.html. */
   const SY_LV = ["a1", "a2", "b1", "b2", "c1"], SY_POS = { adj: "adjective", verb: "verb", noun: "noun", adv: "adverb" }, SY_NEW = 20, SY_DAY = 864e5;
@@ -114,8 +113,7 @@
     speakMixed([["¡Casi!", true], [lvl >= 2 ? "Te doy otra pista." : "Inténtalo otra vez.", true]], () => { if (PR && PR.kind === "sy" && PR.autoMic && CAN_MIC && !PR.over) listen(prAnswer); });
   }
   function syFinish(pass, hit, gaveUp, why) {
-    const it = PR.it, want = it.t === "s" ? it.e.syn : it.e.ant, g = pass ? (PR.tries <= 1 ? 3 : 2) : 1;
-    PR.prevC = sySt().c[it.k] ? Object.assign({}, sySt().c[it.k]) : null; PR.prevNN = sySt().nn;
+    const it = PR.it, want = it.t === "s" ? it.e.syn : it.e.ant, g = pass ? (PR.tries <= 1 ? 3 : PR.tries === 2 ? 2 : 1) : 1; // v282: how hard it was = how many tries it took
     const ms = syGrade(it.k, g, PR.wasNew);
     const ans = hit || want[0], others = want.filter((x) => x !== ans);
     PR.over = true; PR.done++; if (pass && PR.tries <= 1) PR.first++;
@@ -127,12 +125,6 @@
     tRender();
     const tam = others.length ? " También: " + others.slice(0, 3).join(", ") + "." : "";
     speakMixed([[pes.replace(/[^\p{L}\p{P}\s]/gu, "").trim(), true], [(pass ? "«" + ans + "»." : "La respuesta: «" + ans + "».") + tam, true]], () => {});
-  }
-  // the learner changes the grade: undo the automatic one, apply theirs
-  function syRegrade(g) {
-    if (!PR || !PR.over || !PR.fb || !PR.it) return; const s = sySt(), k = PR.it.k;
-    if (PR.prevC) s.c[k] = Object.assign({}, PR.prevC); else delete s.c[k]; s.nn = PR.prevNN;
-    PR.fb.ms = syGrade(k, g, PR.wasNew); PR.fb.g = g; tRender();
   }
   function syEnd() {
     if (!PR) return; const done = PR.done, first = PR.first; try { stopListening(); } catch (e) {}
@@ -160,8 +152,7 @@
     if (fb && !fb.ok && !PR.over) h += '<div class="prbox bad"><p><b>¡Casi!</b> <span class="muted">' + (fb.left === 1 ? "One more try, then I'll show you." : "Try again: " + fb.left + " tries left.") + "</span></p>" + fb.lines.map((l) => (/^🧩/.test(l) ? '<p class="adshape"><span aria-hidden="true">🧩</span> ' + esc(l.replace(/^🧩\s*/, "")).replace(/_+/g, (m) => '<i aria-label="' + m.length + ' letters">' + "_".repeat(m.length) + "</i>") + "</p>" : "<p>" + esc(l) + "</p>")).join("") + "</div>";
     if (PR.over) {
       h += '<div class="prbox ' + (fb.ok ? "ok" : "bad") + ' syres"><p><b>' + esc(fb.praise) + "</b></p>" + (fb.ok ? "" : '<p class="small muted">' + (fb.gaveUp ? "Here's the answer." : (fb.why ? esc(fb.why) + " " : "") + "Here's the answer, after three tries.") + "</p>") +
-        '<p class="small sygq">How hard was it? <span class="muted">The card comes back in…</span></p><div class="sygrades" role="group" aria-label="Grade">' +
-        [[1, "Again"], [2, "Hard"], [3, "Good"], [4, "Easy"]].map(([g, l]) => { const c0 = PR.prevC, ms = syPlan(c0, g).ms; return '<button class="btn small syg g' + g + (fb.g === g ? " on" : "") + '" data-act="sy-grade" data-g="' + g + '" aria-pressed="' + (fb.g === g) + '"><b>' + l + "</b><span>" + syWhen(ms) + "</span></button>"; }).join("") + "</div></div>";
+        "</div>";
     } else h += '<div class="row adbtns"><button class="btn small" data-act="sy-show">Show the answer</button></div>';
     h += "</div>";
     if (PR.over) return h + '<div class="prnextbar"><button class="btn primary prnext" data-act="pr-next">Next <span aria-hidden="true">›</span></button></div>';
@@ -169,8 +160,7 @@
   }
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest('[data-act^="sy-"],[data-act^="syn-"]'); if (!b) return; const a = b.dataset.act;
-    if (a === "sy-grade") syRegrade(+b.dataset.g);
-    else if (a === "sy-show") { if (PR && PR.kind === "sy" && PR.it && !PR.over) syFinish(false, null, true); }
+    if (a === "sy-show") { if (PR && PR.kind === "sy" && PR.it && !PR.over) syFinish(false, null, true); }
     else if (a === "sy-more") { const s = sySt(); s.cap = (s.cap || 0) + 10; try { save(); } catch (x) {} syNext(); }
     else if (a === "sy-extra") { if (PR) PR.extra = true; syNext(); }
     else if (a === "syn-lv") { S.synLv = b.dataset.v; try { save(); } catch (x) {} synList(); document.querySelectorAll('[data-act="syn-lv"]').forEach((x) => x.setAttribute("aria-pressed", x.dataset.v === S.synLv)); }
@@ -200,5 +190,5 @@
     });
     box.innerHTML = h || '<p class="muted">No word matches «' + esc(q) + "».</p>";
   }
-  window.__sy = { cards: () => SY_CARDS.length, words: () => SA.length, find: (s, l, p) => syFind(s, l, p), plan: (c, g) => syPlan(c, g), st: () => sySt(), pr: () => PR, start: (lv) => startSyn(lv), answer: (s) => syAnswer(s), next: () => syNext(), regrade: (g) => syRegrade(g), counts: (lv) => syCounts(lv), when: syWhen };
+  window.__sy = { cards: () => SY_CARDS.length, words: () => SA.length, find: (s, l, p) => syFind(s, l, p), plan: (c, g) => syPlan(c, g), st: () => sySt(), pr: () => PR, start: (lv) => startSyn(lv), answer: (s) => syAnswer(s), next: () => syNext(), counts: (lv) => syCounts(lv), when: syWhen };
   /* ==/SYNANT== */

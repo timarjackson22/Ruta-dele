@@ -17,7 +17,7 @@ const INIT = () => {
   await p.goto(URL + "#a1-u1"); await p.waitForTimeout(1200);
   await p.evaluate(() => { document.body.classList.add("tabs-peek"); document.querySelector('[data-act="t-open"]').click(); }); await p.waitForTimeout(700);
   let st = await p.evaluate(() => { const T = document.getElementById("tutor"); return { apps: [...T.querySelectorAll(".papp span")].map((x) => x.textContent), chatTab: !!T.querySelector('.tseg [data-v="chat"]'), sel: !!T.querySelector("#t-prsel"), wordy: /words and verbs come from|Profe speaks, then listens|Up to three tries/.test(T.innerText), bar: !!T.querySelector(".pchat .pchat-in"), hint: (T.querySelector(".pchat-h") || {}).innerText || "", desc: [...T.querySelectorAll(".papp")].some((x) => x.children.length !== 2 || x.querySelector("span").innerText.length > 14) }; });
-  rec("Opens on the practice home: six app icons", st.apps.join() === "Vocabulary,Translate,Survival Kit,Verbs,Role-play,DELE oral", st.apps.join());
+  rec("Opens on the practice home: seven app icons", st.apps.join() === "Vocabulary,Translate,Survival Kit,Verbs,Synonyms,Role-play,DELE oral", st.apps.join());
   rec("Icons have a name only (no descriptions)", !st.desc);
   rec("No Chat/Practice switch and no practice dropdown", !st.chatTab && !st.sel, JSON.stringify(st));
   rec("No explanatory text (level note, tries note)", !st.wordy);

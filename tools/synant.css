@@ -28,10 +28,5 @@
 #tutor .syback { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cdd5e3; }
 #tutor .syans { font-size: 1.3rem; margin: 0 0 6px; display: flex; align-items: center; justify-content: center; gap: 6px; }
 #tutor .syans.ok b { color: #1f7a50; } #tutor .syans.bad b { color: #b5402a; }
-#tutor .sygrades { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
-#tutor .syg { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 4px; line-height: 1.15; }
-#tutor .syg span { font-size: .74rem; opacity: .75; font-weight: 500; }
-#tutor .syg.on { outline: 2px solid currentColor; outline-offset: 1px; }
-#tutor .syg.g1.on { color: #b5402a; } #tutor .syg.g2.on { color: #a86a00; } #tutor .syg.g3.on { color: #1f7a50; } #tutor .syg.g4.on { color: #2f5fd0; }
 #tutor .sydone .row { gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 /* ==/SYNANT-CSS== */

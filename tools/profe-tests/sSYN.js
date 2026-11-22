@@ -41,12 +41,16 @@ const { open } = require("./h.js");
   const fb1 = await p.evaluate(() => document.querySelector("#tutor .prbox.bad") && document.querySelector("#tutor .prbox.bad").innerText);
   rec("A word of the other kind is named as such, with a first-letter clue", fb1 && (other.length ? /is an antonym|is a synonym/.test(fb1) : true) && /_{2,}/.test(fb1), fb1);
   await p.evaluate((s) => window.__sy.answer(s), want[want.length - 1]); await H.wait(400);
-  const res = await p.evaluate(() => ({ over: window.__sy.pr().over, g: window.__sy.pr().fb.g, back: (document.querySelector("#tutor .syback") || {}).innerText, next: !!document.querySelector('#tutor .prnextbar [data-act="pr-next"]'), grades: document.querySelectorAll("#tutor .syg").length, form: !!document.querySelector("#pr-form") }));
+  const res = await p.evaluate(() => ({ over: window.__sy.pr().over, g: window.__sy.pr().fb.g, back: (document.querySelector("#tutor .syback") || {}).innerText, next: !!document.querySelector('#tutor .prnextbar [data-act="pr-next"]'), grades: document.querySelectorAll('#tutor [data-act="sy-grade"], #tutor .syg').length, form: !!document.querySelector("#pr-form") }));
   rec("Right on the second try → Hard; the card turns over with the answer and the other words", res.over && res.g === 2 && res.back && (want.length < 2 || res.back.includes(want[0])), JSON.stringify(res));
-  rec("Then one big Next, the four grade buttons, no answer box (mic off)", res.next && res.grades === 4 && !res.form, JSON.stringify(res));
-  await p.click('#tutor [data-act="sy-grade"][data-g="4"]'); await H.wait(200);
-  const rg = await p.evaluate((k) => { const c = window.__sy.st().c[k]; return { g: window.__sy.pr().fb.g, days: Math.round((c.d - Date.now()) / 864e5) }; }, it.k);
-  rec("The learner can change the grade (Easy → back in 4 days)", rg.g === 4 && rg.days === 4, JSON.stringify(rg));
+  rec("Then one big Next, no grade buttons (Profe decides in the background), no answer box (mic off)", res.next && res.grades === 0 && !res.form, JSON.stringify(res));
+  const rg = await p.evaluate((k) => { const c = window.__sy.st().c[k]; return Math.round((c.d - Date.now()) / 60e3); }, it.k);
+  rec("Two tries on a new card → back in 10 minutes", rg === 10, rg);
+  // right on the third try = Again (back in the same session); first try = Good (tomorrow)
+  const t3 = await p.evaluate(() => { const P = window.__sy.pr(); P.relearn = []; window.__sy.next(); const c = P.it, w = (c.t === "s" ? c.e.syn : c.e.ant); window.__sy.answer("qqq"); window.__sy.answer("zzz"); window.__sy.answer(w[0]); return { g: P.fb.g, ok: P.fb.ok, back: P.relearn.some((x) => x.k === c.k) }; });
+  rec("Right only on the third try → Again: it comes back this session", t3.ok && t3.g === 1 && t3.back, JSON.stringify(t3));
+  const t1 = await p.evaluate(() => { const P = window.__sy.pr(); P.relearn = []; window.__sy.next(); const c = P.it, w = (c.t === "s" ? c.e.syn : c.e.ant); window.__sy.answer(w[0]); const st = window.__sy.st().c[c.k]; return { g: P.fb.g, h: Math.round((st.d - Date.now()) / 3600e3) }; });
+  rec("Right first time → Good: back tomorrow", t1.g === 3 && t1.h === 24, JSON.stringify(t1));
   // Again comes back in the same session after three other cards
   await p.click('#tutor [data-act="pr-next"]'); await H.wait(500);
   const k1 = await p.evaluate(() => window.__sy.pr().it.k);
