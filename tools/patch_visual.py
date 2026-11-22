@@ -9,7 +9,9 @@ def rep(a, b):
 js = open(os.path.join(T, "visual.js"), encoding="utf-8").read(); css = open(os.path.join(T, "visual.css"), encoding="utf-8").read()
 s = re.sub(r"  /\* ==VISUAL== .*?/\* ==/VISUAL== \*/\n", "", s, flags=re.S)
 rep("  /* ==CURRIC== */", js + "  /* ==CURRIC== */")
-s = re.sub(r"/\* ==VISUAL-CSS== .*?/\* ==/VISUAL-CSS== \*/\n", "", s, flags=re.S); i = s.rfind("</style>"); s = s[:i] + css + s[i:]
+m = re.search(r"/\* ==VISUAL-CSS== .*?/\* ==/VISUAL-CSS== \*/\n", s, flags=re.S)
+if m: s = s[:m.start()] + css + s[m.end():]  # replace in place (later <style> blocks, e.g. rl-frame, stay last)
+else: i = s.rfind("</style>", 0, s.find("<style id=\"rl-frame\">") if "<style id=\"rl-frame\">" in s else len(s)); s = s[:i] + css + s[i:]
 if 'h === "visual"' not in s:
     rep('    else if (h === "biblioteca") { setSec("biblioteca"); navChips(null); libraryHub(); }', '    else if (h === "biblioteca") { setSec("biblioteca"); navChips(null); libraryHub(); }\n    else if (h === "visual") { setSec("biblioteca"); navChips(null); vdHub(); }\n    else if (/^visual\\/[a-z]+$/.test(h)) { setSec("biblioteca"); navChips(null); vdView(h.slice(7)); }')
 if '"Picture dictionary", "Diccionario visual", "#visual"' not in s:
