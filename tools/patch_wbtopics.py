@@ -153,12 +153,30 @@ UI = '''  /* ==WCTUI== */
     return '<div class="wsec"><p class="wlab">Themes' + (WV.ct >= 0 ? ' <button class="wclr" data-act="w-ct" data-k="' + WV.ct + '">Clear ✕</button>' : "") + '</p><div class="wct" role="group" aria-label="Themes">' + WCT.map(chip).join("") + "</div></div>";
   }
   document.addEventListener("click", (e) => { const t = e.target.closest && e.target.closest('[data-act="w-ct"]'); if (!t) return; e.stopImmediatePropagation(); const k = +t.dataset.k; WV.ct = WV.ct === k ? -1 : k; WV.th = -1; WV.page = 0; WV.q = ""; WV.quiz = null; wpStop(); const y = scrollY; wordsView(); scrollTo(0, y); const on = document.querySelector('.wct [aria-pressed="true"]'), row = document.querySelector(".wct"); if (on && row) { const r = on.getBoundingClientRect(), q = row.getBoundingClientRect(); row.scrollLeft += r.left - q.left - (q.width - r.width) / 2; } }, true);
+  // v292: word player — jump to a word (its speaker tapped while playing, or one word back / forward)
+  function wpJump(r) {
+    if (!WP.q.length) wpBuild(); const k = WP.q.findIndex((x) => x.r === r && !x.f); if (k < 0) return false;
+    clearTimeout(WP.t); WP.cur = null; try { speechSynthesis.cancel(); } catch (x) {} WP.i = k; WP.on = true; wpSpeak(); return true;
+  }
+  function wpStep(d) {
+    if (!WV.idx.length) return; if (!WP.q.length) wpBuild(); const cur = (WP.q[WP.i] || {}).r, p = WV.idx.indexOf(cur);
+    const n = WV.idx[Math.max(0, Math.min(WV.idx.length - 1, (p < 0 ? 0 : p) + d))]; if (n !== undefined) wpJump(n);
+  }
+  document.addEventListener("click", (e) => {
+    const t = e.target.closest && e.target.closest('[data-act="w-prev"],[data-act="w-next"],#wbody tr[data-wi] [data-act="say"]'); if (!t || !document.getElementById("wbody")) return;
+    const a = t.dataset.act;
+    if (a === "w-prev" || a === "w-next") { e.stopImmediatePropagation(); wpStep(a === "w-next" ? 1 : -1); return; }
+    if (WP.on) { const r = +t.closest("tr[data-wi]").dataset.wi; if (wpJump(r)) { e.stopImmediatePropagation(); e.preventDefault(); } }
+  }, true);
   /* ==/WCTUI== */
 '''
 if '/* ==WCTUI== */' in s:
     a_ = s.index('  /* ==WCTUI== */'); b_ = s.index('/* ==/WCTUI== */') + len('/* ==/WCTUI== */\n'); s = s[:a_] + UI + s[b_:]
 else:
     s = s.replace('  function typeChips() {', UI + '  function typeChips() {', 1)
+# v292: the word player can step one word back / forward
+rep('''<div class="player" role="group" aria-label="Word audio"><button class="pbtn main" id="wp-play" data-act="w-play" aria-label="Play word audio">' + PLAY + '</button>''',
+    '''<div class="player" role="group" aria-label="Word audio"><button class="pbtn" data-act="w-prev" aria-label="Previous word">' + PREV + '</button><button class="pbtn main" id="wp-play" data-act="w-play" aria-label="Play word audio">' + PLAY + '</button><button class="pbtn" data-act="w-next" aria-label="Next word">' + NEXT + '</button>''')
 # other names of the list
 rep('''id === "w2500" ? "7,000 most-used words (7.000 palabras)"''', '''id === "w2500" ? "Word bank (Banco de palabras)"''')
 rep('''["words", "Words", "7,000 palabras", "#palabras",''', '''["words", "Word bank", W.length.toLocaleString("en") + " words · topics", "#palabras",''')
