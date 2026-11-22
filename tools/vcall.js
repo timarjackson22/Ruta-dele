@@ -178,7 +178,7 @@
   const VC_EYE = [[150, 408], [250, 408]];
   function vcScene() {
     if (window.__vcFailFace) throw new Error("test: no face");
-    const keys = Object.keys(PV_PORTRAITS); const k0 = (typeof pvKey === "function" ? pvKey() : "") || keys[0], o = PV_PORTRAITS[k0] || PV_PORTRAITS[keys[0]];
+    const keys = Object.keys(PV_PORTRAITS); const k0 = (typeof pvKey === "function" ? pvKey() : "") || keys[0], o = PV_PORTRAITS[k0] || PV_PORTRAITS["p:luis"] || PV_PORTRAITS[keys[0]]; /* v275: no picture chosen = Luis, so the face matches «el Profe»'s man's voice */
     const sk = o.skin, skL = vcShade(sk, 1.22), skD = vcShade(sk, 0.72), skDD = vcShade(sk, 0.56), hr = o.hair, hrL = vcShade(hr, 1.9), hrD = vcShade(hr, 0.7), sh = o.shirt, shL = vcShade(sh, 1.3), shD = vcShade(sh, 0.62);
     const es = (typeof S !== "undefined" && S.region === "es");
     const B = [];

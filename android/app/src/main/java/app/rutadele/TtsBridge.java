@@ -90,14 +90,19 @@ public class TtsBridge implements TextToSpeech.OnInitListener {
 
     /** Picks the voice for this language. Returns false when the phone has no voice for it: the caller then reports an
      *  error instead of reading Spanish with an English voice (or the other way round). */
+    final java.util.HashMap<String, Voice> lastVoice = new java.util.HashMap<>();
     boolean setVoice(String name, String lang) {
         String want = (lang == null || lang.isEmpty() ? "es-US" : lang);
         String wl = want.substring(0, Math.min(2, want.length())).toLowerCase(Locale.ROOT);
         if (name != null && !name.isEmpty()) {
             try {
-                for (Voice v : tts.getVoices()) if (v.getName().equals(name) && v.getLocale().getLanguage().toLowerCase(Locale.ROOT).startsWith(wl)) { tts.setVoice(v); return true; }
+                for (Voice v : tts.getVoices()) if (v.getName().equals(name) && v.getLocale().getLanguage().toLowerCase(Locale.ROOT).startsWith(wl)) { tts.setVoice(v); lastVoice.put(wl, v); return true; }
             } catch (Exception ignored) { }
         }
+        // v275: no name (the page's voice list not loaded yet) or a name the engine no longer lists: keep the voice this
+        // language used last time instead of the engine's default voice for the locale (often a woman's) — no voice switching
+        Voice keep = lastVoice.get(wl);
+        if (keep != null) { try { if (tts.setVoice(keep) == TextToSpeech.SUCCESS) return true; } catch (Exception ignored) { } }
         int r = tts.setLanguage(Locale.forLanguageTag(want));
         // v233: a Latin American country the engine has no voice for (es-PA, es-CO…) must not fall back to Spain's voice
         if ("es".equals(wl) && !want.toUpperCase(Locale.ROOT).endsWith("-ES")) {
