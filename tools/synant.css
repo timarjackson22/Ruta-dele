@@ -29,6 +29,7 @@
 .syn .sybody { display: none; padding: 0 12px 12px; }
 .syn .syrow.open .sybody { display: block; animation: syopen .2s ease; }
 body.syn-on .tabbar, body.syn-on #tabpeek, body.syn-on .tutor-fab { display: none !important; }
+#tutor .pa-sy { --pa1: #2fc6cf; --pa2: #0e7a8c; }
 body.syn-on .ui-page.syn { padding-bottom: 120px; }
 .syn .syn-ra { align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 12px; }
 .syn .syn-ra .small { flex: 1 1 180px; }
