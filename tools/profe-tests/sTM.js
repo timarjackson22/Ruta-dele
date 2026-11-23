@@ -39,6 +39,7 @@ const { open } = require("./h.js");
   rec("Level chips filter the topic list", await p.evaluate(() => { const r = [...document.querySelectorAll(".tmrow")].map((x) => x.getAttribute("href")); const h = [...document.querySelectorAll(".tmlvs ~ .tmh, .tmlvs ~ * .tmh")].map((x) => x.textContent); return r.length >= 1 && r.every((x) => /^#a1-|^#guia-|^#drill$|^#repaso/.test(x)) && h.every((x) => x === "A1") && !r.includes("#examenes"); }));
   await p.evaluate(() => { location.hash = "#inicio"; }); await H.wait(900);
   rec("Home «Today» shows Topics to work on", await p.evaluate(() => [...document.querySelectorAll('a[href="#dominio"]')].some((a) => /Topics to work on/.test(a.textContent))));
+  rec("Home «Today» always has a Progress row", await p.evaluate(() => [...document.querySelectorAll('a[href="#progreso"]:not(.hm-chip)')].some((a) => /Progress/.test(a.textContent))));
   await p.evaluate(() => { location.hash = "#progreso"; }); await H.wait(900);
   rec("Progress links to Topic mastery", await p.evaluate(() => !!document.querySelector('.tm-link[href="#dominio"]')));
   rec("No page errors", !H.errs.length, H.errs.join(" | "));
