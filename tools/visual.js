@@ -841,6 +841,6 @@
   try { const d = { id: "visual", t: "Diccionario visual", en: "Picture dictionary · " + vdN() + " words" }; Object.defineProperty(d, "themes", { enumerable: true, get: () => VDT.map((t) => ({ t: t.es, en: t.en, w: t.items.map((it) => [vdW(t, it), it[1]]) })) }); VPRO.push(d); } catch (e) {}
   // Quick drill › Pictures: words with their pictures, up to the chosen level (A1 → A1 topics; A2 and up → every topic)
   const vdPool = (lv) => { const out = []; VDT.forEach((t) => { if (lv === "a1" && t.lvl !== "a1") return; t.items.forEach((it, i) => out.push({ t: t.id, i, es: vdW(t, it), en: it[1] })); }); return out; };
-  window.__vd = { topics: () => VDT.map((t) => ({ id: t.id, n: t.items.length, kind: t.kind, grp: t.grp })), deck: (re) => { const d = SRD.decks.find((x) => new RegExp(re).test(x.name)); return d ? d.w.length : 0; }, lat: () => vdLat(),
+  window.__vd = { topics: () => VDT.map((t) => ({ id: t.id, n: t.items.length, kind: t.kind, grp: t.grp, en: t.en })), deck: (re) => { const d = SRD.decks.find((x) => new RegExp(re).test(x.name)); return d ? d.w.length : 0; }, lat: () => vdLat(),
     pool: vdPool, pic: (tid, i) => { const t = VDT.find((x) => x.id === tid); return t ? vdPic(t, i) : ""; }, lay: (tid) => { const t = VDT.find((x) => x.id === tid); return t ? vdLay(t) : []; }, n: vdN, seq: () => window.__vdSeq, st: () => ({ on: VDP.on, i: VDP.i, paused: VDP.paused, rate: VDP.rate }) };
   /* ==/VISUAL== */

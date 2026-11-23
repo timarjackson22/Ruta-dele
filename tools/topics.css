@@ -1,0 +1,22 @@
+/* ==TOPICS-CSS== v293 topic mastery (#dominio) */
+.tmpage .tmnote { margin: 0 0 12px }
+.tmpage .tmsum { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px } .tmpage .tmsum span { padding: 6px 12px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 6%, transparent); font-size: .9rem }
+.tmpage .tmsum .st-strong { background: #e3f4ec; color: #1f7a50 } .tmpage .tmsum .st-mid { background: #fdf1d8; color: #8a5a00 } .tmpage .tmsum .st-weak { background: #fbe8e2; color: #b5402a }
+.tmpage .tmh { margin: 18px 0 8px; font-size: 1.15rem }
+.tmpage .tmrecs { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px }
+.tmpage .tmrec { display: block; text-decoration: none; color: var(--ink); background: var(--surface); border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(20,30,60,.06), 0 6px 18px rgba(20,30,60,.07); border-left: 5px solid #d9583b }
+.tmpage .tmrec.st-mid { border-left-color: #e0a21b } .tmpage .tmrec.st-strong { border-left-color: #2e9d6a }
+.tmpage .tmr-top { display: flex; align-items: baseline; gap: 8px } .tmpage .tmr-top b { font-size: 1.02rem; line-height: 1.3 }
+.tmpage .tmlv { flex: none; font-size: .7rem; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); color: var(--muted) }
+.tmpage .tmr-mid { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px }
+.tmpage .tmr-why, .tmpage .tmr-ex { margin: 2px 0; font-size: .86rem; color: var(--muted) } .tmpage .tmr-ex { font-style: italic }
+.tmpage .tmr-go { display: inline-block; margin-top: 6px; font-weight: 700; color: var(--cobalt, #2f6fd6); font-size: .9rem }
+.tmpage .tmbar { flex: 1 1 auto; height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 8%, transparent); overflow: hidden; min-width: 60px }
+.tmpage .tmbar i { display: block; height: 100%; border-radius: inherit; background: #2e9d6a }
+.tmpage .st-mid .tmbar i { background: #e0a21b } .tmpage .st-weak .tmbar i { background: #d9583b } .tmpage .st-new .tmbar i { background: #9aa4b8 }
+.tmpage .tmpct { flex: none; min-width: 3em; text-align: right; font-weight: 800; font-size: .9rem }
+.tmpage .tmlvs { gap: 6px; flex-wrap: wrap; margin: 18px 0 0 }
+.tmpage .tmrow { display: flex; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink) }
+.tmpage .tmname { flex: 0 1 55%; min-width: 0; font-weight: 600; line-height: 1.3 } .tmpage .tmname small { display: block; font-weight: 400; color: var(--muted); font-size: .78rem }
+.tmpage .tmempty { padding: 16px; border-radius: 16px; background: var(--surface); color: var(--muted) }
+/* ==/TOPICS-CSS== */

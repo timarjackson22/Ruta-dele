@@ -282,6 +282,7 @@
   function skResult(ok, note, missedItem, why2) { const d = SK.list[SK.i], st = SK.st; if (st.res) return;
     (SK.log = SK.log || []).push({ type: d.type, ok: ok === true, first: ok === true && !d.retry && !st.hinted, hinted: !!st.hinted, kind: why2 || (ok === true ? "ok" : ok === false ? "wrong" : "skip"), retry: !!d.retry }); st.res = ok === "skip" || ok === "skip-free" ? "skip" : ok ? "ok" : "no"; st.note = note || "";
     try { if (typeof ok === "boolean") sfx(ok); } catch (e) {}
+    try { if (typeof ok === "boolean" && !d.retry) window.__tm && window.__tm(d.src || SK.id, ok, SK.qd ? "drill" : "check", d.q || d.verb || ""); } catch (e) {}
     if (ok === true) { SK.ok++; if (!d.retry && !st.hinted) SK.first++; }
     else if (ok !== "skip-free") { if (!SK.qd && !d.retry && SK.retry.length < 4 && !/^(ex|readq|lisq)/.test(d.type)) SK.retry.push(Object.assign({}, d, { retry: true }));
       try { if (missedItem) mistakeAdd(missedItem, SK.id); } catch (e) {} }

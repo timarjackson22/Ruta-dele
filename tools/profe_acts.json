@@ -1544,5 +1544,9 @@
  "wod-save": {
   "voice": "unsuitable",
   "why": "save the word of the day (a tap target on Home)"
+ },
+ "tm-lv": {
+  "voice": "pending",
+  "why": "Topic mastery: show the topics of one level"
  }
 }

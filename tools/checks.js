@@ -25,7 +25,7 @@
   function qcResult(box, it, ok, html) {
     box.classList.add(ok ? "ok" : "no"); const fb = box.querySelector(".qcfb"); fb.hidden = false; fb.innerHTML = html;
     box.querySelectorAll("button, input").forEach((b) => { if (!b.closest(".qcfb")) b.disabled = true; });
-    try { sfx(ok); } catch (e) {} try { actAdd(ok ? 2 : 1); if (!ok) mistakeAdd(it, box.closest("[data-qckey]") ? box.closest("[data-qckey]").dataset.qckey : location.hash.slice(1)); } catch (e) {}
+    try { sfx(ok); } catch (e) {} try { actAdd(ok ? 2 : 1); if (!ok) mistakeAdd(it, box.closest("[data-qckey]") ? box.closest("[data-qckey]").dataset.qckey : location.hash.slice(1)); } catch (e) {} try { window.__tm && window.__tm(box.closest("[data-qckey]") ? box.closest("[data-qckey]").dataset.qckey : location.hash.slice(1), !!ok, "lesson", it.q); } catch (e) {}
   }
   document.addEventListener("click", (e) => {
     const t = e.target.closest && e.target.closest('[data-act="qc-pick"],[data-act="qc-show"]'); if (!t) return; const Q = QC[t.dataset.key]; if (!Q) return; const it = Q.items[+t.dataset.k], box = t.closest(".qcitem");

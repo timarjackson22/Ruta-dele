@@ -472,6 +472,7 @@
     return why;
   }
   function adRecord(it, pass, key) {
+    try { window.__tm && window.__tm(PR.kind === "cj" ? window.__tmTense(it.t) : (/^(a1|a2|b1|b2|c1|c2)-u\d+/.exec(it.id || "") || ["tr-" + PR.lv])[0], !!pass, "profe", it.src || it.v); } catch (e) {}
     const st = adSt(PR.kind, PR.lv); const keys = new Set((it.tags || []).concat(key ? [key] : []));
     keys.forEach((k) => { const s = (st.sk[k] = st.sk[k] || { n: 0, miss: 0, streak: 0 }); s.n++; if (pass) s.streak++; else { s.miss++; s.streak = 0; } });
     st.n++; if (pass && PR.tries <= 1) st.first++;

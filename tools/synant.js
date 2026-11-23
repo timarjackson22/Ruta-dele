@@ -48,6 +48,7 @@
   const syWhen = (ms) => ms < 60 * 60e3 ? Math.max(1, Math.round(ms / 60e3)) + " min" : ms < SY_DAY ? Math.round(ms / 3600e3) + " h" : ms < 30 * SY_DAY ? Math.round(ms / SY_DAY) + (Math.round(ms / SY_DAY) === 1 ? " day" : " days") : Math.round(ms / (30 * SY_DAY)) + " mo";
   function syGrade(k, g, isNew) {
     const s = sySt(), { c, ms } = syPlan(s.c[k], g); s.c[k] = c; if (isNew) s.nn = (s.nn || 0) + 1;
+    try { window.__tm && window.__tm("syn", g >= 2, "profe", k.replace(/\|[sa]$/, "")); } catch (e) {}
     PR.relearn = PR.relearn.filter((x) => x.k !== k); if (g === 1) PR.relearn.push({ k, n: 4 }); else if (g === 2 && c.i === 0) PR.relearn.push({ k, n: 7 }); // n counts down on every pick: back after 3 (or 6) other cards
     try { save(); } catch (e) {} return ms;
   }
