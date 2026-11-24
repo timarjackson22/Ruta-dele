@@ -17,6 +17,13 @@ const { open } = require("./h.js");
   await p.evaluate(() => { window.__usLat = true; }); j = await J("coche", ["carro"], "car");
   rec("Regional word: «coche» is right, and the learner is told it is mainly Spain", j && j.v === "ok" && /mainly said in Spain/.test(j.note), JSON.stringify(j)); await p.evaluate(() => { window.__usLat = null; });
   j = await J("casa", ["perro"], "dog"); rec("A word from the dictionary that means something else: what it means", j && j.v === "no" && /house/.test(j.note), JSON.stringify(j));
+  // v297: 145 groups + the app's synonyms & antonyms list
+  const st = await p.evaluate(() => window.__us.stats()); rec("Knowledge size: ≥ 140 groups, ≥ 450 words, the synonyms list loaded", st.groups >= 140 && st.words >= 450 && st.synList >= 500, JSON.stringify(st));
+  j = await J("realizar", ["darse cuenta"], "to realise"); rec("False friend «realizar» explained", j && j.v === "no" && /carry out/.test(j.note), JSON.stringify(j));
+  j = await J("embarazada", ["avergonzado"], "embarrassed"); rec("False friend «embarazada» explained", j && j.v === "no" && /PREGNANT/.test(j.note), JSON.stringify(j));
+  j = await J("mucho", ["muy"], "very"); rec("muy / mucho explained", j && j.v === "no" && /before adjectives/.test(j.note), JSON.stringify(j));
+  j = await J("enorme", ["grande"], "big"); rec("A synonym from the synonyms list counts, naming the usual word", j && j.v === "ok" && /synonym/.test(j.note), JSON.stringify(j));
+  j = await J("pequeño", ["grande"], "big"); rec("An antonym from the list is called the opposite", j && j.v === "no" && /opposite/.test(j.note), JSON.stringify(j));
   // sentences: a swapped word judged in context
   let c = await p.evaluate(() => window.__ad.checkEs("No conozco dónde está la estación.", { q: "I don't know where the station is.", ans: ["No sé dónde está la estación."] }));
   rec("Sentence: «conozco» for «sé» is a mistake with the reason (saber vs conocer)", !c.ok && c.issues.some((x) => x.type === "usage" && /saber/.test(x.note)), JSON.stringify(c.issues));
