@@ -11,7 +11,7 @@
   const SK_T = {
     match: ["Match pairs", "🧩", { voc: 1 }, 0.6, "R"], hearmean: ["Listen: what does it mean?", "🎧", { lis: .6, voc: .4 }, 0.4, "R"], meaning: ["Read: what does it mean?", "📖", { rea: .7, voc: .3 }, 0.4, "R"],
     hearpick: ["Listen: which sentence?", "🎧", { lis: .8, rea: .2 }, 0.5, "R"], whichsound: ["Which pronunciation is right?", "👂", { pro: .7, lis: .3 }, 0.4, "R"], misspell: ["Spot the misspelling", "🔎", { wex: .5, voc: .5 }, 0.4, "R"],
-    tiles: ["Build the sentence", "🧱", { gra: .5, wex: .3, voc: .2 }, 0.8, "S"], gap: ["Fill the gap", "🧩", { gra: .7, voc: .3 }, 0.5, "S"], syll: ["Split into syllables", "✂️", { pro: .6, wex: .4 }, 0.5, "S"],
+    tiles: ["Build the sentence", "🧱", { gra: .5, wex: .3, voc: .2 }, 0.8, "S"], gap: ["Fill the gap", "🧩", { gra: .7, voc: .3 }, 0.5, "S"], spotfix: ["Spot the mistake", "🩹", { gra: .7, wex: .3 }, 0.4, "S"], syll: ["Split into syllables", "✂️", { pro: .6, wex: .4 }, 0.5, "S"],
     stress: ["Find the stressed syllable", "🎯", { pro: .7, wex: .3 }, 0.4, "S"], conj: ["Conjugate", "🔤", { gra: .8, wex: .2 }, 0.5, "S"], acad: ["Grammar check", "✏️", { gra: .7, rea: .3 }, 0.5, "S"],
     dict: ["Listen and type", "⌨️", { lis: .5, wex: .5 }, 1, "P"], translate: ["Translate", "🌍", { wex: .5, gra: .3, voc: .2 }, 1.2, "P"], say: ["Say it", "🗣", { oex: .5, pro: .5 }, 0.6, "P"],
     readq: ["Read and answer", "📖", { rea: .9, voc: .1 }, 3, "X"], lisq: ["Listen and answer", "🎧", { lis: .9, voc: .1 }, 3, "X"], exread: ["DELE reading bite", "📝", { rea: 1 }, 2, "X"],
@@ -92,6 +92,15 @@
     T.allSents = [].concat(...T.secs.map((s) => s.sents)).filter((e) => skOkSent(e[0], T.lvl));
     return T;
   }
+  function skTabSents(s) { const out = [], seen = new Set(); (s.tables || []).forEach((b) => (b.rows || []).forEach((row) => row.slice(1).forEach((c) => String(c || "").split(/\s+[\/—–]\s+|\s—\s/).forEach((x) => { x = skClean(x).trim();
+      const w = skWords(x).length; if (w >= 3 && w <= 12 && /^[¿¡A-ZÁÉÍÓÚÑ]/.test(x) && /[.?!]$/.test(x) && !/[+=→…_]|\(/.test(x) && !seen.has(skN(x))) { seen.add(skN(x)); out.push(x); } }))));
+    return out; }
+  function skPits(s) { let L = []; try { const j = JSON.parse(s.text || "[]"); if (Array.isArray(j)) L = j.filter((x) => typeof x === "string"); } catch (e) {} if (!/mistake/i.test(s.name || "") && !L.some((x) => /→/.test(x))) return [];
+    return L.map((x) => { const t = x.split("|"), body = t.length > 1 ? t.slice(1).join("|") : t[0], m = /«([^»]{2,70})»\s*→\s*«([^»]{2,70})»/.exec(body); if (!m || skN(m[1]) === skN(m[2])) return null;
+      const why = (/»\s*:\s*(.+)$/.exec(body.slice(m.index + m[0].length - 1)) || [])[1] || ""; return { bad: m[1].trim(), good: m[2].trim(), why: why.trim(), title: t.length > 1 ? t[0].trim() : "" }; }).filter(Boolean); }
+  function skSecWords(T, s) { // a grammar subsection's own words: unit/level words found in its text (else the unit's list, marked not own)
+    const txt = skN(s.text || ""), seen = new Set(), own = T.allWords.filter((w) => { const k = skN(w[0]).replace(/^(el|la|los|las|un|una) /, ""); if (k.length < 3 || seen.has(k) || !new RegExp("(^|[^a-zñ])" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^a-zñ]|$)").test(txt)) return false; seen.add(k); return true; });
+    if (own.length >= 4) { own.own = true; return own; } const all = T.allWords.slice(); all.own = false; return all; }
   function skOutcomes(T, sec) { // register outcomes this subsection trains (grammar/function/theme by keyword on its heading + the level's skill outcomes)
     let R = null; try { R = crReg(); } catch (e) {} if (!R) return [];
     const head = crFold ? crFold(T.title + " " + (sec ? sec.name + " " + sec.text.slice(0, 400) : "")) : ""; const li = (l) => SK_LV.indexOf(l);
@@ -116,32 +125,47 @@
   }
   function skGen(T, si, r) { // candidates for one subsection, by stage
     const P = SK_P[T.lvl], s = T.secs[si], C = { R: [], S: [], P: [] };
+    // v296: every drill records whether its material is this subsection's own (d.own); skPick fills a card from own drills first,
+    // so «Check yourself» after a subsection practises THAT subsection (≥ 60 % own, measured by window.__sk.audit()).
     const sents = s.sents.filter((e) => skOkSent(e[0], T.lvl)), others = T.allSents.filter((e) => !sents.includes(e)), pool = sents.length >= 2 ? sents : sents.concat(skShuf(others, r).slice(0, 3 - sents.length));
-    const words = (s.words.length >= 4 ? s.words.map((w) => [skClean(w[0]), skClean(w[1])]) : T.allWords).filter((w) => w[0].length >= 2 && skN(w[0]) !== skN(w[1])), vocab = s.vocab.length >= 3 ? s.vocab : [].concat(...T.secs.map((x) => x.vocab));
-    const add = (st, d) => d && C[st].push(d);
-    if (words.length >= 5) add("R", { type: "match", pairs: skShuf(words, r).slice(0, 5) });
-    if (words.length >= 4) { const w = skShuf(words, r); add("R", { type: "hearmean", say: w[0][0], ans: w[0][1], opts: skShuf([w[0][1], w[1][1], w[2][1], w[3][1]], r) }); }
-    pool.slice(0, 3).forEach((e, k) => { const seenO = new Set([skN(e[0]), skN(e[1])]), o = skShuf(T.allSents.filter((x) => x !== e), r).filter((x) => { const a = skN(x[0]), b = skN(x[1]); if (seenO.has(a) || seenO.has(b)) return false; seenO.add(a); seenO.add(b); return true; });
-      if (o.length >= 2) add("R", { type: k % 2 ? "meaning" : "hearpick", say: e[0], show: e[0], ans: k % 2 ? e[1] : e[0], opts: skShuf(k % 2 ? [e[1], o[0][1], o[1][1]] : [e[0], o[0][0], o[1][0]], r), en: e[1] });
-      add("S", P.typed && T.lvl >= "b2" && k ? null : { type: "tiles", s: e, extra: skShuf(skWords((o[0] || e)[0].replace(/[.!?¿¡,]/g, "").toLowerCase()), r).filter((x) => !skWords(e[0].toLowerCase()).includes(x)).slice(0, P.extra) });
-      if (!/\s[A-ZÁÉÍÓÚÑ]/.test(e[0])) add("P", { type: "dict", s: e }); if (P.typed) add("P", { type: "translate", s: e, alts: e.alts || [e[0]] }); add("P", { type: "say", s: e }); });
+    const ownW = s.words.length >= 4, words = (ownW ? s.words.map((w) => [skClean(w[0]), skClean(w[1])]) : skSecWords(T, s)).filter((w) => w[0].length >= 2 && skN(w[0]) !== skN(w[1])), ownV = s.vocab.length >= 3, vocab = ownV ? s.vocab : [].concat(...T.secs.map((x) => x.vocab));
+    const ownWd = ownW || (words.own === true), add = (st, d, own) => { if (!d) return; d.own = !!own; C[st].push(d); };
+    if (words.length >= 5) add("R", { type: "match", pairs: skShuf(words, r).slice(0, 5) }, ownWd);
+    if (words.length >= 4) { const w = skShuf(words, r); add("R", { type: "hearmean", say: w[0][0], ans: w[0][1], opts: skShuf([w[0][1], w[1][1], w[2][1], w[3][1]], r) }, ownWd); }
+    pool.slice(0, 3).forEach((e, k) => { const own = sents.includes(e); const seenO = new Set([skN(e[0]), skN(e[1])]), o = skShuf(T.allSents.filter((x) => x !== e), r).filter((x) => { const a = skN(x[0]), b = skN(x[1]); if (seenO.has(a) || seenO.has(b)) return false; seenO.add(a); seenO.add(b); return true; });
+      if (o.length >= 2) add("R", { type: k % 2 ? "meaning" : "hearpick", say: e[0], show: e[0], ans: k % 2 ? e[1] : e[0], opts: skShuf(k % 2 ? [e[1], o[0][1], o[1][1]] : [e[0], o[0][0], o[1][0]], r), en: e[1] }, own);
+      add("S", P.typed && T.lvl >= "b2" && k ? null : { type: "tiles", s: e, extra: skShuf(skWords((o[0] || e)[0].replace(/[.!?¿¡,]/g, "").toLowerCase()), r).filter((x) => !skWords(e[0].toLowerCase()).includes(x)).slice(0, P.extra) }, own);
+      if (!/\s[A-ZÁÉÍÓÚÑ]/.test(e[0])) add("P", { type: "dict", s: e }, own); if (P.typed) add("P", { type: "translate", s: e, alts: e.alts || [e[0]] }, own); add("P", { type: "say", s: e }, own); });
     const vw = skShuf(vocab.filter((w) => skSyl(w).length >= 2), r);
-    if (vw[0]) { const v = skMoveStress(vw[0]); if (v && v !== vw[0]) add("R", { type: "whichsound", w: vw[0], wrong: v, order: r() < .5 ? [0, 1] : [1, 0] }); }
-    if (vw.length >= 4) { const bad = skMisspell(vw[1], r); if (bad) add("R", { type: "misspell", words: skShuf([bad].concat(vw.slice(2, 5)), r), bad, good: vw[1] }); }
-    if (vw[2]) add("S", { type: "syll", w: vw[2].toLowerCase(), syl: skSyl(vw[2].toLowerCase()) });
-    if (vw[3]) add("S", { type: "stress", w: vw[3].toLowerCase(), syl: skSyl(vw[3].toLowerCase()), k: skStress(vw[3].toLowerCase()) });
+    if (vw[0]) { const v = skMoveStress(vw[0]); if (v && v !== vw[0]) add("R", { type: "whichsound", w: vw[0], wrong: v, order: r() < .5 ? [0, 1] : [1, 0] }, ownV); }
+    if (vw.length >= 4) { const bad = skMisspell(vw[1], r); if (bad) add("R", { type: "misspell", words: skShuf([bad].concat(vw.slice(2, 5)), r), bad, good: vw[1] }, ownV); }
+    if (vw[2]) add("S", { type: "syll", w: vw[2].toLowerCase(), syl: skSyl(vw[2].toLowerCase()) }, ownV);
+    if (vw[3]) add("S", { type: "stress", w: vw[3].toLowerCase(), syl: skSyl(vw[3].toLowerCase()), k: skStress(vw[3].toLowerCase()) }, ownV);
     s.tables.forEach((b) => { const PR = /^(yo|tú|él|nosotros|vosotros|ellos)(\/as|\/a| \/|$|,| )/i, INF = /^[a-záéíóúñ]+(ar|er|ir|ír)(se)?(\s*\(.*\))?$/i; const rows = (b.rows || []).filter((row) => PR.test(row[0] || "")), h = b.h || [];
       skShuf(rows, r).slice(0, 2).forEach((row) => { const ci = 1 + Math.floor(r() * (row.length - 1)), form = String(row[ci] || "").split(/[\/·,(]/)[0].trim();
-        if (form && skWords(form).length <= 3 && h[ci] && INF.test(String(h[ci]).trim()) && /^[a-záéíóúñ ]+$/i.test(form) && !/^(he|has|ha|hemos|habéis|han)$/i.test(form)) add("S", { type: "conj", verb: h[ci], person: row[0], tense: T.title + " · " + b.t, ans: [form], why: b.r || "" }); }); });
-    const xs = s.items.filter((it) => it.t === "x"); xs.slice(0, 3).forEach((it) => { if (!/_{2,}|…/.test(it.q)) { const d = skAcad(it); if (d) add(d.type === "stress" ? "S" : "P", d); return; }
+        if (form && skWords(form).length <= 3 && h[ci] && INF.test(String(h[ci]).trim()) && /^[a-záéíóúñ ]+$/i.test(form) && !/^(he|has|ha|hemos|habéis|han)$/i.test(form)) add("S", { type: "conj", verb: h[ci], person: row[0], tense: T.title + " · " + b.t, ans: [form], why: b.r || "" }, true); }); });
+    // v296: material of the subsection itself — Spanish example sentences inside its grammar tables (listen & build, dictation,
+    // say it) and «wrong → right» pairs from its common-mistakes list (spot the mistake)
+    if (sents.length < 2) skTabSents(s).slice(0, 3 - Math.min(sents.length, 2)).forEach((x, k) => { const e = [x, ""];
+      add("S", { type: "tiles", s: e, extra: [], nw: 1 }, true); if (!/\s[A-ZÁÉÍÓÚÑ]/.test(x)) add("P", { type: "dict", s: e, nw: 1 }, true); if (k < 2) add("P", { type: "say", s: e, nw: 1 }, true); });
+    skPits(s).slice(0, 4).forEach((x) => add("S", { type: "spotfix", opts: skShuf([x.bad, x.good], r), ans: x.good, bad: x.bad, why: x.why, hint: x.title, nw: 1 }, true));
+    const xs = s.items.filter((it) => it.t === "x"); xs.slice(0, 3).forEach((it) => { if (!/_{2,}|…/.test(it.q)) { const d = skAcad(it); if (d) add(d.type === "stress" ? "S" : "P", d, true); return; }
       const hint = /\(([^()]*\/[^()]*)\)\s*\.?$/.exec(it.q), ch = hint ? hint[1].split("/").map((x) => x.trim()).filter(Boolean) : [];
-      if (ch.length >= 2 && ch.length <= 4 && ch.some((x) => skNA(x) === skNA(it.a[0]))) add("S", { type: "gap", q: it.q.replace(hint[0], "").trim(), ans: ch.find((x) => skNA(x) === skNA(it.a[0])), alts: it.a, opts: skShuf(ch, r), why: it.why, it });
-      else { const d = skAcad(it); if (d) add(d.type === "stress" ? "S" : "P", d); } });
-    s.items.filter((it) => it.t !== "x").slice(0, 4).forEach((it) => add(it.t === "mc" ? "S" : "P", { type: "acad", it }));
+      if (ch.length >= 2 && ch.length <= 4 && ch.some((x) => skNA(x) === skNA(it.a[0]))) add("S", { type: "gap", q: it.q.replace(hint[0], "").trim(), ans: ch.find((x) => skNA(x) === skNA(it.a[0])), alts: it.a, opts: skShuf(ch, r), why: it.why, it }, true);
+      else { const d = skAcad(it); if (d) add(d.type === "stress" ? "S" : "P", d, true); } });
+    s.items.filter((it) => it.t !== "x").slice(0, 4).forEach((it) => add(it.t === "mc" ? "S" : "P", { type: "acad", it }, true));
     return C;
   }
-  function skPick(C, n, r, canMic) { // recognise → structure → produce, varied, at most 2 of a type
-    const out = [], cnt = {}, take = (st, k) => { const L = skShuf(C[st].filter((d) => (canMic || d.type !== "say") && !out.includes(d)), r); for (const d of L) { if (out.length >= n || k <= 0) break; if ((cnt[d.type] || 0) >= 2) continue; if (out.length && out[out.length - 1].type === d.type) continue; out.push(d); cnt[d.type] = (cnt[d.type] || 0) + 1; k--; } };
+  function skPick(C, n, r, canMic) { // recognise → structure → produce, varied, at most 2 of a type; this subsection's own material first
+    const ownN = ["R", "S", "P"].reduce((a, st) => a + C[st].filter((d) => d.own && (canMic || d.type !== "say")).length, 0);
+    if (ownN >= 3) { const A = {}; ["R", "S", "P"].forEach((st) => (A[st] = C[st].filter((d) => d.own)));
+      const out = skPick0(A, n, r, canMic, true), offMax = Math.floor(out.length * 2 / 3), off = { R: C.R.filter((d) => !d.own), S: C.S.filter((d) => !d.own), P: C.P.filter((d) => !d.own) };
+      if (out.length < n && offMax > 0) skPick0(off, Math.min(n, out.length + offMax), r, canMic, true, out);
+      return out; }
+    return skPick0(C, n, r, canMic);
+  }
+  function skPick0(C, n, r, canMic, loose, out0) {
+    const out = out0 || [], cnt = {}; out.forEach((d) => (cnt[d.type] = (cnt[d.type] || 0) + 1)); const take = (st, k) => { const L = skShuf(C[st].filter((d) => (canMic || d.type !== "say") && !out.includes(d)), r); for (const d of L) { if (out.length >= n || k <= 0) break; if ((cnt[d.type] || 0) >= (loose ? (d.type === "acad" ? 4 : 3) : 2)) continue; if (out.length && out[out.length - 1].type === d.type && !(loose && d.type === "acad")) continue; out.push(d); cnt[d.type] = (cnt[d.type] || 0) + 1; k--; } };
     const q = Math.max(2, Math.round(n / 3)); take("R", q); take("S", q); take("P", n - out.length); take("S", n - out.length); take("R", n - out.length);
     return out;
   }
@@ -249,16 +273,17 @@
       body = '<h2 class="drq">Which pronunciation of <span lang="es">«' + esc(d.w) + '»</span> is right?</h2><p class="muted small">Listen to both. Only one puts the stress in the right place.</p><div class="row sk-c">' + d.order.map((v, k) => '<button class="btn sk-ver" data-act="sk-play" data-t="' + esc(v === 0 ? d.w : d.wrong) + '">🔊 Version ' + lab[k] + "</button>").join("") + "</div>" + opts(["Version A is right", "Version B is right"], st.picked); }
     else if (d.type === "misspell") { needCheck = false; st.correct = d.words.indexOf(d.bad); body = '<h2 class="drq">Which word is misspelled?</h2>' + opts(d.words, st.picked); }
     else if (d.type === "tiles") { const toks = d.s[0].replace(/[¿¡]/g, "").split(/\s+/); st.pool = st.pool || skShuf(toks.concat(d.extra || []).map((x) => x.replace(/[.!?,;:]$/, "")), Math.random); st.pick = st.pick || [];
-      body = '<h2 class="drq">Write this in Spanish</h2><p class="dren">“' + esc(d.s[1]) + '”</p><div class="drline">' + st.pick.map((k, j) => '<button class="drtile on" data-act="sk-un" data-j="' + j + '"' + (st.res ? " disabled" : "") + ">" + esc(st.pool[k]) + "</button>").join("") + '</div><div class="drbank">' + st.pool.map((x, k) => '<button class="drtile" data-act="sk-tile" data-k="' + k + '"' + (st.pick.includes(k) || st.res ? " disabled" : "") + ">" + esc(x) + "</button>").join("") + "</div>"; }
+      body = (d.s[1] ? '<h2 class="drq">Write this in Spanish</h2><p class="dren">“' + esc(d.s[1]) + "”</p>" : '<h2 class="drq">Listen, then put the words in order</h2><div class="row sk-c">' + skPlay(d.s[0]) + skPlay(d.s[0], 1) + "</div>") + '<div class="drline">' + st.pick.map((k, j) => '<button class="drtile on" data-act="sk-un" data-j="' + j + '"' + (st.res ? " disabled" : "") + ">" + esc(st.pool[k]) + "</button>").join("") + '</div><div class="drbank">' + st.pool.map((x, k) => '<button class="drtile" data-act="sk-tile" data-k="' + k + '"' + (st.pick.includes(k) || st.res ? " disabled" : "") + ">" + esc(x) + "</button>").join("") + "</div>"; }
     else if (d.type === "gap") { needCheck = false; st.correct = d.opts.indexOf(d.ans); body = d.word ? '<h2 class="drq">' + esc(d.ins || "Which spelling is right?") + '</h2><p class="muted small">Listen to where the stress falls, then pick how it is written.</p>' + skPlay(d.ans) + opts(d.opts, st.picked)
         : '<h2 class="drq">Fill the gap</h2><p class="drsay" lang="es">' + blanks(d.q) + "</p>" + opts(d.opts, st.picked); }
+    else if (d.type === "spotfix") { needCheck = false; st.correct = d.opts.indexOf(d.ans); body = '<h2 class="drq">Which one is correct?</h2>' + (d.hint ? '<p class="muted small">' + esc(d.hint) + "</p>" : "") + opts(d.opts, st.picked); }
     else if (d.type === "syll") { st.cut = st.cut || []; const L = [...d.w];
       body = '<h2 class="drq">Split into syllables</h2><p class="muted small">Tap between the letters to cut the word.</p><p class="sk-syl" lang="es">' + L.map((c, k) => esc(c) + (k < L.length - 1 ? '<button class="sk-cut' + (st.cut.includes(k + 1) ? " on" : "") + '" data-act="sk-cut" data-k="' + (k + 1) + '"' + (st.res ? " disabled" : "") + ' aria-label="cut after ' + esc(c) + '"></button>' : "")).join("") + "</p>" + skPlay(d.w); }
     else if (d.type === "stress") { needCheck = false; st.correct = d.k; body = '<h2 class="drq">Which syllable is stressed?</h2>' + skPlay(d.w) + '<div class="exopts sk-sylopts">' + d.syl.map((x, k) => '<button class="exopt' + (st.res ? (k === d.k ? " ok" : k === st.picked ? " no" : "") : "") + '" data-act="sk-pick" data-k="' + k + '"' + (st.res ? " disabled" : "") + ">" + esc(x) + "</button>").join("") + "</div>"; }
     else if (d.type === "conj") body = '<h2 class="drq">Conjugate</h2><p class="drsay"><b lang="es">' + esc(d.verb) + "</b> · " + esc(d.person) + '</p><p class="muted small">' + esc(d.tense) + "</p>" + skInput(st);
     else if (d.type === "dict") body = '<h2 class="drq">Type what you hear</h2><div class="row sk-c">' + skPlay(d.s[0]) + skPlay(d.s[0], 1) + "</div>" + skInput(st);
     else if (d.type === "translate") body = '<h2 class="drq">Translate into Spanish</h2><p class="dren">“' + esc(d.s[1]) + '”</p>' + skInput(st, true);
-    else if (d.type === "say") { needCheck = false; body = '<h2 class="drq">Say it</h2><p class="drsay" lang="es">' + esc(d.s[0]) + '</p><p class="dren">“' + esc(d.s[1]) + '”</p><div class="row sk-c">' + skPlay(d.s[0]) + '<button class="drplay sk-mic' + (st.rec ? " rec" : "") + '" data-act="sk-mic" aria-label="Speak"' + (st.res ? " disabled" : "") + ">🎤</button></div>" + (st.heard ? '<p class="small">You said: «' + esc(st.heard) + "»</p>" : "") + (st.res ? "" : '<p class="sk-c">' + skBtn("sk-nomic", "Can't speak now", " small") + "</p>"); }
+    else if (d.type === "say") { needCheck = false; body = '<h2 class="drq">Say it</h2><p class="drsay" lang="es">' + esc(d.s[0]) + "</p>" + (d.s[1] ? '<p class="dren">“' + esc(d.s[1]) + "”</p>" : "") + '<div class="row sk-c">' + skPlay(d.s[0]) + '<button class="drplay sk-mic' + (st.rec ? " rec" : "") + '" data-act="sk-mic" aria-label="Speak"' + (st.res ? " disabled" : "") + ">🎤</button></div>" + (st.heard ? '<p class="small">You said: «' + esc(st.heard) + "»</p>" : "") + (st.res ? "" : '<p class="sk-c">' + skBtn("sk-nomic", "Can't speak now", " small") + "</p>"); }
     else if (d.type === "acad") { const it = d.it; if (it.t === "mc") { needCheck = false; st.correct = it.c; body = '<h2 class="drq">' + esc(PXT[it.t] ? PXT[it.t][0] : "Choose") + '</h2><p class="drsay" lang="es">' + blanks(it.q) + "</p>" + opts(it.opts, st.picked); }
       else { const gap = /_{2,}|…/.test(it.q), head = it.t === "x" ? (it.ins || (gap ? "Complete the sentence" : "Answer")) : PXT[it.t] ? PXT[it.t][0] : "Answer";
         const one = (String(it.q).match(/_{2,}/g) || []).length === 1 && it.t === "x", hm = one ? /\s*\(([^()]+)\)\s*\.?\s*$/.exec(it.q) : null, qq = hm ? it.q.slice(0, hm.index) + (/\.\s*$/.test(hm[0]) ? "." : "") : it.q;
@@ -322,7 +347,7 @@
     if (typeof IS_IOS !== "undefined" && IS_IOS && typeof MIC_OK !== "undefined" && !MIC_OK) micAsk().then((ok) => ok && go()); else go(); }
   /* ---- Profe's 30-second debrief at the end of every drill set: praise, one thing to watch, encouragement (sandwich) ---- */
   const SK_GRP = { listening: ["hearmean", "hearpick", "dict", "lisq", "exlisten"], speaking: ["say", "exspeak"], pronunciation: ["whichsound", "stress", "syll"], spelling: ["misspell"],
-    "sentence building": ["tiles", "gap"], grammar: ["acad", "conj"], vocabulary: ["match", "meaning"], translation: ["translate"], reading: ["readq", "exread"], writing: ["exwrite"] };
+    "sentence building": ["tiles", "gap"], grammar: ["acad", "conj", "spotfix"], vocabulary: ["match", "meaning"], translation: ["translate"], reading: ["readq", "exread"], writing: ["exwrite"] };
   const SK_TIP = { listening: "replay the audio once more before you answer, and listen for the small words", speaking: "say the sentence aloud even when you're not sure: speaking is what makes it stick",
     pronunciation: "say the word slowly and clap each syllable; the stress usually falls on the second-to-last one", spelling: "picture the word before you choose; b and v, ll and y, and missing accents are the usual traps",
     "sentence building": "find the verb first, then build around it", grammar: "check who is doing the action and when, then choose the form", vocabulary: "say each new word aloud with its article",
@@ -389,8 +414,8 @@
     if (a === "sk-acc") { const i = document.querySelector(".sk-in"); if (i) { const p = i.selectionStart || i.value.length; i.value = i.value.slice(0, p) + b.dataset.c + i.value.slice(p); i.focus(); i.setSelectionRange(p + 1, p + 1); st.val = i.value; } return; }
     if (a === "sk-pick") { const k = +b.dataset.k; st.picked = k; const ok = k === st.correct, it = d.it;
       const why = d.type === "misspell" ? "<b>" + esc(d.bad) + "</b> should be <b>" + esc(d.good) + "</b>." : d.type === "whichsound" ? "Right pronunciation: " + ["A", "B"][st.correct] + ". The stress falls on <b>" + esc(skSyl(d.w)[skStress(d.w)]) + "</b> (" + esc(skSyl(d.w).join("-")) + ")." :
-        d.type === "stress" ? (d.why ? esc(d.why) : "Stressed: <b>" + esc(d.syl[d.k]) + "</b> (" + esc(d.syl.join("-")) + ").") : it ? esc(it.why || "") : (d.type === "hearpick" || d.type === "meaning") && d.en ? "«" + esc(d.say) + "» = " + esc(d.en) : d.type === "gap" ? esc(d.why || "") : "";
-      const mi = it || (d.opts ? { t: "mc", k: skHash(d.type + (d.say || d.q || d.w || "")) % 100000, q: d.type === "hearmean" ? "🔊 " + d.say : d.q || d.show || d.say || d.w || "", opts: d.opts, c: st.correct, why: "" } : null);
+        d.type === "stress" ? (d.why ? esc(d.why) : "Stressed: <b>" + esc(d.syl[d.k]) + "</b> (" + esc(d.syl.join("-")) + ").") : it ? esc(it.why || "") : (d.type === "hearpick" || d.type === "meaning") && d.en ? "«" + esc(d.say) + "» = " + esc(d.en) : d.type === "gap" ? esc(d.why || "") : d.type === "spotfix" ? "✗ «" + esc(d.bad) + "» → ✓ <b>«" + esc(d.ans) + "»</b>" + (d.why ? ": " + esc(d.why) : "") : "";
+      const mi = it || (d.opts ? { t: "mc", k: skHash(d.type + (d.say || d.q || d.w || "")) % 100000, q: d.type === "hearmean" ? "🔊 " + d.say : d.type === "spotfix" ? "Which one is correct? (" + (d.hint || "common mistake") + ")" : d.q || d.show || d.say || d.w || "", opts: d.opts, c: st.correct, why: "" } : null);
       skResult(ok, (ok ? "" : "Answer: <b>" + esc((d.opts || (it && it.opts) || d.syl || [])[st.correct] || "") + "</b><br>") + why, ok ? null : mi); return; }
     if (a === "sk-m") { const side = b.dataset.side, i = +b.dataset.i; if (!st.sel || st.sel[0] === side) { st.sel = side + i; skRender(); return; }
       const j = +st.sel.slice(1); st.sel = null; if (i === j) { st.done.push(i); try { sfx(true); } catch (x) {} if (st.done.length === d.pairs.length) skResult(!st.err, st.err ? "All matched, with " + st.err + " slip" + (st.err > 1 ? "s" : "") + "." : ""); else skRender(); }
@@ -412,4 +437,8 @@
         const top = f.closest(".sk") ? document.querySelector(".sk .drtop") : f.closest("#runner") ? (f.closest("#runner").querySelector(".pxq, .pxcard, h3, p") || f) : f.closest(".drill") ? document.querySelector(".drill .drtop") : null;
         if (top) { const y = top.getBoundingClientRect().top + scrollY - 6; scrollTo(0, Math.max(0, y)); } }, 120); was = open; };
     vv.addEventListener("resize", fit); })();
-  window.__sk = { pool: skPool, embed: skEmbed, skills: SK_SKILL, reset: () => { SK = null; }, check: ansCheck, render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };
+  // audit (v296): share of each «Check yourself» card built from its own subsection, for every unit and guide
+  function skAudit(old) { const out = []; const ids = []; SK_LV.forEach((lv) => ((LV[lv] || {}).units || []).forEach((u, k) => ids.push(lv + "-u" + (k + 1)))); (typeof GUIDES !== "undefined" ? GUIDES : []).forEach((g) => ids.push("guia-" + g.id));
+    ids.forEach((id) => { const T = skTopic(id); if (!T) return; T.secs.forEach((sec, si) => { let b = skBank(id, si, "bank"); if (old) { const C = skGen(T, si, skRng(skHash(id + "|" + si + "|bank"))); ["R", "S", "P"].forEach((st) => (C[st] = C[st].filter((d) => !d.nw))); b = skPick0(C, SK_P[T.lvl].n, skRng(skHash(id + "|" + si + "|bank")), true); } if (!b.length) return; const own = b.filter((d) => d.own).length; out.push({ id, si, sec: sec.name, n: b.length, own, pct: own / b.length, types: b.map((d) => d.type + (d.own ? "" : "*")).join(" ") }); }); });
+    return out; }
+  window.__sk = { pool: skPool, audit: skAudit, embed: skEmbed, skills: SK_SKILL, reset: () => { SK = null; }, check: ansCheck, render: () => skRender(), bank: skBank, review: skReview, topic: skTopic, gen: skGen, types: SK_T, syl: skSyl, stress: skStress, moveStress: skMoveStress, misspell: skMisspell, outcomes: skOutcomes, state: () => SK, P: SK_P };

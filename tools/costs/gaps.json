@@ -37,7 +37,7 @@
    "mature": 0.4
   },
   "days_per_month": 12,
-  "ai_turns_per_day": 12,
+  "ai_turns_per_day": 14,
   "ai_in_tokens": 2500,
   "ai_cached_share": 0.8,
   "ai_out_tokens": 200,
@@ -53,7 +53,8 @@
   "call_min_per_day": 3,
   "call_min_note": "Video-call minutes per active learner per active day (calls are optional; most practice is taps and short turns).",
   "ocr_pages_per_month": 4,
-  "ocr_pages_note": "Photos of pages or scanned PDF pages read per active learner per month (Read & Listen › Add your own; v262). Optional; most learners use the built-in texts."
+  "ocr_pages_note": "Photos of pages or scanned PDF pages read per active learner per month (Read & Listen › Add your own; v262). Optional; most learners use the built-in texts.",
+  "ai_turns_note": "AI replies per active learner per active day. v296 adds about two «second look» checks a day in practice (only when the built-in checker rejects or accepts an alternative answer, and only with an AI brain)."
  },
  "metrics": [
   [

@@ -29,6 +29,11 @@ const URL = process.env.URL || "http://localhost:8766/";
       const r = await p.evaluate(() => { const b = [...document.querySelectorAll("#ltext .rl-chat .rl-bub")]; return { n: b.length, raw: b.filter((x) => /^[^,]{1,40}, \d{1,2}[:.]\d{2}:/.test(x.querySelector(".es").textContent.trim())).length, me: document.querySelectorAll("#ltext .rl-bub.me").length, them: document.querySelectorAll("#ltext .rl-bub.them").length, spoken: [...document.querySelectorAll("#ltext .sent")].length }; });
       if (!r.n || r.raw || !r.me || !r.them) bad.push(id + " " + JSON.stringify(r)); }
     rec("Chats (one-to-one and groups) are phone chats: names and times on the bubbles, you on the right, others on the left", !bad.length, bad.join(" | ")); }
+  // v296: each kind of text looks like the real thing
+  { const want = [["news-b1-02", ".rl-paper .rl-mast"], ["news-a1-03", ".rl-radio .rl-onair"], ["history-b1-01", ".rl-hist .rl-tl span"], ["culture-a2-02", ".rl-cult .rl-chero"], ["historia-a2-1", ".rl-tale .rl-orn"]], bad = [];
+    for (const [id, sel] of want) { await p.goto(URL + "#" + id); await p.waitForTimeout(700); if (!(await p.evaluate((q) => !!document.querySelector("#ltext " + q) && document.querySelectorAll("#ltext .sl .sent[data-pi]").length > 2, sel))) bad.push(id); }
+    const op = await p.evaluate(() => LISTEN.filter((x) => window.__layOf(x)[0] === "opinion").map((x) => x.id)[0]); if (op) { await p.goto(URL + "#" + op); await p.waitForTimeout(700); if (!(await p.evaluate(() => !!document.querySelector("#ltext .rl-opin .rl-ohead")))) bad.push(op); }
+    rec("News (newspaper / radio bulletin), history (key dates), culture (feature), opinion (column) and stories (storybook) each have their own form", !bad.length, bad.join(",")); }
   await p.goto(URL + "#leer"); await p.waitForTimeout(600);
   rec("No sideways scroll at 360px; no page errors", (await p.evaluate(() => document.documentElement.scrollWidth <= 361)) && !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);

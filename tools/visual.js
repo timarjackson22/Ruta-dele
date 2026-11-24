@@ -768,6 +768,7 @@
   }
   function vdView(id) {
     const t = VDT.find((x) => x.id === id); if (!t) { vdHub(); return; }
+    if (VDP.auto) setTimeout(() => { if (!VDP.auto) return; VDP.auto = 0; const b = document.querySelector('[data-act="vd-all"]'); if (b) b.click(); }, 60);
     const k = VDT.indexOf(t), prev = VDT[k - 1], next = VDT[k + 1];
     let pic;
     if (t.kind === "grid") pic = '<div class="vd-items">' + t.items.map((it, i) => '<button type="button" class="vd-it" data-act="vd-say" data-i="' + i + '">' + vdIcon(it[2]) + '<b lang="es">' + esc(vdW(t, it)) + "</b><small>" + esc(it[1]) + "</small></button>").join("") + "</div>";
@@ -781,7 +782,10 @@
       '<div class="row vd-top"><button class="btn primary" data-act="vd-all">🔊 Hear them all</button><button class="btn" data-act="vd-deck">＋ Add to my deck</button></div><p class="small vd-how">«Hear them all»: each word in English once, then in Spanish three times.</p>' +
       '<section class="block vd-card2" data-vd="' + t.id + '">' + pic + '<p class="vd-en" id="vd-en" aria-live="polite"></p></section>' +
       '<div class="row vd-more"><a class="btn" href="#drill" data-act="vd-drill">⚡ Quick drill</a><a class="btn" href="#repaso-visual">🃏 Flashcards</a></div>' +
-      '<div class="player vd-player" id="vd-player" role="group" aria-label="Word player" hidden><button class="pbtn" data-act="vd-prev" aria-label="Previous word">' + PREV + '</button><button class="pbtn main" id="vd-play" data-act="vd-play" aria-label="Pause">' + PAUSE + '</button><button class="pbtn" data-act="vd-next" aria-label="Next word">' + NEXT + '</button>' +
+      '<div class="player vd-player" id="vd-player" role="group" aria-label="Word player" hidden><div class="vd-lists">' +
+        (prev ? '<button class="vd-lst" data-act="vd-plist" data-id="' + prev.id + '" aria-label="Previous list: ' + esc(prev.en) + '">‹ ' + esc(prev.es) + "</button>" : '<span class="vd-lst" aria-hidden="true"></span>') +
+        '<button class="vd-rep" id="vd-rep" data-act="vd-rep" aria-pressed="false" aria-label="Repeat the list two more times">🔁 Repeat</button>' +
+        (next ? '<button class="vd-lst nx" data-act="vd-nlist" data-id="' + next.id + '" aria-label="Next list: ' + esc(next.en) + '">' + esc(next.es) + " ›</button>" : '<span class="vd-lst nx" aria-hidden="true"></span>') + '</div><button class="pbtn" data-act="vd-prev" aria-label="Previous word">' + PREV + '</button><button class="pbtn main" id="vd-play" data-act="vd-play" aria-label="Pause">' + PAUSE + '</button><button class="pbtn" data-act="vd-next" aria-label="Next word">' + NEXT + '</button>' +
         '<span class="ppos" id="vd-pos">1 / ' + t.items.length + '</span><button class="pbtn vd-rate" data-act="vd-rate" id="vd-rate" aria-label="Speed">1×</button><button class="pbtn vd-x" data-act="vd-close" aria-label="Close the player">✕</button></div>' +
       '<div class="unav">' + (prev ? '<a class="btn" href="#visual/' + prev.id + '">‹ ' + esc(prev.es) + "</a>" : '<a class="btn" href="#visual">‹ All topics</a>') + (next ? '<a class="btn" href="#visual/' + next.id + '">' + esc(next.es) + " ›</a>" : "") + "</div></div>";
   }
@@ -789,7 +793,11 @@
   function vdLight(i) { document.querySelectorAll(".vd .on").forEach((x) => x.classList.remove("on")); document.querySelectorAll('.vd [data-i="' + i + '"]').forEach((x) => x.classList.add("on")); const w = vdItems()[i], e = document.getElementById("vd-en"); if (e && w) e.innerHTML = "<b lang=\"es\">" + esc(w[0]) + "</b> · " + esc(w[1]); }
   // «Hear them all» (v271): a listening mode — the picture pinned at the top, edge to edge, the word list moving up under it,
   // the reading player at the bottom (previous · play/pause · next · speed · close). Each word: English once, then Spanish three times.
-  const VDP = { gen: 0, on: 0, i: 0, paused: 0, rate: 1 }, VD_RATES = [0.75, 1, 1.25];
+  // v296: «Repeat» plays the list again up to two more times (VDP.rep on, VDP.left = rounds still to come); ‹ / › lists move to
+  // the previous / next topic and keep playing there (VDP.auto), with the same repeat setting.
+  const VDP = { gen: 0, on: 0, i: 0, paused: 0, rate: 1, rep: 0, left: 0, round: 1, auto: 0 }, VD_RATES = [0.75, 1, 1.25];
+  function vdRepUI() { const b = document.getElementById("vd-rep"); if (!b) return; b.setAttribute("aria-pressed", VDP.rep ? "true" : "false"); b.classList.toggle("on", !!VDP.rep);
+    b.textContent = VDP.rep ? "🔁 " + (VDP.left ? "Round " + VDP.round + " of 3" : "Last round") : "🔁 Repeat"; }
   function vdAllBtn(on) { const b = document.querySelector('[data-act="vd-all"]'); if (b) b.textContent = on ? "⏹ Stop" : "🔊 Hear them all"; VDP.on = on ? 1 : 0; }
   function vdSay(txt, lang, g, done) {
     if (g !== VDP.gen || !document.querySelector(".vd")) return;
@@ -808,6 +816,7 @@
   }
   function vdStep(g) {
     if (g !== VDP.gen || VDP.paused) return; const L = vdItems();
+    if (VDP.i >= L.length && VDP.rep && VDP.left > 0) { VDP.left--; VDP.round++; VDP.i = 0; vdRepUI(); }
     if (VDP.i >= L.length) { VDP.paused = 1; VDP.i = Math.max(0, L.length - 1); vdBar(); vdAllBtn(false); return; }
     const w = L[VDP.i]; vdLight(VDP.i); vdKeep(VDP.i); vdBar();
     const say = (x, l, d) => { window.__vdSeq.push(l + ":" + x); vdSay(x, l, g, d); };
@@ -826,7 +835,9 @@
   document.addEventListener("click", (e) => {
     const b = e.target.closest && e.target.closest("[data-act^='vd-']"); if (!b || !document.querySelector(".vd")) return; const a = b.dataset.act;
     if (a === "vd-say") { const i = +b.dataset.i, w = vdItems()[i]; if (VDP.on) { VDP.paused = 0; vdGo(i); return; } VDP.gen++; vdLight(i); try { speechSynthesis.cancel(); speechSynthesis.speak(utter(w[0], "es", 0.85)); } catch (x) {} }
-    else if (a === "vd-all") { if (VDP.on) { vdStop(); return; } window.__vdSeq = []; VDP.i = 0; VDP.paused = 0; vdAllBtn(true); vdMode(true); vdGo(0); }
+    else if (a === "vd-all") { if (VDP.on) { vdStop(); return; } window.__vdSeq = []; VDP.i = 0; VDP.paused = 0; VDP.round = 1; VDP.left = VDP.rep ? 2 : 0; vdRepUI(); vdAllBtn(true); vdMode(true); vdGo(0); }
+    else if (a === "vd-rep") { VDP.rep = VDP.rep ? 0 : 1; VDP.left = VDP.rep ? Math.max(0, 3 - VDP.round) : 0; if (VDP.rep && !VDP.left) { VDP.round = 1; VDP.left = 2; } vdRepUI(); }
+    else if (a === "vd-plist" || a === "vd-nlist") { VDP.auto = 1; location.hash = "#visual/" + b.dataset.id; }
     else if (a === "vd-play") { if (!VDP.on) { vdAllBtn(true); vdMode(true); } VDP.paused = VDP.paused ? 0 : 1; if (VDP.paused) { VDP.gen++; try { speechSynthesis.cancel(); } catch (x) {} vdBar(); } else vdGo(VDP.i); }
     else if (a === "vd-prev") vdGo(VDP.i - 1);
     else if (a === "vd-next") vdGo(VDP.i + 1);
@@ -841,6 +852,6 @@
   try { const d = { id: "visual", t: "Diccionario visual", en: "Picture dictionary · " + vdN() + " words" }; Object.defineProperty(d, "themes", { enumerable: true, get: () => VDT.map((t) => ({ t: t.es, en: t.en, w: t.items.map((it) => [vdW(t, it), it[1]]) })) }); VPRO.push(d); } catch (e) {}
   // Quick drill › Pictures: words with their pictures, up to the chosen level (A1 → A1 topics; A2 and up → every topic)
   const vdPool = (lv) => { const out = []; VDT.forEach((t) => { if (lv === "a1" && t.lvl !== "a1") return; t.items.forEach((it, i) => out.push({ t: t.id, i, es: vdW(t, it), en: it[1] })); }); return out; };
-  window.__vd = { topics: () => VDT.map((t) => ({ id: t.id, n: t.items.length, kind: t.kind, grp: t.grp, en: t.en })), deck: (re) => { const d = SRD.decks.find((x) => new RegExp(re).test(x.name)); return d ? d.w.length : 0; }, lat: () => vdLat(),
+  window.__vd = { rep: () => ({ rep: VDP.rep, left: VDP.left, round: VDP.round, i: VDP.i, on: VDP.on }), topics: () => VDT.map((t) => ({ id: t.id, n: t.items.length, kind: t.kind, grp: t.grp, en: t.en })), deck: (re) => { const d = SRD.decks.find((x) => new RegExp(re).test(x.name)); return d ? d.w.length : 0; }, lat: () => vdLat(),
     pool: vdPool, pic: (tid, i) => { const t = VDT.find((x) => x.id === tid); return t ? vdPic(t, i) : ""; }, lay: (tid) => { const t = VDT.find((x) => x.id === tid); return t ? vdLay(t) : []; }, n: vdN, seq: () => window.__vdSeq, st: () => ({ on: VDP.on, i: VDP.i, paused: VDP.paused, rate: VDP.rate }) };
   /* ==/VISUAL== */

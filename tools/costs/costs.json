@@ -38,7 +38,7 @@
    "mature": 0.4
   },
   "days_per_month": 12,
-  "ai_turns_per_day": 12,
+  "ai_turns_per_day": 14,
   "ai_in_tokens": 2500,
   "ai_cached_share": 0.8,
   "ai_out_tokens": 200,
@@ -54,7 +54,8 @@
   "call_min_per_day": 3,
   "call_min_note": "Video-call minutes per active learner per active day (calls are optional; most practice is taps and short turns).",
   "ocr_pages_per_month": 4,
-  "ocr_pages_note": "Photos of pages or scanned PDF pages read per active learner per month (Read & Listen › Add your own; v262). Optional; most learners use the built-in texts."
+  "ocr_pages_note": "Photos of pages or scanned PDF pages read per active learner per month (Read & Listen › Add your own; v262). Optional; most learners use the built-in texts.",
+  "ai_turns_note": "AI replies per active learner per active day. v296 adds about two «second look» checks a day in practice (only when the built-in checker rejects or accepts an alternative answer, and only with an AI brain)."
  },
  "metrics": [
   [
@@ -103,11 +104,11 @@
      "quote": false,
      "once": false,
      "year": {
-      "test": 6.17,
-      "soft": 146.88,
-      "launch": 1321.92,
-      "growth": 5875.2,
-      "mature": 11750.4
+      "test": 7.2,
+      "soft": 171.36,
+      "launch": 1542.24,
+      "growth": 6854.4,
+      "mature": 13708.8
      }
     },
     {
@@ -126,11 +127,11 @@
      "quote": false,
      "once": false,
      "year": {
-      "test": 123.38,
-      "soft": 2937.6,
-      "launch": 26438.4,
-      "growth": 117504.0,
-      "mature": 235008.0
+      "test": 143.94,
+      "soft": 3427.2,
+      "launch": 30844.8,
+      "growth": 137088.0,
+      "mature": 274176.0
      }
     },
     {
@@ -149,11 +150,11 @@
      "quote": false,
      "once": false,
      "year": {
-      "test": 246.76,
-      "soft": 5875.2,
-      "launch": 52876.8,
-      "growth": 235008.0,
-      "mature": 470016.0
+      "test": 287.88,
+      "soft": 6854.4,
+      "launch": 61689.6,
+      "growth": 274176.0,
+      "mature": 548352.0
      }
     }
    ]
@@ -1098,83 +1099,83 @@
  "totals": {
   "cheap": {
    "test": {
-    "sum": 879.29,
+    "sum": 880.32,
     "quotes": 0,
-    "per_mau": 41.87
+    "per_mau": 41.92
    },
    "soft": {
-    "sum": 5805.14,
+    "sum": 5829.62,
     "quotes": 0,
-    "per_mau": 11.61
+    "per_mau": 11.66
    },
    "launch": {
-    "sum": 50092.62,
+    "sum": 50312.94,
+    "quotes": 0,
+    "per_mau": 11.18
+   },
+   "growth": {
+    "sum": 222685.84,
     "quotes": 0,
     "per_mau": 11.13
    },
-   "growth": {
-    "sum": 221706.64,
-    "quotes": 0,
-    "per_mau": 11.09
-   },
    "mature": {
-    "sum": 443144.08,
+    "sum": 445102.48,
     "quotes": 0,
-    "per_mau": 11.08
+    "per_mau": 11.13
    }
   },
   "modest": {
    "test": {
-    "sum": 7954.76,
+    "sum": 7975.32,
     "quotes": 1,
-    "per_mau": 378.8
+    "per_mau": 379.78
    },
    "soft": {
-    "sum": 58133.37,
+    "sum": 58622.97,
     "quotes": 1,
-    "per_mau": 116.27
+    "per_mau": 117.25
    },
    "launch": {
-    "sum": 277378.55,
+    "sum": 281784.95,
     "quotes": 1,
-    "per_mau": 61.64
+    "per_mau": 62.62
    },
    "growth": {
-    "sum": 1048713.64,
+    "sum": 1068297.64,
     "quotes": 1,
-    "per_mau": 52.44
+    "per_mau": 53.41
    },
    "mature": {
-    "sum": 1964459.56,
+    "sum": 2003627.56,
     "quotes": 1,
-    "per_mau": 49.11
+    "per_mau": 50.09
    }
   },
   "best": {
    "test": {
-    "sum": 42775.64,
+    "sum": 42816.76,
     "quotes": 4,
-    "per_mau": 2036.94
+    "per_mau": 2038.89
    },
    "soft": {
-    "sum": 91514.22,
+    "sum": 92493.42,
     "quotes": 4,
-    "per_mau": 183.03
+    "per_mau": 184.99
    },
    "launch": {
-    "sum": 498516.97,
+    "sum": 507329.77,
     "quotes": 4,
-    "per_mau": 110.78
+    "per_mau": 112.74
    },
    "growth": {
-    "sum": 2075652.64,
+    "sum": 2114820.64,
     "quotes": 4,
-    "per_mau": 103.78
+    "per_mau": 105.74
    },
    "mature": {
-    "sum": 4110666.4,
+    "sum": 4189002.4,
     "quotes": 4,
-    "per_mau": 102.77
+    "per_mau": 104.73
    }
   }
  }

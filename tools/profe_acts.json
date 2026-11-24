@@ -1548,5 +1548,17 @@
  "tm-lv": {
   "voice": "pending",
   "why": "Topic mastery: show the topics of one level"
+ },
+ "vd-rep": {
+  "voice": "pending",
+  "why": "Picture dictionary player: repeat the list two more times"
+ },
+ "vd-plist": {
+  "voice": "pending",
+  "why": "Picture dictionary player: previous list"
+ },
+ "vd-nlist": {
+  "voice": "pending",
+  "why": "Picture dictionary player: next list"
  }
 }

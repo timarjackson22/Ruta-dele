@@ -78,6 +78,22 @@ const URL = process.env.URL || "http://localhost:8766/";
   }
   const fin = await p.evaluate(() => { const Q = window.__qd(); return Q ? { i: Q.i, n: Q.ex.length, ok: Q.ok } : null; });
   rec("Quick drill › Pictures: pick the word for a picture, the picture for a word, write it, match — all graded", picOk && ["pic", "pich", "picw", "match"].every((t) => types.includes(t)) && fin && fin.i >= fin.n && fin.ok >= 9, JSON.stringify({ types, fin, picOk }));
+  // v296: Repeat plays the list 3 times in all, then stops; ‹ / › lists move to the neighbouring topic and keep playing
+  await p.goto(URL + "#visual/mano"); await p.waitForTimeout(700);
+  const nh = await p.evaluate(() => window.__vd.topics().find((t) => t.id === "mano").n);
+  await p.click('[data-act="vd-all"]'); await p.waitForTimeout(200); await p.click('[data-act="vd-rep"]');
+  const rep0 = await p.evaluate(() => ({ st: window.__vd.rep(), lab: document.getElementById("vd-rep").textContent, bar: (() => { const b = document.getElementById("vd-player").getBoundingClientRect(); return [b.top, b.bottom, innerHeight]; })() }));
+  await p.waitForFunction(() => !window.__vd.rep().on, null, { timeout: 120000 }).catch(() => {});
+  const said3 = await p.evaluate(() => window.__vdSeq.filter((x) => /^en:/.test(x)).length);
+  rec("Repeat: the list plays three times in all (twice more), then stops", rep0.st.rep === 1 && rep0.st.left === 2 && /Round 1 of 3/.test(rep0.lab) && said3 === nh * 3, JSON.stringify([rep0, said3, nh]));
+  await p.click('[data-act="vd-all"]'); await p.waitForTimeout(150);
+  const nx = await p.evaluate(() => { const b = document.querySelector('[data-act="vd-nlist"]'); return b && b.dataset.id; });
+  await p.click('[data-act="vd-nlist"]'); await p.waitForTimeout(900);
+  const moved = await p.evaluate(() => ({ h: location.hash, on: window.__vd.rep().on, rep: window.__vd.rep().rep, bar: !document.getElementById("vd-player").hidden }));
+  rec("Next list opens the next topic and keeps playing with the same repeat setting", moved.h === "#visual/" + nx && moved.on === 1 && moved.rep === 1 && moved.bar, JSON.stringify([nx, moved]));
+  await p.click('[data-act="vd-plist"]'); await p.waitForTimeout(900);
+  rec("Previous list goes back and keeps playing", await p.evaluate(() => location.hash === "#visual/mano" && window.__vd.rep().on === 1));
+  await p.click('[data-act="vd-close"]'); await p.waitForTimeout(150);
   rec("No sideways scroll at 360 px; no page errors", (await p.evaluate(() => document.documentElement.scrollWidth <= 361)) && !er.length, er.join(" | "));
   await b.close(); const f = R.filter((x) => !x).length; console.log(f ? f + " FAILED of " + R.length : "ALL " + R.length + " PASS"); process.exit(f ? 1 : 0);
 })();

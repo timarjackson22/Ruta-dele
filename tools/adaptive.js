@@ -234,12 +234,17 @@
       else if (o.op === "ins") { if (!AD_SUBJ.has(o.a.toLowerCase())) issues.push({ type: "missing", a: o.a, after: best.L[o.li - 1] || null, before: best.L[o.li] || null }); } // subject pronouns are optional either way
       else if (o.op === "del") { if (!AD_SUBJ.has(o.l.toLowerCase())) issues.push({ type: "extra", l: o.l }); }
     });
+    // v296: Profe's usage knowledge on each swapped word: a synonym that fits is accepted (with a note on where it is said or what
+    // is more usual), one that doesn't fit this context is a real mistake with the reason
+    const usage = []; issues.forEach((x) => { if ((x.type !== "syn" && x.type !== "word" && x.type !== "verb") || !window.__us) return; const lem = (w) => { try { return [...new Set((adReadings(w) || []).map((r) => r.v))]; } catch (e) { return []; } };
+      const lL = lem(x.l), lA = lem(x.a); if (x.type === "verb" && (!lL.length || !lA.length || lL.some((v) => lA.includes(v)))) return; // a wrong form of the right verb stays a form mistake
+      const r = window.__us.word(x.l, x.a, it.q || "", lL, lA); if (!r) return; if (x.type === "verb" && r.v !== "no" && !r.note) return; if (r.v === "no") { x.type = "usage"; x.note = r.note; } else { x.type = "syn"; if (r.note) usage.push(r.note); } });
     // synonyms the dictionary agrees on are accepted; one other word in a sentence with a single model answer is accepted if nothing else is wrong
     const real = issues.filter((x) => x.type !== "syn");
     let fx = []; try { fx = quickFixes(said) || []; } catch (e) {}
     let ok = real.length === 0, alt = issues.length > 0 && ok;
     if (!ok && it.single && real.length === 1 && /^(word|missing|extra)$/.test(real[0].type) && !fx.length && best.M.length >= 5) { ok = true; alt = true; }
-    return { ok, alt, issues: real, accents, best, fx };
+    return { ok, alt, issues: real, accents, best, fx, usage };
   }
   const adPers = (pi) => (typeof pi === "number" ? ["yo", "tú", "él/ella/usted", "nosotros", "vosotros", "ellos/ustedes"][pi] : { tu: "tú", ud: "usted", uds: "ustedes", vosotros: "vosotros", nos: "nosotros", vos: "vos" }[pi] || pi);
   function adWhy(x, level) { // level 1: what and where; 2: + a clue
@@ -249,6 +254,7 @@
       const s1 = x.got ? q(x.l) + " is the " + (AD_TN[x.got.t] || x.got.t) + (x.got.pi !== -1 ? " (" + adPers(x.got.pi) + ")" : "") + " of " + q(x.v) + ". Here the sentence needs the " + want + wp + "." : q(x.l) + " isn't the right form of " + q(x.v) + ": the sentence needs the " + want + wp + ".";
       return s1 + (level >= 2 ? " 💡 Clue: it starts with " + q(x.a.slice(0, Math.min(x.a.length - 1, Math.max(3, Math.ceil(x.a.length / 2))))) + "…" : "");
     }
+    if (x.type === "usage") return x.note;
     if (x.type === "serestar") return "Check " + q(x.l) + ": ser or estar? " + (level >= 2 ? "💡 Clue: this one needs " + q(x.want) + (x.want === "estar" ? " (states, location, results)." : " (identity, origin, time, characteristics).") : "");
     if (x.type === "agree") return "Check the ending of " + q(x.l) + ": it must agree in gender and number with the word it goes with." + (level >= 2 ? " 💡 Clue: " + q(x.a.slice(0, -1) + "_") + "." : "");
     if (x.type === "article") return "Check the article " + q(x.l) + "." + (level >= 2 ? " 💡 Clue: look at the gender and number of the noun after it (or whether it needs one at all)." : "");
@@ -491,9 +497,18 @@
     if (chk && PR.um && PR.um.c && (!PR.att.length || PR.att[PR.att.length - 1].said !== PR.um.c)) PR.att.push({ said: PR.um.c, lines: pass ? ["✓"] : [] });
     const notes = []; if (chk && chk.accents && chk.accents.length) notes.push("Accent: " + chk.accents.map((x) => "«" + x.l + "» → «" + x.a + "»").join(", ") + " (the DELE marks accents as spelling).");
     if (chk && chk.alt) notes.push("Also correct. The lesson's version: «" + model + "».");
+    if (pass && chk && chk.usage && chk.usage.length) notes.push(...chk.usage.slice(0, 2).map((x) => "💬 " + x));
     if (!pass && chk && chk.issues && PR.kind === "tr") notes.push(...chk.issues.slice(0, 3).map((x) => (it.dir === "en-es" ? adWhy(x, 1) : adWhyEn(x, it, 1))));
     if (it.note && PR.kind === "tr") notes.push("Rule: " + it.note);
     PR.fb = { ok: pass, said: chk ? (PR.um && PR.um.c) || "" : "", model, praise: pes + " " + pen, notes, gaveUp, diff: !pass && chk && chk.best && chk.best.ops ? adDiffHtml(chk.best) : "" };
+    // v296: a second look from Profe's AI (when the learner has one): a rejected Spanish answer may still be right, and an accepted
+    // alternative may not be the natural way to say it
+    if (PR.kind === "tr" && it.dir === "en-es" && chk && window.__us && (!pass || chk.alt || (chk.usage && chk.usage.length))) { const fb = PR.fb, said0 = fb.said || (PR.att.length ? PR.att[PR.att.length - 1].said : "");
+      if (said0) { fb.look = 1; window.__us.ask({ en: it.q, said: said0, model, kind: "sentence" }).then((j) => { if (!PR || PR.fb !== fb) return; fb.look = 0;
+        if (j) { if (!pass && j.ok) { fb.ok = true; fb.second = true; fb.notes.unshift("Second look: your sentence is right too. " + j.why); try { adRecord(it, true, key); } catch (e) {} }
+          else if (!pass && j.why) fb.notes.push("💬 " + j.why);
+          if (j.ok && !j.natural && j.better && adAcc(j.better.toLowerCase()) !== adAcc(said0.toLowerCase())) fb.notes.push("💬 Correct, but a native speaker would say «" + j.better + "»." + (j.why && pass ? " " + j.why : "")); }
+        tRender(); }); } }
     // adaptive: a struggle makes that skill the focus; three right first time in a row masters it, then Profe offers something new
     let ask = null;
     if (!pass || PR.tries >= 2) { if (st.focus !== key) { st.focus = key; st.fstreak = 0; PR.note2 = ""; } else st.fstreak = 0; }
@@ -546,7 +561,7 @@
     h += '<div class="prbox adq"><p class="small muted">' + dirL + '</p><p class="prsay">' + (PR.kind === "cj" ? "" : it.dir === "es-en" ? sayBtn(it.src) + " " : "") + "<b>" + esc(adPrompt(it)) + "</b></p>" + (it.from ? '<p class="small muted">From «' + esc(it.from) + "»</p>" : "") + "</div>";
     const fb = PR.fb;
     if (fb && !fb.ok && !PR.over) h += '<div class="prbox bad"><p><b>¡Casi!</b> <span class="muted">' + (fb.left === 1 ? "One more try, then I'll show you." : "Try again: " + fb.left + " tries left.") + '</span></p><p class="small">You said: «' + esc(fb.said) + "»</p>" + [...new Set(fb.lines)].map((l) => (/^🧩/.test(l) ? '<p class="adshape"><span aria-hidden="true">🧩</span> ' + esc(l.replace(/^🧩\s*/, "")).replace(/_+/g, (m) => '<i aria-label="' + m.length + ' letters">' + "_".repeat(m.length) + "</i>") + "</p>" : "<p>" + esc(l).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>") + "</p>")).join("") + "</div>";
-    if (PR.over && fb) h += '<div class="prbox ' + (fb.ok ? "ok" : "bad") + '"><p><b>' + esc(fb.praise) + "</b></p>" + (fb.ok ? "" : '<p class="small muted">' + (fb.gaveUp ? "Here's the answer." : "Here's the answer, after three tries.") + "</p>") + '<p class="adans">✓ ' + (fb.diff || esc(fb.model)) + (PR.kind === "cj" || it.dir === "en-es" ? " " + sayBtn(fb.model) : "") + "</p>" + (fb.notes || []).map((n) => '<p class="small">' + esc(n) + "</p>").join("") + (!fb.ok && PR.kind === "tr" && it.ans.length > 1 ? '<p class="small muted">Also right: ' + it.ans.slice(1, 3).map((a) => "«" + esc(a) + "»").join(" · ") + "</p>" : "") + "</div>";
+    if (PR.over && fb) h += '<div class="prbox ' + (fb.ok ? "ok" : "bad") + '"><p><b>' + esc(fb.praise) + "</b></p>" + (fb.ok ? "" : '<p class="small muted">' + (fb.gaveUp ? "Here's the answer." : "Here's the answer, after three tries.") + "</p>") + '<p class="adans">✓ ' + (fb.diff || esc(fb.model)) + (PR.kind === "cj" || it.dir === "en-es" ? " " + sayBtn(fb.model) : "") + "</p>" + (fb.notes || []).map((n) => '<p class="small' + (/^(💬|Second look)/.test(n) ? " prwhy" : "") + '">' + esc(n) + "</p>").join("") + (fb.look ? '<p class="muted small">Profe is taking a second look…</p>' : "") + (!fb.ok && PR.kind === "tr" && it.ans.length > 1 ? '<p class="small muted">Also right: ' + it.ans.slice(1, 3).map((a) => "«" + esc(a) + "»").join(" · ") + "</p>" : "") + "</div>";
     if (PR.um && PR.um.fx && PR.um.fx.items && PR.um.fx.items.length) h += '<div class="prfx">' + fixCard(PR.um) + "</div>";
     if (PR.ask) h += '<div class="prbox adask"><p><b>' + (PR.ask === "_" ? "¿Probamos algo nuevo?" : "¡Dominado! You've mastered " + esc(adLabel(PR.ask)) + ".") + '</b></p><p class="small">Would you like to try something new?</p><div class="row"><button class="btn primary small" data-act="ad-new" data-v="1">Yes, something new</button><button class="btn small" data-act="ad-new" data-v="0">No, more of this</button></div></div>';
     h += '<div class="row adbtns">' + (PR.over ? "" : '<button class="btn small" data-act="ad-show">Show the answer</button>') + (PR.ask ? "" : '<button class="btn small" data-act="ad-new" data-v="1">Something new</button>') + "</div>";
