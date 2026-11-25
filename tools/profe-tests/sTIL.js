@@ -1,5 +1,5 @@
 // v298 — «tilde» → «accent» in English, clear pronunciation drills, punctuation names in A1 unit 1.
-// 1. No English sentence calls the accent a «tilde» (Spanish «lleva tilde», «sin tilde» … stay: that is correct Spanish).
+// 1. (v299) «tilde» is kept — it is the Spanish word for the written accent — and the Spanish vs English «tilde» is explained up front.
 // 2. Pronunciation drills send real words to the voice: «Which word do you hear?» uses real stress pairs, never a made-up
 //    stress; «Split into syllables» is a choice of whole splits; «Which syllable is stressed?» shows the word.
 // 3. The voice never reads grammar notes or Roman numerals letter by letter («+ inf», «siglo XX», «DELE»).
@@ -9,8 +9,9 @@ const { open } = require("./h.js");
 (async () => {
   const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (ok ? "" : "  " + String(i || "").slice(0, 400))); };
   const html = fs.readFileSync(path.join(__dirname, "../../index.html"), "utf8");
-  const en = html.split("\n").filter((l) => !/SK_INSTR|\.test\(/.test(l)).join("\n").match(/\b(a|has a|have a|needs a|need a|with a|without a|no|the|its|their|carry a|carries a|takes a|missing the)\s+tildes?\b/gi) || [];
-  rec("No English «a tilde / no tilde / the tilde …» left in the course", en.length === 0, en.slice(0, 8).join(" | "));
+  // «tilde» is the Spanish word for the written accent ´: kept, and explained up front (Spanish vs English tilde)
+  const up = { tip: (html.match(/Spanish «tilde» vs English «tilde»/g) || []).length, note: (html.match(/In Spanish this mark ´ is called «la tilde», and this course uses the word that way/g) || []).length, rule: /write a tilde — the written accent ´ — only if/.test(html), virg: /la virgulilla/.test(html) };
+  rec("«Tilde» explained up front: Spanish ´ vs English ~ (When to write a tilde, A1 unit 1 intro, pronunciation guide)", up.tip >= 1 && up.note >= 2 && up.rule && up.virg, JSON.stringify(up));
   const H = await open({ hash: "#inicio", noOpen: true }); const p = H.p;
   const D = await p.evaluate(() => { const ids = [...new Set(window.__sk.audit().map((x) => x.id))], out = { ws: [], sy: [], st: [] };
     ids.forEach((id) => window.__sk.topic(id).secs.forEach((s, si) => ["bank", "s1"].forEach((seed) => window.__sk.bank(id, si, seed).forEach((d) => {

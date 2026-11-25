@@ -1433,6 +1433,38 @@
 "pre": []
 },
 {
+"id": "o-tilde",
+"forms": null,
+"src": "pcic",
+"lvl": "a1",
+"ref": "Ortografía · 3. La tilde (acentuación gráfica)",
+"comp": "gra",
+"kind": "grammar",
+"text": "Write the tilde (written accent ´) by the aguda / llana / esdrújula rules, on question words and to tell short words apart (tú/tu, sí/si).",
+"kw": "\\btildes?\\b|acentuac|written accent|aguda|llana|esdrujula",
+"w": 2,
+"status": "pending",
+"rev": null,
+"mastery": "Internal target: at least 80% correct over 10+ items in two separate sessions, including 3+ items where the learner writes the form.",
+"pre": []
+},
+{
+"id": "o-punt",
+"forms": null,
+"src": "pcic",
+"lvl": "a1",
+"ref": "Ortografía · 4. Signos de puntuación y otros signos",
+"comp": "gra",
+"kind": "grammar",
+"text": "Name and use Spanish punctuation and written signs: ¿? ¡!, comma, full stop, colon, quotation marks, dashes, capital letters; spell an email aloud.",
+"kw": "punctuation|puntuacion|signos de interrogacion|comillas|arroba|written signs",
+"w": 2,
+"status": "pending",
+"rev": null,
+"mastery": "Internal target: at least 80% correct over 10+ items in two separate sessions, including 3+ items where the learner writes the form.",
+"pre": []
+},
+{
 "id": "g-num",
 "forms": null,
 "src": "pcic",

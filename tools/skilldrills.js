@@ -385,7 +385,7 @@
     const open = rate >= 0.85 ? (es ? "¡Qué bien" + name + "! " : "Great work" + name + "! ") + first + " of " + n + " right first time." : rate >= 0.6 ? (es ? "¡Buen trabajo" + name + "! " : "Good work" + name + "! ") + first + " of " + n + " right first time." : (es ? "¡Bien hecho por terminar" + name + "! " : "Well done for finishing" + name + "! ") + "That set was a stretch, and you saw it through.";
     const strength = best && best.ok ? " Your " + best.k + " was strong" + (best.ok === best.n && best.n > 1 ? ": every one right." : ".") : fixed ? " You fixed " + fixed + " answer" + (fixed > 1 ? "s" : "") + " on the second try, which is exactly how learning works." : "";
     let watch;
-    if (acc >= 2 || (acc && acc >= near)) watch = "One thing to watch: accents. " + acc + " answer" + (acc > 1 ? "s were" : " was") + " right except for an accent or ñ, and the DELE counts those as spelling. Before you press Check, look at each word once more.";
+    if (acc >= 2 || (acc && acc >= near)) watch = "One thing to watch: accents. " + acc + " answer" + (acc > 1 ? "s were" : " was") + " right except for a tilde or ñ, and the DELE counts those as spelling. Before you press Check, look at each word once more.";
     else if (near >= 2) watch = "One thing to watch: small slips. " + near + " answers were one word or a letter away. Read your answer back once before you check it.";
     else if (worst) watch = "One thing to watch: " + worst.k + " (" + worst.ok + " of " + worst.n + "). Tip: " + SK_TIP[worst.k] + ".";
     else if (skippedSpeak) watch = "One thing to try next time: the speaking drills. Even a quiet try out loud helps a lot.";

@@ -57,4 +57,20 @@ else:
             d -= 1
             if d == 0: break
     s = s[:j + 1] + "," + new + s[j + 1:]; print("punctuation block added to A1 unit 1")
+# v299: «tilde» is the Spanish name of the written accent — say so where learners first meet the word
+TIP = "Spanish «tilde» vs English «tilde»|In Spanish, «la tilde» is the written accent ´ (café, canción) — this course uses the word that way. In English, «tilde» means ~; Spanish calls that mark on ñ «la virgulilla», and ñ is simply «la eñe»."
+R_OLD = '"r":"Find the stressed syllable; write a tilde only if the word breaks the stress rules."'
+R_NEW = '"r":"Find the stressed syllable; write a tilde — the written accent ´ — only if the word breaks the stress rules."'
+if R_OLD in s: s = s.replace(R_OLD, R_NEW, 1); print("rule box: tilde explained")
+k = s.find('{"t":"When to write a tilde"'); assert k > 0
+if TIP not in s[k:k + 3000]:
+    n = s.find('"n":[', k); assert 0 < n - k < 3000
+    s = s[:n + 5] + __import__("json").dumps(TIP, ensure_ascii=False) + "," + s[n + 5:]; print("note: Spanish vs English tilde")
+NOTE = " In Spanish this mark ´ is called «la tilde», and this course uses the word that way (in English a tilde is ~; Spanish calls that mark on ñ «la virgulilla»)."
+for a, b in [("or to separate two short words with different meanings (el/él, tu/tú, si/sí).", "unit 1 intro"),
+             ("or needs to be told apart from a twin (tú/tu, sí/si).", "pronunciation guide intro")]:
+    if s.count(a) == 1 and (a + NOTE) not in s: s = s.replace(a, a + NOTE); print(b + ": tilde explained")
+# the guide intro used to say «the written accent (tilde)»; keep that wording with the note after it
+s = s.replace("Stress follows simple rules, and the written accent appears only when a word breaks", "Stress follows simple rules, and the written accent (tilde) appears only when a word breaks")
+s = s.replace("Stress follows three simple rules; the written accent appears only when a word breaks", "Stress follows three simple rules; the written accent (tilde) appears only when a word breaks")
 open(P, "w", encoding="utf-8").write(s)

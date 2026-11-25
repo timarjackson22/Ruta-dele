@@ -217,7 +217,7 @@ P = [
  ("pres", "¿Sabes manejar?", "Can you drive?"),
  ("impf", "De niño no sabía leer.", "As a child I couldn't read."),
  ("fut", "Pronto vas a saber hacerlo solo.", "Soon you'll know how to do it on your own.")]),
-("capacidad", "a1", "No sé + question word", "I don't know …", "No sé qué, dónde, cuándo, si: question words keep their accent.", [
+("capacidad", "a1", "No sé + question word", "I don't know …", "No sé qué, dónde, cuándo, si: question words keep their tilde.", [
  ("pres", "No sé dónde está la estación.", "I don't know where the station is."),
  ("pres", "No sé si puedo ir.", "I don't know if I can go."),
  ("impf", "No sabía qué decir.", "I didn't know what to say."),

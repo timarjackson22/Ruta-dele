@@ -89,6 +89,8 @@ G = [  # id, level, PCIC section, outcome, kw, prerequisites
  ("g-ser-estar", "a1", "Gramática · 9. Ser y estar; hay", "Choose between ser, estar and hay for identity, states and existence.", r"ser y estar|ser or estar|ser vs|\bser\b.*\bestar\b|\bhay\b", ["g-pres"]),
  ("g-gustar", "a1", "Gramática · 7.2 Pronombres de objeto indirecto con gustar", "Express likes with gustar and similar verbs (me gusta, te encanta).", r"gustar|encantar|me gusta", ["g-pres"]),
  ("g-interr", "a1", "Gramática · 14. Oraciones interrogativas", "Ask questions with qué, quién, dónde, cuándo, cuánto, cómo, por qué.", r"interrogativ|question word|questions|preguntas", []),
+ ("o-tilde", "a1", "Ortografía · 3. La tilde (acentuación gráfica)", "Write the tilde (written accent ´) by the aguda / llana / esdrújula rules, on question words and to tell short words apart (tú/tu, sí/si).", r"\btildes?\b|acentuac|written accent|aguda|llana|esdrujula", []),
+ ("o-punt", "a1", "Ortografía · 4. Signos de puntuación y otros signos", "Name and use Spanish punctuation and written signs: ¿? ¡!, comma, full stop, colon, quotation marks, dashes, capital letters; spell an email aloud.", r"punctuation|puntuacion|signos de interrogacion|comillas|arroba|written signs", []),
  ("g-num", "a1", "Gramática · 6. Cuantificadores: numerales", "Use cardinal numbers, quantities and basic quantifiers.", r"numer|number|cuantificador|quantif|mucho|poco", []),
  ("g-prep1", "a1", "Gramática · 12. Preposiciones (a, de, en, con)", "Use basic prepositions of place, origin and direction.", r"preposici|preposition", []),
  ("g-ir-a", "a1", "Gramática · 9.3 Perífrasis: ir a + infinitivo", "Talk about plans with ir a + infinitive.", r"ir a \+|\bvoy a\b|futuro proximo|going to", ["g-pres"]),
