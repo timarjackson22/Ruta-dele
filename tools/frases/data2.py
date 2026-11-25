@@ -170,12 +170,12 @@ P = [
  ("impf", "Eran las diez cuando llegué.", "It was ten o'clock when I arrived."),
  ("pres", "¿Tienes hora?", "Have you got the time?"),
  ("fut", "Serán las nueve más o menos.", "It must be about nine.")]),
-("preguntas", "a1", "¿Por qué + verb? — Porque …", "Why …? — Because …", "Por qué (two words, tilde) asks; porque (one word) answers.", [
+("preguntas", "a1", "¿Por qué + verb? — Porque …", "Why …? — Because …", "Por qué (two words, accent) asks; porque (one word) answers.", [
  ("pres", "¿Por qué no vienes? —Porque estoy cansado.", "Why aren't you coming? —Because I'm tired."),
  ("pret", "¿Por qué te fuiste tan temprano?", "Why did you leave so early?"),
  ("impf", "¿Por qué estabas triste?", "Why were you sad?"),
  ("fut", "¿Por qué no vas a ir?", "Why aren't you going to go?")]),
-("preguntas", "a1", "¿Cuándo + verb?", "When …?", "Cuándo with a tilde in questions; cuando without it in statements.", [
+("preguntas", "a1", "¿Cuándo + verb?", "When …?", "Cuándo with an accent in questions; cuando without it in statements.", [
  ("pres", "¿Cuándo empiezas el trabajo nuevo?", "When do you start the new job?"),
  ("pret", "¿Cuándo llegaste a Panamá?", "When did you get to Panama?"),
  ("fut", "¿Cuándo vas a volver?", "When are you going to come back?"),
@@ -205,7 +205,7 @@ P = [
  ("pret", "¿Cuánto tiempo estuviste en México?", "How long were you in Mexico?"),
  ("pres", "¿Cuánto tiempo hace que vives aquí?", "How long have you lived here?"),
  ("fut", "¿Cuánto tiempo te vas a quedar?", "How long are you going to stay?")]),
-("preguntas", "a2", "¿Sabes si + verb?", "Do you know if …?", "Indirect yes/no questions use si (no tilde).", [
+("preguntas", "a2", "¿Sabes si + verb?", "Do you know if …?", "Indirect yes/no questions use si (no accent).", [
  ("pres", "¿Sabes si la farmacia está abierta?", "Do you know if the pharmacy is open?"),
  ("pret", "¿Sabes si llegó el paquete?", "Do you know if the parcel arrived?"),
  ("fut", "¿Sabes si va a llover?", "Do you know if it's going to rain?"),

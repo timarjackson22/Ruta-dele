@@ -30,7 +30,7 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
       const d = x[2], q = (s) => document.querySelector(s), click = (s) => { const b = q(s); if (b) b.click(); return !!b; };
       let right = null;
       if (t === "match") { for (let i = 0; i < d.pairs.length; i++) { click('[data-act="sk-m"][data-side="l"][data-i="' + i + '"]'); click('[data-act="sk-m"][data-side="r"][data-i="' + i + '"]'); } }
-      else if (["hearmean", "meaning", "hearpick", "whichsound", "misspell", "gap", "stress"].includes(t)) click('[data-act="sk-pick"][data-k="' + S.st.correct + '"]');
+      else if (["hearmean", "meaning", "hearpick", "whichsound", "misspell", "gap", "stress"].includes(t) || (t === "syll" && d.opts)) click('[data-act="sk-pick"][data-k="' + S.st.correct + '"]');
       else if (t === "acad" && d.it.t === "mc") click('[data-act="sk-pick"][data-k="' + d.it.c + '"]');
       else if (t === "tiles") { const toks = d.s[0].replace(/[¿¡]/g, "").split(/\s+/).map((w) => w.replace(/[.!?,;:]$/, "")); for (const w of toks) { const k = S.st.pool.findIndex((x, k) => x === w && !S.st.pick.includes(k)); S.st.pick.push(k); } K.render(); click('[data-act="sk-check"]'); }
       else if (t === "syll") { let pos = 0; S.st.cut = d.syl.slice(0, -1).map((s) => (pos += [...s].length)); K.render(); click('[data-act="sk-check"]'); }
@@ -98,8 +98,8 @@ const R = []; const rec = (n, ok, info) => { R.push(!!ok); console.log((ok ? "PA
     ids.forEach((id) => K.topic(id).secs.forEach((_, si) => [1, 2, 3].forEach((seed) => K.bank(id, si, seed).forEach((d) => {
       if (d.opts && new Set(d.opts.map((o) => String(o).trim().toLowerCase())).size < d.opts.length) bad("duplicate options", d.type);
       if (d.type === "misspell" && taboo.has(d.bad.toLowerCase())) bad("misspelling is a real word", d.bad);
-      if (d.type === "whichsound" && taboo.has(d.wrong)) bad("wrong stress is a real word", d.wrong);
-      if (/^(whichsound|syll|stress|misspell)$/.test(d.type) && (d.w || d.good) !== (d.w || d.good).toLowerCase()) bad("capitalised word", d.w || d.good);
+      if (d.type === "whichsound" && !(d.pair && d.pair.length >= 2 && d.pair.every((x) => x[0] && x[1]))) bad("«which word» drill without a real-word pair", JSON.stringify(d)); // v298: real stress pairs on purpose
+      if (/^(syll|stress|misspell)$/.test(d.type) && (d.w || d.good) !== (d.w || d.good).toLowerCase()) bad("capitalised word", d.w || d.good);
       if (d.type === "conj" && !/(ar|er|ir|ír)(se)?(\s*\(.*\))?$/i.test(d.verb.trim())) bad("conjugation of a non-verb", d.verb);
       if (d.type === "match" && d.pairs.some((p) => p[0].toLowerCase() === p[1].toLowerCase())) bad("match pair identical", d.pairs);
       if (d.type === "gap" && !d.opts.includes(d.ans)) bad("gap answer missing", d.q);
