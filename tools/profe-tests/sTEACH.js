@@ -7,7 +7,8 @@ const { open } = require("./h.js");
   const R = []; const rec = (n, ok, i) => { R.push(!!ok); console.log((ok ? "PASS " : "FAIL ") + n + (ok ? "" : "  " + (i || ""))); };
   const H = await open(); const p = H.p;
   await p.evaluate(() => window.__setName("Ana", true));
-  await p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()); await H.wait(6000);
+  await p.evaluate(() => document.querySelector('[data-act="vc-open"]').click()); await H.wait(3000);
+  await p.waitForFunction(() => window.__vc.state() === "listening" && window.__R.on, null, { timeout: 30000 }); // the ring (v258) made the greeting end after 6 s
   const said = async (fn, ms) => { const n = (await H.tts()).length; await fn(); await H.wait(ms || 7000); return (await H.tts()).slice(n).map((e) => e.text).join(" "); };
   // 1. the drill starts in Spanish, pronoun last («Presente de «cambiar». Yo…»)
   const s1 = await said(() => H.say("quiero practicar cambiar"), 9000);

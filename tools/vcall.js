@@ -109,6 +109,34 @@
     return false;
   }
   window.__vcIsEcho = vcIsEcho;
+  // v300 (S24 log 12:11–12:17, «interrupt by voice» on the phone's speaker): the recogniser hands over Profe's FIRST sentence
+  // while he is already saying the next one, so judging it against the current sentence only took his own words for the
+  // learner's: his question was cancelled, then the turn was dropped as an echo. Profe's voice = any word he said in the
+  // last 20 s; an echo at the start of what was heard is cut off and the learner's own words after it are kept.
+  function vcProSet() { const now = Date.now(), set = new Set(); (AV.recent || []).filter((x) => now - x.t < 20000).forEach((r) => r.w.forEach((w) => set.add(w)));
+    vcEW((AV.cur && AV.cur.text) || "").forEach((w) => set.add(w)); vcEW(VC.lastPro || "").forEach((w) => set.add(w)); return set; }
+  function vcStripEcho(text) {
+    const raw = String(text || "").trim().split(/\s+/).filter(Boolean); if (raw.length < 2) return text; const now = Date.now();
+    const sents = (AV.recent || []).filter((x) => now - x.t < 30000).map((r) => " " + r.w.join(" ") + " ");
+    let i = 0;
+    for (let guard = 0; guard < 4 && i < raw.length; guard++) { let best = 0;
+      for (let k = raw.length - i; k >= 2; k--) { const ws = vcEW(raw.slice(i, i + k).join(" ")); if (ws.length < 2) continue; const q = " " + ws.join(" ") + " ";
+        if (sents.some((p) => p.includes(q) && (ws.length >= 3 || p.trim() === ws.join(" ")))) { best = k; break; } }
+      if (!best) break; i += best; }
+    return i ? raw.slice(i).join(" ") : text;
+  }
+  window.__vcStripEcho = vcStripEcho; window.__vcProSet = vcProSet;
+  // v300: a turn that started by interrupting Profe (seed) goes on in a new mic session, which may hear the same sentence
+  // again (his words first): join them without doubling — «sí pero» + «Jamaica es un país muy sí pero de dónde eres» →
+  // «sí pero de dónde eres»
+  function vcMergeSeed(seed, f) {
+    f = String(f || "").trim(); if (!f) return String(seed || "").trim(); const fb = vcStripEcho(f);
+    const A = String(seed).trim().split(/\s+/), B = fb.split(/\s+/).filter(Boolean), na = vcEW(A.join(" ")).join(" "), nb = vcEW(B.join(" ")).join(" ");
+    if (nb.startsWith(na)) return B.join(" "); const ia = (" " + nb + " ").indexOf(" " + na + " "); if (ia >= 0) { const k = nb.slice(0, ia).split(" ").filter(Boolean).length; return B.slice(k).join(" "); }
+    for (let k = Math.min(A.length, B.length); k >= 1; k--) if (vcEW(A.slice(-k).join(" ")).join(" ") === vcEW(B.slice(0, k).join(" ")).join(" ")) return A.concat(B.slice(k)).join(" ");
+    return A.concat(B).join(" ");
+  }
+  window.__vcMergeSeed = vcMergeSeed;
   window.__vcTurns = () => (VC.on ? (VC.turns || 0) : 0);
   function avBegin(u) {
     try { const now = Date.now(); AV.recent = (AV.recent || []).filter((x) => now - x.t < 30000); AV.recent.push({ t: now, w: vcEW(u && u.text) }); if (VC.hold) vcHoldStop(); } catch (e) {}
@@ -533,7 +561,7 @@
     if (!seed) VC.heardAt = 0;
     r.onresult = (e) => { if (r._vcDead) return; if (!VC.heardAt) VC.heardAt = Date.now(); let f = "", im = ""; const fins = []; for (let i = 0; i < e.results.length; i++) { const x = e.results[i][0].transcript; if (e.results[i].isFinal) fins.push(x); else im += x + " "; }
       { const nz = (s) => String(s).toLowerCase().replace(/[^a-záéíóúüñ0-9 ]/gi, "").replace(/\s+/g, " ").trim(); const keep = []; fins.forEach((x) => { const k = nz(x), p = keep.length ? nz(keep[keep.length - 1]) : ""; if (!k) return; if (k === p || (p && p.endsWith(k))) return; if (p && k.startsWith(p)) { keep[keep.length - 1] = x; return; } keep.push(x); }); f = keep.join(" ") + (keep.length ? " " : ""); } // v260: «quiero practicar quiero practicar»
-      fin = ((seed ? seed + " " : "") + f).trim(); live = (fin + " " + im).trim(); vcCapYou(fin, im.trim()); VC.lastHeard = Date.now();
+      fin = seed ? vcMergeSeed(seed, f) : f.trim(); live = (fin + " " + im).trim(); vcCapYou(fin, im.trim()); VC.lastHeard = Date.now();
       { const nw = (live.match(/\S+/g) || []).length; if (nw - (VC.nodN || 0) >= 4) { VC.nodN = nw; AV.nodL = performance.now(); } }
       clearTimeout(VC.sT); clearTimeout(VC.qT); VC.qT = setTimeout(() => finish(live), wait(live, !im.trim())); };
     r.onerror = (e) => { if (r._vcDead) return; r._err = e && e.error; };
@@ -548,8 +576,12 @@
   function vcBargeOn() {
     if (VC.rec || !VC.on || VC.muted) return; const r = new SR(); VC.rec = r; r.lang = vcLang(); r.continuous = !IS_IOS; r.interimResults = true; const g = VC.gen;
     r.onresult = (e) => { if (r._vcDead) return; let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript + " "; t = t.trim(); const ws = (t.toLowerCase().match(/[\p{L}']+/gu) || []); if (ws.length < 2) return;
-      const said = new Set((String((AV.cur && AV.cur.text) || VC.lastPro).toLowerCase().match(/[\p{L}']+/gu) || [])); const own = ws.filter((w) => said.has(w)).length / ws.length; if (own >= 0.5) return; // Profe hearing itself
-      r._vcDead = 1; try { r.abort(); } catch (x) {} if (VC.rec === r) VC.rec = null; vcInterrupt(t); };
+      // v300: Profe hearing himself = any of his sentences of the last 20 s; his words at the start are cut off first, then
+      // what is left must be mostly the learner's — on a final result, or a partial with 4+ words of their own
+      const said = vcProSet(), seed = vcStripEcho(t), ew = vcEW(seed), mine = ew.filter((w) => !said.has(w)).length, fin = [...e.results].some((x) => x.isFinal);
+      if (ew.length < 2 || mine < 2 || mine / ew.length < 0.5 || (!fin && mine < 4)) return;
+      VC.heardAt = Date.now(); VC.barged = true; try { window.__vlog("call", "interrupted by the learner: «" + seed.slice(0, 60) + "»"); } catch (x) {}
+      r._vcDead = 1; try { r.abort(); } catch (x) {} if (VC.rec === r) VC.rec = null; vcInterrupt(seed); };
     r.onend = () => { if (VC.rec === r) VC.rec = null; if (!r._vcDead && VC.on && g === VC.gen && AV.speaking) setTimeout(() => { if (AV.speaking) vcBargeOn(); }, 300); };
     try { r.start(); } catch (e) { VC.rec = null; }
   }
@@ -603,7 +635,11 @@
   async function vcTurn(text) {
     VC.turns = (VC.turns || 0) + 1;
     // echo = 5+ of Profe's words in a row AND first heard within 3 s of him finishing AND he didn't ask for a repeat
-    if (vcIsEcho(text)) try { window.__vlog("call", "sounds like Profe's words (heard " + ((VC.heardAt || Date.now()) - (AV.lastEnd || 0)) + " ms after he stopped)"); } catch (e) {}
+    { const dt = (VC.heardAt || Date.now()) - (AV.lastEnd || 0), rep = /\b(repite|rep[ií]telo|repeat|say it|dilo|ahora t[uú]|tu turno|your turn|di:)/i.test(VC.lastPro || "");
+      // v300: «Jamaica es un país muy Sí pero de dónde eres» — his words heard first, then the learner's: keep the learner's
+      if (!rep && (dt < 1500 || VC.barged)) { const st = vcStripEcho(text); if (st !== text && vcEW(st).length >= 1) { try { window.__vlog("call", "cut Profe's own words off the start: «" + String(text).slice(0, 40) + "» → «" + st.slice(0, 40) + "»"); } catch (e) {} text = st; } }
+      VC.barged = false;
+      if (vcIsEcho(text)) try { window.__vlog("call", "sounds like Profe's words (heard " + (dt < 0 ? "while he was speaking" : dt + " ms after he stopped") + ")"); } catch (e) {} }
     if (vcIsEcho(text) && (VC.heardAt || Date.now()) - (AV.lastEnd || 0) < 1500 && /* v256: was 3 s; learners repeating a modelled sentence were dropped */ !/\b(repite|rep[ií]telo|repeat|say it|dilo|ahora t[uú]|tu turno|your turn|di:)/i.test(VC.lastPro || "")) { try { window.__vlog("call", "ignored Profe's own voice: «" + String(text).slice(0, 60) + "»"); } catch (e) {} vcListen(); return; }
     if (!VC.on) return; const g = ++VC.gen; VC.nodN = 0; vcCap(text, ""); vcStopMic();
     const t = text.trim(), low = t.toLowerCase();
